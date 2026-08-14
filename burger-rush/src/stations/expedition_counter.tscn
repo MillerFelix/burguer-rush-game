@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://expedition_counter_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/expedition_counter.gd" id="1_expedition"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.4, 1, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="Material_Counter"]
+albedo_color = Color(0.42, 0.45, 0.48, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+material = SubResource("Material_Counter")
+size = Vector3(1.4, 0.9, 0.9)
+
+[sub_resource type="StandardMaterial3D" id="Material_PassTop"]
+albedo_color = Color(0.2, 0.22, 0.25, 1)
+metallic = 0.8
+roughness = 0.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_PassTop"]
+material = SubResource("Material_PassTop")
+size = Vector3(1.3, 0.04, 0.8)
+
+[node name="ExpeditionCounter" type="StaticBody3D"]
+script = ExtResource("1_expedition")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="CounterMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("BoxMesh_1")
+
+[node name="TopMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, 0)
+mesh = SubResource("BoxMesh_PassTop")
+
+[node name="TraySlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+billboard = 1
+double_sided = false
+text = "📦 EXPEDIÇÃO
+0 Pedidos Ativos"
+font_size = 22
+outline_size = 6

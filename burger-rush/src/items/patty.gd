@@ -12,45 +12,79 @@ enum State {
 
 @onready var mesh_instance: MeshInstance3D = $MeshInstance3D
 
-const COLOR_RAW := Color(0.85, 0.25, 0.25, 1.0)
-const COLOR_COOKING := Color(0.65, 0.40, 0.25, 1.0)
-const COLOR_COOKED := Color(0.38, 0.20, 0.10, 1.0)
-const COLOR_BURNT := Color(0.12, 0.12, 0.12, 1.0)
+const COLOR_RAW: Color = Color(0.85, 0.28, 0.25, 1.0)
+const COLOR_COOKED: Color = Color(0.42, 0.22, 0.12, 1.0)
+const COLOR_BURNT: Color = Color(0.08, 0.08, 0.08, 1.0)
 
 func _ready() -> void:
 	item_id = "patty"
-	_update_state_properties()
+	item_type = "ingredient"
+	_update_visuals()
 
 func set_state(new_state: State) -> void:
 	state = new_state
-	_update_state_properties()
+	_update_visuals()
 
-func _update_state_properties() -> void:
+func get_ingredient_key() -> String:
 	match state:
 		State.RAW:
-			prompt_text = "E — Pegar Carne Crua"
-			_apply_material_color(COLOR_RAW)
+			return "patty:raw"
 		State.COOKING:
-			prompt_text = "E — Pegar Carne (Em Preparo)"
-			_apply_material_color(COLOR_COOKING)
+			return "patty:cooking"
 		State.COOKED:
-			prompt_text = "E — Pegar Carne Pronta"
-			_apply_material_color(COLOR_COOKED)
+			return "patty:cooked"
 		State.BURNT:
-			prompt_text = "E — Pegar Carne Queimada"
-			_apply_material_color(COLOR_BURNT)
+			return "patty:burnt"
+		_:
+			return "patty"
 
-func _apply_material_color(color: Color) -> void:
+func get_display_name() -> String:
+	match state:
+		State.RAW:
+			return "Carne Crua"
+		State.COOKING:
+			return "Carne (Cozinhando)"
+		State.COOKED:
+			return "Carne Pronta"
+		State.BURNT:
+			return "Carne Queimada"
+		_:
+			return "Carne"
+
+func get_interaction_prompt(player: Node = null) -> String:
+	if player and player.get("held_item") != null:
+		return ""
+	match state:
+		State.RAW:
+			return "E — Pegar Carne Crua"
+		State.COOKING:
+			return "E — Pegar Carne (Em Preparo)"
+		State.COOKED:
+			return "E — Pegar Carne Pronta"
+		State.BURNT:
+			return "E — Pegar Carne Queimada"
+		_:
+			return "E — Pegar Carne"
+
+func _update_visuals() -> void:
 	if not mesh_instance:
 		return
 
-	var mat: StandardMaterial3D = mesh_instance.get_surface_override_material(0)
+	var mat: StandardMaterial3D = mesh_instance.material_override as StandardMaterial3D
 	if not mat:
 		mat = StandardMaterial3D.new()
-		mesh_instance.set_surface_override_material(0, mat)
-	else:
-		mat = mat.duplicate()
-		mesh_instance.set_surface_override_material(0, mat)
+		mesh_instance.material_override = mat
 
-	mat.albedo_color = color
-	mat.roughness = 0.6
+	match state:
+		State.RAW:
+			mat.albedo_color = COLOR_RAW
+			mat.roughness = 0.6
+		State.COOKING:
+			mat.albedo_color = COLOR_RAW.lerp(COLOR_COOKED, 0.5)
+			mat.roughness = 0.5
+		State.COOKED:
+			mat.albedo_color = COLOR_COOKED
+			mat.roughness = 0.4
+		State.BURNT:
+			mat.albedo_color = COLOR_BURNT
+			mat.roughness = 0.95

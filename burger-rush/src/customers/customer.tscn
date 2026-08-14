@@ -1,0 +1,106 @@
+[gd_scene format=3 uid="uid://customer_scene_uid"]
+
+[ext_resource type="Script" path="res://src/customers/customer.gd" id="1_customer"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.35
+height = 1.75
+
+[sub_resource type="StandardMaterial3D" id="Material_Skin"]
+albedo_color = Color(0.92, 0.78, 0.65, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_Shirt"]
+albedo_color = Color(0.2, 0.45, 0.75, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Pants"]
+albedo_color = Color(0.18, 0.22, 0.28, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_Hair"]
+albedo_color = Color(0.25, 0.18, 0.12, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_Shoes"]
+albedo_color = Color(0.9, 0.9, 0.92, 1)
+roughness = 0.4
+
+[sub_resource type="SphereMesh" id="SphereMesh_Head"]
+material = SubResource("Material_Skin")
+radius = 0.18
+height = 0.36
+
+[sub_resource type="SphereMesh" id="SphereMesh_Hair"]
+material = SubResource("Material_Hair")
+radius = 0.19
+height = 0.25
+
+[sub_resource type="BoxMesh" id="BoxMesh_Torso"]
+material = SubResource("Material_Shirt")
+size = Vector3(0.42, 0.55, 0.24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Leg"]
+material = SubResource("Material_Pants")
+size = Vector3(0.16, 0.7, 0.18)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Shoe"]
+material = SubResource("Material_Shoes")
+size = Vector3(0.16, 0.08, 0.24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Arm"]
+material = SubResource("Material_Shirt")
+size = Vector3(0.1, 0.48, 0.12)
+
+[node name="Customer" type="CharacterBody3D"]
+script = ExtResource("1_customer")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Head" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+mesh = SubResource("SphereMesh_Head")
+
+[node name="Hair" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.63, -0.02)
+mesh = SubResource("SphereMesh_Hair")
+
+[node name="Torso" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+mesh = SubResource("BoxMesh_Torso")
+
+[node name="ArmLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 1.1, 0)
+mesh = SubResource("BoxMesh_Arm")
+
+[node name="ArmRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 1.1, 0)
+mesh = SubResource("BoxMesh_Arm")
+
+[node name="LegLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11, 0.45, 0)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="LegRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.11, 0.45, 0)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="ShoeLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11, 0.05, 0.03)
+mesh = SubResource("BoxMesh_Shoe")
+
+[node name="ShoeRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.11, 0.05, 0.03)
+mesh = SubResource("BoxMesh_Shoe")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+billboard = 1
+double_sided = false
+text = "💬 [E] Fazer Pedido"
+font_size = 28
+outline_size = 8

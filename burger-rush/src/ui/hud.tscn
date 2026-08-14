@@ -2,6 +2,18 @@
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Modal"]
+bg_color = Color(0.12, 0.14, 0.18, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.8, 0.65, 0.3, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
@@ -26,10 +38,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -150.0
+offset_left = -250.0
 offset_top = 20.0
-offset_right = 150.0
-offset_bottom = 46.0
+offset_right = 250.0
+offset_bottom = 50.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
@@ -37,3 +49,148 @@ theme_override_constants/outline_size = 4
 text = "E — Pegar"
 horizontal_alignment = 1
 vertical_alignment = 1
+
+[node name="TopRight" type="MarginContainer" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -220.0
+offset_bottom = 60.0
+grow_horizontal = 0
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+
+[node name="MoneyLabel" type="Label" parent="TopRight"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 20
+text = "💰 Caixa: $100.00"
+horizontal_alignment = 2
+
+[node name="TopLeft" type="MarginContainer" parent="."]
+offset_right = 380.0
+offset_bottom = 160.0
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+
+[node name="OrdersLabel" type="Label" parent="TopLeft"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.7, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 15
+text = "📋 PEDIDOS ATIVOS (0)
+Nenhum pedido no momento."
+
+[node name="TopCenter" type="MarginContainer" parent="."]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_right = 200.0
+offset_bottom = 60.0
+grow_horizontal = 2
+theme_override_constants/margin_top = 16
+
+[node name="DayTimeLabel" type="Label" parent="TopCenter"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 20
+text = "DIA 1  |  08:00  |  PREPARAÇÃO"
+horizontal_alignment = 1
+
+[node name="FeedbackLabel" type="Label" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -120.0
+offset_right = 300.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 18
+text = "Feedback"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FeedbackTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="DayReportModal" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -200.0
+offset_right = 240.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_Modal")
+
+[node name="VBox" type="VBoxContainer" parent="DayReportModal"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TitleLabel" type="Label" parent="DayReportModal/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 24
+text = "📋 RELATÓRIO DO DIA 1"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="DayReportModal/VBox"]
+layout_mode = 2
+
+[node name="RevenueLabel" type="Label" parent="DayReportModal/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "💵 Receita do Dia: $0.00"
+
+[node name="CompletedLabel" type="Label" parent="DayReportModal/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "✅ Pedidos Concluídos: 0"
+
+[node name="CancelledLabel" type="Label" parent="DayReportModal/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "❌ Pedidos Cancelados: 0"
+
+[node name="AvgTimeLabel" type="Label" parent="DayReportModal/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "⏱️ Tempo Médio: 0.0s"
+
+[node name="BalanceLabel" type="Label" parent="DayReportModal/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 20
+text = "💰 Saldo no Caixa: $100.00"
+
+[node name="HSeparator2" type="HSeparator" parent="DayReportModal/VBox"]
+layout_mode = 2
+
+[node name="NextDayButton" type="Button" parent="DayReportModal/VBox"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "Iniciar Próximo Dia (08:00) [E / Enter]"
+
+[connection signal="timeout" from="FeedbackTimer" to="." method="_on_feedback_timer_timeout"]

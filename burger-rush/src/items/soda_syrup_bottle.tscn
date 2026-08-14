@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://soda_syrup_bottle_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/soda_syrup_bottle.gd" id="1_syrup"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.2, 0.28, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="Material_Syrup"]
+albedo_color = Color(0.6, 0.1, 0.15, 1)
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_Bottle"]
+material = SubResource("Material_Syrup")
+size = Vector3(0.18, 0.24, 0.18)
+
+[sub_resource type="StandardMaterial3D" id="Material_Cap"]
+albedo_color = Color(0.9, 0.9, 0.9, 1)
+roughness = 0.4
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Cap"]
+material = SubResource("Material_Cap")
+top_radius = 0.035
+bottom_radius = 0.035
+height = 0.04
+
+[node name="SodaSyrupBottle" type="StaticBody3D"]
+script = ExtResource("1_syrup")
+item_id = "syrup_soda"
+display_name = "Xarope de Refrigerante"
+item_type = "ingredient"
+prompt_text = "E — Pegar Xarope de Refrigerante"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="BottleMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+mesh = SubResource("BoxMesh_Bottle")
+
+[node name="CapMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26, 0)
+mesh = SubResource("CylinderMesh_Cap")

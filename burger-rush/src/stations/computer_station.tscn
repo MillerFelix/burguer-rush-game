@@ -1,0 +1,136 @@
+[gd_scene format=3 uid="uid://computer_station_uid"]
+
+[ext_resource type="Script" path="res://src/stations/computer_station.gd" id="1_computer"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.1, 1.3, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="Material_DeskWood"]
+albedo_color = Color(0.72, 0.62, 0.5, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_DeskFrame"]
+albedo_color = Color(0.2, 0.2, 0.22, 1)
+metallic = 0.85
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_MonitorPlastic"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_MonitorScreen"]
+albedo_color = Color(0.15, 0.35, 0.55, 1)
+emission_enabled = true
+emission = Color(0.2, 0.4, 0.6, 1)
+emission_energy_multiplier = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_Keyboard"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_DeskTop"]
+material = SubResource("Material_DeskWood")
+size = Vector3(1.05, 0.05, 0.75)
+
+[sub_resource type="BoxMesh" id="BoxMesh_MonitorFrame"]
+material = SubResource("Material_MonitorPlastic")
+size = Vector3(0.55, 0.35, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_MonitorScreen"]
+material = SubResource("Material_MonitorScreen")
+size = Vector3(0.51, 0.31, 0.01)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_MonitorPole"]
+material = SubResource("Material_MonitorPlastic")
+top_radius = 0.02
+bottom_radius = 0.02
+height = 0.18
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_MonitorBase"]
+material = SubResource("Material_MonitorPlastic")
+top_radius = 0.1
+bottom_radius = 0.12
+height = 0.02
+
+[sub_resource type="BoxMesh" id="BoxMesh_Keyboard"]
+material = SubResource("Material_Keyboard")
+size = Vector3(0.38, 0.02, 0.14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Mouse"]
+material = SubResource("Material_Keyboard")
+size = Vector3(0.06, 0.02, 0.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_PC"]
+material = SubResource("Material_DeskFrame")
+size = Vector3(0.18, 0.38, 0.42)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_DeskLeg"]
+material = SubResource("Material_DeskFrame")
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.75
+
+[node name="ComputerStation" type="StaticBody3D"]
+script = ExtResource("1_computer")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="DeskTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("BoxMesh_DeskTop")
+
+[node name="MonitorBase" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, -0.15)
+mesh = SubResource("CylinderMesh_MonitorBase")
+
+[node name="MonitorPole" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, -0.15)
+mesh = SubResource("CylinderMesh_MonitorPole")
+
+[node name="MonitorFrame" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, -0.15)
+mesh = SubResource("BoxMesh_MonitorFrame")
+
+[node name="MonitorScreen" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, -0.13)
+mesh = SubResource("BoxMesh_MonitorScreen")
+
+[node name="Keyboard" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.78, 0.1)
+mesh = SubResource("BoxMesh_Keyboard")
+
+[node name="Mouse" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.78, 0.1)
+mesh = SubResource("BoxMesh_Mouse")
+
+[node name="TowerPC" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.2, 0)
+mesh = SubResource("BoxMesh_PC")
+
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.38, -0.3)
+mesh = SubResource("CylinderMesh_DeskLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.38, -0.3)
+mesh = SubResource("CylinderMesh_DeskLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.38, 0.3)
+mesh = SubResource("CylinderMesh_DeskLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.38, 0.3)
+mesh = SubResource("CylinderMesh_DeskLeg")
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+billboard = 1
+double_sided = false
+text = "💻 COMPUTADOR ADMINISTRATIVO"
+font_size = 20
+outline_size = 6

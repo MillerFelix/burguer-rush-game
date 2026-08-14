@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://bread_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/bread.gd" id="1_bread"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 0.08
+radius = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_Bread"]
+albedo_color = Color(0.88, 0.62, 0.28, 1)
+roughness = 0.7
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+material = SubResource("Material_Bread")
+top_radius = 0.19
+bottom_radius = 0.2
+height = 0.07
+radial_segments = 16
+
+[node name="Bread" type="StaticBody3D"]
+script = ExtResource("1_bread")
+item_id = "bread"
+prompt_text = "E — Pegar Pão"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("CylinderMesh_1")

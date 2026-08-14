@@ -1,10 +1,33 @@
 [gd_scene format=3 uid="uid://main_scene_uid"]
 
 [ext_resource type="PackedScene" path="res://src/player/player.tscn" id="1_player"]
-[ext_resource type="PackedScene" path="res://src/items/item.tscn" id="2_item"]
-[ext_resource type="PackedScene" path="res://src/items/patty.tscn" id="3_patty"]
 [ext_resource type="PackedScene" path="res://src/stations/grill.tscn" id="4_grill"]
 [ext_resource type="PackedScene" path="res://src/stations/prep_table.tscn" id="5_preptable"]
+[ext_resource type="Script" path="res://src/economy/economy_manager.gd" id="8_economy"]
+[ext_resource type="Script" path="res://src/orders/order_manager.gd" id="9_order_mgr"]
+[ext_resource type="PackedScene" path="res://src/stations/delivery_station.tscn" id="10_delivery"]
+[ext_resource type="Script" path="res://src/customers/customer_spawner.gd" id="11_spawner"]
+[ext_resource type="Script" path="res://src/time/game_clock.gd" id="12_clock"]
+[ext_resource type="PackedScene" path="res://src/stations/open_sign.tscn" id="13_opensign"]
+[ext_resource type="Script" path="res://src/inventory/inventory_manager.gd" id="14_inventory"]
+[ext_resource type="Script" path="res://src/purchasing/purchase_manager.gd" id="15_purchasing"]
+[ext_resource type="PackedScene" path="res://src/stations/computer_station.tscn" id="16_computer"]
+[ext_resource type="PackedScene" path="res://src/stations/ingredient_dispenser.tscn" id="17_dispenser"]
+[ext_resource type="Script" path="res://src/progression/progression_manager.gd" id="18_progression"]
+[ext_resource type="Script" path="res://src/stations/table_manager.gd" id="19_table_mgr"]
+[ext_resource type="PackedScene" path="res://src/stations/restaurant_table.tscn" id="20_table"]
+[ext_resource type="PackedScene" path="res://src/stations/expedition_counter.tscn" id="21_expedition"]
+[ext_resource type="Script" path="res://src/equipment/equipment_manager.gd" id="22_equip_mgr"]
+[ext_resource type="Script" path="res://src/equipment/equipment_slot.gd" id="23_equip_slot"]
+[ext_resource type="Script" path="res://src/economy/waste_manager.gd" id="24_waste_mgr"]
+[ext_resource type="PackedScene" path="res://src/stations/packaging_station.tscn" id="25_packaging"]
+[ext_resource type="PackedScene" path="res://src/stations/trash_bin.tscn" id="26_trash"]
+[ext_resource type="PackedScene" path="res://src/stations/receiving_area.tscn" id="27_receiving"]
+[ext_resource type="PackedScene" path="res://src/stations/fryer.tscn" id="28_fryer"]
+[ext_resource type="PackedScene" path="res://src/stations/drink_machine.tscn" id="29_drink_machine"]
+[ext_resource type="Script" path="res://src/customers/reputation_manager.gd" id="30_rep_mgr"]
+[ext_resource type="Script" path="res://src/employees/employee_manager.gd" id="31_emp_mgr"]
+[ext_resource type="Script" path="res://src/economy/weekly_report_manager.gd" id="32_weekly_mgr"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.384314, 0.639216, 0.886275, 1)
@@ -19,102 +42,337 @@ sky_material = SubResource("ProceduralSkyMaterial_1")
 background_mode = 2
 sky = SubResource("Sky_1")
 ambient_light_source = 3
-ambient_light_color = Color(0.6, 0.6, 0.6, 1)
+ambient_light_color = Color(0.72, 0.72, 0.72, 1)
 tonemap_mode = 2
 
-[sub_resource type="StandardMaterial3D" id="Material_Floor"]
-albedo_color = Color(0.28, 0.32, 0.36, 1)
+[sub_resource type="StandardMaterial3D" id="Material_FloorDining"]
+albedo_color = Color(0.42, 0.3, 0.2, 1)
+roughness = 0.45
 
-[sub_resource type="StandardMaterial3D" id="Material_Wall"]
-albedo_color = Color(0.72, 0.74, 0.76, 1)
+[sub_resource type="StandardMaterial3D" id="Material_FloorKitchen"]
+albedo_color = Color(0.25, 0.28, 0.32, 1)
+roughness = 0.35
 
-[sub_resource type="StandardMaterial3D" id="Material_Obstacle"]
-albedo_color = Color(0.85, 0.45, 0.25, 1)
+[sub_resource type="StandardMaterial3D" id="Material_FloorSidewalk"]
+albedo_color = Color(0.65, 0.65, 0.65, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_FloorStreet"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_WallInterior"]
+albedo_color = Color(0.85, 0.83, 0.8, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_WallExterior"]
+albedo_color = Color(0.22, 0.25, 0.28, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_Glass"]
+transparency = 1
+albedo_color = Color(0.75, 0.88, 0.95, 0.4)
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Material_Ceiling"]
+albedo_color = Color(0.88, 0.88, 0.88, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_CounterDivider"]
+albedo_color = Color(0.38, 0.22, 0.12, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_CounterTop"]
+albedo_color = Color(0.8, 0.82, 0.85, 1)
+metallic = 0.6
+roughness = 0.25
 
 [node name="Main" type="Node3D"]
+
+[node name="EmployeeManager" type="Node" parent="."]
+script = ExtResource("31_emp_mgr")
+
+[node name="WeeklyReportManager" type="Node" parent="."]
+script = ExtResource("32_weekly_mgr")
+
+[node name="ReputationManager" type="Node" parent="."]
+script = ExtResource("30_rep_mgr")
+
+[node name="WasteManager" type="Node" parent="."]
+script = ExtResource("24_waste_mgr")
+
+[node name="EquipmentManager" type="Node" parent="."]
+script = ExtResource("22_equip_mgr")
+
+[node name="ProgressionManager" type="Node" parent="."]
+script = ExtResource("18_progression")
+
+[node name="TableManager" type="Node" parent="."]
+script = ExtResource("19_table_mgr")
+
+[node name="InventoryManager" type="Node" parent="."]
+script = ExtResource("14_inventory")
+
+[node name="PurchaseManager" type="Node" parent="."]
+script = ExtResource("15_purchasing")
+
+[node name="GameClock" type="Node" parent="."]
+script = ExtResource("12_clock")
+
+[node name="EconomyManager" type="Node" parent="."]
+script = ExtResource("8_economy")
+
+[node name="OrderManager" type="Node" parent="."]
+script = ExtResource("9_order_mgr")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 10, 0)
+transform = Transform3D(0.866025, -0.353553, 0.353553, 0, 0.707107, 0.707107, -0.5, -0.612372, 0.612372, 0, 15, 5)
 shadow_enabled = true
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="DiningLight1" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0, 3.2, 4.5)
+light_color = Color(1.0, 0.92, 0.8, 1)
+light_energy = 1.2
+omni_range = 8.0
+
+[node name="DiningLight2" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.0, 3.2, 4.5)
+light_color = Color(1.0, 0.92, 0.8, 1)
+light_energy = 1.2
+omni_range = 8.0
+
+[node name="KitchenLight1" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.0, 3.2, -4.5)
+light_color = Color(0.9, 0.95, 1.0, 1)
+light_energy = 1.4
+omni_range = 8.0
+
+[node name="KitchenLight2" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.0, 3.2, -4.5)
+light_color = Color(0.9, 0.95, 1.0, 1)
+light_energy = 1.4
+omni_range = 8.0
+
+[node name="StreetLight" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 12.0)
+light_color = Color(1.0, 0.85, 0.65, 1)
+light_energy = 1.5
+omni_range = 14.0
 
 [node name="Room" type="Node3D" parent="."]
 
-[node name="Floor" type="CSGBox3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+[node name="FloorDining" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 4.5)
 use_collision = true
-size = Vector3(20, 0.5, 20)
-material = SubResource("Material_Floor")
+size = Vector3(18, 0.5, 9)
+material = SubResource("Material_FloorDining")
+
+[node name="FloorKitchen" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -4.5)
+use_collision = true
+size = Vector3(18, 0.5, 9)
+material = SubResource("Material_FloorKitchen")
+
+[node name="FloorSidewalk" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 12.0)
+use_collision = true
+size = Vector3(26, 0.5, 6)
+material = SubResource("Material_FloorSidewalk")
+
+[node name="FloorStreet" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.35, 19.0)
+use_collision = true
+size = Vector3(26, 0.5, 8)
+material = SubResource("Material_FloorStreet")
+
+[node name="Ceiling" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.75, 0)
+use_collision = true
+size = Vector3(18.5, 0.5, 18.5)
+material = SubResource("Material_Ceiling")
 
 [node name="WallNorth" type="CSGBox3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -9)
 use_collision = true
-size = Vector3(20, 3, 0.5)
-material = SubResource("Material_Wall")
-
-[node name="WallSouth" type="CSGBox3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 10)
-use_collision = true
-size = Vector3(20, 3, 0.5)
-material = SubResource("Material_Wall")
-
-[node name="WallWest" type="CSGBox3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1.5, 0)
-use_collision = true
-size = Vector3(0.5, 3, 20)
-material = SubResource("Material_Wall")
+size = Vector3(18, 3.5, 0.5)
+material = SubResource("Material_WallInterior")
 
 [node name="WallEast" type="CSGBox3D" parent="Room"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.75, 0)
 use_collision = true
-size = Vector3(0.5, 3, 20)
-material = SubResource("Material_Wall")
+size = Vector3(0.5, 3.5, 18)
+material = SubResource("Material_WallInterior")
 
-[node name="Obstacles" type="Node3D" parent="Room"]
-
-[node name="Pedestal" type="CSGBox3D" parent="Room/Obstacles"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, -2)
+[node name="WallWestNorth" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.75, -6.5)
 use_collision = true
-size = Vector3(0.8, 1, 0.8)
-material = SubResource("Material_Obstacle")
+size = Vector3(0.5, 3.5, 5.0)
+material = SubResource("Material_WallInterior")
 
-[node name="PattyCounter" type="CSGBox3D" parent="Room/Obstacles"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.5, -1.8)
+[node name="WallWestSouth" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.75, 4.5)
 use_collision = true
-size = Vector3(1, 1, 1)
-material = SubResource("Material_Obstacle")
+size = Vector3(0.5, 3.5, 9.0)
+material = SubResource("Material_WallInterior")
 
-[node name="Step1" type="CSGBox3D" parent="Room/Obstacles"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.25, 3)
+[node name="WallSouthLeft" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 1.75, 9)
 use_collision = true
-size = Vector3(2, 0.5, 2)
-material = SubResource("Material_Obstacle")
+size = Vector3(7.0, 3.5, 0.5)
+material = SubResource("Material_WallExterior")
 
-[node name="Step2" type="CSGBox3D" parent="Room/Obstacles"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 5)
+[node name="WallSouthRight" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 1.75, 9)
 use_collision = true
-size = Vector3(2, 1, 2)
-material = SubResource("Material_Obstacle")
+size = Vector3(7.0, 3.5, 0.5)
+material = SubResource("Material_WallExterior")
 
-[node name="Block" type="CSGBox3D" parent="Room/Obstacles"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.75, -3)
+[node name="WindowSouthLeft" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 1.5, 9)
+size = Vector3(4.0, 1.8, 0.1)
+material = SubResource("Material_Glass")
+
+[node name="WindowSouthRight" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1.5, 9)
+size = Vector3(4.0, 1.8, 0.1)
+material = SubResource("Material_Glass")
+
+[node name="CounterDividerLeft" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5, 0.5, 0)
 use_collision = true
-size = Vector3(1.5, 1.5, 1.5)
-material = SubResource("Material_Obstacle")
+size = Vector3(4, 1, 0.8)
+material = SubResource("Material_CounterDivider")
 
-[node name="TestCube" parent="." instance=ExtResource("2_item")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, -2)
+[node name="CounterDividerRight" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.0, 0.5, 0)
+use_collision = true
+size = Vector3(3, 1, 0.8)
+material = SubResource("Material_CounterDivider")
 
-[node name="RawPatty" parent="." instance=ExtResource("3_patty")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 1.05, -1.8)
+[node name="NeonSign" type="Label3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 9.3)
+billboard = 0
+double_sided = false
+text = "🍔 BURGER RUSH 🍔"
+font_size = 48
+outline_size = 12
+modulate = Color(1.0, 0.85, 0.2, 1.0)
+outline_modulate = Color(0.85, 0.15, 0.15, 1.0)
+
+[node name="MenuBoard" type="Label3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 2.7, 0.0)
+billboard = 0
+double_sided = true
+text = "══════ CARDÁPIO BURGER RUSH ══════\n🍔 Cheeseburger $18.00  |  🥓 X-Bacon $25.00\n🍟 Batata Frita $8.00   |  🥤 Refrigerante $6.00"
+font_size = 22
+outline_size = 6
+modulate = Color(1.0, 0.95, 0.8, 1.0)
+outline_modulate = Color(0.1, 0.1, 0.12, 1.0)
+
+[node name="Table1" parent="." instance=ExtResource("20_table")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 0, 4.5)
+table_id = 1
+
+[node name="Table2" parent="." instance=ExtResource("20_table")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4.5)
+table_id = 2
+
+[node name="Table3" parent="." instance=ExtResource("20_table")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, 4.5)
+table_id = 3
+
+[node name="ReceivingArea" parent="." instance=ExtResource("27_receiving")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2, 0, -2.0)
+
+[node name="TrashBin" parent="." instance=ExtResource("26_trash")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8, 0, -2.0)
+
+[node name="BreadDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -4.5)
+ingredient_id = "bread"
+
+[node name="PattyDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0, 0, -4.5)
+ingredient_id = "patty"
+
+[node name="CheeseDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, -4.5)
+ingredient_id = "cheese"
+
+[node name="PotatoDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0, 0, -4.5)
+ingredient_id = "potato_raw"
+
+[node name="LettuceDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.5, 0, -7.2)
+ingredient_id = "lettuce"
+
+[node name="TomatoDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.0, 0, -7.2)
+ingredient_id = "tomato"
+
+[node name="BaconDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.5, 0, -7.2)
+ingredient_id = "bacon"
+
+[node name="SauceDispenser" parent="." instance=ExtResource("17_dispenser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.0, 0, -7.2)
+ingredient_id = "sauce"
 
 [node name="Grill" parent="." instance=ExtResource("4_grill")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5, 0, -1.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0, 0, -7.2)
+
+[node name="SecondGrillSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -7.2)
+script = ExtResource("23_equip_slot")
+equipment_id = "second_grill"
+equipment_scene = ExtResource("4_grill")
+
+[node name="Fryer" parent="." instance=ExtResource("28_fryer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.0, 0, -7.2)
+
+[node name="SecondFryerSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.5, 0, -7.2)
+script = ExtResource("23_equip_slot")
+equipment_id = "second_fryer"
+equipment_scene = ExtResource("28_fryer")
 
 [node name="PrepTable" parent="." instance=ExtResource("5_preptable")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0, -4.5)
+
+[node name="SecondPrepTableSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0, -3.0)
+script = ExtResource("23_equip_slot")
+equipment_id = "extra_prep_table"
+equipment_scene = ExtResource("5_preptable")
+
+[node name="PackagingStation" parent="." instance=ExtResource("25_packaging")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0, 0, -4.5)
+
+[node name="DrinkMachine" parent="." instance=ExtResource("29_drink_machine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.6, 0, -4.5)
+
+[node name="ComputerStation" parent="." instance=ExtResource("16_computer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.2, 0, -5.5)
+
+[node name="ExpeditionCounter" parent="." instance=ExtResource("21_expedition")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0, -1.0)
+
+[node name="DeliveryStation" parent="." instance=ExtResource("10_delivery")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2, 0, -1.0)
+
+[node name="OpenSign" parent="." instance=ExtResource("13_opensign")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 0, 5.0)
+
+[node name="CustomerSpawner" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 12.0)
+script = ExtResource("11_spawner")
+spawn_position = Vector3(0.0, 0, 12.0)
+exit_position = Vector3(0.0, 0, 12.0)
 
 [node name="Player" parent="." instance=ExtResource("1_player")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)

@@ -1,40 +1,106 @@
-[gd_scene format=3 uid="uid://prep_table_scene_uid"]
+[gd_scene format=3 uid="uid://preptable_scene_uid"]
 
 [ext_resource type="Script" path="res://src/stations/prep_table.gd" id="1_preptable"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_PrepTable"]
-size = Vector3(1.4, 1.0, 1.0)
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.2, 1.05, 0.9)
 
-[sub_resource type="StandardMaterial3D" id="Material_TableBody"]
-albedo_color = Color(0.55, 0.38, 0.22, 1)
-roughness = 0.75
+[sub_resource type="StandardMaterial3D" id="Material_CuttingBoard"]
+albedo_color = Color(0.95, 0.95, 0.95, 1)
+roughness = 0.5
 
-[sub_resource type="BoxMesh" id="BoxMesh_TableBody"]
-material = SubResource("Material_TableBody")
-size = Vector3(1.4, 0.9, 1.0)
+[sub_resource type="StandardMaterial3D" id="Material_StainlessFrame"]
+albedo_color = Color(0.7, 0.72, 0.76, 1)
+metallic = 0.85
+roughness = 0.25
 
-[sub_resource type="StandardMaterial3D" id="Material_TableTop"]
-albedo_color = Color(0.72, 0.56, 0.35, 1)
-roughness = 0.55
+[sub_resource type="StandardMaterial3D" id="Material_GastronormPan"]
+albedo_color = Color(0.8, 0.82, 0.86, 1)
+metallic = 0.9
+roughness = 0.2
 
-[sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
-material = SubResource("Material_TableTop")
-size = Vector3(1.4, 0.06, 1.0)
+[sub_resource type="BoxMesh" id="BoxMesh_Top"]
+material = SubResource("Material_CuttingBoard")
+size = Vector3(1.15, 0.08, 0.85)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Shelf"]
+material = SubResource("Material_StainlessFrame")
+size = Vector3(1.1, 0.04, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Rail"]
+material = SubResource("Material_StainlessFrame")
+size = Vector3(1.15, 0.12, 0.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GNPan"]
+material = SubResource("Material_GastronormPan")
+size = Vector3(0.22, 0.08, 0.2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Leg"]
+material = SubResource("Material_StainlessFrame")
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.85
 
 [node name="PrepTable" type="StaticBody3D"]
 script = ExtResource("1_preptable")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-shape = SubResource("BoxShape3D_PrepTable")
+shape = SubResource("BoxShape3D_1")
 
-[node name="BodyMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
-mesh = SubResource("BoxMesh_TableBody")
+[node name="Model" type="Node3D" parent="."]
 
-[node name="TopMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0)
-mesh = SubResource("BoxMesh_TableTop")
+[node name="TableTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0.05)
+mesh = SubResource("BoxMesh_Top")
+
+[node name="UnderShelf" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0.05)
+mesh = SubResource("BoxMesh_Shelf")
+
+[node name="TopIngredientRail" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, -0.3)
+mesh = SubResource("BoxMesh_Rail")
+
+[node name="GNPan1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 1.02, -0.3)
+mesh = SubResource("BoxMesh_GNPan")
+
+[node name="GNPan2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 1.02, -0.3)
+mesh = SubResource("BoxMesh_GNPan")
+
+[node name="GNPan3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.02, -0.3)
+mesh = SubResource("BoxMesh_GNPan")
+
+[node name="GNPan4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.38, 1.02, -0.3)
+mesh = SubResource("BoxMesh_GNPan")
+
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.52, 0.44, -0.32)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.52, 0.44, -0.32)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.52, 0.44, 0.42)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.52, 0.44, 0.42)
+mesh = SubResource("CylinderMesh_Leg")
 
 [node name="ItemSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.1)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+billboard = 1
+double_sided = false
+text = "🥩 MONTAGEM LIVRE"
+font_size = 22
+outline_size = 6

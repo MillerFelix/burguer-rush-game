@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://employee_scene_uid"]
+
+[ext_resource type="Script" path="res://src/employees/employee.gd" id="1_employee"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="StandardMaterial3D" id="Material_Skin"]
+albedo_color = Color(0.92, 0.78, 0.65, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_UniformShirt"]
+albedo_color = Color(0.92, 0.92, 0.94, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Apron"]
+albedo_color = Color(0.85, 0.15, 0.15, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Pants"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_Hat"]
+albedo_color = Color(0.85, 0.15, 0.15, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Badge"]
+albedo_color = Color(0.95, 0.85, 0.2, 1)
+metallic = 0.8
+roughness = 0.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_Head"]
+material = SubResource("Material_Skin")
+radius = 0.18
+height = 0.36
+
+[sub_resource type="BoxMesh" id="BoxMesh_Hat"]
+material = SubResource("Material_Hat")
+size = Vector3(0.38, 0.1, 0.38)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Torso"]
+material = SubResource("Material_UniformShirt")
+size = Vector3(0.42, 0.55, 0.24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Apron"]
+material = SubResource("Material_Apron")
+size = Vector3(0.36, 0.52, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Badge"]
+material = SubResource("Material_Badge")
+size = Vector3(0.08, 0.05, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Leg"]
+material = SubResource("Material_Pants")
+size = Vector3(0.16, 0.7, 0.18)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Arm"]
+material = SubResource("Material_UniformShirt")
+size = Vector3(0.1, 0.48, 0.12)
+
+[node name="Employee" type="CharacterBody3D"]
+script = ExtResource("1_employee")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Head" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+mesh = SubResource("SphereMesh_Head")
+
+[node name="Hat" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.74, 0.02)
+mesh = SubResource("BoxMesh_Hat")
+
+[node name="Torso" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+mesh = SubResource("BoxMesh_Torso")
+
+[node name="Apron" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, 0.12)
+mesh = SubResource("BoxMesh_Apron")
+
+[node name="Badge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 1.25, 0.14)
+mesh = SubResource("BoxMesh_Badge")
+
+[node name="ArmLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 1.1, 0)
+mesh = SubResource("BoxMesh_Arm")
+
+[node name="ArmRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 1.1, 0)
+mesh = SubResource("BoxMesh_Arm")
+
+[node name="LegLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11, 0.45, 0)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="LegRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.11, 0.45, 0)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
+billboard = 1
+text = "👤 Funcionário"
+font_size = 20
+
+[node name="HoldPosition" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0.5)

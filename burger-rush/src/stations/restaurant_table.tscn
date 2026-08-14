@@ -1,0 +1,142 @@
+[gd_scene format=3 uid="uid://restaurant_table_uid"]
+
+[ext_resource type="Script" path="res://src/stations/restaurant_table.gd" id="1_table"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 1.0
+radius = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_WoodTable"]
+albedo_color = Color(0.46, 0.3, 0.18, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_BlackIron"]
+albedo_color = Color(0.15, 0.15, 0.16, 1)
+metallic = 0.9
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_ChairCushion"]
+albedo_color = Color(0.65, 0.18, 0.18, 1)
+roughness = 0.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_TableTop"]
+material = SubResource("Material_WoodTable")
+top_radius = 0.55
+bottom_radius = 0.55
+height = 0.05
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Pole"]
+material = SubResource("Material_BlackIron")
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.75
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Base"]
+material = SubResource("Material_BlackIron")
+top_radius = 0.25
+bottom_radius = 0.28
+height = 0.04
+
+[sub_resource type="BoxMesh" id="BoxMesh_ChairSeat"]
+material = SubResource("Material_ChairCushion")
+size = Vector3(0.38, 0.06, 0.38)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ChairBack"]
+material = SubResource("Material_WoodTable")
+size = Vector3(0.38, 0.35, 0.04)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ChairLeg"]
+material = SubResource("Material_BlackIron")
+top_radius = 0.015
+bottom_radius = 0.015
+height = 0.45
+
+[node name="RestaurantTable" type="StaticBody3D"]
+script = ExtResource("1_table")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="TableBase" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+mesh = SubResource("CylinderMesh_Base")
+
+[node name="TablePole" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+mesh = SubResource("CylinderMesh_Pole")
+
+[node name="TableTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0)
+mesh = SubResource("CylinderMesh_TableTop")
+
+[node name="Chair1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.65)
+
+[node name="Seat" type="MeshInstance3D" parent="Model/Chair1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("BoxMesh_ChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="Model/Chair1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0.17)
+mesh = SubResource("BoxMesh_ChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="Model/Chair1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, -0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model/Chair1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, -0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model/Chair1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, 0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model/Chair1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, 0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Chair2" type="Node3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -0.65)
+
+[node name="Seat" type="MeshInstance3D" parent="Model/Chair2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("BoxMesh_ChairSeat")
+
+[node name="Back" type="MeshInstance3D" parent="Model/Chair2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0.17)
+mesh = SubResource("BoxMesh_ChairBack")
+
+[node name="Leg1" type="MeshInstance3D" parent="Model/Chair2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, -0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model/Chair2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, -0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model/Chair2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, 0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model/Chair2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, 0.15)
+mesh = SubResource("CylinderMesh_ChairLeg")
+
+[node name="Seat" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.65)
+
+[node name="PlateSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82, 0)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+billboard = 1
+double_sided = false
+text = "🍽️ Mesa #1
+🟢 Disponível"
+font_size = 20
+outline_size = 6

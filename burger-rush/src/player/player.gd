@@ -19,21 +19,38 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		return
+
+	if event is InputEventMouseMotion:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		head.rotate_x(-event.relative.y * mouse_sensitivity)
 		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-89.0), deg_to_rad(89.0))
 	
-	if event.is_action_pressed("ui_cancel"):
-		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		else:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
 	if event.is_action_pressed("interact"):
 		_try_interact()
 
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F:
+		_try_secondary_interact()
+
+func _try_secondary_interact() -> void:
+	if raycast and raycast.is_colliding():
+		var collider = raycast.get_collider()
+		if collider:
+			if collider.has_method("cycle_flavor"):
+				collider.cycle_flavor(self)
+			elif collider.has_method("secondary_interact"):
+				collider.secondary_interact(self)
+
 func _physics_process(delta: float) -> void:
+	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		velocity.x = 0.0
+		velocity.z = 0.0
+		if not is_on_floor():
+			velocity += get_gravity() * delta
+		move_and_slide()
+		return
+
 	# Aplica gravidade padrão da Godot
 	if not is_on_floor():
 		velocity += get_gravity() * delta
@@ -130,9 +147,10 @@ func drop_item() -> void:
 
 	var item := held_item
 	held_item = null
-
-	var drop_transform := item.global_transform
 	hold_position.remove_child(item)
+
+	var forward_dir = -camera.global_transform.basis.z
+	var drop_pos = head.global_position + forward_dir * 0.7 - Vector3.UP * 0.2
 
 	var world: Node = get_parent()
 	if not world:
@@ -141,7 +159,8 @@ func drop_item() -> void:
 		world = get_tree().root
 
 	world.add_child(item)
-	item.global_transform = drop_transform
+	item.global_position = drop_pos
+	item.rotation = Vector3(0, rotation.y, 0)
 
 	if item.has_method("on_dropped"):
 		item.on_dropped()

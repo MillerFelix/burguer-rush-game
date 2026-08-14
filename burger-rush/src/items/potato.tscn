@@ -1,0 +1,28 @@
+[gd_scene format=3 uid="uid://potato_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/potato.gd" id="1_pot"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.2, 0.08, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="Material_Potato"]
+albedo_color = Color(0.92, 0.85, 0.55, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_Potato"]
+material = SubResource("Material_Potato")
+size = Vector3(0.2, 0.06, 0.2)
+
+[node name="Potato" type="StaticBody3D"]
+script = ExtResource("1_pot")
+item_id = "potato"
+display_name = "Batata"
+item_type = "ingredient"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+mesh = SubResource("BoxMesh_Potato")

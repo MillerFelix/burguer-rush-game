@@ -1,0 +1,333 @@
+[gd_scene format=3 uid="uid://computer_ui_scene_uid"]
+
+[ext_resource type="Script" path="res://src/ui/computer_ui.gd" id="1_comp_ui"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Panel"]
+bg_color = Color(0.1, 0.12, 0.16, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.22, 0.35, 0.52, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="ComputerUI" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("1_comp_ui")
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -520.0
+offset_top = -340.0
+offset_right = 520.0
+offset_bottom = 340.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_Panel")
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Header" type="HBoxContainer" parent="PanelContainer/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="PanelContainer/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "  🖥️ BURGER RUSH OS — CENTRAL ADMINISTRATIVA"
+
+[node name="CloseButton" type="Button" parent="PanelContainer/VBox/Header"]
+custom_minimum_size = Vector2(36, 36)
+layout_mode = 2
+text = "✕"
+
+[node name="TabContainer" type="TabContainer" parent="PanelContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="Visão Geral" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Visão Geral"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="DayTimeLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "📅 DIA 1 (Segunda-feira)  |  ⏰ 08:00  |  Status: PREPARAÇÃO"
+
+[node name="MoneyLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "💰 Caixa Disponível: $100.00"
+
+[node name="HSeparator1" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+layout_mode = 2
+
+[node name="StatsGrid" type="GridContainer" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+layout_mode = 2
+columns = 2
+theme_override_constants/h_separation = 30
+theme_override_constants/v_separation = 10
+
+[node name="RevenueLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+layout_mode = 2
+text = "💵 Vendas do Dia: $0.00"
+
+[node name="PurchasesLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+layout_mode = 2
+text = "🛒 Gastos em Compras Hoje: $0.00"
+
+[node name="WasteLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+layout_mode = 2
+text = "🗑️ Desperdício / Perdas: -$0.00"
+
+[node name="ProfitLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+layout_mode = 2
+text = "📈 Lucro do Dia: $0.00"
+
+[node name="OrdersLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+layout_mode = 2
+text = "📋 Pedidos Concluídos: 0"
+
+[node name="RatingLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+layout_mode = 2
+text = "⭐ Avaliação Média: ★★★★★ 5.0 / 5.0"
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+layout_mode = 2
+
+[node name="AlertsLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+layout_mode = 2
+text = "🟢 Alertas Operacionais: Tudo funcionando normalmente."
+
+[node name="Estoque" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Estoque"]
+layout_mode = 2
+
+[node name="StockVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Estoque/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Compras" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Compras"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Compras/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="PurchasesVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Compras/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="FeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Compras/VBox"]
+layout_mode = 2
+text = ""
+
+[node name="Cardápio" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Cardápio"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Cardápio/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MenuVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Cardápio/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="FeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Cardápio/VBox"]
+layout_mode = 2
+text = ""
+
+[node name="Equipamentos" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Equipamentos"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Equipamentos/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EquipmentVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Equipamentos/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="FeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Equipamentos/VBox"]
+layout_mode = 2
+text = ""
+
+[node name="Funcionários" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Funcionários"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TopHBox" type="HBoxContainer" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox"]
+layout_mode = 2
+
+[node name="HireButton" type="Button" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox/TopHBox"]
+layout_mode = 2
+text = "➕ Contratar Novo Funcionário ($100.00)"
+
+[node name="EmpFeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = ""
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox"]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="EmployeesVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Relatório Semanal" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Relatório Semanal"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="WeeklyHeaderLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "📊 RELATÓRIO DE FECHAMENTO SEMANAL"
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox"]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="WeeklyContentLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Nenhum fechamento semanal ocorrido ainda."
+
+[node name="Avaliações" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Avaliações"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="ReputationHeaderLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "⭐ SATISFAÇÃO GERAL: ★★★★★ 5.0 / 5.0 (0 avaliações)"
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox"]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ReviewsVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Finanças" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Finanças"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SummaryLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Finanças/VBox"]
+layout_mode = 2
+text = "💰 Saldo: $100.00"
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Finanças/VBox"]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Finanças/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="TransactionsLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Finanças/VBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Nenhuma transação registrada nesta sessão."
+
+[connection signal="pressed" from="PanelContainer/VBox/Header/CloseButton" to="." method="_on_close_button_pressed"]
+[connection signal="pressed" from="PanelContainer/VBox/TabContainer/Funcionários/VBox/TopHBox/HireButton" to="." method="_on_hire_button_pressed"]

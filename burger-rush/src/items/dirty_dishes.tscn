@@ -1,0 +1,44 @@
+[gd_scene format=3 uid="uid://dirty_dishes_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/dirty_dishes.gd" id="1_dishes"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 0.15
+radius = 0.22
+
+[sub_resource type="StandardMaterial3D" id="Material_Plate"]
+albedo_color = Color(0.75, 0.75, 0.78, 1)
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Plate"]
+material = SubResource("Material_Plate")
+top_radius = 0.22
+bottom_radius = 0.2
+height = 0.03
+
+[sub_resource type="StandardMaterial3D" id="Material_Scraps"]
+albedo_color = Color(0.4, 0.25, 0.15, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_Scraps"]
+material = SubResource("Material_Scraps")
+size = Vector3(0.12, 0.04, 0.1)
+
+[node name="DirtyDishes" type="StaticBody3D"]
+script = ExtResource("1_dishes")
+item_id = "dirty_dishes"
+display_name = "Pratos Sujos e Restos"
+item_type = "waste"
+prompt_text = "E — Recolher Pratos Sujos"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="PlateMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("CylinderMesh_Plate")
+
+[node name="ScrapsMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+mesh = SubResource("BoxMesh_Scraps")

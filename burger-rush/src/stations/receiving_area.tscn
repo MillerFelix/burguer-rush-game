@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://receiving_area_uid"]
+
+[ext_resource type="Script" path="res://src/stations/receiving_area.gd" id="1_receiving"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.3, 0.35, 1.3)
+
+[sub_resource type="StandardMaterial3D" id="Material_PalletWood"]
+albedo_color = Color(0.68, 0.54, 0.38, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_Plank"]
+material = SubResource("Material_PalletWood")
+size = Vector3(1.2, 0.03, 0.15)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Beam"]
+material = SubResource("Material_PalletWood")
+size = Vector3(0.08, 0.1, 1.2)
+
+[node name="ReceivingArea" type="StaticBody3D"]
+script = ExtResource("1_receiving")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Beam1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 0.05, 0)
+mesh = SubResource("BoxMesh_Beam")
+
+[node name="Beam2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.05, 0)
+mesh = SubResource("BoxMesh_Beam")
+
+[node name="Beam3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.05, 0)
+mesh = SubResource("BoxMesh_Beam")
+
+[node name="Plank1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, -0.45)
+mesh = SubResource("BoxMesh_Plank")
+
+[node name="Plank2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, -0.225)
+mesh = SubResource("BoxMesh_Plank")
+
+[node name="Plank3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0.0)
+mesh = SubResource("BoxMesh_Plank")
+
+[node name="Plank4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0.225)
+mesh = SubResource("BoxMesh_Plank")
+
+[node name="Plank5" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0.45)
+mesh = SubResource("BoxMesh_Plank")
+
+[node name="CrateSpawnSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.13, 0)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+billboard = 1
+double_sided = false
+text = "📦 RECEBIMENTO"
+font_size = 20
+outline_size = 5

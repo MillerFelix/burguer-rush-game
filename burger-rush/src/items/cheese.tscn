@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://cheese_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/cheese.gd" id="1_cheese"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.28, 0.02, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="Material_Cheese"]
+albedo_color = Color(1, 0.72, 0.1, 1)
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+material = SubResource("Material_Cheese")
+size = Vector3(0.28, 0.015, 0.28)
+
+[node name="Cheese" type="StaticBody3D"]
+script = ExtResource("1_cheese")
+item_id = "cheese"
+prompt_text = "E — Pegar Queijo"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_1")

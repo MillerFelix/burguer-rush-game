@@ -1,0 +1,118 @@
+[gd_scene format=3 uid="uid://drink_machine_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/drink_machine.gd" id="1_drink_machine"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.85, 1.35, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="Material_MachineBody"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+metallic = 0.5
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
+albedo_color = Color(0.85, 0.88, 0.92, 1)
+metallic = 0.95
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_DripTray"]
+albedo_color = Color(0.25, 0.27, 0.3, 1)
+metallic = 0.85
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_Nozzle"]
+albedo_color = Color(0.1, 0.1, 0.1, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_LogoPanel"]
+albedo_color = Color(0.9, 0.15, 0.15, 1)
+emission_enabled = true
+emission = Color(0.8, 0.1, 0.1, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
+material = SubResource("Material_MachineBody")
+size = Vector3(0.8, 0.85, 0.75)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopDispenser"]
+material = SubResource("Material_MachineBody")
+size = Vector3(0.76, 0.45, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Header"]
+material = SubResource("Material_LogoPanel")
+size = Vector3(0.72, 0.15, 0.05)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DripTray"]
+material = SubResource("Material_DripTray")
+size = Vector3(0.72, 0.08, 0.35)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Nozzle"]
+material = SubResource("Material_Nozzle")
+top_radius = 0.025
+bottom_radius = 0.015
+height = 0.08
+
+[sub_resource type="BoxMesh" id="BoxMesh_Lever"]
+material = SubResource("Material_Chrome")
+size = Vector3(0.02, 0.08, 0.04)
+
+[node name="DrinkMachine" type="StaticBody3D"]
+script = ExtResource("1_drink_machine")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="BaseCabinet" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+mesh = SubResource("BoxMesh_Cabinet")
+
+[node name="DripTray" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0.18)
+mesh = SubResource("BoxMesh_DripTray")
+
+[node name="TopDispenser" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, -0.1)
+mesh = SubResource("BoxMesh_TopDispenser")
+
+[node name="HeaderPanel" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0.16)
+mesh = SubResource("BoxMesh_Header")
+
+[node name="Nozzle1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2, 0.98, 0.12)
+mesh = SubResource("CylinderMesh_Nozzle")
+
+[node name="Lever1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, -0.2, 0.95, 0.1)
+mesh = SubResource("BoxMesh_Lever")
+
+[node name="Nozzle2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.98, 0.12)
+mesh = SubResource("CylinderMesh_Nozzle")
+
+[node name="Lever2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0.0, 0.95, 0.1)
+mesh = SubResource("BoxMesh_Lever")
+
+[node name="Nozzle3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.98, 0.12)
+mesh = SubResource("CylinderMesh_Nozzle")
+
+[node name="Lever3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0.2, 0.95, 0.1)
+mesh = SubResource("BoxMesh_Lever")
+
+[node name="CupSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0.18)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
+billboard = 1
+double_sided = false
+text = "🥤 MÁQUINA DE BEBIDAS"
+font_size = 20
+outline_size = 6

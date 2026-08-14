@@ -1,0 +1,89 @@
+[gd_scene format=3 uid="uid://fryer_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/fryer.gd" id="1_fryer"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.8, 1.1, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="Material_Stainless"]
+albedo_color = Color(0.68, 0.7, 0.74, 1)
+metallic = 0.85
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_DarkSteel"]
+albedo_color = Color(0.2, 0.22, 0.25, 1)
+metallic = 0.9
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_Oil"]
+transparency = 1
+albedo_color = Color(0.9, 0.65, 0.1, 0.85)
+roughness = 0.1
+metallic = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Material_BasketHandle"]
+albedo_color = Color(0.15, 0.15, 0.15, 1)
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
+material = SubResource("Material_Stainless")
+size = Vector3(0.75, 0.75, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_WellRim"]
+material = SubResource("Material_DarkSteel")
+size = Vector3(0.65, 0.08, 0.65)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Oil"]
+material = SubResource("Material_Oil")
+size = Vector3(0.55, 0.04, 0.55)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Basket"]
+material = SubResource("Material_Stainless")
+size = Vector3(0.48, 0.25, 0.48)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Handle"]
+material = SubResource("Material_BasketHandle")
+top_radius = 0.02
+bottom_radius = 0.02
+height = 0.35
+
+[node name="Fryer" type="StaticBody3D"]
+script = ExtResource("1_fryer")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("BoxMesh_Cabinet")
+
+[node name="WellRim" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0)
+mesh = SubResource("BoxMesh_WellRim")
+
+[node name="OilMesh" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.86, 0)
+mesh = SubResource("BoxMesh_Oil")
+
+[node name="BasketWire" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+mesh = SubResource("BoxMesh_Basket")
+
+[node name="BasketHandle" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 1.12, 0.32)
+mesh = SubResource("CylinderMesh_Handle")
+
+[node name="FryerSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+billboard = 1
+double_sided = false
+text = "🍟 FRITADEIRA
+🟢 Vazia"
+font_size = 20
+outline_size = 6

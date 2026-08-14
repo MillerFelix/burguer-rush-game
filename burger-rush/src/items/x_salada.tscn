@@ -1,0 +1,101 @@
+[gd_scene format=3 uid="uid://x_salada_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/x_salada.gd" id="1_xsalada"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 0.18
+radius = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_Bun"]
+albedo_color = Color(0.88, 0.62, 0.28, 1)
+roughness = 0.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Bottom"]
+material = SubResource("Material_Bun")
+top_radius = 0.19
+bottom_radius = 0.18
+height = 0.03
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="Material_Patty"]
+albedo_color = Color(0.42, 0.22, 0.12, 1)
+roughness = 0.4
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Patty"]
+material = SubResource("Material_Patty")
+top_radius = 0.18
+bottom_radius = 0.18
+height = 0.04
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="Material_Cheese"]
+albedo_color = Color(1, 0.72, 0.1, 1)
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_Cheese"]
+material = SubResource("Material_Cheese")
+size = Vector3(0.26, 0.012, 0.26)
+
+[sub_resource type="StandardMaterial3D" id="Material_Lettuce"]
+albedo_color = Color(0.25, 0.75, 0.2, 1)
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Lettuce"]
+material = SubResource("Material_Lettuce")
+top_radius = 0.19
+bottom_radius = 0.2
+height = 0.015
+radial_segments = 12
+
+[sub_resource type="StandardMaterial3D" id="Material_Tomato"]
+albedo_color = Color(0.9, 0.18, 0.15, 1)
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Tomato"]
+material = SubResource("Material_Tomato")
+top_radius = 0.16
+bottom_radius = 0.16
+height = 0.02
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Top"]
+material = SubResource("Material_Bun")
+top_radius = 0.17
+bottom_radius = 0.2
+height = 0.05
+radial_segments = 16
+
+[node name="XSalada" type="StaticBody3D"]
+script = ExtResource("1_xsalada")
+item_id = "x_salada"
+display_name = "X-Salada"
+item_type = "final_product"
+prompt_text = "E — Pegar X-Salada"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="BottomBun" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("CylinderMesh_Bottom")
+
+[node name="PattyMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("CylinderMesh_Patty")
+
+[node name="CheeseMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0, 0.076, 0)
+mesh = SubResource("BoxMesh_Cheese")
+
+[node name="LettuceMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
+mesh = SubResource("CylinderMesh_Lettuce")
+
+[node name="TomatoMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.108, 0)
+mesh = SubResource("CylinderMesh_Tomato")
+
+[node name="TopBun" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("CylinderMesh_Top")

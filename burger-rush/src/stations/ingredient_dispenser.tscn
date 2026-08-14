@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://ingredient_dispenser_uid"]
+
+[ext_resource type="Script" path="res://src/stations/ingredient_dispenser.gd" id="1_dispenser"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.65, 0.95, 0.65)
+
+[sub_resource type="StandardMaterial3D" id="Material_RackSteel"]
+albedo_color = Color(0.3, 0.32, 0.35, 1)
+metallic = 0.8
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_PlasticBin"]
+transparency = 1
+albedo_color = Color(0.9, 0.95, 1.0, 0.7)
+roughness = 0.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShelfStand"]
+material = SubResource("Material_RackSteel")
+size = Vector3(0.6, 0.65, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_StorageBin"]
+material = SubResource("Material_PlasticBin")
+size = Vector3(0.5, 0.22, 0.45)
+
+[node name="IngredientDispenser" type="StaticBody3D"]
+script = ExtResource("1_dispenser")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="ShelfStand" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.325, 0)
+mesh = SubResource("BoxMesh_ShelfStand")
+
+[node name="StorageBin" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.72, 0)
+mesh = SubResource("BoxMesh_StorageBin")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+billboard = 1
+double_sided = false
+text = "📦 INSUMO
+Qtd: 10/50"
+font_size = 18
+outline_size = 5

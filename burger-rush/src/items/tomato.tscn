@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://tomato_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/tomato.gd" id="1_tomato"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 0.03
+radius = 0.16
+
+[sub_resource type="StandardMaterial3D" id="Material_Tomato"]
+albedo_color = Color(0.9, 0.18, 0.15, 1)
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Tomato"]
+material = SubResource("Material_Tomato")
+top_radius = 0.16
+bottom_radius = 0.16
+height = 0.02
+radial_segments = 16
+
+[node name="Tomato" type="StaticBody3D"]
+script = ExtResource("1_tomato")
+item_id = "tomato"
+display_name = "Tomate"
+item_type = "ingredient"
+prompt_text = "E — Pegar Tomate"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("CylinderMesh_Tomato")

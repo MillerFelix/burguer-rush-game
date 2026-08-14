@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://lettuce_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/lettuce.gd" id="1_lettuce"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.28, 0.03, 0.28)
+
+[sub_resource type="StandardMaterial3D" id="Material_Lettuce"]
+albedo_color = Color(0.25, 0.75, 0.2, 1)
+roughness = 0.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Lettuce"]
+material = SubResource("Material_Lettuce")
+top_radius = 0.18
+bottom_radius = 0.2
+height = 0.02
+radial_segments = 12
+
+[node name="Lettuce" type="StaticBody3D"]
+script = ExtResource("1_lettuce")
+item_id = "lettuce"
+display_name = "Alface"
+item_type = "ingredient"
+prompt_text = "E — Pegar Alface"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("CylinderMesh_Lettuce")
