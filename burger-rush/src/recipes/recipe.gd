@@ -12,17 +12,21 @@ extends Resource
 @export var is_unlocked: bool = true
 
 func matches(ingredient_keys: Array) -> bool:
-	var sorted_req = []
-	for r in required_ingredients:
-		sorted_req.append(str(r))
-	sorted_req.sort()
+	var norm_req = _normalize_ingredient_keys(required_ingredients)
+	var norm_given = _normalize_ingredient_keys(ingredient_keys)
+	return norm_req == norm_given
 
-	var sorted_given = []
-	for g in ingredient_keys:
-		sorted_given.append(str(g))
-	sorted_given.sort()
-
-	return sorted_req == sorted_given
+func _normalize_ingredient_keys(keys: Array) -> Array:
+	var result: Array[String] = []
+	for k in keys:
+		var s = str(k)
+		if s == "bread":
+			result.append("bread_bottom")
+			result.append("bread_top")
+		else:
+			result.append(s)
+	result.sort()
+	return result
 
 func calculate_cost() -> float:
 	var inv = InventoryManager.get_instance()
@@ -46,8 +50,8 @@ func _fallback_ingredient_cost(ing_id: String) -> float:
 	match ing_id:
 		"patty":
 			return 5.0
-		"bread":
-			return 2.0
+		"bread", "bread_bottom", "bread_top":
+			return 1.0
 		"cheese":
 			return 2.0
 		"burger":

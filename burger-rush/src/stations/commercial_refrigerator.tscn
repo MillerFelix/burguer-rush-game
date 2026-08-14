@@ -1,0 +1,144 @@
+[gd_scene format=3 uid="uid://commercial_refrigerator_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/commercial_refrigerator.gd" id="1_fridge"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.5, 2.1, 0.85)
+
+[sub_resource type="StandardMaterial3D" id="Material_StainlessSteel"]
+albedo_color = Color(0.74, 0.76, 0.78, 1)
+metallic = 0.8
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_RefrigInterior"]
+albedo_color = Color(0.88, 0.92, 0.95, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_GlassDoor"]
+transparency = 1
+albedo_color = Color(0.85, 0.95, 1.0, 0.35)
+roughness = 0.1
+emission_enabled = true
+emission = Color(0.2, 0.5, 0.8, 1)
+emission_energy_multiplier = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
+albedo_color = Color(0.9, 0.92, 0.94, 1)
+metallic = 0.95
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_GrillWire"]
+albedo_color = Color(0.85, 0.87, 0.9, 1)
+metallic = 0.85
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_PattyBrown"]
+albedo_color = Color(0.35, 0.18, 0.14, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_BaconRed"]
+albedo_color = Color(0.65, 0.2, 0.18, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
+albedo_color = Color(0.15, 0.15, 0.18, 1)
+roughness = 0.65
+
+[sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
+material = SubResource("Material_StainlessSteel")
+size = Vector3(1.5, 2.0, 0.85)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Interior"]
+material = SubResource("Material_RefrigInterior")
+size = Vector3(1.36, 1.76, 0.68)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GlassDoor"]
+material = SubResource("Material_GlassDoor")
+size = Vector3(0.65, 1.76, 0.05)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_DoorHandle"]
+material = SubResource("Material_Chrome")
+top_radius = 0.015
+bottom_radius = 0.015
+height = 0.8
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_WireShelf"]
+material = SubResource("Material_GrillWire")
+size = Vector3(1.34, 0.02, 0.64)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_PattyStack"]
+material = SubResource("Material_PattyBrown")
+top_radius = 0.12
+bottom_radius = 0.12
+height = 0.06
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_BaconTray"]
+material = SubResource("Material_BaconRed")
+size = Vector3(0.35, 0.04, 0.45)
+
+[node name="CommercialRefrigerator" type="StaticBody3D"]
+script = ExtResource("1_fridge")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+mesh = SubResource("BoxMesh_Cabinet")
+
+[node name="Interior" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0.06)
+mesh = SubResource("BoxMesh_Interior")
+
+[node name="ShelfTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48, 0.06)
+mesh = SubResource("BoxMesh_WireShelf")
+
+[node name="ShelfMid" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, 0.06)
+mesh = SubResource("BoxMesh_WireShelf")
+
+[node name="ShelfBot" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0.06)
+mesh = SubResource("BoxMesh_WireShelf")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 1.05, 0.42)
+mesh = SubResource("BoxMesh_GlassDoor")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0, 0.04)
+mesh = SubResource("CylinderMesh_DoorHandle")
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.05, 0.42)
+mesh = SubResource("BoxMesh_GlassDoor")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0, 0.04)
+mesh = SubResource("CylinderMesh_DoorHandle")
+
+[node name="PattyStack1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.54, 0.06)
+mesh = SubResource("CylinderMesh_PattyStack")
+
+[node name="PattyStack2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.54, 0.06)
+mesh = SubResource("CylinderMesh_PattyStack")
+
+[node name="BaconTray" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54, 0.06)
+mesh = SubResource("BoxMesh_BaconTray")
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0.44)
+billboard = 1
+double_sided = false
+text = "❄️ GELADEIRA DE CARNES (3 SEÇÕES)"
+font_size = 20
+outline_size = 6

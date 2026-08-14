@@ -1,99 +1,162 @@
-[gd_scene format=3 uid="uid://packaging_station_uid"]
+[gd_scene format=3 uid="uid://packaging_station_scene_uid"]
 
-[ext_resource type="Script" path="res://src/stations/packaging_station.gd" id="1_packaging"]
+[ext_resource type="Script" path="res://src/stations/packaging_station.gd" id="1_pack"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.1, 1.05, 0.85)
+size = Vector3(0.7, 0.9, 2.2)
 
-[sub_resource type="StandardMaterial3D" id="Material_WoodTop"]
-albedo_color = Color(0.48, 0.32, 0.2, 1)
-roughness = 0.5
+[sub_resource type="StandardMaterial3D" id="Material_StainlessSteel"]
+albedo_color = Color(0.78, 0.8, 0.82, 1)
+metallic = 0.85
+roughness = 0.3
 
-[sub_resource type="StandardMaterial3D" id="Material_BlackSteel"]
-albedo_color = Color(0.18, 0.18, 0.2, 1)
-metallic = 0.8
-roughness = 0.35
+[sub_resource type="StandardMaterial3D" id="Material_SteelLegs"]
+albedo_color = Color(0.32, 0.35, 0.38, 1)
+metallic = 0.75
+roughness = 0.45
 
-[sub_resource type="StandardMaterial3D" id="Material_PaperRoll"]
-albedo_color = Color(0.9, 0.85, 0.75, 1)
-roughness = 0.8
+[sub_resource type="StandardMaterial3D" id="Material_CardboardKraft"]
+albedo_color = Color(0.78, 0.62, 0.44, 1)
+roughness = 0.85
 
-[sub_resource type="StandardMaterial3D" id="Material_Boxes"]
-albedo_color = Color(0.82, 0.2, 0.2, 1)
-roughness = 0.6
+[sub_resource type="StandardMaterial3D" id="Material_FriesBoxRed"]
+albedo_color = Color(0.85, 0.15, 0.12, 1)
+roughness = 0.4
 
-[sub_resource type="BoxMesh" id="BoxMesh_Top"]
-material = SubResource("Material_WoodTop")
-size = Vector3(1.05, 0.08, 0.8)
+[sub_resource type="StandardMaterial3D" id="Material_CupWhite"]
+albedo_color = Color(0.95, 0.96, 0.98, 1)
+roughness = 0.3
 
-[sub_resource type="BoxMesh" id="BoxMesh_Shelf"]
-material = SubResource("Material_BlackSteel")
-size = Vector3(1.0, 0.04, 0.75)
+[sub_resource type="StandardMaterial3D" id="Material_WrappingPaper"]
+albedo_color = Color(0.92, 0.9, 0.85, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
+albedo_color = Color(0.9, 0.92, 0.95, 1)
+metallic = 0.95
+roughness = 0.15
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
+material = SubResource("Material_StainlessSteel")
+size = Vector3(0.7, 0.05, 2.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Backsplash"]
+material = SubResource("Material_StainlessSteel")
+size = Vector3(0.04, 0.12, 2.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Leg"]
+material = SubResource("Material_SteelLegs")
+size = Vector3(0.05, 0.85, 0.05)
+
+[sub_resource type="BoxMesh" id="BoxMesh_UnderShelf"]
+material = SubResource("Material_SteelLegs")
+size = Vector3(0.6, 0.03, 2.1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Divider"]
+material = SubResource("Material_StainlessSteel")
+size = Vector3(0.6, 0.08, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BurgerBoxStack"]
+material = SubResource("Material_CardboardKraft")
+size = Vector3(0.24, 0.16, 0.24)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_PaperRoll"]
-material = SubResource("Material_PaperRoll")
+material = SubResource("Material_WrappingPaper")
 top_radius = 0.06
 bottom_radius = 0.06
+height = 0.3
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_FriesBoxStack"]
+material = SubResource("Material_FriesBoxRed")
+size = Vector3(0.18, 0.18, 0.14)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupDispenserTube"]
+material = SubResource("Material_Chrome")
+top_radius = 0.065
+bottom_radius = 0.065
 height = 0.45
+radial_segments = 16
 
-[sub_resource type="BoxMesh" id="BoxMesh_BoxStack"]
-material = SubResource("Material_Boxes")
-size = Vector3(0.22, 0.18, 0.22)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Leg"]
-material = SubResource("Material_BlackSteel")
-top_radius = 0.025
-bottom_radius = 0.025
-height = 0.85
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupWhite"]
+material = SubResource("Material_CupWhite")
+top_radius = 0.055
+bottom_radius = 0.042
+height = 0.14
+radial_segments = 16
 
 [node name="PackagingStation" type="StaticBody3D"]
-script = ExtResource("1_packaging")
+script = ExtResource("1_pack")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
 
 [node name="TableTop" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
-mesh = SubResource("BoxMesh_Top")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
+mesh = SubResource("BoxMesh_TableTop")
+
+[node name="Backsplash" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.96, 0)
+mesh = SubResource("BoxMesh_Backsplash")
+
+[node name="Divider1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, -0.36)
+mesh = SubResource("BoxMesh_Divider")
+
+[node name="Divider2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.36)
+mesh = SubResource("BoxMesh_Divider")
+
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.425, -1.05)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.425, -1.05)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3, 0.425, 1.05)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.3, 0.425, 1.05)
+mesh = SubResource("BoxMesh_Leg")
 
 [node name="UnderShelf" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
-mesh = SubResource("BoxMesh_Shelf")
-
-[node name="PaperRoll" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.32, 1.0, -0.22)
-mesh = SubResource("CylinderMesh_PaperRoll")
+mesh = SubResource("BoxMesh_UnderShelf")
 
 [node name="BoxStack" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 1.0, -0.22)
-mesh = SubResource("BoxMesh_BoxStack")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.98, -0.72)
+mesh = SubResource("BoxMesh_BurgerBoxStack")
 
-[node name="Leg1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.44, -0.35)
-mesh = SubResource("CylinderMesh_Leg")
+[node name="PaperRoll" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -0.22, 1.04, -0.72)
+mesh = SubResource("CylinderMesh_PaperRoll")
 
-[node name="Leg2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.44, -0.35)
-mesh = SubResource("CylinderMesh_Leg")
+[node name="FriesStack" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.99, 0)
+mesh = SubResource("BoxMesh_FriesBoxStack")
 
-[node name="Leg3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.44, 0.35)
-mesh = SubResource("CylinderMesh_Leg")
+[node name="CupDispenser" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 1.15, 0.72)
+mesh = SubResource("CylinderMesh_CupDispenserTube")
 
-[node name="Leg4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.44, 0.35)
-mesh = SubResource("CylinderMesh_Leg")
+[node name="CupStack" type="MeshInstance3D" parent="Model/CupDispenser"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.18, 0)
+mesh = SubResource("CylinderMesh_CupWhite")
 
 [node name="PackagingSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.9, -0.72)
 
 [node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
 billboard = 1
 double_sided = false
-text = "📦 EMBALAGEM LIVRE"
-font_size = 22
-outline_size = 6
+text = "📦 ESTAÇÃO DE EMBALAGEM"
+font_size = 18
+outline_size = 5

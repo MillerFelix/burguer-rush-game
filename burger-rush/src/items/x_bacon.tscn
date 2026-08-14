@@ -1,87 +1,24 @@
-[gd_scene format=3 uid="uid://x_bacon_scene_uid"]
+[gd_scene format=3 uid="uid://x_bacon_item_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/x_bacon.gd" id="1_xbacon"]
+[ext_resource type="Script" path="res://src/items/burger.gd" id="1_burger"]
+[ext_resource type="PackedScene" path="res://assets/models/food/burgerCheeseDouble.glb" id="2_baconburger_glb"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 0.17
-radius = 0.2
-
-[sub_resource type="StandardMaterial3D" id="Material_Bun"]
-albedo_color = Color(0.88, 0.62, 0.28, 1)
-roughness = 0.6
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Bottom"]
-material = SubResource("Material_Bun")
-top_radius = 0.19
-bottom_radius = 0.18
-height = 0.03
-radial_segments = 16
-
-[sub_resource type="StandardMaterial3D" id="Material_Patty"]
-albedo_color = Color(0.42, 0.22, 0.12, 1)
-roughness = 0.4
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Patty"]
-material = SubResource("Material_Patty")
-top_radius = 0.18
-bottom_radius = 0.18
-height = 0.04
-radial_segments = 16
-
-[sub_resource type="StandardMaterial3D" id="Material_Cheese"]
-albedo_color = Color(1, 0.72, 0.1, 1)
-roughness = 0.35
-
-[sub_resource type="BoxMesh" id="BoxMesh_Cheese"]
-material = SubResource("Material_Cheese")
-size = Vector3(0.26, 0.012, 0.26)
-
-[sub_resource type="StandardMaterial3D" id="Material_Bacon"]
-albedo_color = Color(0.65, 0.22, 0.12, 1)
-roughness = 0.5
-
-[sub_resource type="BoxMesh" id="BoxMesh_Bacon"]
-material = SubResource("Material_Bacon")
-size = Vector3(0.26, 0.015, 0.08)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Top"]
-material = SubResource("Material_Bun")
-top_radius = 0.17
-bottom_radius = 0.2
-height = 0.05
-radial_segments = 16
+height = 0.2
+radius = 0.16
 
 [node name="XBacon" type="StaticBody3D"]
-script = ExtResource("1_xbacon")
+script = ExtResource("1_burger")
 item_id = "x_bacon"
-display_name = "X-Bacon"
-item_type = "final_product"
+display_name = "X-Bacon Artesanal"
+item_type = "burger"
 prompt_text = "E — Pegar X-Bacon"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.085, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="BottomBun" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
-mesh = SubResource("CylinderMesh_Bottom")
+[node name="MeshInstance3D" type="Node3D" parent="."]
 
-[node name="PattyMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
-mesh = SubResource("CylinderMesh_Patty")
-
-[node name="CheeseMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0, 0.076, 0)
-mesh = SubResource("BoxMesh_Cheese")
-
-[node name="BaconMesh1" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 0, 0.09, 0)
-mesh = SubResource("BoxMesh_Bacon")
-
-[node name="BaconMesh2" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.258819, 0, -0.965926, 0, 1, 0, 0.965926, 0, 0.258819, 0, 0.095, 0)
-mesh = SubResource("BoxMesh_Bacon")
-
-[node name="TopBun" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.13, 0)
-mesh = SubResource("CylinderMesh_Top")
+[node name="burgerCheeseDouble" parent="MeshInstance3D" instance=ExtResource("2_baconburger_glb")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)

@@ -1,61 +1,34 @@
 [gd_scene format=3 uid="uid://trash_bin_scene_uid"]
 
 [ext_resource type="Script" path="res://src/stations/trash_bin.gd" id="1_trash"]
+[ext_resource type="PackedScene" path="res://assets/models/furniture/trashcan.glb" id="2_trashcan_glb"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 0.85
-radius = 0.3
-
-[sub_resource type="StandardMaterial3D" id="Material_Stainless"]
-albedo_color = Color(0.75, 0.77, 0.8, 1)
-metallic = 0.85
-roughness = 0.25
-
-[sub_resource type="StandardMaterial3D" id="Material_BlackRubber"]
-albedo_color = Color(0.12, 0.12, 0.14, 1)
-roughness = 0.6
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_CanBody"]
-material = SubResource("Material_Stainless")
-top_radius = 0.24
-bottom_radius = 0.24
-height = 0.72
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Lid"]
-material = SubResource("Material_BlackRubber")
-top_radius = 0.25
-bottom_radius = 0.25
-height = 0.05
-
-[sub_resource type="BoxMesh" id="BoxMesh_Pedal"]
-material = SubResource("Material_BlackRubber")
-size = Vector3(0.12, 0.03, 0.1)
+height = 0.95
+radius = 0.35
 
 [node name="TrashBin" type="StaticBody3D"]
 script = ExtResource("1_trash")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.475, 0)
 shape = SubResource("CylinderShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
 
-[node name="CanBody" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
-mesh = SubResource("CylinderMesh_CanBody")
+[node name="CanBody" type="Node3D" parent="Model"]
 
-[node name="Lid" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-mesh = SubResource("CylinderMesh_Lid")
+[node name="trashcan" parent="Model/CanBody" instance=ExtResource("2_trashcan_glb")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 0, 0, 0)
 
-[node name="Pedal" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0.22)
-mesh = SubResource("BoxMesh_Pedal")
+[node name="Pedal" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0.28)
 
 [node name="StatusLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
 billboard = 1
 double_sided = false
-text = "🗑️ LIXEIRA"
+text = "🗑️ LIXEIRA
+[E] Descartar Item"
 font_size = 20
-outline_size = 5
+outline_size = 6

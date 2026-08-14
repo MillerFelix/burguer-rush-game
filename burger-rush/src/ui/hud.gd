@@ -56,12 +56,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			_on_next_day_button_pressed()
 
 func show_prompt(text: String) -> void:
-	interaction_label.text = text
-	interaction_label.visible = true
+	if interaction_label:
+		interaction_label.text = text
+		interaction_label.visible = true
 
 func hide_prompt() -> void:
-	interaction_label.text = ""
-	interaction_label.visible = false
+	if interaction_label:
+		interaction_label.text = ""
+		interaction_label.visible = false
 
 func show_temporary_feedback(message: String, duration: float = 3.0) -> void:
 	if not feedback_label:

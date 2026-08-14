@@ -1,31 +1,91 @@
-[gd_scene format=3 uid="uid://bread_scene_uid"]
+[gd_scene format=3 uid="uid://bread_item_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/bread.gd" id="1_bread"]
+[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 0.08
-radius = 0.2
+height = 0.12
+radius = 0.12
 
-[sub_resource type="StandardMaterial3D" id="Material_Bread"]
-albedo_color = Color(0.88, 0.62, 0.28, 1)
-roughness = 0.7
+[sub_resource type="StandardMaterial3D" id="Material_BriocheCrust"]
+albedo_color = Color(0.86, 0.54, 0.22, 1)
+roughness = 0.4
+rim_enabled = true
+rim = 0.2
+rim_tint = 0.5
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-material = SubResource("Material_Bread")
-top_radius = 0.19
-bottom_radius = 0.2
-height = 0.07
-radial_segments = 16
+[sub_resource type="StandardMaterial3D" id="Material_BriocheCrumb"]
+albedo_color = Color(0.96, 0.88, 0.68, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Material_Sesame"]
+albedo_color = Color(0.98, 0.94, 0.82, 1)
+roughness = 0.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_TopBun"]
+material = SubResource("Material_BriocheCrust")
+radius = 0.115
+height = 0.12
+radial_segments = 20
+rings = 10
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_BottomBun"]
+material = SubResource("Material_BriocheCrust")
+top_radius = 0.11
+bottom_radius = 0.105
+height = 0.035
+radial_segments = 20
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CrumbLayer"]
+material = SubResource("Material_BriocheCrumb")
+top_radius = 0.112
+bottom_radius = 0.112
+height = 0.01
+radial_segments = 20
+
+[sub_resource type="SphereMesh" id="SphereMesh_SesameSeed"]
+material = SubResource("Material_Sesame")
+radius = 0.005
+height = 0.01
+radial_segments = 6
+rings = 4
 
 [node name="Bread" type="StaticBody3D"]
-script = ExtResource("1_bread")
+script = ExtResource("1_item")
 item_id = "bread"
-prompt_text = "E — Pegar Pão"
+display_name = "Pão Brioche"
+item_type = "ingredient"
+prompt_text = "E — Pegar Pão Brioche"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
-mesh = SubResource("CylinderMesh_1")
+[node name="MeshInstance3D" type="Node3D" parent="."]
+
+[node name="BottomBun" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.018, 0)
+mesh = SubResource("CylinderMesh_BottomBun")
+
+[node name="Crumb" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.038, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
+
+[node name="TopBun" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.065, 0)
+mesh = SubResource("SphereMesh_TopBun")
+
+[node name="Sesame1" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0.04, 0.12, 0.03)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="Sesame2" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(0.866025, 0, 0.5, 0.25, 0.866025, -0.433013, -0.433013, 0.5, 0.75, -0.04, 0.12, -0.03)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="Sesame3" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01, 0.125, -0.04)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="Sesame4" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.115, 0.04)
+mesh = SubResource("SphereMesh_SesameSeed")

@@ -1,0 +1,187 @@
+[gd_scene format=3 uid="uid://juice_machine_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/juice_machine.gd" id="1_juice"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.4, 1.95, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="Material_SatinSteel"]
+albedo_color = Color(0.76, 0.78, 0.8, 1)
+metallic = 0.75
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_TankAcrylic"]
+transparency = 1
+albedo_color = Color(0.92, 0.96, 0.98, 0.35)
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_JuiceOrange"]
+transparency = 1
+albedo_color = Color(0.95, 0.55, 0.08, 0.9)
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_JuiceGrape"]
+transparency = 1
+albedo_color = Color(0.42, 0.10, 0.55, 0.9)
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_JuicePassion"]
+transparency = 1
+albedo_color = Color(0.96, 0.82, 0.14, 0.9)
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
+albedo_color = Color(0.88, 0.9, 0.92, 1)
+metallic = 0.9
+roughness = 0.18
+
+[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="BoxMesh_ToeKick"]
+material = SubResource("Material_ToeKick")
+size = Vector3(1.38, 0.1, 0.76)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BaseCabinet"]
+material = SubResource("Material_SatinSteel")
+size = Vector3(1.4, 0.78, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DripTray"]
+material = SubResource("Material_SatinSteel")
+size = Vector3(1.36, 0.06, 0.28)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TankJar"]
+material = SubResource("Material_TankAcrylic")
+size = Vector3(0.36, 0.62, 0.44)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LiquidOrange"]
+material = SubResource("Material_JuiceOrange")
+size = Vector3(0.34, 0.56, 0.42)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LiquidGrape"]
+material = SubResource("Material_JuiceGrape")
+size = Vector3(0.34, 0.56, 0.42)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LiquidPassion"]
+material = SubResource("Material_JuicePassion")
+size = Vector3(0.34, 0.56, 0.42)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TankLid"]
+material = SubResource("Material_SatinSteel")
+size = Vector3(0.38, 0.04, 0.46)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Spout"]
+material = SubResource("Material_Chrome")
+top_radius = 0.02
+bottom_radius = 0.015
+height = 0.08
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_LeverHandle"]
+material = SubResource("Material_Chrome")
+top_radius = 0.012
+bottom_radius = 0.012
+height = 0.16
+radial_segments = 10
+
+[node name="JuiceMachine" type="StaticBody3D"]
+script = ExtResource("1_juice")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.975, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="ToeKick" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("BoxMesh_ToeKick")
+
+[node name="BaseCabinet" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49, 0)
+mesh = SubResource("BoxMesh_BaseCabinet")
+
+[node name="DripTray" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, 0.22)
+mesh = SubResource("BoxMesh_DripTray")
+
+[node name="Tank1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.34, -0.04)
+mesh = SubResource("BoxMesh_TankJar")
+
+[node name="Juice1" type="MeshInstance3D" parent="Model/Tank1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+mesh = SubResource("BoxMesh_LiquidOrange")
+
+[node name="Lid1" type="MeshInstance3D" parent="Model/Tank1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("BoxMesh_TankLid")
+
+[node name="Spout1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.02, 0.16)
+mesh = SubResource("CylinderMesh_Spout")
+
+[node name="Lever1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.08, 0.18)
+
+[node name="LeverMesh" type="MeshInstance3D" parent="Model/Lever1"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.06, 0)
+mesh = SubResource("CylinderMesh_LeverHandle")
+
+[node name="Tank2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.34, -0.04)
+mesh = SubResource("BoxMesh_TankJar")
+
+[node name="Juice2" type="MeshInstance3D" parent="Model/Tank2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+mesh = SubResource("BoxMesh_LiquidGrape")
+
+[node name="Lid2" type="MeshInstance3D" parent="Model/Tank2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("BoxMesh_TankLid")
+
+[node name="Spout2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, 0.16)
+mesh = SubResource("CylinderMesh_Spout")
+
+[node name="Lever2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, 0.18)
+
+[node name="LeverMesh" type="MeshInstance3D" parent="Model/Lever2"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.06, 0)
+mesh = SubResource("CylinderMesh_LeverHandle")
+
+[node name="Tank3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.34, -0.04)
+mesh = SubResource("BoxMesh_TankJar")
+
+[node name="Juice3" type="MeshInstance3D" parent="Model/Tank3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+mesh = SubResource("BoxMesh_LiquidPassion")
+
+[node name="Lid3" type="MeshInstance3D" parent="Model/Tank3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("BoxMesh_TankLid")
+
+[node name="Spout3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.02, 0.16)
+mesh = SubResource("CylinderMesh_Spout")
+
+[node name="Lever3" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.08, 0.18)
+
+[node name="LeverMesh" type="MeshInstance3D" parent="Model/Lever3"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.06, 0)
+mesh = SubResource("CylinderMesh_LeverHandle")
+
+[node name="CupSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.14)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
+billboard = 1
+double_sided = false
+text = "🍹 SUQUEIRA INDUSTRIAL (3 SABORES)"
+font_size = 20
+outline_size = 6

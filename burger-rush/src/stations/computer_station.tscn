@@ -1,136 +1,135 @@
-[gd_scene format=3 uid="uid://computer_station_uid"]
+[gd_scene format=3 uid="uid://computer_station_scene_uid"]
 
-[ext_resource type="Script" path="res://src/stations/computer_station.gd" id="1_computer"]
+[ext_resource type="Script" path="res://src/stations/computer_station.gd" id="1_comp"]
+[ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.1, 1.3, 0.85)
+size = Vector3(1.1, 1.2, 0.8)
 
 [sub_resource type="StandardMaterial3D" id="Material_DeskWood"]
-albedo_color = Color(0.72, 0.62, 0.5, 1)
-roughness = 0.5
+albedo_texture = ExtResource("2_wood_tex")
+uv1_scale = Vector3(2, 1, 1)
+roughness = 0.65
 
-[sub_resource type="StandardMaterial3D" id="Material_DeskFrame"]
-albedo_color = Color(0.2, 0.2, 0.22, 1)
-metallic = 0.85
+[sub_resource type="StandardMaterial3D" id="Material_SatinSteel"]
+albedo_color = Color(0.72, 0.74, 0.76, 1)
+metallic = 0.6
 roughness = 0.4
 
-[sub_resource type="StandardMaterial3D" id="Material_MonitorPlastic"]
-albedo_color = Color(0.12, 0.12, 0.14, 1)
-roughness = 0.35
+[sub_resource type="StandardMaterial3D" id="Material_TerminalPlastic"]
+albedo_color = Color(0.2, 0.22, 0.25, 1)
+roughness = 0.55
 
-[sub_resource type="StandardMaterial3D" id="Material_MonitorScreen"]
-albedo_color = Color(0.15, 0.35, 0.55, 1)
+[sub_resource type="StandardMaterial3D" id="Material_GlowingScreen"]
+albedo_color = Color(0.12, 0.45, 0.72, 1)
 emission_enabled = true
-emission = Color(0.2, 0.4, 0.6, 1)
-emission_energy_multiplier = 0.9
+emission = Color(0.12, 0.45, 0.72, 1)
+emission_energy_multiplier = 0.85
+roughness = 0.3
 
-[sub_resource type="StandardMaterial3D" id="Material_Keyboard"]
-albedo_color = Color(0.18, 0.18, 0.2, 1)
-roughness = 0.4
+[sub_resource type="StandardMaterial3D" id="Material_ReceiptPaper"]
+albedo_color = Color(0.96, 0.96, 0.94, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_DeskBody"]
+material = SubResource("Material_DeskWood")
+size = Vector3(1.0, 0.78, 0.74)
 
 [sub_resource type="BoxMesh" id="BoxMesh_DeskTop"]
-material = SubResource("Material_DeskWood")
-size = Vector3(1.05, 0.05, 0.75)
+material = SubResource("Material_SatinSteel")
+size = Vector3(1.04, 0.05, 0.78)
 
-[sub_resource type="BoxMesh" id="BoxMesh_MonitorFrame"]
-material = SubResource("Material_MonitorPlastic")
-size = Vector3(0.55, 0.35, 0.03)
+[sub_resource type="BoxMesh" id="BoxMesh_MonitorBezel"]
+material = SubResource("Material_TerminalPlastic")
+size = Vector3(0.58, 0.38, 0.04)
 
-[sub_resource type="BoxMesh" id="BoxMesh_MonitorScreen"]
-material = SubResource("Material_MonitorScreen")
-size = Vector3(0.51, 0.31, 0.01)
+[sub_resource type="BoxMesh" id="BoxMesh_MonitorGlass"]
+material = SubResource("Material_GlowingScreen")
+size = Vector3(0.52, 0.32, 0.01)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_MonitorPole"]
-material = SubResource("Material_MonitorPlastic")
-top_radius = 0.02
-bottom_radius = 0.02
-height = 0.18
+material = SubResource("Material_TerminalPlastic")
+top_radius = 0.03
+bottom_radius = 0.035
+height = 0.2
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_MonitorBase"]
-material = SubResource("Material_MonitorPlastic")
-top_radius = 0.1
-bottom_radius = 0.12
-height = 0.02
+[sub_resource type="BoxMesh" id="BoxMesh_MonitorBase"]
+material = SubResource("Material_TerminalPlastic")
+size = Vector3(0.24, 0.02, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Keyboard"]
-material = SubResource("Material_Keyboard")
-size = Vector3(0.38, 0.02, 0.14)
+material = SubResource("Material_TerminalPlastic")
+size = Vector3(0.42, 0.02, 0.16)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Mouse"]
-material = SubResource("Material_Keyboard")
-size = Vector3(0.06, 0.02, 0.1)
+material = SubResource("Material_TerminalPlastic")
+size = Vector3(0.07, 0.025, 0.11)
 
-[sub_resource type="BoxMesh" id="BoxMesh_PC"]
-material = SubResource("Material_DeskFrame")
-size = Vector3(0.18, 0.38, 0.42)
+[sub_resource type="BoxMesh" id="BoxMesh_ReceiptPrinter"]
+material = SubResource("Material_TerminalPlastic")
+size = Vector3(0.16, 0.14, 0.18)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_DeskLeg"]
-material = SubResource("Material_DeskFrame")
-top_radius = 0.025
-bottom_radius = 0.025
-height = 0.75
+[sub_resource type="BoxMesh" id="BoxMesh_PaperSlip"]
+material = SubResource("Material_ReceiptPaper")
+size = Vector3(0.08, 0.06, 0.01)
 
 [node name="ComputerStation" type="StaticBody3D"]
-script = ExtResource("1_computer")
+script = ExtResource("1_comp")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
 
+[node name="DeskBody" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.39, 0)
+mesh = SubResource("BoxMesh_DeskBody")
+
 [node name="DeskTop" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
 mesh = SubResource("BoxMesh_DeskTop")
 
+[node name="ReceiptPrinter" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.89, -0.15)
+mesh = SubResource("BoxMesh_ReceiptPrinter")
+
+[node name="PaperSlip" type="MeshInstance3D" parent="Model/ReceiptPrinter"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.08, 0.02)
+mesh = SubResource("BoxMesh_PaperSlip")
+
 [node name="MonitorBase" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, -0.15)
-mesh = SubResource("CylinderMesh_MonitorBase")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.83, -0.15)
+mesh = SubResource("BoxMesh_MonitorBase")
 
 [node name="MonitorPole" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.94, -0.15)
 mesh = SubResource("CylinderMesh_MonitorPole")
 
-[node name="MonitorFrame" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, -0.15)
-mesh = SubResource("BoxMesh_MonitorFrame")
+[node name="MonitorScreen" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0.05, 1.12, -0.12)
 
-[node name="MonitorScreen" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, -0.13)
-mesh = SubResource("BoxMesh_MonitorScreen")
+[node name="Bezel" type="MeshInstance3D" parent="Model/MonitorScreen"]
+mesh = SubResource("BoxMesh_MonitorBezel")
 
-[node name="Keyboard" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.78, 0.1)
+[node name="Glass" type="MeshInstance3D" parent="Model/MonitorScreen"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.02)
+mesh = SubResource("BoxMesh_MonitorGlass")
+
+[node name="Keyboard" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 0.835, 0.15)
+
+[node name="KeyboardMesh" type="MeshInstance3D" parent="Model/Keyboard"]
 mesh = SubResource("BoxMesh_Keyboard")
 
-[node name="Mouse" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.78, 0.1)
+[node name="MouseMesh" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0.835, 0.15)
 mesh = SubResource("BoxMesh_Mouse")
 
-[node name="TowerPC" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.35, 0.2, 0)
-mesh = SubResource("BoxMesh_PC")
-
-[node name="Leg1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.38, -0.3)
-mesh = SubResource("CylinderMesh_DeskLeg")
-
-[node name="Leg2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.38, -0.3)
-mesh = SubResource("CylinderMesh_DeskLeg")
-
-[node name="Leg3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.38, 0.3)
-mesh = SubResource("CylinderMesh_DeskLeg")
-
-[node name="Leg4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.38, 0.3)
-mesh = SubResource("CylinderMesh_DeskLeg")
-
 [node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 billboard = 1
 double_sided = false
-text = "💻 COMPUTADOR ADMINISTRATIVO"
+text = "🖥️ TERMINAL ADMINISTRATIVO"
 font_size = 20
 outline_size = 6

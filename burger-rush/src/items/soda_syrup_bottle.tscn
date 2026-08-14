@@ -1,43 +1,45 @@
 [gd_scene format=3 uid="uid://soda_syrup_bottle_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/soda_syrup_bottle.gd" id="1_syrup"]
+[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://assets/textures/cardboard_kraft.png" id="2_kraft_tex"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(0.2, 0.28, 0.2)
+size = Vector3(0.24, 0.32, 0.24)
 
-[sub_resource type="StandardMaterial3D" id="Material_Syrup"]
-albedo_color = Color(0.6, 0.1, 0.15, 1)
-roughness = 0.3
+[sub_resource type="StandardMaterial3D" id="Material_SyrupBox"]
+albedo_texture = ExtResource("2_kraft_tex")
+roughness = 0.8
 
-[sub_resource type="BoxMesh" id="BoxMesh_Bottle"]
-material = SubResource("Material_Syrup")
-size = Vector3(0.18, 0.24, 0.18)
-
-[sub_resource type="StandardMaterial3D" id="Material_Cap"]
-albedo_color = Color(0.9, 0.9, 0.9, 1)
+[sub_resource type="StandardMaterial3D" id="Material_ValveRed"]
+albedo_color = Color(0.85, 0.15, 0.15, 1)
 roughness = 0.4
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Cap"]
-material = SubResource("Material_Cap")
-top_radius = 0.035
-bottom_radius = 0.035
+[sub_resource type="BoxMesh" id="BoxMesh_Box"]
+material = SubResource("Material_SyrupBox")
+size = Vector3(0.22, 0.3, 0.22)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Valve"]
+material = SubResource("Material_ValveRed")
+top_radius = 0.02
+bottom_radius = 0.025
 height = 0.04
+radial_segments = 12
 
 [node name="SodaSyrupBottle" type="StaticBody3D"]
-script = ExtResource("1_syrup")
-item_id = "syrup_soda"
+script = ExtResource("1_item")
+item_id = "soda_syrup"
 display_name = "Xarope de Refrigerante"
-item_type = "ingredient"
+item_type = "maintenance"
 prompt_text = "E — Pegar Xarope de Refrigerante"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="BottleMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
-mesh = SubResource("BoxMesh_Bottle")
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("BoxMesh_Box")
 
-[node name="CapMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26, 0)
-mesh = SubResource("CylinderMesh_Cap")
+[node name="Valve" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.08, 0.12)
+mesh = SubResource("CylinderMesh_Valve")

@@ -1,0 +1,53 @@
+[gd_scene format=3 uid="uid://bread_bottom_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 0.05
+radius = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Material_BriocheCrust"]
+albedo_color = Color(0.86, 0.54, 0.22, 1)
+roughness = 0.4
+rim_enabled = true
+rim = 0.2
+rim_tint = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_BriocheCrumb"]
+albedo_color = Color(0.96, 0.88, 0.68, 1)
+roughness = 0.75
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_BottomBun"]
+material = SubResource("Material_BriocheCrust")
+top_radius = 0.112
+bottom_radius = 0.105
+height = 0.035
+radial_segments = 20
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CrumbLayer"]
+material = SubResource("Material_BriocheCrumb")
+top_radius = 0.112
+bottom_radius = 0.112
+height = 0.008
+radial_segments = 20
+
+[node name="BreadBottom" type="StaticBody3D"]
+script = ExtResource("1_item")
+item_id = "bread_bottom"
+display_name = "Base do Pão Brioche"
+item_type = "ingredient"
+prompt_text = "E — Pegar Base do Pão"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="MeshInstance3D" type="Node3D" parent="."]
+
+[node name="BottomBun" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.018, 0)
+mesh = SubResource("CylinderMesh_BottomBun")
+
+[node name="Crumb" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.037, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")

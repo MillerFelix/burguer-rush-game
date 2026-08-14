@@ -3,87 +3,180 @@
 [ext_resource type="Script" path="res://src/stations/fryer.gd" id="1_fryer"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(0.8, 1.1, 0.85)
+size = Vector3(1.8, 1.05, 0.8)
 
-[sub_resource type="StandardMaterial3D" id="Material_Stainless"]
-albedo_color = Color(0.68, 0.7, 0.74, 1)
-metallic = 0.85
-roughness = 0.25
+[sub_resource type="StandardMaterial3D" id="Material_SatinCabinet"]
+albedo_color = Color(0.76, 0.78, 0.8, 1)
+metallic = 0.5
+roughness = 0.42
 
-[sub_resource type="StandardMaterial3D" id="Material_DarkSteel"]
-albedo_color = Color(0.2, 0.22, 0.25, 1)
-metallic = 0.9
+[sub_resource type="StandardMaterial3D" id="Material_HotOil"]
+albedo_color = Color(0.85, 0.65, 0.15, 0.85)
+metallic = 0.3
+roughness = 0.15
+emission_enabled = true
+emission = Color(0.9, 0.65, 0.1, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_WireBasket"]
+albedo_color = Color(0.85, 0.85, 0.88, 1)
+metallic = 0.8
 roughness = 0.35
 
-[sub_resource type="StandardMaterial3D" id="Material_Oil"]
-transparency = 1
-albedo_color = Color(0.9, 0.65, 0.1, 0.85)
-roughness = 0.1
-metallic = 0.1
-
-[sub_resource type="StandardMaterial3D" id="Material_BasketHandle"]
-albedo_color = Color(0.15, 0.15, 0.15, 1)
+[sub_resource type="StandardMaterial3D" id="Material_HandleRed"]
+albedo_color = Color(0.85, 0.15, 0.15, 1)
 roughness = 0.5
 
+[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_ChromeAccent"]
+albedo_color = Color(0.88, 0.88, 0.9, 1)
+metallic = 0.7
+roughness = 0.3
+
 [sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
-material = SubResource("Material_Stainless")
-size = Vector3(0.75, 0.75, 0.8)
+material = SubResource("Material_SatinCabinet")
+size = Vector3(1.8, 0.78, 0.8)
 
-[sub_resource type="BoxMesh" id="BoxMesh_WellRim"]
-material = SubResource("Material_DarkSteel")
-size = Vector3(0.65, 0.08, 0.65)
+[sub_resource type="BoxMesh" id="BoxMesh_ToeKick"]
+material = SubResource("Material_ToeKick")
+size = Vector3(1.78, 0.1, 0.76)
 
-[sub_resource type="BoxMesh" id="BoxMesh_Oil"]
-material = SubResource("Material_Oil")
-size = Vector3(0.55, 0.04, 0.55)
+[sub_resource type="BoxMesh" id="BoxMesh_OilWell"]
+material = SubResource("Material_HotOil")
+size = Vector3(0.36, 0.04, 0.54)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Basket"]
-material = SubResource("Material_Stainless")
-size = Vector3(0.48, 0.25, 0.48)
+material = SubResource("Material_WireBasket")
+size = Vector3(0.32, 0.22, 0.48)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Handle"]
-material = SubResource("Material_BasketHandle")
+[sub_resource type="CylinderMesh" id="CylinderMesh_BasketHandle"]
+material = SubResource("Material_HandleRed")
 top_radius = 0.02
 bottom_radius = 0.02
-height = 0.35
+height = 0.24
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_ControlPanel"]
+material = SubResource("Material_SatinCabinet")
+size = Vector3(1.76, 0.12, 0.02)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Knob"]
+material = SubResource("Material_HandleRed")
+top_radius = 0.03
+bottom_radius = 0.035
+height = 0.025
+radial_segments = 14
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Leg"]
+material = SubResource("Material_ChromeAccent")
+top_radius = 0.035
+bottom_radius = 0.03
+height = 0.12
+radial_segments = 12
 
 [node name="Fryer" type="StaticBody3D"]
 script = ExtResource("1_fryer")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
 
+[node name="ToeKick" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("BoxMesh_ToeKick")
+
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82, 0.06, 0.32)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 0.06, 0.32)
+mesh = SubResource("CylinderMesh_Leg")
+
 [node name="Cabinet" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49, 0)
 mesh = SubResource("BoxMesh_Cabinet")
 
-[node name="WellRim" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.84, 0)
-mesh = SubResource("BoxMesh_WellRim")
+[node name="ControlPanel" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0.405)
+mesh = SubResource("BoxMesh_ControlPanel")
 
 [node name="OilMesh" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.86, 0)
-mesh = SubResource("BoxMesh_Oil")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.585, 0.82, -0.05)
+mesh = SubResource("BoxMesh_OilWell")
+
+[node name="OilMesh2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.195, 0.82, -0.05)
+mesh = SubResource("BoxMesh_OilWell")
+
+[node name="OilMesh3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.195, 0.82, -0.05)
+mesh = SubResource("BoxMesh_OilWell")
+
+[node name="OilMesh4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.585, 0.82, -0.05)
+mesh = SubResource("BoxMesh_OilWell")
 
 [node name="BasketWire" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.585, 0.88, -0.05)
+mesh = SubResource("BoxMesh_Basket")
+
+[node name="BasketWire2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.195, 0.88, -0.05)
+mesh = SubResource("BoxMesh_Basket")
+
+[node name="BasketWire3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.195, 0.88, -0.05)
+mesh = SubResource("BoxMesh_Basket")
+
+[node name="BasketWire4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.585, 0.88, -0.05)
 mesh = SubResource("BoxMesh_Basket")
 
 [node name="BasketHandle" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 1.12, 0.32)
-mesh = SubResource("CylinderMesh_Handle")
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -0.585, 1.05, 0.28)
+mesh = SubResource("CylinderMesh_BasketHandle")
+
+[node name="BasketHandle2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -0.195, 1.05, 0.28)
+mesh = SubResource("CylinderMesh_BasketHandle")
+
+[node name="BasketHandle3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0.195, 1.05, 0.28)
+mesh = SubResource("CylinderMesh_BasketHandle")
+
+[node name="BasketHandle4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0.585, 1.05, 0.28)
+mesh = SubResource("CylinderMesh_BasketHandle")
+
+[node name="Knob1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.585, 0.78, 0.42)
+mesh = SubResource("CylinderMesh_Knob")
+
+[node name="Knob2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.195, 0.78, 0.42)
+mesh = SubResource("CylinderMesh_Knob")
+
+[node name="Knob3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.195, 0.78, 0.42)
+mesh = SubResource("CylinderMesh_Knob")
+
+[node name="Knob4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.585, 0.78, 0.42)
+mesh = SubResource("CylinderMesh_Knob")
 
 [node name="FryerSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, -0.05)
 
 [node name="StatusLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 billboard = 1
 double_sided = false
-text = "🍟 FRITADEIRA
-🟢 Vazia"
+text = "🍟 FRITADEIRA INDUSTRIAL (4 CESTOS)"
 font_size = 20
 outline_size = 6

@@ -1,55 +1,68 @@
 [gd_scene format=3 uid="uid://restaurant_table_uid"]
 
 [ext_resource type="Script" path="res://src/stations/restaurant_table.gd" id="1_table"]
+[ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
 height = 1.0
 radius = 0.85
 
 [sub_resource type="StandardMaterial3D" id="Material_WoodTable"]
-albedo_color = Color(0.46, 0.3, 0.18, 1)
+albedo_texture = ExtResource("2_wood_tex")
+uv1_scale = Vector3(2, 2, 2)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Material_DarkIron"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+metallic = 0.6
 roughness = 0.45
 
-[sub_resource type="StandardMaterial3D" id="Material_BlackIron"]
-albedo_color = Color(0.15, 0.15, 0.16, 1)
-metallic = 0.9
-roughness = 0.35
+[sub_resource type="StandardMaterial3D" id="Material_ChairRedCushion"]
+albedo_color = Color(0.82, 0.16, 0.16, 1)
+roughness = 0.65
 
-[sub_resource type="StandardMaterial3D" id="Material_ChairCushion"]
-albedo_color = Color(0.65, 0.18, 0.18, 1)
-roughness = 0.6
+[sub_resource type="StandardMaterial3D" id="Material_CeramicNapkin"]
+albedo_color = Color(0.95, 0.95, 0.95, 1)
+roughness = 0.35
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_TableTop"]
 material = SubResource("Material_WoodTable")
 top_radius = 0.55
-bottom_radius = 0.55
+bottom_radius = 0.53
 height = 0.05
+radial_segments = 24
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Pole"]
-material = SubResource("Material_BlackIron")
+[sub_resource type="CylinderMesh" id="CylinderMesh_TablePole"]
+material = SubResource("Material_DarkIron")
 top_radius = 0.04
-bottom_radius = 0.04
+bottom_radius = 0.045
 height = 0.75
+radial_segments = 16
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Base"]
-material = SubResource("Material_BlackIron")
-top_radius = 0.25
+[sub_resource type="CylinderMesh" id="CylinderMesh_TableBase"]
+material = SubResource("Material_DarkIron")
+top_radius = 0.24
 bottom_radius = 0.28
 height = 0.04
+radial_segments = 20
 
 [sub_resource type="BoxMesh" id="BoxMesh_ChairSeat"]
-material = SubResource("Material_ChairCushion")
-size = Vector3(0.38, 0.06, 0.38)
+material = SubResource("Material_ChairRedCushion")
+size = Vector3(0.4, 0.06, 0.4)
 
 [sub_resource type="BoxMesh" id="BoxMesh_ChairBack"]
-material = SubResource("Material_WoodTable")
-size = Vector3(0.38, 0.35, 0.04)
+material = SubResource("Material_ChairRedCushion")
+size = Vector3(0.4, 0.32, 0.05)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_ChairLeg"]
-material = SubResource("Material_BlackIron")
-top_radius = 0.015
-bottom_radius = 0.015
+material = SubResource("Material_DarkIron")
+top_radius = 0.016
+bottom_radius = 0.012
 height = 0.45
+
+[sub_resource type="BoxMesh" id="BoxMesh_NapkinHolder"]
+material = SubResource("Material_CeramicNapkin")
+size = Vector3(0.08, 0.08, 0.06)
 
 [node name="RestaurantTable" type="StaticBody3D"]
 script = ExtResource("1_table")
@@ -62,15 +75,19 @@ shape = SubResource("CylinderShape3D_1")
 
 [node name="TableBase" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
-mesh = SubResource("CylinderMesh_Base")
+mesh = SubResource("CylinderMesh_TableBase")
 
 [node name="TablePole" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
-mesh = SubResource("CylinderMesh_Pole")
+mesh = SubResource("CylinderMesh_TablePole")
 
 [node name="TableTop" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0)
 mesh = SubResource("CylinderMesh_TableTop")
+
+[node name="Centerpiece" type="MeshInstance3D" parent="Model/TableTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.065, 0)
+mesh = SubResource("BoxMesh_NapkinHolder")
 
 [node name="Chair1" type="Node3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.65)
@@ -80,23 +97,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 mesh = SubResource("BoxMesh_ChairSeat")
 
 [node name="Back" type="MeshInstance3D" parent="Model/Chair1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0.17)
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.62, 0.18)
 mesh = SubResource("BoxMesh_ChairBack")
 
 [node name="Leg1" type="MeshInstance3D" parent="Model/Chair1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.225, -0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Leg2" type="MeshInstance3D" parent="Model/Chair1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.225, -0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Leg3" type="MeshInstance3D" parent="Model/Chair1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, 0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.225, 0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Leg4" type="MeshInstance3D" parent="Model/Chair1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, 0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.225, 0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Chair2" type="Node3D" parent="Model"]
@@ -107,36 +124,36 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 mesh = SubResource("BoxMesh_ChairSeat")
 
 [node name="Back" type="MeshInstance3D" parent="Model/Chair2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0.17)
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.62, 0.18)
 mesh = SubResource("BoxMesh_ChairBack")
 
 [node name="Leg1" type="MeshInstance3D" parent="Model/Chair2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.225, -0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Leg2" type="MeshInstance3D" parent="Model/Chair2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, -0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.225, -0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Leg3" type="MeshInstance3D" parent="Model/Chair2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, 0.225, 0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.225, 0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Leg4" type="MeshInstance3D" parent="Model/Chair2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.225, 0.15)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.225, 0.16)
 mesh = SubResource("CylinderMesh_ChairLeg")
 
 [node name="Seat" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0.65)
 
 [node name="PlateSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.81, 0)
 
 [node name="StatusLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 billboard = 1
 double_sided = false
-text = "🍽️ Mesa #1
-🟢 Disponível"
+text = "Mesa 1
+🟢 Limpa e Livre"
 font_size = 20
 outline_size = 6

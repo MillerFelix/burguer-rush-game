@@ -139,7 +139,29 @@ static func _initialize_recipes() -> void:
 	sprite_recipe.is_unlocked = true
 	_recipes.append(sprite_recipe)
 
-	# 7d. Refrigerante Genérico (compatibilidade)
+	# 7d. Refrigerante Uva
+	var grape_soda_recipe = Recipe.new()
+	grape_soda_recipe.id = "soda_grape"
+	grape_soda_recipe.display_name = "Refrigerante Uva"
+	grape_soda_recipe.category = "drink"
+	grape_soda_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
+	grape_soda_recipe.result_scene = soda_scene
+	grape_soda_recipe.base_price = 6.0
+	grape_soda_recipe.is_unlocked = true
+	_recipes.append(grape_soda_recipe)
+
+	# 7e. Refrigerante Cola Zero
+	var zero_soda_recipe = Recipe.new()
+	zero_soda_recipe.id = "soda_cola_zero"
+	zero_soda_recipe.display_name = "Refrigerante Cola Zero"
+	zero_soda_recipe.category = "drink"
+	zero_soda_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
+	zero_soda_recipe.result_scene = soda_scene
+	zero_soda_recipe.base_price = 6.0
+	zero_soda_recipe.is_unlocked = true
+	_recipes.append(zero_soda_recipe)
+
+	# 7f. Refrigerante Genérico (compatibilidade)
 	var soda_recipe = Recipe.new()
 	soda_recipe.id = "soda"
 	soda_recipe.display_name = "Refrigerante"
@@ -149,6 +171,39 @@ static func _initialize_recipes() -> void:
 	soda_recipe.base_price = 6.0
 	soda_recipe.is_unlocked = true
 	_recipes.append(soda_recipe)
+
+	# 7g. Suco de Laranja
+	var juice_orange_recipe = Recipe.new()
+	juice_orange_recipe.id = "juice_orange"
+	juice_orange_recipe.display_name = "Suco de Laranja"
+	juice_orange_recipe.category = "drink"
+	juice_orange_recipe.required_ingredients.assign(["cup_empty", "cup_lid"])
+	juice_orange_recipe.result_scene = soda_scene
+	juice_orange_recipe.base_price = 7.0
+	juice_orange_recipe.is_unlocked = true
+	_recipes.append(juice_orange_recipe)
+
+	# 7h. Suco de Uva
+	var juice_grape_recipe = Recipe.new()
+	juice_grape_recipe.id = "juice_grape"
+	juice_grape_recipe.display_name = "Suco de Uva"
+	juice_grape_recipe.category = "drink"
+	juice_grape_recipe.required_ingredients.assign(["cup_empty", "cup_lid"])
+	juice_grape_recipe.result_scene = soda_scene
+	juice_grape_recipe.base_price = 7.0
+	juice_grape_recipe.is_unlocked = true
+	_recipes.append(juice_grape_recipe)
+
+	# 7i. Suco de Maracujá
+	var juice_passion_recipe = Recipe.new()
+	juice_passion_recipe.id = "juice_passion"
+	juice_passion_recipe.display_name = "Suco de Maracujá"
+	juice_passion_recipe.category = "drink"
+	juice_passion_recipe.required_ingredients.assign(["cup_empty", "cup_lid"])
+	juice_passion_recipe.result_scene = soda_scene
+	juice_passion_recipe.base_price = 7.0
+	juice_passion_recipe.is_unlocked = true
+	_recipes.append(juice_passion_recipe)
 
 	# 8. Combo Clássico: Cheeseburger + Batata + Refrigerante Cola
 	var combo_classic = Recipe.new()

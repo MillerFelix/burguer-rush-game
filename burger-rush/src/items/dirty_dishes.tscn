@@ -1,44 +1,27 @@
-[gd_scene format=3 uid="uid://dirty_dishes_scene_uid"]
+[gd_scene format=3 uid="uid://dirty_dishes_item_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/dirty_dishes.gd" id="1_dishes"]
+[ext_resource type="Script" path="res://src/items/dirty_dishes.gd" id="1_dirty"]
+[ext_resource type="PackedScene" path="res://assets/models/food/plate.glb" id="2_plate_glb"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 0.15
+height = 0.12
 radius = 0.22
 
-[sub_resource type="StandardMaterial3D" id="Material_Plate"]
-albedo_color = Color(0.75, 0.75, 0.78, 1)
-roughness = 0.5
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Plate"]
-material = SubResource("Material_Plate")
-top_radius = 0.22
-bottom_radius = 0.2
-height = 0.03
-
-[sub_resource type="StandardMaterial3D" id="Material_Scraps"]
-albedo_color = Color(0.4, 0.25, 0.15, 1)
-roughness = 0.8
-
-[sub_resource type="BoxMesh" id="BoxMesh_Scraps"]
-material = SubResource("Material_Scraps")
-size = Vector3(0.12, 0.04, 0.1)
-
 [node name="DirtyDishes" type="StaticBody3D"]
-script = ExtResource("1_dishes")
+script = ExtResource("1_dirty")
 item_id = "dirty_dishes"
-display_name = "Pratos Sujos e Restos"
-item_type = "waste"
-prompt_text = "E — Recolher Pratos Sujos"
+display_name = "Prato Usado"
+item_type = "dishes"
+prompt_text = "E — Recolher Pratos"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="PlateMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
-mesh = SubResource("CylinderMesh_Plate")
+[node name="MeshInstance3D" type="Node3D" parent="."]
 
-[node name="ScrapsMesh" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
-mesh = SubResource("BoxMesh_Scraps")
+[node name="plate1" parent="MeshInstance3D" instance=ExtResource("2_plate_glb")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 0, 0)
+
+[node name="plate2" parent="MeshInstance3D" instance=ExtResource("2_plate_glb")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0.04, 0)

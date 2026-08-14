@@ -1,120 +1,178 @@
 class_name PackagingStation
 extends StaticBody3D
 
-@onready var slot: Node3D = $PackagingSlot
+@onready var packaging_slot: Node3D = $PackagingSlot
 @onready var status_label: Label3D = $StatusLabel
 
 var packaged_item: Node3D = null
 
+var items_data: Array[Dictionary] = [
+	{
+		"id": "burger_box",
+		"name": "Embalagem de Lanche",
+		"icon": "📦",
+		"scene": preload("res://src/items/burger_box.tscn")
+	},
+	{
+		"id": "potato_box",
+		"name": "Embalagem de Batata",
+		"icon": "🍟",
+		"scene": preload("res://src/items/potato_box.tscn")
+	},
+	{
+		"id": "cup_empty",
+		"name": "Copo de Bebida",
+		"icon": "🥤",
+		"scene": preload("res://src/items/drink_cup.tscn")
+	}
+]
+var active_item_index: int = 0
+
 func _ready() -> void:
-	var inv = InventoryManager.get_instance()
-	if inv:
-		inv.stock_changed.connect(_on_stock_changed)
-	_update_status()
+	_update_label()
+
+func get_aimed_item_index(player: Node = null) -> int:
+	if not player:
+		return active_item_index
+	var ray = player.get_node_or_null("Head/Camera3D/RayCast3D")
+	if ray and ray is RayCast3D and ray.is_colliding():
+		var col_pt = to_local(ray.get_collision_point())
+		# Bancada ao longo do eixo Z local:
+		# Z < -0.35 -> Lanche, -0.35 <= Z <= 0.35 -> Batata, Z > 0.35 -> Copos
+		if col_pt.z < -0.35:
+			return 0 # Lanche
+		elif col_pt.z > 0.35:
+			return 2 # Copos
+		else:
+			return 1 # Batata
+	return active_item_index
+
+func cycle_item(worker: Node3D = null) -> String:
+	active_item_index = (active_item_index + 1) % items_data.size()
+	var itm = items_data[active_item_index]
+	if worker:
+		_show_feedback(worker, "📦 Embalagem selecionada: %s %s" % [itm["icon"], itm["name"]])
+	_update_label()
+	return itm["name"]
 
 func get_interaction_prompt(player: Node = null) -> String:
-	if packaged_item:
-		var name_str = packaged_item.get_display_name() if packaged_item.has_method("get_display_name") else "Lanche"
+	if not player:
+		return ""
 
-		if player and player.get("held_item") != null:
-			var held = player.get("held_item")
-			if held is BurgerBox:
-				return "E — Embalar %s na Caixa" % name_str
-			return ""
+	var held = player.get("held_item")
 
-		if packaged_item.get("is_packaged") == true:
-			return "E — Pegar %s Embalado" % name_str
-		else:
-			var inv = InventoryManager.get_instance()
-			var stock = inv.get_stock("burger_box") if inv else 0
-			if stock > 0:
-				return "E — Embalar %s com Caixa do Estoque" % name_str
-			else:
-				return "E — Pegar %s (Sem Embalagem)" % name_str
+	# 1. Se houver item embalado pronto para retirar da bancada
+	if packaged_item != null:
+		var d_name = packaged_item.get_display_name() if packaged_item.has_method("get_display_name") else packaged_item.name
+		if held == null:
+			return "E — Pegar %s Embalado" % d_name
+		return ""
 
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held.get("item_type") == "final_product" and held.get("item_id") != "fries" and held.get("item_id") != "soda":
-			var name_str = held.get_display_name() if held.has_method("get_display_name") else "Lanche"
-			return "E — Colocar %s na Bancada de Embalagem" % name_str
-		elif held is BurgerBox:
-			return "E — Colocar Caixa na Bancada"
+	# 2. Se o jogador estiver segurando copo aberto para selar com tampa
+	if held != null and held.has_method("has_lid") and not held.has_lid():
+		var flv = held.get("flavor") if held.get("flavor") != null else "Bebida"
+		return "E — Selar %s com Tampa e Canudo" % flv
+
+	# 3. Se o jogador estiver segurando comida/lanche para embalar
+	if held != null and (held.has_method("can_be_packaged") or str(held.get("item_type")) in ["final_product", "food", "burger", "fries"]):
+		var d_name = held.get_display_name() if held.has_method("get_display_name") else held.name
+		return "E — Embalar %s para Viagem" % d_name
+
+	# 4. Mão vazia: pode pegar embalagem ou copo diretamente
+	if held == null:
+		var aimed_idx = get_aimed_item_index(player)
+		var itm = items_data[aimed_idx]
+		return "E — Pegar %s %s | [F] Alternar" % [itm["icon"], itm["name"]]
 
 	return ""
 
 func interact(player: Node3D) -> void:
-	var inv = InventoryManager.get_instance()
+	var held = player.get("held_item")
 
-	# Caso haja item na bancada
-	if packaged_item:
-		var held = player.get("held_item")
-
-		# Se o jogador estiver segurando a caixa de hambúrguer
-		if held is BurgerBox:
-			if player.has_method("take_held_item"):
-				var box = player.take_held_item()
-				box.queue_free()
-				packaged_item.set("is_packaged", true)
-				_show_feedback(player, "📦 %s embalado na caixa com sucesso!" % packaged_item.get_display_name())
-				_update_status()
-				return
-
-		# Se o jogador estiver com as mãos livres
-		if held == null and player.has_method("pick_up"):
-			if packaged_item.get("is_packaged") != true:
-				if inv and inv.has_stock("burger_box", 1):
-					inv.consume_stock("burger_box", 1)
-					packaged_item.set("is_packaged", true)
-					_show_feedback(player, "📦 Caixa retirada do estoque e lanche embalado!")
-				else:
-					_show_feedback(player, "⚠️ Lanche retirado sem embalagem! Compre caixas no computador.")
-
-			var item = packaged_item
-			packaged_item = null
-			slot.remove_child(item)
+	# 1. Retirar item embalado da bancada
+	if packaged_item != null and held == null:
+		var item = packaged_item
+		packaged_item = null
+		if packaging_slot and item.get_parent() == packaging_slot:
+			packaging_slot.remove_child(item)
+		if player.has_method("pick_up"):
 			player.pick_up(item)
-			_update_status()
-			return
+		_update_label()
+		_show_feedback(player, "📦 Pegou %s embalado!" % (item.get_display_name() if item.has_method("get_display_name") else item.name))
 		return
 
-	# Caso a bancada esteja livre e o jogador coloque o lanche
-	if player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held.get("item_type") == "final_product" and held.get("item_id") != "fries" and held.get("item_id") != "soda":
-			if player.has_method("take_held_item"):
-				var item = player.take_held_item()
-				packaged_item = item
-				slot.add_child(item)
-				item.position = Vector3.ZERO
-				item.rotation = Vector3.ZERO
-				if item.has_method("on_placed_in_station"):
-					item.on_placed_in_station()
-				_show_feedback(player, "🍔 %s colocado na bancada de embalagem." % item.get_display_name())
-				_update_status()
+	# 2. Selar Copo de Bebida com Tampa e Canudo
+	if held != null and held.has_method("has_lid") and not held.has_lid():
+		if held.has_method("seal_cup"):
+			held.seal_cup()
+		elif held.get("lid_mesh") != null:
+			held.lid_mesh.visible = true
+			if "is_sealed" in held:
+				held.is_sealed = true
+		_update_label()
+		_show_feedback(player, "🥤 Bebida selada com sucesso!")
+		return
 
-func _on_stock_changed(item_id: String, _qty: int) -> void:
-	if item_id == "burger_box":
-		_update_status()
+	# 3. Embalar sanduíche / batata na bancada
+	if held != null and (held.has_method("can_be_packaged") or str(held.get("item_type")) in ["final_product", "food", "burger", "fries"]):
+		if player.has_method("take_held_item"):
+			var food_item = player.take_held_item()
+			if food_item:
+				_package_item_on_station(food_item)
+				_show_feedback(player, "📦 %s embalado para viagem!" % (food_item.get_display_name() if food_item.has_method("get_display_name") else food_item.name))
+		return
 
-func _update_status() -> void:
+	# 4. Pegar Embalagem ou Copo individual com as mãos livres
+	if held == null:
+		var aimed_idx = get_aimed_item_index(player)
+		active_item_index = aimed_idx
+		var itm = items_data[aimed_idx]
+		var item_scene: PackedScene = itm["scene"]
+		if item_scene:
+			var new_item = item_scene.instantiate()
+			if is_inside_tree() and get_tree().root:
+				get_tree().root.add_child(new_item)
+			else:
+				add_child(new_item)
+			if player.has_method("pick_up"):
+				player.pick_up(new_item)
+			_show_feedback(player, "📦 Pegou %s" % itm["name"])
+			_update_label()
+
+func _package_item_on_station(food_item: Node3D) -> void:
+	var prev_parent = food_item.get_parent()
+	if prev_parent:
+		prev_parent.remove_child(food_item)
+
+	if packaging_slot:
+		packaging_slot.add_child(food_item)
+	else:
+		add_child(food_item)
+
+	food_item.position = Vector3.ZERO
+	food_item.rotation = Vector3.ZERO
+
+	if food_item.has_method("set_packaged"):
+		food_item.set_packaged(true)
+	elif "is_packaged" in food_item:
+		food_item.is_packaged = true
+
+	packaged_item = food_item
+	_update_label()
+
+func _update_label() -> void:
 	if not status_label:
 		return
 
-	var inv = InventoryManager.get_instance()
-	var box_stock = inv.get_stock("burger_box") if inv else 0
+	if packaged_item != null:
+		var d_name = packaged_item.get_display_name() if packaged_item.has_method("get_display_name") else packaged_item.name
+		status_label.text = "📦 %s Embalado Pronto" % d_name
+		status_label.modulate = Color(0.3, 1.0, 0.4, 1.0)
+		return
 
-	if packaged_item:
-		var name_str = packaged_item.get_display_name() if packaged_item.has_method("get_display_name") else "Lanche"
-		var pkg_status = "✨ EMBALADO" if packaged_item.get("is_packaged") == true else "🟡 Aguarda Caixa"
-		status_label.text = "📦 EMBALAGEM\n%s\n(%s)" % [name_str, pkg_status]
-		status_label.modulate = Color(0.3, 1.0, 0.5, 1.0) if packaged_item.get("is_packaged") == true else Color(1.0, 0.85, 0.2, 1.0)
-	else:
-		if box_stock <= 0:
-			status_label.text = "📦 EMBALAGEM\n🔴 SEM CAIXAS!"
-			status_label.modulate = Color(1.0, 0.3, 0.3, 1.0)
-		else:
-			status_label.text = "📦 EMBALAGEM\nCaixas em Estoque: %d" % box_stock
-			status_label.modulate = Color(0.8, 0.8, 0.8, 1.0)
+	var itm = items_data[active_item_index]
+	status_label.text = "📦 ESTAÇÃO DE EMBALAGEM\n[📦 Lanches] │ [🍟 Batatas] │ [🥤 Copos]\n[E] Pegar %s │ [F] Alternar" % itm["name"]
+	status_label.modulate = Color(0.9, 0.9, 0.9, 1.0)
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")

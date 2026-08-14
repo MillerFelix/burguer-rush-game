@@ -1,0 +1,202 @@
+[gd_scene format=3 uid="uid://storage_rack_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/storage_rack.gd" id="1_rack"]
+[ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Main"]
+size = Vector3(4.8, 1.35, 0.65)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Wing"]
+size = Vector3(0.65, 1.35, 1.4)
+
+[sub_resource type="StandardMaterial3D" id="Material_DarkSteel"]
+albedo_color = Color(0.25, 0.26, 0.28, 1)
+metallic = 0.8
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_WoodShelf"]
+albedo_texture = ExtResource("2_wood_tex")
+uv1_scale = Vector3(4, 1, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_CratePlasticGrey"]
+albedo_color = Color(0.45, 0.48, 0.52, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_CratePlasticGreen"]
+albedo_color = Color(0.2, 0.5, 0.25, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_CratePlasticRed"]
+albedo_color = Color(0.65, 0.2, 0.18, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_BreadGolden"]
+albedo_color = Color(0.86, 0.54, 0.22, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_CheeseYellow"]
+albedo_color = Color(0.98, 0.72, 0.12, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_PotatoEarthy"]
+albedo_color = Color(0.62, 0.48, 0.32, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_Post"]
+material = SubResource("Material_DarkSteel")
+size = Vector3(0.06, 1.3, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShelfPlankMain"]
+material = SubResource("Material_WoodShelf")
+size = Vector3(4.72, 0.03, 0.58)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShelfPlankWing"]
+material = SubResource("Material_WoodShelf")
+size = Vector3(0.58, 0.03, 1.32)
+
+[sub_resource type="BoxMesh" id="BoxMesh_StorageCrate"]
+material = SubResource("Material_CratePlasticGrey")
+size = Vector3(0.52, 0.18, 0.48)
+
+[sub_resource type="BoxMesh" id="BoxMesh_StorageCrateGreen"]
+material = SubResource("Material_CratePlasticGreen")
+size = Vector3(0.52, 0.18, 0.48)
+
+[sub_resource type="BoxMesh" id="BoxMesh_StorageCrateRed"]
+material = SubResource("Material_CratePlasticRed")
+size = Vector3(0.52, 0.18, 0.48)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_BunBottom"]
+material = SubResource("Material_BreadGolden")
+top_radius = 0.08
+bottom_radius = 0.075
+height = 0.035
+radial_segments = 14
+
+[sub_resource type="SphereMesh" id="SphereMesh_BunTop"]
+material = SubResource("Material_BreadGolden")
+radius = 0.08
+height = 0.09
+radial_segments = 14
+rings = 8
+
+[sub_resource type="BoxMesh" id="BoxMesh_CheeseStack"]
+material = SubResource("Material_CheeseYellow")
+size = Vector3(0.18, 0.08, 0.18)
+
+[sub_resource type="SphereMesh" id="SphereMesh_Potato"]
+material = SubResource("Material_PotatoEarthy")
+radius = 0.055
+height = 0.08
+radial_segments = 10
+rings = 6
+
+[node name="StorageRack" type="StaticBody3D"]
+script = ExtResource("1_rack")
+
+[node name="CollisionShape3D_Main" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.675, 0)
+shape = SubResource("BoxShape3D_Main")
+
+[node name="CollisionShape3D_Wing" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.675, 0.9)
+shape = SubResource("BoxShape3D_Wing")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Post1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.36, 0.65, -0.28)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="Post2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.36, 0.65, -0.28)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="Post3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.36, 0.65, 0.28)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="Post4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.36, 0.65, 0.28)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="PostMid1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0.65, 0.28)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="PostMid2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0.65, 0.28)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="ShelfTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("BoxMesh_ShelfPlankMain")
+
+[node name="ShelfBot" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("BoxMesh_ShelfPlankMain")
+
+[node name="ShelfWingTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.85, 0.9)
+mesh = SubResource("BoxMesh_ShelfPlankWing")
+
+[node name="ShelfWingBot" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.35, 0.9)
+mesh = SubResource("BoxMesh_ShelfPlankWing")
+
+[node name="CrateBreadBottom" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.95, 0)
+mesh = SubResource("BoxMesh_StorageCrate")
+
+[node name="BunBotVisual" type="MeshInstance3D" parent="Model/CrateBreadBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+mesh = SubResource("CylinderMesh_BunBottom")
+
+[node name="CrateBreadTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.95, 0)
+mesh = SubResource("BoxMesh_StorageCrate")
+
+[node name="BunTopVisual" type="MeshInstance3D" parent="Model/CrateBreadTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("SphereMesh_BunTop")
+
+[node name="CrateCheese" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.95, 0)
+mesh = SubResource("BoxMesh_StorageCrate")
+
+[node name="CheeseVisual" type="MeshInstance3D" parent="Model/CrateCheese"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+mesh = SubResource("BoxMesh_CheeseStack")
+
+[node name="CratePotato" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2, 0.45, 0)
+mesh = SubResource("BoxMesh_StorageCrate")
+
+[node name="PotatoVisual" type="MeshInstance3D" parent="Model/CratePotato"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+mesh = SubResource("SphereMesh_Potato")
+
+[node name="CrateTomato" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.45, 0)
+mesh = SubResource("BoxMesh_StorageCrateRed")
+
+[node name="CrateLettuce" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 0.45, 0)
+mesh = SubResource("BoxMesh_StorageCrateGreen")
+
+[node name="CrateWingTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.95, 0.9)
+mesh = SubResource("BoxMesh_StorageCrate")
+
+[node name="CrateWingBot" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.45, 0.9)
+mesh = SubResource("BoxMesh_StorageCrate")
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0.35)
+billboard = 1
+double_sided = false
+text = "📦 ESTANTE EM L (2 NÍVEIS)"
+font_size = 18
+outline_size = 5

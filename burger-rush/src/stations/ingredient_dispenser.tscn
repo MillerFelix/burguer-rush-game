@@ -1,50 +1,96 @@
-[gd_scene format=3 uid="uid://ingredient_dispenser_uid"]
+[gd_scene format=3 uid="uid://ingredient_dispenser_scene_uid"]
 
 [ext_resource type="Script" path="res://src/stations/ingredient_dispenser.gd" id="1_dispenser"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(0.65, 0.95, 0.65)
+size = Vector3(1.0, 1.45, 0.7)
 
-[sub_resource type="StandardMaterial3D" id="Material_RackSteel"]
-albedo_color = Color(0.3, 0.32, 0.35, 1)
-metallic = 0.8
-roughness = 0.4
+[sub_resource type="StandardMaterial3D" id="Material_SatinSteel"]
+albedo_color = Color(0.72, 0.74, 0.76, 1)
+metallic = 0.55
+roughness = 0.45
 
-[sub_resource type="StandardMaterial3D" id="Material_PlasticBin"]
-transparency = 1
-albedo_color = Color(0.9, 0.95, 1.0, 0.7)
-roughness = 0.2
+[sub_resource type="StandardMaterial3D" id="Material_StorageTote"]
+albedo_color = Color(0.24, 0.42, 0.62, 1)
+roughness = 0.6
 
-[sub_resource type="BoxMesh" id="BoxMesh_ShelfStand"]
-material = SubResource("Material_RackSteel")
-size = Vector3(0.6, 0.65, 0.6)
+[sub_resource type="StandardMaterial3D" id="Material_LabelPlate"]
+albedo_color = Color(0.96, 0.96, 0.94, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_ShelfWood"]
+albedo_color = Color(0.58, 0.42, 0.28, 1)
+roughness = 0.7
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShelfPost"]
+material = SubResource("Material_SatinSteel")
+size = Vector3(0.04, 1.4, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShelfTier"]
+material = SubResource("Material_ShelfWood")
+size = Vector3(0.96, 0.03, 0.62)
 
 [sub_resource type="BoxMesh" id="BoxMesh_StorageBin"]
-material = SubResource("Material_PlasticBin")
-size = Vector3(0.5, 0.22, 0.45)
+material = SubResource("Material_StorageTote")
+size = Vector3(0.88, 0.28, 0.54)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BadgePlate"]
+material = SubResource("Material_LabelPlate")
+size = Vector3(0.48, 0.1, 0.01)
 
 [node name="IngredientDispenser" type="StaticBody3D"]
 script = ExtResource("1_dispenser")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.725, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
 
-[node name="ShelfStand" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.325, 0)
-mesh = SubResource("BoxMesh_ShelfStand")
+[node name="ShelfStand" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+
+[node name="Post1" type="MeshInstance3D" parent="Model/ShelfStand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 0, -0.28)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+[node name="Post2" type="MeshInstance3D" parent="Model/ShelfStand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 0, -0.28)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+[node name="Post3" type="MeshInstance3D" parent="Model/ShelfStand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 0, 0.28)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+[node name="Post4" type="MeshInstance3D" parent="Model/ShelfStand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 0, 0.28)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+[node name="BottomTier" type="MeshInstance3D" parent="Model/ShelfStand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.55, 0)
+mesh = SubResource("BoxMesh_ShelfTier")
+
+[node name="MidTier" type="MeshInstance3D" parent="Model/ShelfStand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+mesh = SubResource("BoxMesh_ShelfTier")
+
+[node name="TopTier" type="MeshInstance3D" parent="Model/ShelfStand"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+mesh = SubResource("BoxMesh_ShelfTier")
 
 [node name="StorageBin" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.72, 0)
+transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.88, 0)
 mesh = SubResource("BoxMesh_StorageBin")
 
+[node name="BadgePlate" type="MeshInstance3D" parent="Model/StorageBin"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0.28)
+mesh = SubResource("BoxMesh_BadgePlate")
+
 [node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.55, 0)
 billboard = 1
 double_sided = false
-text = "📦 INSUMO
-Qtd: 10/50"
-font_size = 18
-outline_size = 5
+text = "🥖 Pão
+Estoque: 10"
+font_size = 20
+outline_size = 6
