@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://prep_table_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/prep_table.gd" id="1_preptable"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_PrepTable"]
+size = Vector3(1.4, 1.0, 1.0)
+
+[sub_resource type="StandardMaterial3D" id="Material_TableBody"]
+albedo_color = Color(0.55, 0.38, 0.22, 1)
+roughness = 0.75
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableBody"]
+material = SubResource("Material_TableBody")
+size = Vector3(1.4, 0.9, 1.0)
+
+[sub_resource type="StandardMaterial3D" id="Material_TableTop"]
+albedo_color = Color(0.72, 0.56, 0.35, 1)
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
+material = SubResource("Material_TableTop")
+size = Vector3(1.4, 0.06, 1.0)
+
+[node name="PrepTable" type="StaticBody3D"]
+script = ExtResource("1_preptable")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_PrepTable")
+
+[node name="BodyMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("BoxMesh_TableBody")
+
+[node name="TopMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0)
+mesh = SubResource("BoxMesh_TableTop")
+
+[node name="ItemSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.01, 0)

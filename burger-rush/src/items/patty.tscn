@@ -1,0 +1,26 @@
+[gd_scene format=3 uid="uid://patty_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/patty.gd" id="1_patty"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 0.08
+radius = 0.25
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+albedo_color = Color(0.85, 0.25, 0.25, 1)
+roughness = 0.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+material = SubResource("StandardMaterial3D_1")
+top_radius = 0.25
+bottom_radius = 0.25
+height = 0.08
+
+[node name="Patty" type="StaticBody3D"]
+script = ExtResource("1_patty")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CylinderShape3D_1")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_1")
