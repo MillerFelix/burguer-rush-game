@@ -1,14 +1,21 @@
 [gd_scene format=3 uid="uid://lettuce_item_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
+[ext_resource type="Script" path="res://src/items/lettuce.gd" id="1_lettuce"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_lettuce.png" id="2_tex_lettuce"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_normal.png" id="3_tex_norm"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
 height = 0.04
 radius = 0.12
 
 [sub_resource type="StandardMaterial3D" id="Material_LettuceGreen"]
-albedo_color = Color(0.26, 0.74, 0.28, 1)
-roughness = 0.55
+albedo_texture = ExtResource("2_tex_lettuce")
+normal_enabled = true
+normal_scale = 0.4
+normal_texture = ExtResource("3_tex_norm")
+roughness = 0.45
+rim_enabled = true
+rim = 0.15
 
 [sub_resource type="StandardMaterial3D" id="Material_LettuceLight"]
 albedo_color = Color(0.42, 0.85, 0.38, 1)
@@ -34,7 +41,7 @@ material = SubResource("Material_LettuceRib")
 size = Vector3(0.14, 0.01, 0.016)
 
 [node name="Lettuce" type="StaticBody3D"]
-script = ExtResource("1_item")
+script = ExtResource("1_lettuce")
 item_id = "lettuce"
 display_name = "Alface Fresca"
 item_type = "ingredient"

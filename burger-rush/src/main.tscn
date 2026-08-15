@@ -53,6 +53,7 @@
 [ext_resource type="PackedScene" path="res://src/environment/kitchen_ceiling_light.tscn" id="64_kitchen_light"]
 [ext_resource type="PackedScene" path="res://src/environment/street_lamp.tscn" id="65_street_lamp"]
 [ext_resource type="PackedScene" path="res://src/environment/urban_facade_back.tscn" id="66_facade_back"]
+[ext_resource type="PackedScene" path="res://src/stations/commercial_chest_freezer.tscn" id="67_chest_freezer"]
 [ext_resource type="Script" uid="uid://dhgo0576yqil2" path="res://src/customers/delivery_queue_manager.gd" id="67_delivery_mgr"]
 [ext_resource type="PackedScene" path="res://src/stations/cash_register.tscn" id="68_cash_register"]
 [ext_resource type="PackedScene" path="res://src/environment/restaurant_parking_lot.tscn" id="69_parking_lot"]
@@ -60,6 +61,7 @@
 [ext_resource type="PackedScene" path="res://src/environment/dining_menu_board.tscn" id="71_menu_board"]
 [ext_resource type="Script" uid="uid://cb4u0fmol7xrf" path="res://src/customers/reputation_manager.gd" id="72_reputation"]
 [ext_resource type="Script" uid="uid://desmxb53bg2to" path="res://src/environment/weather_manager.gd" id="73_weather"]
+[ext_resource type="PackedScene" path="res://src/stations/ingredient_refrigerator.tscn" id="74_ingredient_refrigerator"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.35, 0.62, 0.9, 1)
@@ -948,9 +950,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.5, 1.5, 9)
 size = Vector3(4, 1.8, 0.1)
 material = SubResource("Material_Glass")
 
-[node name="CommercialFridge" parent="Room" unique_id=2058725806 instance=ExtResource("42_fridge_glb")]
-transform = Transform3D(1.1, 0, 0, 0, 1, 0, 0, 0, 1.1, -7.5, 0, -8.2)
-
 [node name="RangeHoodCookline" type="MeshInstance3D" parent="Room" unique_id=2133516643]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9, 2.45, -8.35)
 mesh = SubResource("BoxMesh_RangeHood")
@@ -1140,6 +1139,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 0, -8.35)
 
 [node name="CommercialRefrigerator" parent="." unique_id=1675697131 instance=ExtResource("48_refrigerator")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -8.2)
+
+[node name="CommercialChestFreezer" parent="." unique_id=2089471131 instance=ExtResource("67_chest_freezer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.25, 0, -8.2)
+
+[node name="IngredientRefrigerator" parent="." unique_id=2099381726 instance=ExtResource("74_ingredient_refrigerator")]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -8.6, 0, -6.3)
 
 [node name="StorageRack" parent="." unique_id=50939419 instance=ExtResource("49_storagerack")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, 0, -0.55)

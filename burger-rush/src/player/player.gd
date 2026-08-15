@@ -26,12 +26,42 @@ func _unhandled_input(event: InputEvent) -> void:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		head.rotate_x(-event.relative.y * mouse_sensitivity)
 		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-89.0), deg_to_rad(89.0))
-	
+
+	# [E] — Interação com Equipamento (Abrir/Fechar portas, acionar máquinas)
 	if event.is_action_pressed("interact"):
-		_try_interact()
+		_try_interact_equipment()
+
+	# [Clique Esquerdo do Mouse] — Manipulação de Itens (Pegar/Devolver)
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_try_interact_item()
 
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F:
 		_try_secondary_interact()
+
+func _try_interact_equipment() -> void:
+	if raycast and raycast.is_colliding():
+		var collider = raycast.get_collider()
+		if collider:
+			if collider.has_method("interact_equipment"):
+				collider.interact_equipment(self)
+				return
+			elif collider.has_method("interact"):
+				collider.interact(self)
+				return
+
+	if held_item != null:
+		drop_item()
+
+func _try_interact_item() -> void:
+	if raycast and raycast.is_colliding():
+		var collider = raycast.get_collider()
+		if collider:
+			if collider.has_method("interact_item"):
+				collider.interact_item(self)
+				return
+			elif collider is Item and held_item == null:
+				pick_up(collider as Item)
+				return
 
 func _try_secondary_interact() -> void:
 	if raycast and raycast.is_colliding():
@@ -93,24 +123,6 @@ func _update_interaction_detection() -> void:
 		return
 
 	hud.hide_prompt()
-
-func _try_interact() -> void:
-	if raycast and raycast.is_colliding():
-		var collider = raycast.get_collider()
-		if collider and collider.has_method("get_interaction_prompt") and collider.has_method("interact"):
-			var prompt: String = collider.get_interaction_prompt(self)
-			if prompt != "":
-				collider.interact(self)
-				return
-
-	if held_item != null:
-		drop_item()
-		return
-
-	if raycast and raycast.is_colliding():
-		var collider = raycast.get_collider()
-		if collider and collider.has_method("interact"):
-			collider.interact(self)
 
 func pick_up(item: Node3D) -> void:
 	if held_item != null:

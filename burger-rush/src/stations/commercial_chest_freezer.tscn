@@ -1,0 +1,605 @@
+[gd_scene format=3 uid="uid://commercial_chest_freezer_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/commercial_chest_freezer.gd" id="1_freezer"]
+[ext_resource type="Script" path="res://src/stations/freezer_chest_lid.gd" id="2_lid"]
+[ext_resource type="Script" path="res://src/stations/freezer_mozzarella_slot.gd" id="3_moz_slot"]
+[ext_resource type="Script" path="res://src/stations/freezer_cheddar_slot.gd" id="4_che_slot"]
+[ext_resource type="Script" path="res://src/stations/freezer_prato_slot.gd" id="5_pra_slot"]
+[ext_resource type="Texture2D" path="res://assets/textures/cheese_cheddar.png" id="6_tex_cheddar"]
+[ext_resource type="Texture2D" path="res://assets/textures/cheese_mozzarella.png" id="7_tex_mozzarella"]
+[ext_resource type="Texture2D" path="res://assets/textures/cheese_prato.png" id="8_tex_prato"]
+[ext_resource type="Texture2D" path="res://assets/textures/cheese_normal.png" id="9_tex_norm"]
+
+; ================================================================
+; FORMAS DE COLISÃO
+; ================================================================
+
+; Colisões periféricas do corpo do freezer (paredes externas sem bloquear o topo)
+[sub_resource type="BoxShape3D" id="Shape_WallFront"]
+size = Vector3(1.60, 0.86, 0.05)
+
+[sub_resource type="BoxShape3D" id="Shape_WallBack"]
+size = Vector3(1.60, 0.86, 0.05)
+
+[sub_resource type="BoxShape3D" id="Shape_WallSide"]
+size = Vector3(0.05, 0.86, 0.66)
+
+[sub_resource type="BoxShape3D" id="Shape_Floor"]
+size = Vector3(1.50, 0.10, 0.66)
+
+; Colisão da Tampa Articulada
+[sub_resource type="BoxShape3D" id="Shape_ChestLid"]
+size = Vector3(1.56, 0.06, 0.72)
+
+; Colisão Individual de Cada Slot de Queijo (posicionada nas pilhas elevadas)
+[sub_resource type="BoxShape3D" id="Shape_CheeseSlot"]
+size = Vector3(0.46, 0.32, 0.58)
+
+; ================================================================
+; MATERIAIS
+; ================================================================
+
+[sub_resource type="StandardMaterial3D" id="Material_FreezerWhite"]
+albedo_color = Color(0.94, 0.95, 0.96, 1)
+roughness = 0.25
+metallic = 0.10
+
+[sub_resource type="StandardMaterial3D" id="Material_TrimDark"]
+albedo_color = Color(0.24, 0.26, 0.28, 1)
+roughness = 0.40
+
+[sub_resource type="StandardMaterial3D" id="Material_InteriorLiner"]
+albedo_color = Color(0.96, 0.97, 0.98, 1)
+roughness = 0.30
+metallic = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Material_WireBasket"]
+albedo_color = Color(0.75, 0.76, 0.78, 1)
+metallic = 0.85
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_HandleAlum"]
+albedo_color = Color(0.80, 0.82, 0.84, 1)
+metallic = 0.90
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_BadgePlate"]
+albedo_color = Color(0.96, 0.94, 0.88, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_CheeseMozzarella"]
+albedo_texture = ExtResource("7_tex_mozzarella")
+normal_enabled = true
+normal_scale = 0.50
+normal_texture = ExtResource("9_tex_norm")
+roughness = 0.38
+rim_enabled = true
+rim = 0.15
+rim_tint = 0.40
+
+[sub_resource type="StandardMaterial3D" id="Material_CheeseCheddar"]
+albedo_texture = ExtResource("6_tex_cheddar")
+normal_enabled = true
+normal_scale = 0.50
+normal_texture = ExtResource("9_tex_norm")
+roughness = 0.42
+rim_enabled = true
+rim = 0.15
+rim_tint = 0.40
+
+[sub_resource type="StandardMaterial3D" id="Material_CheesePrato"]
+albedo_texture = ExtResource("8_tex_prato")
+normal_enabled = true
+normal_scale = 0.50
+normal_texture = ExtResource("9_tex_norm")
+roughness = 0.40
+rim_enabled = true
+rim = 0.15
+rim_tint = 0.40
+
+; ================================================================
+; MESHES ESTRUTURAIS
+; ================================================================
+
+[sub_resource type="BoxMesh" id="BoxMesh_Plinth"]
+material = SubResource("Material_TrimDark")
+size = Vector3(1.58, 0.05, 0.74)
+
+[sub_resource type="BoxMesh" id="BoxMesh_OuterWallFront"]
+material = SubResource("Material_FreezerWhite")
+size = Vector3(1.60, 0.78, 0.045)
+
+[sub_resource type="BoxMesh" id="BoxMesh_OuterWallBack"]
+material = SubResource("Material_FreezerWhite")
+size = Vector3(1.60, 0.78, 0.045)
+
+[sub_resource type="BoxMesh" id="BoxMesh_OuterWallSide"]
+material = SubResource("Material_FreezerWhite")
+size = Vector3(0.045, 0.78, 0.67)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CavityFloor"]
+material = SubResource("Material_InteriorLiner")
+size = Vector3(1.51, 0.03, 0.67)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CavityWall"]
+material = SubResource("Material_InteriorLiner")
+size = Vector3(1.51, 0.56, 0.015)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CavitySide"]
+material = SubResource("Material_InteriorLiner")
+size = Vector3(0.015, 0.56, 0.64)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopCollarFront"]
+material = SubResource("Material_TrimDark")
+size = Vector3(1.60, 0.035, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopCollarSide"]
+material = SubResource("Material_TrimDark")
+size = Vector3(0.06, 0.035, 0.64)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Divider"]
+material = SubResource("Material_WireBasket")
+size = Vector3(0.012, 0.48, 0.64)
+
+[sub_resource type="BoxMesh" id="BoxMesh_WireBasketElevated"]
+material = SubResource("Material_WireBasket")
+size = Vector3(0.46, 0.015, 0.60)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BadgePlate"]
+material = SubResource("Material_BadgePlate")
+size = Vector3(0.24, 0.06, 0.008)
+
+; Tampa Superior Articulada
+[sub_resource type="BoxMesh" id="BoxMesh_HingedLidBody"]
+material = SubResource("Material_FreezerWhite")
+size = Vector3(1.56, 0.045, 0.72)
+
+[sub_resource type="BoxMesh" id="BoxMesh_HingedLidHandle"]
+material = SubResource("Material_HandleAlum")
+size = Vector3(0.40, 0.025, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_HingePivot"]
+material = SubResource("Material_TrimDark")
+size = Vector3(0.12, 0.035, 0.035)
+
+; Fatias dos Queijos (0.16 x 0.010 x 0.16)
+[sub_resource type="BoxMesh" id="BoxMesh_CheeseMozzarella"]
+material = SubResource("Material_CheeseMozzarella")
+size = Vector3(0.16, 0.010, 0.16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CheeseCheddar"]
+material = SubResource("Material_CheeseCheddar")
+size = Vector3(0.16, 0.010, 0.16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CheesePrato"]
+material = SubResource("Material_CheesePrato")
+size = Vector3(0.16, 0.010, 0.16)
+
+; ================================================================
+; HIERARQUIA DA CENA
+; ================================================================
+
+[node name="CommercialChestFreezer" type="Node3D"]
+script = ExtResource("1_freezer")
+
+; ─── CORPO PRINCIPAL DO FREEZER (StaticBody3D Periférico) ──────
+[node name="FreezerBody" type="StaticBody3D" parent="."]
+
+; Colisões periféricas (paredes e chão, sem cobrir o topo aberto)
+[node name="ColWallFront" type="CollisionShape3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.43, 0.355)
+shape = SubResource("Shape_WallFront")
+
+[node name="ColWallBack" type="CollisionShape3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.43, -0.355)
+shape = SubResource("Shape_WallBack")
+
+[node name="ColWallLeft" type="CollisionShape3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.775, 0.43, 0)
+shape = SubResource("Shape_WallSide")
+
+[node name="ColWallRight" type="CollisionShape3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.775, 0.43, 0)
+shape = SubResource("Shape_WallSide")
+
+[node name="ColFloor" type="CollisionShape3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+shape = SubResource("Shape_Floor")
+
+; Gabinete externo
+[node name="Plinth" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("BoxMesh_Plinth")
+
+[node name="WallFront" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0.357)
+mesh = SubResource("BoxMesh_OuterWallFront")
+
+[node name="WallBack" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, -0.357)
+mesh = SubResource("BoxMesh_OuterWallBack")
+
+[node name="WallLeft" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.777, 0.44, 0)
+mesh = SubResource("BoxMesh_OuterWallSide")
+
+[node name="WallRight" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.777, 0.44, 0)
+mesh = SubResource("BoxMesh_OuterWallSide")
+
+; Moldura superior
+[node name="CollarFront" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.842, 0.35)
+mesh = SubResource("BoxMesh_TopCollarFront")
+
+[node name="CollarBack" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.842, -0.35)
+mesh = SubResource("BoxMesh_TopCollarFront")
+
+[node name="CollarLeft" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.77, 0.842, 0)
+mesh = SubResource("BoxMesh_TopCollarSide")
+
+[node name="CollarRight" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.77, 0.842, 0)
+mesh = SubResource("BoxMesh_TopCollarSide")
+
+; Cavidade interna
+[node name="CavityFloor" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.265, 0)
+mesh = SubResource("BoxMesh_CavityFloor")
+
+[node name="CavityFront" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0.327)
+mesh = SubResource("BoxMesh_CavityWall")
+
+[node name="CavityBack" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, -0.327)
+mesh = SubResource("BoxMesh_CavityWall")
+
+[node name="CavityLeft" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.747, 0.55, 0)
+mesh = SubResource("BoxMesh_CavitySide")
+
+[node name="CavityRight" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.747, 0.55, 0)
+mesh = SubResource("BoxMesh_CavitySide")
+
+; Divisórias dos 3 compartimentos
+[node name="Divider1" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.245, 0.55, 0)
+mesh = SubResource("BoxMesh_Divider")
+
+[node name="Divider2" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.245, 0.55, 0)
+mesh = SubResource("BoxMesh_Divider")
+
+; Cestos aramados em altura elevada acessível
+[node name="BasketLeft" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49, 0.54, 0)
+mesh = SubResource("BoxMesh_WireBasketElevated")
+
+[node name="BasketCenter" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54, 0)
+mesh = SubResource("BoxMesh_WireBasketElevated")
+
+[node name="BasketRight" type="MeshInstance3D" parent="FreezerBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49, 0.54, 0)
+mesh = SubResource("BoxMesh_WireBasketElevated")
+
+; Placas de identificação
+[node name="Plates" type="Node3D" parent="FreezerBody"]
+
+[node name="PlateMozzarella" type="MeshInstance3D" parent="FreezerBody/Plates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49, 0.77, 0.32)
+mesh = SubResource("BoxMesh_BadgePlate")
+
+[node name="Label" type="Label3D" parent="FreezerBody/Plates/PlateMozzarella"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.006)
+billboard = 0
+double_sided = false
+text = "🧀 MUÇARELA\nx15"
+font_size = 13
+outline_size = 4
+modulate = Color(0.15, 0.18, 0.22, 1)
+horizontal_alignment = 1
+
+[node name="PlateCheddar" type="MeshInstance3D" parent="FreezerBody/Plates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.77, 0.32)
+mesh = SubResource("BoxMesh_BadgePlate")
+
+[node name="Label" type="Label3D" parent="FreezerBody/Plates/PlateCheddar"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.006)
+billboard = 0
+double_sided = false
+text = "🧀 CHEDDAR\nx20"
+font_size = 13
+outline_size = 4
+modulate = Color(0.22, 0.12, 0.02, 1)
+horizontal_alignment = 1
+
+[node name="PlatePrato" type="MeshInstance3D" parent="FreezerBody/Plates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49, 0.77, 0.32)
+mesh = SubResource("BoxMesh_BadgePlate")
+
+[node name="Label" type="Label3D" parent="FreezerBody/Plates/PlatePrato"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.006)
+billboard = 0
+double_sided = false
+text = "🧀 PRATO\nx15"
+font_size = 13
+outline_size = 4
+modulate = Color(0.20, 0.15, 0.02, 1)
+horizontal_alignment = 1
+
+; Pilhas fartas e elevadas de queijos próximos da superfície (Y = 0.56 a 0.74)
+[node name="Products" type="Node3D" parent="FreezerBody"]
+
+; ─── COMPARTIMENTO 1: MUÇARELA ─────────────────────────────────
+[node name="MozzarellaStack1" type="Node3D" parent="FreezerBody/Products"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.49, 0.56, -0.12)
+
+[node name="Slice1" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice2" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(0.99, 0, 0.05, 0, 1, 0, -0.05, 0, 0.99, 0.003, 0.016, 0.002)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice3" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(0.98, 0, -0.06, 0, 1, 0, 0.06, 0, 0.98, -0.004, 0.027, 0.003)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice4" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(0.99, 0, 0.08, 0, 1, 0, -0.08, 0, 0.99, 0.002, 0.038, -0.003)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice5" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(0.97, 0, -0.04, 0, 1, 0, 0.04, 0, 0.97, -0.002, 0.049, 0.004)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice6" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(0.99, 0, 0.03, 0, 1, 0, -0.03, 0, 0.99, 0.004, 0.060, -0.002)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice7" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(0.98, 0, -0.07, 0, 1, 0, 0.07, 0, 0.98, -0.003, 0.071, 0.003)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice8" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack1"]
+transform = Transform3D(1, 0, 0.02, 0, 1, 0, -0.02, 0, 1, 0.001, 0.082, -0.001)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="MozzarellaStack2" type="Node3D" parent="FreezerBody/Products"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, -0.49, 0.56, 0.12)
+
+[node name="Slice1" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice2" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack2"]
+transform = Transform3D(0.98, 0, 0.06, 0, 1, 0, -0.06, 0, 0.98, 0.003, 0.016, 0.003)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice3" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack2"]
+transform = Transform3D(0.99, 0, -0.05, 0, 1, 0, 0.05, 0, 0.99, -0.004, 0.027, -0.002)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice4" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack2"]
+transform = Transform3D(0.97, 0, 0.07, 0, 1, 0, -0.07, 0, 0.97, 0.002, 0.038, 0.004)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice5" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack2"]
+transform = Transform3D(0.99, 0, -0.03, 0, 1, 0, 0.03, 0, 0.99, -0.003, 0.049, -0.001)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice6" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack2"]
+transform = Transform3D(0.98, 0, 0.04, 0, 1, 0, -0.04, 0, 0.98, 0.004, 0.060, 0.002)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+[node name="Slice7" type="MeshInstance3D" parent="FreezerBody/Products/MozzarellaStack2"]
+transform = Transform3D(0.99, 0, -0.06, 0, 1, 0, 0.06, 0, 0.99, -0.002, 0.071, -0.003)
+mesh = SubResource("BoxMesh_CheeseMozzarella")
+
+; ─── COMPARTIMENTO 2: CHEDDAR ──────────────────────────────────
+[node name="CheddarStack1" type="Node3D" parent="FreezerBody/Products"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.0, 0.56, -0.12)
+
+[node name="Slice1" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice2" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(0.98, 0, 0.05, 0, 1, 0, -0.05, 0, 0.98, -0.004, 0.016, 0.002)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice3" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(0.99, 0, -0.07, 0, 1, 0, 0.07, 0, 0.99, 0.003, 0.027, -0.003)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice4" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(0.97, 0, 0.06, 0, 1, 0, -0.06, 0, 0.97, -0.002, 0.038, 0.004)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice5" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(0.99, 0, -0.04, 0, 1, 0, 0.04, 0, 0.99, 0.004, 0.049, -0.002)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice6" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(0.98, 0, 0.03, 0, 1, 0, -0.03, 0, 0.98, -0.003, 0.060, 0.003)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice7" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(0.99, 0, -0.05, 0, 1, 0, 0.05, 0, 0.99, 0.002, 0.071, -0.001)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice8" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack1"]
+transform = Transform3D(1, 0, 0.02, 0, 1, 0, -0.02, 0, 1, -0.001, 0.082, 0.002)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="CheddarStack2" type="Node3D" parent="FreezerBody/Products"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.0, 0.56, 0.12)
+
+[node name="Slice1" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice2" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack2"]
+transform = Transform3D(0.98, 0, -0.06, 0, 1, 0, 0.06, 0, 0.98, 0.003, 0.016, -0.002)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice3" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack2"]
+transform = Transform3D(0.99, 0, 0.04, 0, 1, 0, -0.04, 0, 0.99, -0.003, 0.027, 0.003)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice4" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack2"]
+transform = Transform3D(0.97, 0, -0.05, 0, 1, 0, 0.05, 0, 0.97, 0.002, 0.038, -0.004)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice5" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack2"]
+transform = Transform3D(0.99, 0, 0.06, 0, 1, 0, -0.06, 0, 0.99, -0.004, 0.049, 0.001)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice6" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack2"]
+transform = Transform3D(0.98, 0, -0.03, 0, 1, 0, 0.03, 0, 0.98, 0.003, 0.060, -0.002)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+[node name="Slice7" type="MeshInstance3D" parent="FreezerBody/Products/CheddarStack2"]
+transform = Transform3D(0.99, 0, 0.05, 0, 1, 0, -0.05, 0, 0.99, -0.002, 0.071, 0.003)
+mesh = SubResource("BoxMesh_CheeseCheddar")
+
+; ─── COMPARTIMENTO 3: QUEIJO PRATO ─────────────────────────────
+[node name="PratoStack1" type="Node3D" parent="FreezerBody/Products"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.49, 0.56, -0.12)
+
+[node name="Slice1" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice2" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(0.99, 0, -0.05, 0, 1, 0, 0.05, 0, 0.99, 0.004, 0.016, 0.003)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice3" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(0.97, 0, 0.06, 0, 1, 0, -0.06, 0, 0.97, -0.003, 0.027, 0.002)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice4" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(0.99, 0, -0.04, 0, 1, 0, 0.04, 0, 0.99, 0.002, 0.038, -0.003)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice5" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(0.98, 0, 0.07, 0, 1, 0, -0.07, 0, 0.98, -0.004, 0.049, 0.004)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice6" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(0.99, 0, -0.03, 0, 1, 0, 0.03, 0, 0.99, 0.003, 0.060, -0.002)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice7" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(0.98, 0, 0.05, 0, 1, 0, -0.05, 0, 0.98, -0.002, 0.071, 0.002)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice8" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack1"]
+transform = Transform3D(1, 0, -0.02, 0, 1, 0, 0.02, 0, 1, 0.001, 0.082, -0.001)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="PratoStack2" type="Node3D" parent="FreezerBody/Products"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.49, 0.56, 0.12)
+
+[node name="Slice1" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice2" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack2"]
+transform = Transform3D(0.98, 0, 0.06, 0, 1, 0, -0.06, 0, 0.98, -0.004, 0.016, 0.003)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice3" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack2"]
+transform = Transform3D(0.99, 0, -0.04, 0, 1, 0, 0.04, 0, 0.99, 0.003, 0.027, -0.002)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice4" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack2"]
+transform = Transform3D(0.97, 0, 0.05, 0, 1, 0, -0.05, 0, 0.97, -0.002, 0.038, 0.004)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice5" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack2"]
+transform = Transform3D(0.99, 0, -0.06, 0, 1, 0, 0.06, 0, 0.99, 0.004, 0.049, -0.001)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice6" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack2"]
+transform = Transform3D(0.98, 0, 0.03, 0, 1, 0, -0.03, 0, 0.98, -0.003, 0.060, 0.002)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+[node name="Slice7" type="MeshInstance3D" parent="FreezerBody/Products/PratoStack2"]
+transform = Transform3D(0.99, 0, -0.05, 0, 1, 0, 0.05, 0, 0.99, 0.002, 0.071, -0.003)
+mesh = SubResource("BoxMesh_CheesePrato")
+
+; ─── SLOTS INTERATIVOS INDIVIDUAIS DOS QUEIJOS (CLIQUE DO MOUSE) ──
+[node name="MozzarellaSlot" type="StaticBody3D" parent="."]
+script = ExtResource("3_moz_slot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MozzarellaSlot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.49, 0.65, 0)
+shape = SubResource("Shape_CheeseSlot")
+
+[node name="CheddarSlot" type="StaticBody3D" parent="."]
+script = ExtResource("4_che_slot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CheddarSlot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+shape = SubResource("Shape_CheeseSlot")
+
+[node name="PratoSlot" type="StaticBody3D" parent="."]
+script = ExtResource("5_pra_slot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PratoSlot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.49, 0.65, 0)
+shape = SubResource("Shape_CheeseSlot")
+
+; ─── TAMPA SUPERIOR ARTICULADA COM PIVÔ TRASEIRO (TECLA E) ─────
+[node name="LidPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.86, -0.36)
+
+[node name="HingeLeft" type="MeshInstance3D" parent="LidPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, 0, 0)
+mesh = SubResource("BoxMesh_HingePivot")
+
+[node name="HingeRight" type="MeshInstance3D" parent="LidPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0, 0)
+mesh = SubResource("BoxMesh_HingePivot")
+
+[node name="ChestLid" type="StaticBody3D" parent="LidPivot"]
+script = ExtResource("2_lid")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LidPivot/ChestLid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0.36)
+shape = SubResource("Shape_ChestLid")
+
+[node name="LidBody" type="MeshInstance3D" parent="LidPivot/ChestLid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0.36)
+mesh = SubResource("BoxMesh_HingedLidBody")
+
+[node name="LidHandle" type="MeshInstance3D" parent="LidPivot/ChestLid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.035, 0.69)
+mesh = SubResource("BoxMesh_HingedLidHandle")
+
+; ─── ILUMINAÇÃO INTERNA LED ────────────────────────────────────
+[node name="InteriorLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, 0)
+light_color = Color(0.88, 0.96, 1, 1)
+light_energy = 0.4
+omni_range = 2.6
+omni_attenuation = 0.85
+
+; ─── MONITOR DE STATUS SUPERIOR ────────────────────────────────
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0.38)
+billboard = 1
+double_sided = false
+text = "❄️ FREEZER DE QUEIJOS"
+font_size = 18
+outline_size = 5
+modulate = Color(0.85, 0.95, 1, 1)
+horizontal_alignment = 1

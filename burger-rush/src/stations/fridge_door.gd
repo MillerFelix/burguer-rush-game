@@ -1,6 +1,6 @@
 ## Porta da Geladeira de Carnes
 ## StaticBody3D que faz parte do DoorPivot.
-## Chama toggle_door() no nó raiz da geladeira.
+## Responde à tecla [E] para abrir e fechar a porta.
 extends StaticBody3D
 
 func get_interaction_prompt(_player: Node = null) -> String:
@@ -13,13 +13,15 @@ func get_interaction_prompt(_player: Node = null) -> String:
 		return "E — Fechar Geladeira"
 	return "E — Abrir Geladeira de Carnes"
 
-func interact(player: Node3D) -> void:
+func interact_equipment(player: Node3D) -> void:
 	var fridge = _get_fridge()
 	if fridge:
 		fridge.toggle_door(player)
 
+func interact(player: Node3D) -> void:
+	interact_equipment(player)
+
 func _get_fridge() -> MeatRefrigerator:
-	# DoorPivot -> MeatRefrigerator (pai do pivot)
 	var pivot = get_parent()
 	if pivot:
 		var root = pivot.get_parent()

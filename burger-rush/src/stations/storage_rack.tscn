@@ -4,485 +4,356 @@
 [ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]
 [ext_resource type="Texture2D" path="res://assets/textures/cardboard_kraft.png" id="3_cardboard_tex"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_Main"]
-size = Vector3(4.8, 1.35, 0.65)
+; ================================================================
+; COLISÃO
+; ================================================================
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_Wing"]
-size = Vector3(0.65, 1.35, 1.4)
+[sub_resource type="BoxShape3D" id="BoxShape3D_Table"]
+size = Vector3(1.36, 0.85, 0.68)
 
-[sub_resource type="StandardMaterial3D" id="Material_DarkSteel"]
-albedo_color = Color(0.25, 0.26, 0.28, 1)
-metallic = 0.8
-roughness = 0.45
+; ================================================================
+; MATERIAIS
+; ================================================================
 
-[sub_resource type="StandardMaterial3D" id="Material_WoodShelf"]
+; Madeira quente natural do tampo e prateleira
+[sub_resource type="StandardMaterial3D" id="Material_WoodTable"]
+albedo_color = Color(0.78, 0.60, 0.42, 1)
 albedo_texture = ExtResource("2_wood_tex")
-uv1_scale = Vector3(4, 1, 1)
-roughness = 0.7
+uv1_scale = Vector3(2, 2, 1)
+roughness = 0.75
 
+; Madeira escura das pernas
+[sub_resource type="StandardMaterial3D" id="Material_WoodLegs"]
+albedo_color = Color(0.45, 0.32, 0.20, 1)
+roughness = 0.80
+
+; Papelão Kraft das caixas de ingredientes
 [sub_resource type="StandardMaterial3D" id="Material_CardboardKraft"]
-albedo_color = Color(0.86, 0.74, 0.58, 1)
+albedo_color = Color(0.88, 0.76, 0.60, 1)
 albedo_texture = ExtResource("3_cardboard_tex")
 uv1_scale = Vector3(2, 2, 1)
 roughness = 0.85
 
-[sub_resource type="StandardMaterial3D" id="Material_BadgeWhite"]
-albedo_color = Color(0.96, 0.95, 0.92, 1)
+; Placa de identificação frontal
+[sub_resource type="StandardMaterial3D" id="Material_BadgeCream"]
+albedo_color = Color(0.96, 0.94, 0.88, 1)
 roughness = 0.35
 
-[sub_resource type="StandardMaterial3D" id="Material_BreadGolden"]
+; Materiais originais aprovados do pão brioche
+[sub_resource type="StandardMaterial3D" id="Material_BriocheCrust"]
 albedo_color = Color(0.86, 0.54, 0.22, 1)
-roughness = 0.45
+roughness = 0.40
+rim_enabled = true
+rim = 0.20
+rim_tint = 0.50
 
-[sub_resource type="StandardMaterial3D" id="Material_CheeseYellow"]
-albedo_color = Color(0.98, 0.72, 0.12, 1)
-roughness = 0.45
+[sub_resource type="StandardMaterial3D" id="Material_BriocheCrumb"]
+albedo_color = Color(0.96, 0.88, 0.68, 1)
+roughness = 0.75
 
-[sub_resource type="StandardMaterial3D" id="Material_PotatoEarthy"]
-albedo_color = Color(0.62, 0.48, 0.32, 1)
-roughness = 0.8
+[sub_resource type="StandardMaterial3D" id="Material_Sesame"]
+albedo_color = Color(0.98, 0.94, 0.82, 1)
+roughness = 0.50
 
-[sub_resource type="StandardMaterial3D" id="Material_TomatoRed"]
-albedo_color = Color(0.88, 0.16, 0.14, 1)
-roughness = 0.25
+; ================================================================
+; MESHES
+; ================================================================
 
-[sub_resource type="StandardMaterial3D" id="Material_LettuceGreen"]
-albedo_color = Color(0.24, 0.68, 0.28, 1)
-roughness = 0.6
+[sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
+material = SubResource("Material_WoodTable")
+size = Vector3(1.36, 0.05, 0.68)
 
-[sub_resource type="StandardMaterial3D" id="Material_OnionPurple"]
-albedo_color = Color(0.65, 0.22, 0.55, 1)
-roughness = 0.5
+[sub_resource type="BoxMesh" id="BoxMesh_TableLeg"]
+material = SubResource("Material_WoodLegs")
+size = Vector3(0.06, 0.77, 0.06)
 
-[sub_resource type="StandardMaterial3D" id="Material_BaconRed"]
-albedo_color = Color(0.72, 0.25, 0.22, 1)
-roughness = 0.5
+[sub_resource type="BoxMesh" id="BoxMesh_LowerShelf"]
+material = SubResource("Material_WoodTable")
+size = Vector3(1.22, 0.03, 0.54)
 
-[sub_resource type="StandardMaterial3D" id="Material_PickleGreen"]
-albedo_color = Color(0.35, 0.55, 0.22, 1)
-roughness = 0.4
+[sub_resource type="BoxMesh" id="BoxMesh_TableFrontBadge"]
+material = SubResource("Material_BadgeCream")
+size = Vector3(0.36, 0.10, 0.008)
 
-[sub_resource type="StandardMaterial3D" id="Material_MushroomBrown"]
-albedo_color = Color(0.75, 0.68, 0.58, 1)
-roughness = 0.6
-
-[sub_resource type="BoxMesh" id="BoxMesh_Post"]
-material = SubResource("Material_DarkSteel")
-size = Vector3(0.06, 1.3, 0.06)
-
-[sub_resource type="BoxMesh" id="BoxMesh_ShelfPlankMain"]
-material = SubResource("Material_WoodShelf")
-size = Vector3(4.72, 0.03, 0.58)
-
-[sub_resource type="BoxMesh" id="BoxMesh_ShelfPlankWing"]
-material = SubResource("Material_WoodShelf")
-size = Vector3(0.58, 0.03, 1.32)
-
-[sub_resource type="BoxMesh" id="BoxMesh_CardboardBox"]
+[sub_resource type="BoxMesh" id="BoxMesh_BreadBox"]
 material = SubResource("Material_CardboardKraft")
-size = Vector3(0.48, 0.15, 0.44)
+size = Vector3(0.52, 0.14, 0.48)
 
-[sub_resource type="BoxMesh" id="BoxMesh_BadgePlate"]
-material = SubResource("Material_BadgeWhite")
-size = Vector3(0.24, 0.08, 0.008)
+[sub_resource type="BoxMesh" id="BoxMesh_BoxBadge"]
+material = SubResource("Material_BadgeCream")
+size = Vector3(0.22, 0.06, 0.008)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_BunBottom"]
-material = SubResource("Material_BreadGolden")
-top_radius = 0.075
-bottom_radius = 0.07
-height = 0.035
-radial_segments = 14
+; Meshes do Pão Aprovado
+[sub_resource type="SphereMesh" id="SphereMesh_TopBun"]
+material = SubResource("Material_BriocheCrust")
+radius = 0.095
+height = 0.090
+radial_segments = 20
+rings = 10
 
-[sub_resource type="SphereMesh" id="SphereMesh_BunTop"]
-material = SubResource("Material_BreadGolden")
-radius = 0.075
-height = 0.085
-radial_segments = 14
-rings = 8
+[sub_resource type="CylinderMesh" id="CylinderMesh_BottomBun"]
+material = SubResource("Material_BriocheCrust")
+top_radius = 0.092
+bottom_radius = 0.086
+height = 0.032
+radial_segments = 20
 
-[sub_resource type="BoxMesh" id="BoxMesh_CheeseStack"]
-material = SubResource("Material_CheeseYellow")
-size = Vector3(0.16, 0.07, 0.16)
+[sub_resource type="CylinderMesh" id="CylinderMesh_CrumbLayer"]
+material = SubResource("Material_BriocheCrumb")
+top_radius = 0.092
+bottom_radius = 0.092
+height = 0.008
+radial_segments = 20
 
-[sub_resource type="SphereMesh" id="SphereMesh_Potato"]
-material = SubResource("Material_PotatoEarthy")
-radius = 0.05
-height = 0.075
-radial_segments = 10
-rings = 6
+[sub_resource type="SphereMesh" id="SphereMesh_SesameSeed"]
+material = SubResource("Material_Sesame")
+radius = 0.004
+height = 0.008
+radial_segments = 6
+rings = 4
 
-[sub_resource type="SphereMesh" id="SphereMesh_Tomato"]
-material = SubResource("Material_TomatoRed")
-radius = 0.055
-height = 0.07
-radial_segments = 12
-rings = 6
-
-[sub_resource type="BoxMesh" id="BoxMesh_LettuceLeaves"]
-material = SubResource("Material_LettuceGreen")
-size = Vector3(0.18, 0.06, 0.18)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Onion"]
-material = SubResource("Material_OnionPurple")
-top_radius = 0.06
-bottom_radius = 0.06
-height = 0.03
-radial_segments = 12
-
-[sub_resource type="BoxMesh" id="BoxMesh_BaconStrip"]
-material = SubResource("Material_BaconRed")
-size = Vector3(0.18, 0.02, 0.08)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Pickle"]
-material = SubResource("Material_PickleGreen")
-top_radius = 0.05
-bottom_radius = 0.05
-height = 0.02
-radial_segments = 10
-
-[sub_resource type="SphereMesh" id="SphereMesh_Mushroom"]
-material = SubResource("Material_MushroomBrown")
-radius = 0.045
-height = 0.05
-radial_segments = 10
+; ================================================================
+; HIERARQUIA DA CENA
+; ================================================================
 
 [node name="StorageRack" type="StaticBody3D"]
 script = ExtResource("1_rack")
 
-[node name="CollisionShape3D_Main" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.675, 0)
-shape = SubResource("BoxShape3D_Main")
-
-[node name="CollisionShape3D_Wing" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.675, 0.9)
-shape = SubResource("BoxShape3D_Wing")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+shape = SubResource("BoxShape3D_Table")
 
 [node name="Model" type="Node3D" parent="."]
 
-[node name="Post1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.36, 0.65, -0.28)
-mesh = SubResource("BoxMesh_Post")
+; ─── MESINHA DE ARMAZENAMENTO ──────────────────────────────────
+[node name="TableTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.795, 0)
+mesh = SubResource("BoxMesh_TableTop")
 
-[node name="Post2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.36, 0.65, -0.28)
-mesh = SubResource("BoxMesh_Post")
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.60, 0.385, -0.26)
+mesh = SubResource("BoxMesh_TableLeg")
 
-[node name="Post3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.36, 0.65, 0.28)
-mesh = SubResource("BoxMesh_Post")
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.60, 0.385, -0.26)
+mesh = SubResource("BoxMesh_TableLeg")
 
-[node name="Post4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.36, 0.65, 0.28)
-mesh = SubResource("BoxMesh_Post")
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.60, 0.385, 0.26)
+mesh = SubResource("BoxMesh_TableLeg")
 
-[node name="PostMid1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0.65, 0.28)
-mesh = SubResource("BoxMesh_Post")
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.60, 0.385, 0.26)
+mesh = SubResource("BoxMesh_TableLeg")
 
-[node name="PostMid2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0.65, 0.28)
-mesh = SubResource("BoxMesh_Post")
+[node name="LowerShelf" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.20, 0)
+mesh = SubResource("BoxMesh_LowerShelf")
 
-[node name="ShelfTop" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-mesh = SubResource("BoxMesh_ShelfPlankMain")
+; Placa de Identificação Frontal "🍞 PÃO" presa fisicamente na mesa
+[node name="TableFrontBadge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.73, 0.342)
+mesh = SubResource("BoxMesh_TableFrontBadge")
 
-[node name="ShelfBot" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
-mesh = SubResource("BoxMesh_ShelfPlankMain")
-
-[node name="ShelfWingTop" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.85, 0.9)
-mesh = SubResource("BoxMesh_ShelfPlankWing")
-
-[node name="ShelfWingBot" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.35, 0.9)
-mesh = SubResource("BoxMesh_ShelfPlankWing")
-
-[node name="BoxBreadBottom" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 0.93, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxBreadBottom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
-
-[node name="Label" type="Label3D" parent="Model/BoxBreadBottom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
+[node name="TableFrontLabel" type="Label3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.73, 0.347)
 billboard = 0
 double_sided = false
-text = "🍞 BASE\nx24"
-font_size = 14
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
+text = "🍞 PÃO"
+font_size = 20
+outline_size = 5
+modulate = Color(0.20, 0.12, 0.05, 1.0)
+horizontal_alignment = 1
 
-[node name="Item1" type="MeshInstance3D" parent="Model/BoxBreadBottom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.08, -0.06)
-mesh = SubResource("CylinderMesh_BunBottom")
-
-[node name="Item2" type="MeshInstance3D" parent="Model/BoxBreadBottom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.08, 0.06)
-mesh = SubResource("CylinderMesh_BunBottom")
-
+; ─── CAIXA 1: TAMPAS DE PÃO COM GERGELIM (Lado Esquerdo) ───────
 [node name="BoxBreadTop" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.10, 0.93, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 0.89, 0.01)
+mesh = SubResource("BoxMesh_BreadBox")
 
 [node name="Badge" type="MeshInstance3D" parent="Model/BoxBreadTop"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.244)
+mesh = SubResource("BoxMesh_BoxBadge")
 
 [node name="Label" type="Label3D" parent="Model/BoxBreadTop"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.25)
 billboard = 0
 double_sided = false
-text = "🥯 TAMPA\nx24"
+text = "🥯 TAMPA\nx25"
 font_size = 14
 outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
+modulate = Color(0.18, 0.14, 0.08, 1.0)
+horizontal_alignment = 1
 
-[node name="Item1" type="MeshInstance3D" parent="Model/BoxBreadTop"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.09, -0.06)
-mesh = SubResource("SphereMesh_BunTop")
+; Pães Superiores Visíveis com Gergelim (dispostos naturalmente)
+[node name="TopBun1" type="Node3D" parent="Model/BoxBreadTop"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, -0.13, 0.04, -0.11)
 
-[node name="Item2" type="MeshInstance3D" parent="Model/BoxBreadTop"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.09, 0.06)
-mesh = SubResource("SphereMesh_BunTop")
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
 
-[node name="BoxCheese" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.93, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
+[node name="TopBun" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("SphereMesh_TopBun")
 
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxCheese"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
+[node name="Sesame1" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun1"]
+transform = Transform3D(1, 0, 0, 0, 0.866, 0.5, 0, -0.5, 0.866, 0.035, 0.070, 0.025)
+mesh = SubResource("SphereMesh_SesameSeed")
 
-[node name="Label" type="Label3D" parent="Model/BoxCheese"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
+[node name="Sesame2" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.035, 0.070, -0.025)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="Sesame3" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01, 0.072, -0.03)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="TopBun2" type="Node3D" parent="Model/BoxBreadTop"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.13, 0.04, -0.11)
+
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
+
+[node name="TopBun" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("SphereMesh_TopBun")
+
+[node name="Sesame1" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, 0.070, 0.025)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="Sesame2" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.03, 0.070, -0.025)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="TopBun3" type="Node3D" parent="Model/BoxBreadTop"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, -0.13, 0.04, 0.11)
+
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
+
+[node name="TopBun" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("SphereMesh_TopBun")
+
+[node name="Sesame1" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.025, 0.070, 0.02)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="TopBun4" type="Node3D" parent="Model/BoxBreadTop"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.13, 0.04, 0.11)
+
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
+
+[node name="TopBun" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("SphereMesh_TopBun")
+
+[node name="Sesame1" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.025, 0.070, 0.02)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+[node name="TopBun5" type="Node3D" parent="Model/BoxBreadTop"]
+transform = Transform3D(0.98, 0, 0.18, 0, 0.98, -0.18, -0.18, 0.18, 0.96, 0.0, 0.075, 0.0)
+
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
+
+[node name="TopBun" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("SphereMesh_TopBun")
+
+[node name="Sesame1" type="MeshInstance3D" parent="Model/BoxBreadTop/TopBun5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, 0.070, 0.02)
+mesh = SubResource("SphereMesh_SesameSeed")
+
+; ─── CAIXA 2: BASES DE PÃO (Lado Direito) ──────────────────────
+[node name="BoxBreadBottom" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 0.89, 0.01)
+mesh = SubResource("BoxMesh_BreadBox")
+
+[node name="Badge" type="MeshInstance3D" parent="Model/BoxBreadBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.244)
+mesh = SubResource("BoxMesh_BoxBadge")
+
+[node name="Label" type="Label3D" parent="Model/BoxBreadBottom"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.25)
 billboard = 0
 double_sided = false
-text = "🧀 QUEIJO\nx30"
+text = "🍞 BASE\nx25"
 font_size = 14
 outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
+modulate = Color(0.18, 0.14, 0.08, 1.0)
+horizontal_alignment = 1
 
-[node name="Item" type="MeshInstance3D" parent="Model/BoxCheese"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
-mesh = SubResource("BoxMesh_CheeseStack")
+; Pães Inferiores Visíveis (Bases de Pão dispostas naturalmente)
+[node name="BotBun1" type="Node3D" parent="Model/BoxBreadBottom"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, -0.13, 0.02, -0.11)
 
-[node name="BoxOnion" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00, 0.93, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
+[node name="BottomBun" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.016, 0)
+mesh = SubResource("CylinderMesh_BottomBun")
 
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxOnion"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.033, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
 
-[node name="Label" type="Label3D" parent="Model/BoxOnion"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🧅 CEBOLA\n(Reserva)"
-font_size = 13
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
+[node name="BotBun2" type="Node3D" parent="Model/BoxBreadBottom"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.13, 0.02, -0.11)
 
-[node name="Item" type="MeshInstance3D" parent="Model/BoxOnion"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
-mesh = SubResource("CylinderMesh_Onion")
+[node name="BottomBun" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.016, 0)
+mesh = SubResource("CylinderMesh_BottomBun")
 
-[node name="BoxBacon" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.93, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.033, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
 
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxBacon"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
+[node name="BotBun3" type="Node3D" parent="Model/BoxBreadBottom"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, -0.13, 0.02, 0.11)
 
-[node name="Label" type="Label3D" parent="Model/BoxBacon"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🥓 BACON\n(Reserva)"
-font_size = 13
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
+[node name="BottomBun" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.016, 0)
+mesh = SubResource("CylinderMesh_BottomBun")
 
-[node name="Item" type="MeshInstance3D" parent="Model/BoxBacon"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
-mesh = SubResource("BoxMesh_BaconStrip")
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.033, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
 
-[node name="BoxBreadExtra" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.10, 0.93, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
+[node name="BotBun4" type="Node3D" parent="Model/BoxBreadBottom"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.13, 0.02, 0.11)
 
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxBreadExtra"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
+[node name="BottomBun" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.016, 0)
+mesh = SubResource("CylinderMesh_BottomBun")
 
-[node name="Label" type="Label3D" parent="Model/BoxBreadExtra"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🍞 PÃO\nEstoque"
-font_size = 13
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.033, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
 
-[node name="Item" type="MeshInstance3D" parent="Model/BoxBreadExtra"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
-mesh = SubResource("SphereMesh_BunTop")
+[node name="BotBun5" type="Node3D" parent="Model/BoxBreadBottom"]
+transform = Transform3D(0.98, 0, 0.18, 0, 0.98, -0.18, -0.18, 0.18, 0.96, 0.0, 0.055, 0.0)
 
-[node name="BoxPotato" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.65, 0.43, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
+[node name="BottomBun" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.016, 0)
+mesh = SubResource("CylinderMesh_BottomBun")
 
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxPotato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
+[node name="Crumb" type="MeshInstance3D" parent="Model/BoxBreadBottom/BotBun5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.033, 0)
+mesh = SubResource("CylinderMesh_CrumbLayer")
 
-[node name="Label" type="Label3D" parent="Model/BoxPotato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🥔 BATATAS\nx30"
-font_size = 14
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
-
-[node name="Item1" type="MeshInstance3D" parent="Model/BoxPotato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.08, -0.06)
-mesh = SubResource("SphereMesh_Potato")
-
-[node name="Item2" type="MeshInstance3D" parent="Model/BoxPotato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.08, 0.06)
-mesh = SubResource("SphereMesh_Potato")
-
-[node name="BoxTomato" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.10, 0.43, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxTomato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
-
-[node name="Label" type="Label3D" parent="Model/BoxTomato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🍅 TOMATE\nx20"
-font_size = 14
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
-
-[node name="Item1" type="MeshInstance3D" parent="Model/BoxTomato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.08, -0.06)
-mesh = SubResource("SphereMesh_Tomato")
-
-[node name="Item2" type="MeshInstance3D" parent="Model/BoxTomato"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.08, 0.06)
-mesh = SubResource("SphereMesh_Tomato")
-
-[node name="BoxLettuce" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.43, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxLettuce"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
-
-[node name="Label" type="Label3D" parent="Model/BoxLettuce"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🥬 ALFACE\nx20"
-font_size = 14
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
-
-[node name="Item" type="MeshInstance3D" parent="Model/BoxLettuce"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
-mesh = SubResource("BoxMesh_LettuceLeaves")
-
-[node name="BoxPickle" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00, 0.43, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxPickle"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
-
-[node name="Label" type="Label3D" parent="Model/BoxPickle"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🥒 PICLES\n(Reserva)"
-font_size = 13
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
-
-[node name="Item" type="MeshInstance3D" parent="Model/BoxPickle"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
-mesh = SubResource("CylinderMesh_Pickle")
-
-[node name="BoxMushroom" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.43, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxMushroom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
-
-[node name="Label" type="Label3D" parent="Model/BoxMushroom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "🍄 COGUMELO\n(Reserva)"
-font_size = 13
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
-
-[node name="Item" type="MeshInstance3D" parent="Model/BoxMushroom"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
-mesh = SubResource("SphereMesh_Mushroom")
-
-[node name="BoxPackaging" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.10, 0.43, 0)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="Badge" type="MeshInstance3D" parent="Model/BoxPackaging"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.224)
-mesh = SubResource("BoxMesh_BadgePlate")
-
-[node name="Label" type="Label3D" parent="Model/BoxPackaging"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.23)
-billboard = 0
-double_sided = false
-text = "📦 EMBALAGEM\nEstoque"
-font_size = 13
-outline_size = 4
-modulate = Color(0.15, 0.12, 0.08, 1)
-
-[node name="BoxWingTop1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.93, 0.45)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="BoxWingTop2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.93, 1.05)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="BoxWingBot1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.43, 0.45)
-mesh = SubResource("BoxMesh_CardboardBox")
-
-[node name="BoxWingBot2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.1, 0.43, 1.05)
-mesh = SubResource("BoxMesh_CardboardBox")
-
+; ─── STATUS LABEL SUPERIOR ─────────────────────────────────────
 [node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 billboard = 1
 double_sided = false
-text = "📦 ESTOQUE DE INGREDIENTES (CAIXAS DE PAPELÃO)"
+text = "🍞 ÁREA DE PÃES"
 font_size = 18
 outline_size = 5
+modulate = Color(0.96, 0.90, 0.75, 1.0)
+horizontal_alignment = 1

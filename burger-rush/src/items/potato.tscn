@@ -1,33 +1,44 @@
 [gd_scene format=3 uid="uid://potato_item_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
+[ext_resource type="Script" path="res://src/items/potato.gd" id="1_potato"]
+[ext_resource type="Texture2D" path="res://assets/textures/frozen_fries_bag.png" id="2_tex_bag"]
 
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 0.08
-height = 0.22
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.24, 0.36, 0.14)
 
-[sub_resource type="StandardMaterial3D" id="Material_PotatoSkin"]
-albedo_color = Color(0.72, 0.52, 0.32, 1)
-roughness = 0.85
+[sub_resource type="StandardMaterial3D" id="Material_FriesBag"]
+albedo_texture = ExtResource("2_tex_bag")
+roughness = 0.35
+metallic = 0.15
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_Potato"]
-material = SubResource("Material_PotatoSkin")
-radius = 0.075
-height = 0.18
-radial_segments = 14
-rings = 6
+[sub_resource type="BoxMesh" id="BoxMesh_BagBody"]
+material = SubResource("Material_FriesBag")
+size = Vector3(0.24, 0.34, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="Material_CookedFries"]
+albedo_color = Color(0.95, 0.72, 0.2, 1)
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_FriesMesh"]
+material = SubResource("Material_CookedFries")
+size = Vector3(0.14, 0.12, 0.14)
 
 [node name="Potato" type="StaticBody3D"]
-script = ExtResource("1_item")
+script = ExtResource("1_potato")
 item_id = "potato_raw"
-display_name = "Batata Crua"
+display_name = "Saco de Batata Frita Congelada"
 item_type = "ingredient"
-prompt_text = "E — Pegar Batata Crua"
+prompt_text = "E — Pegar Saco de Batata"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
-shape = SubResource("CapsuleShape3D_1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+shape = SubResource("BoxShape3D_1")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
-transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0, 0.08, 0)
-mesh = SubResource("CapsuleMesh_Potato")
+[node name="MeshBag" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
+mesh = SubResource("BoxMesh_BagBody")
+
+[node name="MeshFries" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+visible = false
+mesh = SubResource("BoxMesh_FriesMesh")

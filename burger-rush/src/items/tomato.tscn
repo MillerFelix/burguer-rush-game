@@ -1,24 +1,41 @@
 [gd_scene format=3 uid="uid://tomato_item_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
-[ext_resource type="PackedScene" path="res://assets/models/food/tomatoSlice.glb" id="2_tomatoslice_glb"]
+[ext_resource type="Script" path="res://src/items/tomato.gd" id="1_tomato"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_tomato_bright.png" id="2_tex_tomato"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_normal.png" id="3_tex_norm"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 0.05
-radius = 0.12
+height = 0.024
+radius = 0.06
+
+[sub_resource type="StandardMaterial3D" id="Material_TomatoBright"]
+albedo_texture = ExtResource("2_tex_tomato")
+normal_enabled = true
+normal_scale = 0.45
+normal_texture = ExtResource("3_tex_norm")
+roughness = 0.22
+rim_enabled = true
+rim = 0.20
+rim_tint = 0.30
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_TomatoSlice"]
+material = SubResource("Material_TomatoBright")
+top_radius = 0.058
+bottom_radius = 0.058
+height = 0.018
+radial_segments = 16
 
 [node name="Tomato" type="StaticBody3D"]
-script = ExtResource("1_item")
+script = ExtResource("1_tomato")
 item_id = "tomato"
-display_name = "Tomate Fresco"
+display_name = "Fatia de Tomate Fresco"
 item_type = "ingredient"
 prompt_text = "E — Pegar Tomate"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="MeshInstance3D" type="Node3D" parent="."]
-
-[node name="tomatoSlice" parent="MeshInstance3D" instance=ExtResource("2_tomatoslice_glb")]
-transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 0, 0)
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")

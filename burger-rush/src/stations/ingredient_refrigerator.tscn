@@ -1,0 +1,616 @@
+[gd_scene format=3 uid="uid://ingredient_refrigerator_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/ingredient_refrigerator.gd" id="1_root"]
+[ext_resource type="Script" path="res://src/stations/ingredient_fridge_door.gd" id="2_door"]
+[ext_resource type="Script" path="res://src/stations/ing_slot_potato.gd" id="3_slot_pot"]
+[ext_resource type="Script" path="res://src/stations/ing_slot_lettuce.gd" id="4_slot_let"]
+[ext_resource type="Script" path="res://src/stations/ing_slot_tomato.gd" id="5_slot_tom"]
+[ext_resource type="Script" path="res://src/stations/ing_slot_red_onion.gd" id="6_slot_red_oni"]
+[ext_resource type="Script" path="res://src/stations/ing_slot_white_onion.gd" id="7_slot_oni"]
+[ext_resource type="Script" path="res://src/stations/ing_slot_pickle.gd" id="8_slot_pic"]
+[ext_resource type="Texture2D" path="res://assets/textures/frozen_fries_bag.png" id="9_tex_fries_bag"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_lettuce.png" id="10_tex_lettuce"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_tomato_bright.png" id="11_tex_tomato"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_red_onion.png" id="12_tex_red_onion"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_onion.png" id="13_tex_onion"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_pickle.png" id="14_tex_pickle"]
+[ext_resource type="Texture2D" path="res://assets/textures/veg_normal.png" id="15_tex_norm"]
+
+; ================================================================
+; FORMAS DE COLISÃO
+; ================================================================
+
+; Colisões periféricas do corpo da geladeira (paredes externas sem bloquear a porta)
+[sub_resource type="BoxShape3D" id="Shape_WallSide"]
+size = Vector3(0.06, 2.10, 0.70)
+
+[sub_resource type="BoxShape3D" id="Shape_WallBack"]
+size = Vector3(1.20, 2.10, 0.06)
+
+[sub_resource type="BoxShape3D" id="Shape_BasePlinth"]
+size = Vector3(1.20, 0.16, 0.70)
+
+[sub_resource type="BoxShape3D" id="Shape_TopCanopy"]
+size = Vector3(1.20, 0.18, 0.70)
+
+; Colisão da Porta
+[sub_resource type="BoxShape3D" id="Shape_Door"]
+size = Vector3(1.16, 1.84, 0.04)
+
+; Colisões dos 4 Andares
+[sub_resource type="BoxShape3D" id="Shape_SlotPotato"]
+size = Vector3(1.05, 0.38, 0.50)
+
+[sub_resource type="BoxShape3D" id="Shape_SlotHalfShelf"]
+size = Vector3(0.50, 0.36, 0.50)
+
+[sub_resource type="BoxShape3D" id="Shape_SlotPickle"]
+size = Vector3(1.05, 0.36, 0.50)
+
+; ================================================================
+; MATERIAIS
+; ================================================================
+
+[sub_resource type="StandardMaterial3D" id="Material_FridgeWhite"]
+albedo_color = Color(0.94, 0.95, 0.96, 1)
+roughness = 0.25
+metallic = 0.10
+
+[sub_resource type="StandardMaterial3D" id="Material_DarkTrim"]
+albedo_color = Color(0.20, 0.22, 0.24, 1)
+roughness = 0.40
+
+[sub_resource type="StandardMaterial3D" id="Material_InteriorLiner"]
+albedo_color = Color(0.96, 0.97, 0.98, 1)
+roughness = 0.30
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_WireShelf"]
+albedo_color = Color(0.80, 0.82, 0.84, 1)
+metallic = 0.85
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_HandleAlum"]
+albedo_color = Color(0.85, 0.87, 0.89, 1)
+metallic = 0.90
+roughness = 0.20
+
+[sub_resource type="StandardMaterial3D" id="Material_GlassDoor"]
+transparency = 1
+albedo_color = Color(0.88, 0.94, 0.98, 0.28)
+roughness = 0.08
+refraction_enabled = false
+
+[sub_resource type="StandardMaterial3D" id="Material_BadgePlate"]
+albedo_color = Color(0.96, 0.95, 0.92, 1)
+roughness = 0.35
+
+; Materiais dos Ingredientes
+[sub_resource type="StandardMaterial3D" id="Material_FriesBag"]
+albedo_texture = ExtResource("9_tex_fries_bag")
+roughness = 0.35
+metallic = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_VegLettuce"]
+albedo_texture = ExtResource("10_tex_lettuce")
+normal_enabled = true
+normal_scale = 0.40
+normal_texture = ExtResource("15_tex_norm")
+roughness = 0.45
+rim_enabled = true
+rim = 0.20
+
+[sub_resource type="StandardMaterial3D" id="Material_VegTomato"]
+albedo_texture = ExtResource("11_tex_tomato")
+normal_enabled = true
+normal_scale = 0.45
+normal_texture = ExtResource("15_tex_norm")
+roughness = 0.22
+rim_enabled = true
+rim = 0.20
+
+[sub_resource type="StandardMaterial3D" id="Material_VegRedOnion"]
+albedo_texture = ExtResource("12_tex_red_onion")
+normal_enabled = true
+normal_scale = 0.40
+normal_texture = ExtResource("15_tex_norm")
+roughness = 0.35
+rim_enabled = true
+rim = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_VegOnion"]
+albedo_texture = ExtResource("13_tex_onion")
+normal_enabled = true
+normal_scale = 0.40
+normal_texture = ExtResource("15_tex_norm")
+roughness = 0.38
+rim_enabled = true
+rim = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_VegPickle"]
+albedo_texture = ExtResource("14_tex_pickle")
+normal_enabled = true
+normal_scale = 0.40
+normal_texture = ExtResource("15_tex_norm")
+roughness = 0.35
+rim_enabled = true
+rim = 0.15
+
+; ================================================================
+; MESHES ESTRUTURAIS
+; ================================================================
+
+[sub_resource type="BoxMesh" id="BoxMesh_Plinth"]
+material = SubResource("Material_DarkTrim")
+size = Vector3(1.20, 0.14, 0.70)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopCanopy"]
+material = SubResource("Material_DarkTrim")
+size = Vector3(1.20, 0.14, 0.70)
+
+[sub_resource type="BoxMesh" id="BoxMesh_OuterWallSide"]
+material = SubResource("Material_FridgeWhite")
+size = Vector3(0.045, 1.82, 0.68)
+
+[sub_resource type="BoxMesh" id="BoxMesh_OuterWallBack"]
+material = SubResource("Material_FridgeWhite")
+size = Vector3(1.11, 1.82, 0.045)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CavityFloor"]
+material = SubResource("Material_InteriorLiner")
+size = Vector3(1.10, 0.02, 0.62)
+
+[sub_resource type="BoxMesh" id="BoxMesh_WireShelf"]
+material = SubResource("Material_WireShelf")
+size = Vector3(1.08, 0.015, 0.58)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DividerShelf"]
+material = SubResource("Material_WireShelf")
+size = Vector3(0.012, 0.28, 0.56)
+
+; Porta de Vidro
+[sub_resource type="BoxMesh" id="BoxMesh_DoorFrameHoriz"]
+material = SubResource("Material_FridgeWhite")
+size = Vector3(1.16, 0.06, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DoorFrameVert"]
+material = SubResource("Material_FridgeWhite")
+size = Vector3(0.06, 1.80, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DoorGlass"]
+material = SubResource("Material_GlassDoor")
+size = Vector3(1.04, 1.68, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DoorHandle"]
+material = SubResource("Material_HandleAlum")
+size = Vector3(0.035, 0.50, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Hinge"]
+material = SubResource("Material_DarkTrim")
+size = Vector3(0.04, 0.08, 0.04)
+
+; Meshes dos Ingredientes
+[sub_resource type="BoxMesh" id="BoxMesh_FriesBagModel"]
+material = SubResource("Material_FriesBag")
+size = Vector3(0.24, 0.34, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LettuceLeaf"]
+material = SubResource("Material_VegLettuce")
+size = Vector3(0.18, 0.012, 0.14)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_TomatoSlice"]
+material = SubResource("Material_VegTomato")
+top_radius = 0.058
+bottom_radius = 0.058
+height = 0.018
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_RedOnionSlice"]
+material = SubResource("Material_VegRedOnion")
+top_radius = 0.044
+bottom_radius = 0.044
+height = 0.012
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_WhiteOnionSlice"]
+material = SubResource("Material_VegOnion")
+top_radius = 0.044
+bottom_radius = 0.044
+height = 0.012
+radial_segments = 16
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_PickleSlice"]
+material = SubResource("Material_VegPickle")
+top_radius = 0.0225
+bottom_radius = 0.0225
+height = 0.008
+radial_segments = 14
+
+; ================================================================
+; HIERARQUIA DA CENA
+; ================================================================
+
+[node name="IngredientRefrigerator" type="Node3D"]
+script = ExtResource("1_root")
+
+; ─── CORPO PRINCIPAL DA GELADEIRA (StaticBody3D Periférico) ────
+[node name="FridgeBody" type="StaticBody3D" parent="."]
+
+[node name="ColWallLeft" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.57, 1.05, 0)
+shape = SubResource("Shape_WallSide")
+
+[node name="ColWallRight" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.57, 1.05, 0)
+shape = SubResource("Shape_WallSide")
+
+[node name="ColWallBack" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.33)
+shape = SubResource("Shape_WallBack")
+
+[node name="ColPlinth" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+shape = SubResource("Shape_BasePlinth")
+
+[node name="ColCanopy" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.01, 0)
+shape = SubResource("Shape_TopCanopy")
+
+; Gabinete externo
+[node name="Plinth" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+mesh = SubResource("BoxMesh_Plinth")
+
+[node name="Canopy" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.03, 0)
+mesh = SubResource("BoxMesh_TopCanopy")
+
+[node name="WallLeft" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.577, 1.05, 0)
+mesh = SubResource("BoxMesh_OuterWallSide")
+
+[node name="WallRight" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.577, 1.05, 0)
+mesh = SubResource("BoxMesh_OuterWallSide")
+
+[node name="WallBack" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.337)
+mesh = SubResource("BoxMesh_OuterWallBack")
+
+; Cavidade e Prateleiras (4 Andares)
+[node name="CavityFloor" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("BoxMesh_CavityFloor")
+
+[node name="Shelf2" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
+mesh = SubResource("BoxMesh_WireShelf")
+
+[node name="Divider2" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0)
+mesh = SubResource("BoxMesh_DividerShelf")
+
+[node name="Shelf3" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, 0)
+mesh = SubResource("BoxMesh_WireShelf")
+
+[node name="Divider3" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.12, 0)
+mesh = SubResource("BoxMesh_DividerShelf")
+
+[node name="Shelf4" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.38, 0)
+mesh = SubResource("BoxMesh_WireShelf")
+
+; Labels das 4 Prateleiras
+[node name="Labels" type="Node3D" parent="FridgeBody"]
+
+[node name="LabelShelf1" type="Label3D" parent="FridgeBody/Labels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54, 0.28)
+billboard = 0
+double_sided = false
+text = "🍟 SACOS DE BATATA CONGELADA (x25)"
+font_size = 13
+outline_size = 4
+modulate = Color(1.0, 0.92, 0.50, 1)
+horizontal_alignment = 1
+
+[node name="LabelShelf2" type="Label3D" parent="FridgeBody/Labels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.28)
+billboard = 0
+double_sided = false
+text = "🥬 ALFACE x15   │   🍅 TOMATE x15"
+font_size = 13
+outline_size = 4
+modulate = Color(0.65, 0.95, 0.70, 1)
+horizontal_alignment = 1
+
+[node name="LabelShelf3" type="Label3D" parent="FridgeBody/Labels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.34, 0.28)
+billboard = 0
+double_sided = false
+text = "🧅 CEBOLA ROXA x15   │   🧅 CEBOLA NORMAL x15"
+font_size = 13
+outline_size = 4
+modulate = Color(0.95, 0.80, 0.90, 1)
+horizontal_alignment = 1
+
+[node name="LabelShelf4" type="Label3D" parent="FridgeBody/Labels"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.74, 0.28)
+billboard = 0
+double_sided = false
+text = "🥒 PICLES EM FATIAS (x15)"
+font_size = 13
+outline_size = 4
+modulate = Color(0.70, 0.95, 0.65, 1)
+horizontal_alignment = 1
+
+; ─── PRODUTOS VISÍVEIS NOS 4 ANDARES ───────────────────────────
+[node name="Products" type="Node3D" parent="FridgeBody"]
+
+; ─── ANDAR 1 (INFERIOR): SACOS GRANDES DE BATATA FRITA ──────────
+[node name="PotatoBagsGroup" type="Node3D" parent="FridgeBody/Products"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
+
+[node name="Bag1" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.32, 0.17, 0.04)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="Bag2" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup"]
+transform = Transform3D(0.96, 0, -0.26, 0, 1, 0, 0.26, 0, 0.96, 0.0, 0.17, -0.02)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="Bag3" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.32, 0.17, 0.03)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+; ─── ANDAR 2: ALFACE (ESQ) E TOMATE (DIR) ──────────────────────
+[node name="LettuceGroup" type="Node3D" parent="FridgeBody/Products"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.60, 0)
+
+[node name="Leaf1" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+transform = Transform3D(0.96, 0, 0.28, 0, 1, 0, -0.28, 0, 0.96, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Leaf2" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, 0.02, 0.025, 0.01)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Leaf3" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+transform = Transform3D(0.95, 0, 0.31, 0, 1, 0, -0.31, 0, 0.95, -0.01, 0.040, -0.02)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Leaf4" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.01, 0.055, 0.02)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Leaf5" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+transform = Transform3D(0.97, 0, 0.24, 0, 1, 0, -0.24, 0, 0.97, -0.02, 0.070, 0)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="TomatoGroup" type="Node3D" parent="FridgeBody/Products"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.60, 0)
+
+[node name="Tom1" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Tom2" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.06, 0.028, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Tom3" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+transform = Transform3D(0.96, 0, 0.26, 0, 1, 0, -0.26, 0, 0.96, -0.06, 0.046, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Tom4" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+transform = Transform3D(0.97, 0, -0.22, 0, 1, 0, 0.22, 0, 0.97, 0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Tom5" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+transform = Transform3D(0.99, 0, 0.12, 0, 1, 0, -0.12, 0, 0.99, 0.06, 0.028, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Tom6" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.06, 0.046, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+; ─── ANDAR 3: CEBOLA ROXA (ESQ) E CEBOLA NORMAL (DIR) ──────────
+[node name="RedOnionGroup" type="Node3D" parent="FridgeBody/Products"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.00, 0)
+
+[node name="Red1" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, -0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Red2" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+transform = Transform3D(0.97, 0, 0.24, 0, 1, 0, -0.24, 0, 0.97, -0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Red3" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.06, 0.038, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Red4" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Red5" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Red6" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+transform = Transform3D(0.97, 0, 0.22, 0, 1, 0, -0.22, 0, 0.97, 0.06, 0.038, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="WhiteOnionGroup" type="Node3D" parent="FridgeBody/Products"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 1.00, 0)
+
+[node name="WOni1" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOni2" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, -0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOni3" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+transform = Transform3D(0.96, 0, 0.26, 0, 1, 0, -0.26, 0, 0.96, -0.06, 0.038, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOni4" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOni5" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOni6" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.06, 0.038, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+; ─── ANDAR 4 (SUPERIOR): PICLES (FATIAS PEQUENAS) ──────────────
+[node name="PickleGroup" type="Node3D" parent="FridgeBody/Products"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.40, 0)
+
+[node name="Pic1" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.18, 0.01, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic2" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.18, 0.020, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic3" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.96, 0, 0.26, 0, 1, 0, -0.26, 0, 0.96, -0.18, 0.030, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic4" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.0, 0.01, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic5" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.0, 0.020, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic6" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.0, 0.030, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic7" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.18, 0.01, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic8" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.18, 0.020, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Pic9" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+transform = Transform3D(0.97, 0, 0.22, 0, 1, 0, -0.22, 0, 0.97, 0.18, 0.030, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+; ─── SLOTS INTERATIVOS INDIVIDUAIS (CLIQUE DO MOUSE) ───────────
+[node name="PotatoSlot" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0.04)
+script = ExtResource("3_slot_pot")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PotatoSlot"]
+shape = SubResource("Shape_SlotPotato")
+
+[node name="LettuceSlot" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.76, 0.04)
+script = ExtResource("4_slot_let")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="LettuceSlot"]
+shape = SubResource("Shape_SlotHalfShelf")
+
+[node name="TomatoSlot" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.76, 0.04)
+script = ExtResource("5_slot_tom")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TomatoSlot"]
+shape = SubResource("Shape_SlotHalfShelf")
+
+[node name="RedOnionSlot" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.16, 0.04)
+script = ExtResource("6_slot_red_oni")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RedOnionSlot"]
+shape = SubResource("Shape_SlotHalfShelf")
+
+[node name="WhiteOnionSlot" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 1.16, 0.04)
+script = ExtResource("7_slot_oni")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WhiteOnionSlot"]
+shape = SubResource("Shape_SlotHalfShelf")
+
+[node name="PickleSlot" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.56, 0.04)
+script = ExtResource("8_slot_pic")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickleSlot"]
+shape = SubResource("Shape_SlotPickle")
+
+; ─── PORTA COM PIVÔ DE DOBRADIÇA ESQUERDA (TECLA E) ────────────
+[node name="DoorPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58, 0, 0.365)
+
+[node name="DoorBody" type="StaticBody3D" parent="DoorPivot"]
+script = ExtResource("2_door")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 1.05, 0)
+shape = SubResource("Shape_Door")
+
+[node name="FrameTop" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 1.94, 0)
+mesh = SubResource("BoxMesh_DoorFrameHoriz")
+
+[node name="FrameBottom" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 0.16, 0)
+mesh = SubResource("BoxMesh_DoorFrameHoriz")
+
+[node name="FrameLeft" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, 1.05, 0)
+mesh = SubResource("BoxMesh_DoorFrameVert")
+
+[node name="FrameRight" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.13, 1.05, 0)
+mesh = SubResource("BoxMesh_DoorFrameVert")
+
+[node name="GlassPanel" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 1.05, 0)
+mesh = SubResource("BoxMesh_DoorGlass")
+
+[node name="Handle" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.10, 1.05, 0.04)
+mesh = SubResource("BoxMesh_DoorHandle")
+
+[node name="HingeTop" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.015, 1.86, 0)
+mesh = SubResource("BoxMesh_Hinge")
+
+[node name="HingeBottom" type="MeshInstance3D" parent="DoorPivot/DoorBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.015, 0.24, 0)
+mesh = SubResource("BoxMesh_Hinge")
+
+; ─── ILUMINAÇÃO INTERNA LED ────────────────────────────────────
+[node name="InteriorLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0.0)
+light_color = Color(0.90, 0.96, 1, 1)
+light_energy = 0.4
+omni_range = 2.8
+omni_attenuation = 0.90
+
+; ─── MONITOR DE STATUS SUPERIOR ────────────────────────────────
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.22, 0.40)
+billboard = 1
+double_sided = false
+text = "❄️ GELADEIRA DE HORTIFRÚTI & BATATAS"
+font_size = 18
+outline_size = 5
+modulate = Color(0.65, 0.95, 0.75, 1)
+horizontal_alignment = 1

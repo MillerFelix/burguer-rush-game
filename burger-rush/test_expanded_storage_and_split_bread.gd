@@ -10,8 +10,13 @@ func _init() -> void:
 	inv._initialize_default_inventory()
 	inv.items["bread_bottom"]["quantity"] = 30
 	inv.items["bread_top"]["quantity"] = 30
-	inv.items["patty"]["quantity"] = 30
-	inv.items["cheese"]["quantity"] = 30
+	if "patty_beef" in inv.items:
+		inv.items["patty_beef"]["quantity"] = 30
+		inv.items["patty_chicken"]["quantity"] = 30
+	if "cheese_cheddar" in inv.items:
+		inv.items["cheese_cheddar"]["quantity"] = 30
+	if "cheese" in inv.items:
+		inv.items["cheese"]["quantity"] = 30
 	inv.items["tomato"]["quantity"] = 30
 	inv.items["lettuce"]["quantity"] = 30
 

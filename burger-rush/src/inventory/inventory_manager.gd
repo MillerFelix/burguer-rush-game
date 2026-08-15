@@ -51,7 +51,7 @@ func _initialize_default_inventory() -> void:
 	_register_item("tomato", "Tomate", "vegetables", 15, 50, 1.5, 5, load("res://src/items/tomato.tscn"))
 	_register_item("red_onion", "Cebola Roxa", "vegetables", 15, 50, 1.2, 5, load("res://src/items/onion.tscn"))
 	_register_item("onion", "Cebola Normal", "vegetables", 15, 50, 1.0, 5, load("res://src/items/onion.tscn"))
-	_register_item("pickle", "Picles", "vegetables", 15, 50, 1.5, 5, load("res://src/items/lettuce.tscn"))
+	_register_item("pickle", "Picles", "vegetables", 15, 50, 1.5, 5, load("res://src/items/pickle.tscn"))
 
 	# =========================================================================
 	# 5. EXTRAS

@@ -4,24 +4,35 @@
 [ext_resource type="Script" path="res://src/stations/fridge_door.gd" id="2_door"]
 [ext_resource type="Script" path="res://src/stations/fridge_beef_slot.gd" id="3_beef"]
 [ext_resource type="Script" path="res://src/stations/fridge_chicken_slot.gd" id="4_chicken"]
+[ext_resource type="Texture2D" path="res://assets/textures/meat_patty_beef.png" id="5_tex_beef"]
+[ext_resource type="Texture2D" path="res://assets/textures/meat_patty_chicken.png" id="6_tex_chicken"]
+[ext_resource type="Texture2D" path="res://assets/textures/meat_patty_normal.png" id="7_tex_normal"]
 
 ; ================================================================
 ; FORMAS DE COLISÃO
 ; ================================================================
 
-; Corpo principal da geladeira (caixa externa)
-[sub_resource type="BoxShape3D" id="Shape_Cabinet"]
-size = Vector3(1.40, 2.00, 0.68)
+; Colisões periféricas do corpo (paredes externas vazadas)
+[sub_resource type="BoxShape3D" id="Shape_WallSide"]
+size = Vector3(0.06, 2.05, 0.70)
 
-; Porta (cobre toda a abertura frontal)
+[sub_resource type="BoxShape3D" id="Shape_WallBack"]
+size = Vector3(1.40, 2.05, 0.06)
+
+[sub_resource type="BoxShape3D" id="Shape_WallTop"]
+size = Vector3(1.40, 0.08, 0.70)
+
+[sub_resource type="BoxShape3D" id="Shape_BaseBottom"]
+size = Vector3(1.40, 0.14, 0.70)
+
+; Porta (gira junto com o DoorPivot)
 [sub_resource type="BoxShape3D" id="Shape_Door"]
-size = Vector3(1.36, 1.90, 0.06)
+size = Vector3(1.36, 1.84, 0.05)
 
-; Slot de carne bovina (metade esquerda do interior)
+; Slots de interação dentro dos cestos
 [sub_resource type="BoxShape3D" id="Shape_BeefSlot"]
 size = Vector3(0.56, 1.40, 0.52)
 
-; Slot de carne frango (metade direita do interior)
 [sub_resource type="BoxShape3D" id="Shape_ChickenSlot"]
 size = Vector3(0.56, 1.40, 0.52)
 
@@ -29,199 +40,229 @@ size = Vector3(0.56, 1.40, 0.52)
 ; MATERIAIS
 ; ================================================================
 
-[sub_resource type="StandardMaterial3D" id="Mat_Steel"]
-albedo_color = Color(0.74, 0.76, 0.78, 1)
-metallic = 0.82
-roughness = 0.28
+; Aço escovado exterior
+[sub_resource type="StandardMaterial3D" id="Mat_Stainless"]
+albedo_color = Color(0.72, 0.75, 0.78, 1)
+metallic = 0.85
+roughness = 0.25
 
+; Aço escuro / Molduras / Base
 [sub_resource type="StandardMaterial3D" id="Mat_SteelDark"]
-albedo_color = Color(0.22, 0.24, 0.27, 1)
-metallic = 0.75
-roughness = 0.40
+albedo_color = Color(0.18, 0.20, 0.23, 1)
+metallic = 0.70
+roughness = 0.38
 
+; Polímero branco higiênico para o interior
 [sub_resource type="StandardMaterial3D" id="Mat_Interior"]
-albedo_color = Color(0.92, 0.95, 0.97, 1)
-roughness = 0.55
+albedo_color = Color(0.93, 0.96, 0.98, 1)
+roughness = 0.35
 
+; Prateleiras de aço aramado
+[sub_resource type="StandardMaterial3D" id="Mat_Shelf"]
+albedo_color = Color(0.78, 0.82, 0.86, 1)
+metallic = 0.88
+roughness = 0.22
+
+; Divisória central
+[sub_resource type="StandardMaterial3D" id="Mat_Divider"]
+albedo_color = Color(0.65, 0.70, 0.75, 1)
+metallic = 0.80
+roughness = 0.30
+
+; Vidro duplo da porta com leve reflexo e transparência cristalina
 [sub_resource type="StandardMaterial3D" id="Mat_Glass"]
 transparency = 1
-albedo_color = Color(0.80, 0.92, 1.0, 0.22)
-roughness = 0.05
-metallic = 0.05
+albedo_color = Color(0.82, 0.94, 1.0, 0.18)
+roughness = 0.04
+metallic = 0.10
 emission_enabled = true
-emission = Color(0.20, 0.55, 0.90, 1)
-emission_energy_multiplier = 0.10
+emission = Color(0.3, 0.7, 1.0, 1)
+emission_energy_multiplier = 0.04
 
+; Cromo polido (puxador e dobradiças)
 [sub_resource type="StandardMaterial3D" id="Mat_Chrome"]
-albedo_color = Color(0.90, 0.92, 0.95, 1)
-metallic = 0.96
-roughness = 0.08
+albedo_color = Color(0.95, 0.96, 0.98, 1)
+metallic = 0.98
+roughness = 0.06
 
-[sub_resource type="StandardMaterial3D" id="Mat_Shelf"]
-albedo_color = Color(0.70, 0.75, 0.80, 1)
-metallic = 0.72
-roughness = 0.32
-
-[sub_resource type="StandardMaterial3D" id="Mat_DividerWall"]
-albedo_color = Color(0.55, 0.60, 0.65, 1)
-metallic = 0.65
-roughness = 0.42
-
-[sub_resource type="StandardMaterial3D" id="Mat_LightStrip"]
-albedo_color = Color(0.85, 0.94, 1.0, 1)
+; Barra de LED interna
+[sub_resource type="StandardMaterial3D" id="Mat_LED"]
+albedo_color = Color(0.90, 0.96, 1.0, 1)
 emission_enabled = true
-emission = Color(0.60, 0.82, 1.0, 1)
-emission_energy_multiplier = 0.70
+emission = Color(0.80, 0.92, 1.0, 1)
+emission_energy_multiplier = 1.2
 
+; Cesto de Carne Bovina (Policarbonato translúcido fumê/avermelhado)
+[sub_resource type="StandardMaterial3D" id="Mat_BasketBeef"]
+transparency = 1
+albedo_color = Color(0.85, 0.35, 0.35, 0.65)
+roughness = 0.30
+metallic = 0.15
+
+; Cesto de Frango (Policarbonato translúcido amarelado)
+[sub_resource type="StandardMaterial3D" id="Mat_BasketChicken"]
+transparency = 1
+albedo_color = Color(0.92, 0.80, 0.30, 0.65)
+roughness = 0.30
+metallic = 0.15
+
+; Etiqueta Carne Bovina (Vermelho)
+[sub_resource type="StandardMaterial3D" id="Mat_LabelBeef"]
+albedo_color = Color(0.80, 0.10, 0.10, 1)
+roughness = 0.40
+
+; Etiqueta Frango (Amarelo Ouro)
+[sub_resource type="StandardMaterial3D" id="Mat_LabelChicken"]
+albedo_color = Color(0.95, 0.75, 0.05, 1)
+roughness = 0.40
+
+; Carne Bovina Crua (Textura orgânica + Normal map + Escala realista)
+[sub_resource type="StandardMaterial3D" id="Mat_BeefPatty"]
+albedo_color = Color(0.95, 0.90, 0.90, 1)
+albedo_texture = ExtResource("5_tex_beef")
+normal_enabled = true
+normal_scale = 0.60
+normal_texture = ExtResource("7_tex_normal")
+roughness = 0.72
+uv1_scale = Vector3(2, 2, 2)
+
+; Hambúrguer de Frango Cru (Textura orgânica + Normal map + Escala realista)
+[sub_resource type="StandardMaterial3D" id="Mat_ChickenPatty"]
+albedo_color = Color(0.98, 0.95, 0.95, 1)
+albedo_texture = ExtResource("6_tex_chicken")
+normal_enabled = true
+normal_scale = 0.45
+normal_texture = ExtResource("7_tex_normal")
+roughness = 0.68
+uv1_scale = Vector3(2, 2, 2)
+
+; Rodapé de borracha
 [sub_resource type="StandardMaterial3D" id="Mat_ToeKick"]
-albedo_color = Color(0.14, 0.15, 0.17, 1)
-roughness = 0.78
-
-; Carne bovina: marrom escuro, disco robusto
-[sub_resource type="StandardMaterial3D" id="Mat_Beef"]
-albedo_color = Color(0.36, 0.17, 0.12, 1)
-roughness = 0.88
-
-; Bandeja bovina: bege/bege escuro
-[sub_resource type="StandardMaterial3D" id="Mat_BeefTray"]
-albedo_color = Color(0.78, 0.70, 0.58, 1)
-roughness = 0.62
-
-; Etiqueta bovina: vermelho escuro
-[sub_resource type="StandardMaterial3D" id="Mat_BeefLabel"]
-albedo_color = Color(0.75, 0.12, 0.12, 1)
-roughness = 0.55
-
-; Carne frango: bege alaranjado, forma mais achatada
-[sub_resource type="StandardMaterial3D" id="Mat_Chicken"]
-albedo_color = Color(0.95, 0.70, 0.48, 1)
-roughness = 0.75
-
-; Bandeja frango: branco cremoso
-[sub_resource type="StandardMaterial3D" id="Mat_ChickenTray"]
-albedo_color = Color(0.95, 0.93, 0.88, 1)
-roughness = 0.58
-
-; Etiqueta frango: amarelo
-[sub_resource type="StandardMaterial3D" id="Mat_ChickenLabel"]
-albedo_color = Color(0.96, 0.78, 0.08, 1)
-roughness = 0.55
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.85
 
 ; ================================================================
-; MESHES
+; MESHES ESTRUTURAIS
 ; ================================================================
 
-; Armário externo (sem a frente — interior fica visível)
-[sub_resource type="BoxMesh" id="Mesh_Cabinet"]
-material = SubResource("Mat_Steel")
-size = Vector3(1.40, 2.00, 0.68)
+; Peças externas da carcaça (sem sobreposição de faces)
+[sub_resource type="BoxMesh" id="Mesh_OuterTop"]
+material = SubResource("Mat_Stainless")
+size = Vector3(1.40, 0.05, 0.70)
 
-; Rodapé
+[sub_resource type="BoxMesh" id="Mesh_OuterBottom"]
+material = SubResource("Mat_Stainless")
+size = Vector3(1.40, 0.10, 0.70)
+
+[sub_resource type="BoxMesh" id="Mesh_OuterSide"]
+material = SubResource("Mat_Stainless")
+size = Vector3(0.05, 1.90, 0.70)
+
+[sub_resource type="BoxMesh" id="Mesh_OuterBack"]
+material = SubResource("Mat_Stainless")
+size = Vector3(1.30, 1.90, 0.04)
+
 [sub_resource type="BoxMesh" id="Mesh_ToeKick"]
 material = SubResource("Mat_ToeKick")
-size = Vector3(1.38, 0.10, 0.06)
+size = Vector3(1.36, 0.06, 0.02)
 
-; Paredes internas — fundo
-[sub_resource type="BoxMesh" id="Mesh_BackWall"]
-material = SubResource("Mat_Interior")
-size = Vector3(1.30, 1.85, 0.02)
-
-; Teto interno
-[sub_resource type="BoxMesh" id="Mesh_Ceiling"]
-material = SubResource("Mat_Interior")
-size = Vector3(1.30, 0.02, 0.58)
-
-; Piso interno
-[sub_resource type="BoxMesh" id="Mesh_Floor"]
-material = SubResource("Mat_Interior")
-size = Vector3(1.30, 0.02, 0.58)
-
-; Parede lateral esquerda interna
-[sub_resource type="BoxMesh" id="Mesh_WallLeft"]
-material = SubResource("Mat_Interior")
-size = Vector3(0.02, 1.85, 0.58)
-
-; Parede lateral direita interna
-[sub_resource type="BoxMesh" id="Mesh_WallRight"]
-material = SubResource("Mat_Interior")
-size = Vector3(0.02, 1.85, 0.58)
-
-; Divisor central vertical (separa bovina / frango)
-[sub_resource type="BoxMesh" id="Mesh_Divider"]
-material = SubResource("Mat_DividerWall")
-size = Vector3(0.025, 1.83, 0.58)
-
-; Prateleiras
-[sub_resource type="BoxMesh" id="Mesh_Shelf"]
-material = SubResource("Mat_Shelf")
-size = Vector3(1.28, 0.022, 0.56)
-
-; Fita LED no topo do interior
-[sub_resource type="BoxMesh" id="Mesh_LightStrip"]
-material = SubResource("Mat_LightStrip")
-size = Vector3(1.26, 0.025, 0.025)
-
-; Bandeja bovina
-[sub_resource type="BoxMesh" id="Mesh_BeefTray"]
-material = SubResource("Mat_BeefTray")
-size = Vector3(0.54, 0.022, 0.50)
-
-; Disco de carne bovina (hamburger bovino, mais escuro e espesso)
-[sub_resource type="CylinderMesh" id="Mesh_BeefPatty"]
-material = SubResource("Mat_Beef")
-top_radius = 0.108
-bottom_radius = 0.108
-height = 0.060
-radial_segments = 16
-
-; Etiqueta de identificação bovina (pequena placa vermelha)
-[sub_resource type="BoxMesh" id="Mesh_BeefLabel"]
-material = SubResource("Mat_BeefLabel")
-size = Vector3(0.20, 0.055, 0.018)
-
-; Bandeja frango
-[sub_resource type="BoxMesh" id="Mesh_ChickenTray"]
-material = SubResource("Mat_ChickenTray")
-size = Vector3(0.52, 0.022, 0.48)
-
-; Disco de frango (mais claro, ligeiramente menor e mais achatado)
-[sub_resource type="CylinderMesh" id="Mesh_ChickenPatty"]
-material = SubResource("Mat_Chicken")
-top_radius = 0.090
-bottom_radius = 0.090
-height = 0.042
-radial_segments = 14
-
-; Etiqueta frango (pequena placa amarela)
-[sub_resource type="BoxMesh" id="Mesh_ChickenLabel"]
-material = SubResource("Mat_ChickenLabel")
-size = Vector3(0.20, 0.055, 0.018)
-
-; ─── PORTA ───────────────────────────────────────────────────
-; Frame de aço escuro da porta
-[sub_resource type="BoxMesh" id="Mesh_DoorFrame"]
+[sub_resource type="BoxMesh" id="Mesh_CompressorGrille"]
 material = SubResource("Mat_SteelDark")
-size = Vector3(1.40, 1.95, 0.045)
+size = Vector3(1.26, 0.04, 0.005)
 
-; Painel de vidro translúcido
-[sub_resource type="BoxMesh" id="Mesh_Glass"]
+; Paredes e pisos internos (cavidade profunda)
+[sub_resource type="BoxMesh" id="Mesh_InnerBack"]
+material = SubResource("Mat_Interior")
+size = Vector3(1.30, 1.88, 0.02)
+
+[sub_resource type="BoxMesh" id="Mesh_InnerSide"]
+material = SubResource("Mat_Interior")
+size = Vector3(0.02, 1.88, 0.62)
+
+[sub_resource type="BoxMesh" id="Mesh_InnerCeilingFloor"]
+material = SubResource("Mat_Interior")
+size = Vector3(1.26, 0.02, 0.62)
+
+[sub_resource type="BoxMesh" id="Mesh_Divider"]
+material = SubResource("Mat_Divider")
+size = Vector3(0.025, 1.86, 0.60)
+
+; Prateleiras aramadas
+[sub_resource type="BoxMesh" id="Mesh_ShelfGrid"]
+material = SubResource("Mat_Shelf")
+size = Vector3(0.60, 0.02, 0.58)
+
+; Barra de LED
+[sub_resource type="BoxMesh" id="Mesh_LEDStrip"]
+material = SubResource("Mat_LED")
+size = Vector3(1.26, 0.02, 0.03)
+
+; Cestos gastronômicos (fundo + laterais + aba frontal baixa)
+[sub_resource type="BoxMesh" id="Mesh_BasketFloor"]
+size = Vector3(0.54, 0.018, 0.50)
+
+[sub_resource type="BoxMesh" id="Mesh_BasketSide"]
+size = Vector3(0.016, 0.11, 0.50)
+
+[sub_resource type="BoxMesh" id="Mesh_BasketBack"]
+size = Vector3(0.54, 0.11, 0.016)
+
+[sub_resource type="BoxMesh" id="Mesh_BasketFront"]
+size = Vector3(0.54, 0.035, 0.016)
+
+[sub_resource type="BoxMesh" id="Mesh_BasketBadge"]
+size = Vector3(0.24, 0.045, 0.01)
+
+; Modelos de Hambúrgueres (Redondos, Achatados, 20% Menores, Proporção Real)
+[sub_resource type="CylinderMesh" id="Mesh_BeefPatty"]
+material = SubResource("Mat_BeefPatty")
+top_radius = 0.082
+bottom_radius = 0.082
+height = 0.034
+radial_segments = 20
+rings = 2
+
+[sub_resource type="CylinderMesh" id="Mesh_ChickenPatty"]
+material = SubResource("Mat_ChickenPatty")
+top_radius = 0.078
+bottom_radius = 0.078
+height = 0.032
+radial_segments = 20
+rings = 2
+
+; Porta e Moldura (dimensões exatas sem sobreposição / Z-fighting)
+[sub_resource type="BoxMesh" id="Mesh_DoorFrameHoriz"]
+material = SubResource("Mat_SteelDark")
+size = Vector3(1.36, 0.06, 0.036)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorFrameVert"]
+material = SubResource("Mat_SteelDark")
+size = Vector3(0.06, 1.74, 0.036)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorFrameDivider"]
+material = SubResource("Mat_SteelDark")
+size = Vector3(0.04, 1.74, 0.032)
+
+[sub_resource type="BoxMesh" id="Mesh_DoorGlass"]
 material = SubResource("Mat_Glass")
-size = Vector3(1.30, 1.82, 0.025)
+size = Vector3(0.60, 1.74, 0.010)
 
-; Puxador (cilindro horizontal)
-[sub_resource type="CylinderMesh" id="Mesh_Handle"]
+[sub_resource type="CylinderMesh" id="Mesh_DoorHandle"]
 material = SubResource("Mat_Chrome")
-top_radius = 0.020
-bottom_radius = 0.020
-height = 0.75
+top_radius = 0.018
+bottom_radius = 0.018
+height = 0.90
 radial_segments = 12
 
-; Dobradiças (discos)
-[sub_resource type="CylinderMesh" id="Mesh_Hinge"]
+[sub_resource type="BoxMesh" id="Mesh_HandleBracket"]
 material = SubResource("Mat_Chrome")
-top_radius = 0.028
-bottom_radius = 0.028
-height = 0.06
+size = Vector3(0.025, 0.025, 0.05)
+
+[sub_resource type="CylinderMesh" id="Mesh_DoorHinge"]
+material = SubResource("Mat_Chrome")
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.07
 radial_segments = 10
 
 ; ================================================================
@@ -231,244 +272,435 @@ radial_segments = 10
 [node name="CommercialRefrigerator" type="Node3D"]
 script = ExtResource("1_root")
 
-; ─── CORPO PRINCIPAL ──────────────────────────────────────────
+; ─── CORPO PRINCIPAL COM CAVIDADE REAL ─────────────────────────
 [node name="FridgeBody" type="StaticBody3D" parent="."]
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
-shape = SubResource("Shape_Cabinet")
+; Colisões periféricas (vazadas no centro)
+[node name="ColLeft" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.67, 1.025, -0.01)
+shape = SubResource("Shape_WallSide")
 
-; Armário externo (visual do aço inoxidável)
-[node name="Cabinet" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, 0)
-mesh = SubResource("Mesh_Cabinet")
+[node name="ColRight" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.67, 1.025, -0.01)
+shape = SubResource("Shape_WallSide")
 
-; Rodapé
+[node name="ColBack" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.025, -0.34)
+shape = SubResource("Shape_WallBack")
+
+[node name="ColTop" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.025, -0.01)
+shape = SubResource("Shape_WallTop")
+
+[node name="ColBottom" type="CollisionShape3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.01)
+shape = SubResource("Shape_BaseBottom")
+
+; Carcaça Externa (Aço Inoxidável - faces perfeitamente ajustadas)
+[node name="OuterTop" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.025, -0.01)
+mesh = SubResource("Mesh_OuterTop")
+
+[node name="OuterBottom" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, -0.01)
+mesh = SubResource("Mesh_OuterBottom")
+
+[node name="OuterLeft" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.675, 1.05, -0.01)
+mesh = SubResource("Mesh_OuterSide")
+
+[node name="OuterRight" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.675, 1.05, -0.01)
+mesh = SubResource("Mesh_OuterSide")
+
+[node name="OuterBack" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.34)
+mesh = SubResource("Mesh_OuterBack")
+
 [node name="ToeKick" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.055, 0.31)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0.345)
 mesh = SubResource("Mesh_ToeKick")
 
-; ─── INTERIOR DA GELADEIRA ────────────────────────────────────
+[node name="CompressorGrille" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0.345)
+mesh = SubResource("Mesh_CompressorGrille")
 
-; Parede de fundo
-[node name="BackWall" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03, -0.33)
-mesh = SubResource("Mesh_BackWall")
+; ─── REVESTIMENTO DA CAVIDADE INTERNA ──────────────────────────
+[node name="InnerBack" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.30)
+mesh = SubResource("Mesh_InnerBack")
 
-; Teto interno
-[node name="InternalCeiling" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
-mesh = SubResource("Mesh_Ceiling")
+[node name="InnerLeft" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.64, 1.05, 0.02)
+mesh = SubResource("Mesh_InnerSide")
 
-; Piso interno
-[node name="InternalFloor" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
-mesh = SubResource("Mesh_Floor")
+[node name="InnerRight" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.64, 1.05, 0.02)
+mesh = SubResource("Mesh_InnerSide")
 
-; Parede esquerda interna
-[node name="InternalWallLeft" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.64, 1.03, 0)
-mesh = SubResource("Mesh_WallLeft")
+[node name="InnerCeiling" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.99, 0.02)
+mesh = SubResource("Mesh_InnerCeilingFloor")
 
-; Parede direita interna
-[node name="InternalWallRight" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.64, 1.03, 0)
-mesh = SubResource("Mesh_WallRight")
+[node name="InnerFloor" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0.02)
+mesh = SubResource("Mesh_InnerCeilingFloor")
 
-; Divisor central (separa bovina da esquerda / frango da direita)
 [node name="Divider" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0.02)
 mesh = SubResource("Mesh_Divider")
 
-; Prateleira superior
-[node name="ShelfTop" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.62, 0)
-mesh = SubResource("Mesh_Shelf")
+[node name="LEDStrip" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.97, 0.20)
+mesh = SubResource("Mesh_LEDStrip")
 
-; Prateleira intermediária
-[node name="ShelfMid" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.10, 0)
-mesh = SubResource("Mesh_Shelf")
+; ─── PRATELEIRAS MULTINÍVEIS ARAMADAS ──────────────────────────
+[node name="ShelfTopLeft" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 1.48, 0.02)
+mesh = SubResource("Mesh_ShelfGrid")
 
-; Fita de LED interna no topo
-[node name="LightStrip" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.93, -0.02)
-mesh = SubResource("Mesh_LightStrip")
+[node name="ShelfTopRight" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 1.48, 0.02)
+mesh = SubResource("Mesh_ShelfGrid")
 
-; ─── LADO BOVINA (esquerdo, X negativo) ─────────────────────
+[node name="ShelfMidLeft" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.95, 0.02)
+mesh = SubResource("Mesh_ShelfGrid")
 
-; Bandeja bovina — prateleira superior (entre 1.62 e 1.95)
-[node name="BeefTrayTop" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.65, 0)
-mesh = SubResource("Mesh_BeefTray")
+[node name="ShelfMidRight" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.95, 0.02)
+mesh = SubResource("Mesh_ShelfGrid")
 
-; Patties bovinos na bandeja superior
-[node name="Beef_T1" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.682, -0.08)
+[node name="ShelfBotLeft" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.42, 0.02)
+mesh = SubResource("Mesh_ShelfGrid")
+
+[node name="ShelfBotRight" type="MeshInstance3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.42, 0.02)
+mesh = SubResource("Mesh_ShelfGrid")
+
+; ─── CESTO DE CARNE BOVINA (Lado Esquerdo - Médio) ───────────────
+[node name="BasketBeefMid" type="Node3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.96, 0.02)
+
+[node name="Floor" type="MeshInstance3D" parent="FridgeBody/BasketBeefMid"]
+mesh = SubResource("Mesh_BasketFloor")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallLeft" type="MeshInstance3D" parent="FridgeBody/BasketBeefMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallRight" type="MeshInstance3D" parent="FridgeBody/BasketBeefMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallBack" type="MeshInstance3D" parent="FridgeBody/BasketBeefMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.055, -0.24)
+mesh = SubResource("Mesh_BasketBack")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallFront" type="MeshInstance3D" parent="FridgeBody/BasketBeefMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.018, 0.24)
+mesh = SubResource("Mesh_BasketFront")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="Badge" type="MeshInstance3D" parent="FridgeBody/BasketBeefMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.25)
+mesh = SubResource("Mesh_BasketBadge")
+surface_material_override/0 = SubResource("Mat_LabelBeef")
+
+; ─── CESTO DE CARNE BOVINA (Lado Esquerdo - Superior) ────────────
+[node name="BasketBeefTop" type="Node3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 1.49, 0.02)
+
+[node name="Floor" type="MeshInstance3D" parent="FridgeBody/BasketBeefTop"]
+mesh = SubResource("Mesh_BasketFloor")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallLeft" type="MeshInstance3D" parent="FridgeBody/BasketBeefTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallRight" type="MeshInstance3D" parent="FridgeBody/BasketBeefTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallBack" type="MeshInstance3D" parent="FridgeBody/BasketBeefTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.055, -0.24)
+mesh = SubResource("Mesh_BasketBack")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+[node name="WallFront" type="MeshInstance3D" parent="FridgeBody/BasketBeefTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.018, 0.24)
+mesh = SubResource("Mesh_BasketFront")
+surface_material_override/0 = SubResource("Mat_BasketBeef")
+
+; ─── CESTO DE FRANGO (Lado Direito - Médio) ──────────────────────
+[node name="BasketChickenMid" type="Node3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0.96, 0.02)
+
+[node name="Floor" type="MeshInstance3D" parent="FridgeBody/BasketChickenMid"]
+mesh = SubResource("Mesh_BasketFloor")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallLeft" type="MeshInstance3D" parent="FridgeBody/BasketChickenMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallRight" type="MeshInstance3D" parent="FridgeBody/BasketChickenMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallBack" type="MeshInstance3D" parent="FridgeBody/BasketChickenMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.055, -0.24)
+mesh = SubResource("Mesh_BasketBack")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallFront" type="MeshInstance3D" parent="FridgeBody/BasketChickenMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.018, 0.24)
+mesh = SubResource("Mesh_BasketFront")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="Badge" type="MeshInstance3D" parent="FridgeBody/BasketChickenMid"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.25)
+mesh = SubResource("Mesh_BasketBadge")
+surface_material_override/0 = SubResource("Mat_LabelChicken")
+
+; ─── CESTO DE FRANGO (Lado Direito - Superior) ────────────────────
+[node name="BasketChickenTop" type="Node3D" parent="FridgeBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 1.49, 0.02)
+
+[node name="Floor" type="MeshInstance3D" parent="FridgeBody/BasketChickenTop"]
+mesh = SubResource("Mesh_BasketFloor")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallLeft" type="MeshInstance3D" parent="FridgeBody/BasketChickenTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallRight" type="MeshInstance3D" parent="FridgeBody/BasketChickenTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.055, 0)
+mesh = SubResource("Mesh_BasketSide")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallBack" type="MeshInstance3D" parent="FridgeBody/BasketChickenTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.055, -0.24)
+mesh = SubResource("Mesh_BasketBack")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+[node name="WallFront" type="MeshInstance3D" parent="FridgeBody/BasketChickenTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.018, 0.24)
+mesh = SubResource("Mesh_BasketFront")
+surface_material_override/0 = SubResource("Mat_BasketChicken")
+
+; ─── ALIMENTOS VISÍVEIS: GRUPO CARNE BOVINA ─────────────────────
+[node name="BeefFoodGroup" type="Node3D" parent="FridgeBody"]
+
+; Pilha 1 (Médio, Frente Esquerda)
+[node name="Patty_B1" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, -0.44, 0.99, 0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-[node name="Beef_T2" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.745, -0.08)
+[node name="Patty_B2" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, -0.44, 1.03, 0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-[node name="Beef_T3" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.808, -0.08)
+[node name="Patty_B3" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, -0.44, 1.07, 0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-[node name="Beef_T4" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 1.682, -0.08)
+; Pilha 2 (Médio, Frente Direita)
+[node name="Patty_B4" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, -0.22, 0.99, 0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-[node name="Beef_T5" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 1.745, -0.08)
+[node name="Patty_B5" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, -0.22, 1.03, 0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-; Bandeja bovina — prateleira intermediária (entre 1.10 e 1.62)
-[node name="BeefTrayMid" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.13, 0)
-mesh = SubResource("Mesh_BeefTray")
-
-[node name="Beef_M1" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.162, -0.08)
+[node name="Patty_B6" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.95, 0, -0.31, 0, 1, 0, 0.31, 0, 0.95, -0.22, 1.07, 0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-[node name="Beef_M2" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 1.225, -0.08)
+; Pilha 3 (Médio, Fundo)
+[node name="Patty_B7" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.33, 0.99, -0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-[node name="Beef_M3" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.46, 1.162, -0.08)
+[node name="Patty_B8" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, -0.33, 1.03, -0.10)
 mesh = SubResource("Mesh_BeefPatty")
 
-; Etiqueta vermelha "BOVINA"
-[node name="BeefLabel" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.96, 0.35)
-mesh = SubResource("Mesh_BeefLabel")
+; Pilha Top (Superior)
+[node name="Patty_B9" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, -0.44, 1.52, 0.10)
+mesh = SubResource("Mesh_BeefPatty")
 
-; ─── LADO FRANGO (direito, X positivo) ──────────────────────
+[node name="Patty_B10" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, -0.44, 1.56, 0.10)
+mesh = SubResource("Mesh_BeefPatty")
 
-; Bandeja frango — prateleira superior
-[node name="ChickenTrayTop" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.65, 0)
-mesh = SubResource("Mesh_ChickenTray")
+[node name="Patty_B11" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, -0.22, 1.52, 0.10)
+mesh = SubResource("Mesh_BeefPatty")
 
-[node name="Chick_T1" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 1.672, -0.08)
+[node name="Patty_B12" type="MeshInstance3D" parent="FridgeBody/BeefFoodGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, -0.22, 1.56, 0.10)
+mesh = SubResource("Mesh_BeefPatty")
+
+; ─── ALIMENTOS VISÍVEIS: GRUPO HAMBÚRGUER DE FRANGO ─────────────
+[node name="ChickenFoodGroup" type="Node3D" parent="FridgeBody"]
+
+; Pilha 1 (Médio, Frente Esquerda)
+[node name="Patty_C1" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, 0.22, 0.99, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_T2" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 1.716, -0.08)
+[node name="Patty_C2" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.22, 1.03, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_T3" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 1.760, -0.08)
+[node name="Patty_C3" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.22, 1.07, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_T4" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 1.804, -0.08)
+; Pilha 2 (Médio, Frente Direita)
+[node name="Patty_C4" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.44, 0.99, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_T5" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 1.672, -0.08)
+[node name="Patty_C5" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, 0.44, 1.03, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_T6" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 1.716, -0.08)
+[node name="Patty_C6" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.44, 1.07, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-; Bandeja frango — prateleira intermediária
-[node name="ChickenTrayMid" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.13, 0)
-mesh = SubResource("Mesh_ChickenTray")
-
-[node name="Chick_M1" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 1.152, -0.08)
+; Pilha 3 (Médio, Fundo)
+[node name="Patty_C7" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.33, 0.99, -0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_M2" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 1.196, -0.08)
+[node name="Patty_C8" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.33, 1.03, -0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_M3" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 1.152, -0.08)
+; Pilha Top (Superior)
+[node name="Patty_C9" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, 0.22, 1.52, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-[node name="Chick_M4" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.46, 1.196, -0.08)
+[node name="Patty_C10" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.22, 1.56, 0.10)
 mesh = SubResource("Mesh_ChickenPatty")
 
-; Etiqueta amarela "FRANGO"
-[node name="ChickenLabel" type="MeshInstance3D" parent="FridgeBody"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.96, 0.35)
-mesh = SubResource("Mesh_ChickenLabel")
+[node name="Patty_C11" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.44, 1.52, 0.10)
+mesh = SubResource("Mesh_ChickenPatty")
 
-; ─── SLOTS DE INTERAÇÃO (StaticBody3D filhos de FridgeBody, cada um com script) ─
-; NOTA: São filhos do Node3D raiz (MeatRefrigerator), não do FridgeBody,
-; para que seus scripts possam chamar get_parent() -> MeatRefrigerator
+[node name="Patty_C12" type="MeshInstance3D" parent="FridgeBody/ChickenFoodGroup"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.44, 1.56, 0.10)
+mesh = SubResource("Mesh_ChickenPatty")
 
+; ─── SLOTS DE INTERAÇÃO (StaticBody3D) ─────────────────────────
 [node name="BeefSlot" type="StaticBody3D" parent="."]
 script = ExtResource("3_beef")
 
-; Colisão do slot bovina — cobre o lado esquerdo do interior aberto
-; Posicionado levemente à frente da geladeira (z positivo) para ser alcançável
 [node name="CollisionShape3D" type="CollisionShape3D" parent="BeefSlot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 1.05, 0.38)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 1.03, 0.02)
 shape = SubResource("Shape_BeefSlot")
 
 [node name="ChickenSlot" type="StaticBody3D" parent="."]
 script = ExtResource("4_chicken")
 
-; Colisão do slot frango — cobre o lado direito do interior aberto
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ChickenSlot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 1.05, 0.38)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 1.03, 0.02)
 shape = SubResource("Shape_ChickenSlot")
 
-; ─── PORTA COM PIVOT DE DOBRADIÇA ───────────────────────────
-; O pivot fica no canto ESQUERDO da porta (onde estão as dobradiças)
-; Posição X = -0.70 (metade da largura da porta)
-; Quando rotation_degrees.y = -85, a porta abre para o lado esquerdo
-
+; ─── PORTA COM PIVÔ DE DOBRADIÇA ESQUERDA ─────────────────────
+; Posição com folga física perfeita (Z = 0.375) evitando Z-fighting
 [node name="DoorPivot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.70, 0, 0.345)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0, 0.375)
 
 [node name="FridgeDoor" type="StaticBody3D" parent="DoorPivot"]
 script = ExtResource("2_door")
 
-; A porta é centrada no pivot — deve ser deslocada 0.70 no eixo X
-; para que o canto esquerdo fique no pivot (ponto de rotação)
 [node name="CollisionShape3D" type="CollisionShape3D" parent="DoorPivot/FridgeDoor"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70, 1.02, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68, 1.05, 0)
 shape = SubResource("Shape_Door")
 
-; Frame escuro da porta
-[node name="DoorFrame" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70, 1.02, 0.004)
-mesh = SubResource("Mesh_DoorFrame")
+; Moldura da Porta (estruturada perfeitamente sem sobreposição)
+[node name="FrameTop" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68, 1.95, 0)
+mesh = SubResource("Mesh_DoorFrameHoriz")
 
-; Vidro translúcido
-[node name="Glass" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70, 1.02, 0.020)
-mesh = SubResource("Mesh_Glass")
+[node name="FrameBottom" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68, 0.15, 0)
+mesh = SubResource("Mesh_DoorFrameHoriz")
 
-; Puxador (vertical, no lado direito da porta — onde o jogador puxa)
-[node name="Handle" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 1.32, 1.02, 0.055)
-mesh = SubResource("Mesh_Handle")
+[node name="FrameLeft" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.03, 1.05, 0)
+mesh = SubResource("Mesh_DoorFrameVert")
 
-; Dobradiça superior
+[node name="FrameRight" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.33, 1.05, 0)
+mesh = SubResource("Mesh_DoorFrameVert")
+
+[node name="FrameCenter" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68, 1.05, 0)
+mesh = SubResource("Mesh_DoorFrameDivider")
+
+; Painéis de Vidro
+[node name="GlassLeft" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 1.05, 0)
+mesh = SubResource("Mesh_DoorGlass")
+
+[node name="GlassRight" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.00, 1.05, 0)
+mesh = SubResource("Mesh_DoorGlass")
+
+; Puxador Ergonômico de Aço
+[node name="HandleBar" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.30, 1.05, 0.055)
+mesh = SubResource("Mesh_DoorHandle")
+
+[node name="HandleBracketTop" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.30, 1.45, 0.028)
+mesh = SubResource("Mesh_HandleBracket")
+
+[node name="HandleBracketBot" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.30, 0.65, 0.028)
+mesh = SubResource("Mesh_HandleBracket")
+
+; Dobradiças Reforçadas
 [node name="HingeTop" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0.04, 1.85, 0)
-mesh = SubResource("Mesh_Hinge")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.015, 1.86, 0)
+mesh = SubResource("Mesh_DoorHinge")
 
-; Dobradiça inferior
 [node name="HingeBot" type="MeshInstance3D" parent="DoorPivot/FridgeDoor"]
-transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0.04, 0.20, 0)
-mesh = SubResource("Mesh_Hinge")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.015, 0.24, 0)
+mesh = SubResource("Mesh_DoorHinge")
 
-; ─── LABELS 3D ──────────────────────────────────────────────
+; ─── ILUMINAÇÃO INTERNA ────────────────────────────────────────
+[node name="InteriorLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.82, 0.0)
+light_color = Color(0.92, 0.96, 1.0, 1)
+light_energy = 0.4
+omni_range = 2.8
+omni_attenuation = 1.2
 
+; ─── LABELS 3D DE IDENTIFICAÇÃO E ESTADO ───────────────────────
 [node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.20, 0.44)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.20, 0.40)
 billboard = 1
 double_sided = false
 text = "❄️ GELADEIRA DE CARNES"
@@ -477,19 +709,18 @@ outline_size = 5
 modulate = Color(0.4, 0.85, 1.0, 1.0)
 horizontal_alignment = 1
 
-; Labels de identificação dos compartimentos (visíveis quando porta abre)
 [node name="LabelBeef3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 2.00, 0.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 1.98, 0.35)
 billboard = 0
 double_sided = true
-text = "🥩 BOVINA"
+text = "🥩 CARNE BOVINA"
 font_size = 13
 outline_size = 3
 modulate = Color(1.0, 0.65, 0.65, 1.0)
 horizontal_alignment = 1
 
 [node name="LabelChicken3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.32, 2.00, 0.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 1.98, 0.35)
 billboard = 0
 double_sided = true
 text = "🍗 FRANGO"
