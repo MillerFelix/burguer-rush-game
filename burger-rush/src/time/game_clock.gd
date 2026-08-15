@@ -17,10 +17,10 @@ signal week_ended(report: WeeklyReport)
 static var instance: GameClock = null
 
 @export var start_hour: int = 8
-@export var start_minute: int = 0
+@export var start_minute: int = 30
 @export var auto_open_hour: int = 9
 @export var auto_open_minute: int = 0
-@export var closing_hour: int = 18
+@export var closing_hour: int = 21
 @export var closing_minute: int = 0
 @export var time_scale: float = 1.0 # 1 segundo real = 1 minuto de jogo
 @export var is_paused: bool = false

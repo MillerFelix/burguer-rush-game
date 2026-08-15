@@ -84,9 +84,9 @@ func _init() -> void:
 		{"idx": 0, "id": "bread_bottom", "name": "Base do Pão", "tier": "Superior"},
 		{"idx": 1, "id": "bread_top", "name": "Tampa do Pão", "tier": "Superior"},
 		{"idx": 2, "id": "cheese", "name": "Queijo Cheddar", "tier": "Superior"},
-		{"idx": 3, "id": "potato_raw", "name": "Batata Crua", "tier": "Inferior"},
-		{"idx": 4, "id": "tomato", "name": "Tomate Fresco", "tier": "Inferior"},
-		{"idx": 5, "id": "lettuce", "name": "Alface Crocante", "tier": "Inferior"}
+		{"idx": 6, "id": "potato_raw", "name": "Batata Crua", "tier": "Inferior"},
+		{"idx": 7, "id": "tomato", "name": "Tomate Fresco", "tier": "Inferior"},
+		{"idx": 8, "id": "lettuce", "name": "Alface Crocante", "tier": "Inferior"}
 	]
 
 	for itm_t in ingredients_to_test:

@@ -1,64 +1,136 @@
 [gd_scene format=3 uid="uid://employee_scene_uid"]
 
 [ext_resource type="Script" path="res://src/employees/employee.gd" id="1_emp"]
-[ext_resource type="Texture2D" path="res://assets/textures/character_face_employee.png" id="2_face_tex"]
+[ext_resource type="Script" path="res://src/characters/humanoid_animator.gd" id="2_anim"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
-radius = 0.32
-height = 1.75
+radius = 0.35
+height = 1.80
 
 [sub_resource type="StandardMaterial3D" id="Material_Skin"]
 albedo_color = Color(0.96, 0.78, 0.65, 1)
-roughness = 0.7
+roughness = 0.85
 
-[sub_resource type="StandardMaterial3D" id="Material_Face"]
-albedo_texture = ExtResource("2_face_tex")
-roughness = 0.7
+[sub_resource type="StandardMaterial3D" id="Material_EyesWhite"]
+albedo_color = Color(0.98, 0.98, 0.98, 1)
+roughness = 0.4
 
-[sub_resource type="StandardMaterial3D" id="Material_Uniform"]
-albedo_color = Color(0.18, 0.18, 0.22, 1)
+[sub_resource type="StandardMaterial3D" id="Material_Pupil"]
+albedo_color = Color(0.10, 0.12, 0.16, 1)
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_EyeHighlight"]
+albedo_color = Color(1, 1, 1, 1)
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_Eyebrow"]
+albedo_color = Color(0.24, 0.16, 0.12, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_Mouth"]
+albedo_color = Color(0.75, 0.28, 0.28, 1)
 roughness = 0.75
 
-[sub_resource type="StandardMaterial3D" id="Material_RedApron"]
+[sub_resource type="StandardMaterial3D" id="Material_UniformRed"]
 albedo_color = Color(0.85, 0.16, 0.16, 1)
-roughness = 0.7
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_ApronDark"]
+albedo_color = Color(0.18, 0.18, 0.22, 1)
+roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="Material_GoldBadge"]
-albedo_color = Color(0.95, 0.82, 0.2, 1)
+albedo_color = Color(0.95, 0.82, 0.20, 1)
 metallic = 0.8
-roughness = 0.3
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_Pants"]
+albedo_color = Color(0.18, 0.18, 0.22, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_Shoes"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Material_ShoeSole"]
+albedo_color = Color(0.95, 0.95, 0.96, 1)
+roughness = 0.6
 
 [sub_resource type="BoxMesh" id="BoxMesh_Head"]
 material = SubResource("Material_Skin")
-size = Vector3(0.24, 0.26, 0.24)
+size = Vector3(0.34, 0.34, 0.34)
 
-[sub_resource type="BoxMesh" id="BoxMesh_FacePlane"]
-material = SubResource("Material_Face")
-size = Vector3(0.22, 0.24, 0.01)
+[sub_resource type="BoxMesh" id="BoxMesh_EyeWhite"]
+material = SubResource("Material_EyesWhite")
+size = Vector3(0.065, 0.075, 0.01)
 
-[sub_resource type="BoxMesh" id="BoxMesh_VisorHat"]
-material = SubResource("Material_RedApron")
-size = Vector3(0.28, 0.08, 0.32)
+[sub_resource type="BoxMesh" id="BoxMesh_Pupil"]
+material = SubResource("Material_Pupil")
+size = Vector3(0.042, 0.052, 0.01)
+
+[sub_resource type="BoxMesh" id="BoxMesh_EyeHighlight"]
+material = SubResource("Material_EyeHighlight")
+size = Vector3(0.016, 0.016, 0.01)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Eyebrow"]
+material = SubResource("Material_Eyebrow")
+size = Vector3(0.08, 0.02, 0.01)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Nose"]
+material = SubResource("Material_Skin")
+size = Vector3(0.045, 0.045, 0.025)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Mouth"]
+material = SubResource("Material_Mouth")
+size = Vector3(0.11, 0.035, 0.01)
+
+[sub_resource type="BoxMesh" id="BoxMesh_VisorCap"]
+material = SubResource("Material_UniformRed")
+size = Vector3(0.36, 0.15, 0.36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_VisorBrim"]
+material = SubResource("Material_UniformRed")
+size = Vector3(0.32, 0.028, 0.17)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Neck"]
+material = SubResource("Material_Skin")
+size = Vector3(0.14, 0.10, 0.14)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Torso"]
-material = SubResource("Material_Uniform")
-size = Vector3(0.38, 0.52, 0.22)
+material = SubResource("Material_UniformRed")
+size = Vector3(0.44, 0.52, 0.30)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Apron"]
-material = SubResource("Material_RedApron")
-size = Vector3(0.32, 0.44, 0.01)
+material = SubResource("Material_ApronDark")
+size = Vector3(0.34, 0.46, 0.01)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Badge"]
 material = SubResource("Material_GoldBadge")
-size = Vector3(0.06, 0.04, 0.01)
+size = Vector3(0.075, 0.05, 0.01)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Hips"]
+material = SubResource("Material_Pants")
+size = Vector3(0.42, 0.14, 0.28)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Arm"]
-material = SubResource("Material_Uniform")
-size = Vector3(0.1, 0.46, 0.1)
+material = SubResource("Material_UniformRed")
+size = Vector3(0.13, 0.48, 0.14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Hand"]
+material = SubResource("Material_Skin")
+size = Vector3(0.12, 0.12, 0.12)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Leg"]
-material = SubResource("Material_Uniform")
-size = Vector3(0.13, 0.62, 0.13)
+material = SubResource("Material_Pants")
+size = Vector3(0.16, 0.54, 0.17)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Shoe"]
+material = SubResource("Material_Shoes")
+size = Vector3(0.18, 0.12, 0.24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShoeSole"]
+material = SubResource("Material_ShoeSole")
+size = Vector3(0.182, 0.028, 0.242)
 
 [node name="Employee" type="CharacterBody3D"]
 collision_layer = 4
@@ -66,56 +138,131 @@ collision_mask = 3
 script = ExtResource("1_emp")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.90, 0)
 shape = SubResource("CapsuleShape3D_1")
+
+[node name="HumanoidAnimator" type="Node" parent="."]
+script = ExtResource("2_anim")
 
 [node name="Model" type="Node3D" parent="."]
 
 [node name="Torso" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
 mesh = SubResource("BoxMesh_Torso")
 
+[node name="Neck" type="MeshInstance3D" parent="Model/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.30, 0)
+mesh = SubResource("BoxMesh_Neck")
+
+[node name="Hips" type="MeshInstance3D" parent="Model/Torso"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.31, 0)
+mesh = SubResource("BoxMesh_Hips")
+
 [node name="Apron" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.115)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.92, -0.16)
 mesh = SubResource("BoxMesh_Apron")
 
 [node name="Badge" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 1.12, 0.12)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 1.06, -0.17)
 mesh = SubResource("BoxMesh_Badge")
 
 [node name="Head" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.42, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48, 0)
 mesh = SubResource("BoxMesh_Head")
 
-[node name="Face" type="MeshInstance3D" parent="Model/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.125)
-mesh = SubResource("BoxMesh_FacePlane")
+[node name="Hat" type="MeshInstance3D" parent="Model/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0)
+mesh = SubResource("BoxMesh_VisorCap")
 
-[node name="Hat" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.54, 0.04)
-mesh = SubResource("BoxMesh_VisorHat")
+[node name="VisorBrim" type="MeshInstance3D" parent="Model/Head/Hat"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.06, -0.20)
+mesh = SubResource("BoxMesh_VisorBrim")
+
+[node name="EyeLeft" type="MeshInstance3D" parent="Model/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.035, -0.172)
+mesh = SubResource("BoxMesh_EyeWhite")
+
+[node name="Pupil" type="MeshInstance3D" parent="Model/Head/EyeLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.005, -0.003)
+mesh = SubResource("BoxMesh_Pupil")
+
+[node name="Highlight" type="MeshInstance3D" parent="Model/Head/EyeLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.014, 0.015, -0.005)
+mesh = SubResource("BoxMesh_EyeHighlight")
+
+[node name="EyeRight" type="MeshInstance3D" parent="Model/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.035, -0.172)
+mesh = SubResource("BoxMesh_EyeWhite")
+
+[node name="Pupil" type="MeshInstance3D" parent="Model/Head/EyeRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.005, -0.003)
+mesh = SubResource("BoxMesh_Pupil")
+
+[node name="Highlight" type="MeshInstance3D" parent="Model/Head/EyeRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.014, 0.015, -0.005)
+mesh = SubResource("BoxMesh_EyeHighlight")
+
+[node name="EyebrowLeft" type="MeshInstance3D" parent="Model/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.095, -0.173)
+mesh = SubResource("BoxMesh_Eyebrow")
+
+[node name="EyebrowRight" type="MeshInstance3D" parent="Model/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.095, -0.173)
+mesh = SubResource("BoxMesh_Eyebrow")
+
+[node name="Nose" type="MeshInstance3D" parent="Model/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, -0.182)
+mesh = SubResource("BoxMesh_Nose")
+
+[node name="Mouth" type="MeshInstance3D" parent="Model/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.085, -0.172)
+mesh = SubResource("BoxMesh_Mouth")
 
 [node name="ArmLeft" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.98, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 1.14, 0)
 mesh = SubResource("BoxMesh_Arm")
+
+[node name="HandLeft" type="MeshInstance3D" parent="Model/ArmLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.30, 0)
+mesh = SubResource("BoxMesh_Hand")
 
 [node name="ArmRight" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0.98, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.29, 1.14, 0)
 mesh = SubResource("BoxMesh_Arm")
 
+[node name="HandRight" type="MeshInstance3D" parent="Model/ArmRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.30, 0)
+mesh = SubResource("BoxMesh_Hand")
+
 [node name="LegLeft" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.1, 0.38, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13, 0.60, 0)
 mesh = SubResource("BoxMesh_Leg")
+
+[node name="ShoeLeft" type="MeshInstance3D" parent="Model/LegLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.32, -0.04)
+mesh = SubResource("BoxMesh_Shoe")
+
+[node name="SoleLeft" type="MeshInstance3D" parent="Model/LegLeft/ShoeLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+mesh = SubResource("BoxMesh_ShoeSole")
 
 [node name="LegRight" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.38, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.13, 0.60, 0)
 mesh = SubResource("BoxMesh_Leg")
 
+[node name="ShoeRight" type="MeshInstance3D" parent="Model/LegRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.32, -0.04)
+mesh = SubResource("BoxMesh_Shoe")
+
+[node name="SoleRight" type="MeshInstance3D" parent="Model/LegRight/ShoeRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.05, 0)
+mesh = SubResource("BoxMesh_ShoeSole")
+
 [node name="HoldPosition" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.90, -0.42)
 
 [node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
 billboard = 1
 double_sided = false
 text = "👨‍🍳 Funcionário"
@@ -123,7 +270,7 @@ font_size = 20
 outline_size = 6
 
 [node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
 visible = false
 billboard = 1
 double_sided = false

@@ -56,13 +56,19 @@ func interact(player: Node3D) -> void:
 		if is_instance_valid(box):
 			if box.get_parent():
 				box.get_parent().remove_child(box)
-			player.get_tree().root.add_child(box)
+			var tr = player.get_tree() if player.is_inside_tree() else (Engine.get_main_loop() as SceneTree)
+			if tr and tr.root:
+				tr.root.add_child(box)
+			elif is_inside_tree() and get_tree() and get_tree().root:
+				get_tree().root.add_child(box)
+			else:
+				add_child(box)
 			player.pick_up(box)
 			_show_feedback(player, "📦 Você pegou a %s. Leve até o estoque correspondente!" % box.display_name)
 		_update_visual_status()
 
 func _clean_destroyed_boxes() -> void:
-	spawned_boxes = spawned_boxes.filter(func(b): return is_instance_valid(b) and b.location == Item.ItemLocation.WORLD and b.get_parent() == crate_spawn_slot)
+	spawned_boxes = spawned_boxes.filter(func(b): return is_instance_valid(b) and b.location == Item.ItemLocation.WORLD and (b.get_parent() == crate_spawn_slot or b.get_parent() == self))
 
 func _update_visual_status() -> void:
 	_clean_destroyed_boxes()

@@ -21,3 +21,11 @@ shape = SubResource("BoxShape3D_1")
 
 [node name="carton" parent="MeshInstance3D" instance=ExtResource("2_carton_glb")]
 transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+billboard = 1
+double_sided = false
+text = "📦 Carga"
+font_size = 14
+outline_size = 4

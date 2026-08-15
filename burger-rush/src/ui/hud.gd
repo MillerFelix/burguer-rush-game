@@ -108,10 +108,14 @@ func _update_orders_display() -> void:
 	var text = "📋 PEDIDOS ATIVOS (%d):\n" % active.size()
 	for o in active:
 		var prod_info = ""
+		var item_list: Array[String] = []
 		for item in o.items:
-			prod_info += "%s x%d " % [item.get("product_name", "Item"), item.get("quantity", 1)]
-		var table_tag = "[Mesa #%d] " % o.table_id if o.table_id > 0 else "[Balcão] "
-		text += "#%03d %s: %s($%.2f) [%s]\n" % [o.id, table_tag, prod_info, o.total_price, o.get_state_string()]
+			item_list.append("%dx %s" % [item.get("quantity", 1), item.get("product_name", "Item")])
+		prod_info = ", ".join(item_list)
+
+		var group_tag = " (%dp)" % o.group_size if o.group_size > 1 else ""
+		var table_tag = "[Mesa #%d%s] " % [o.table_id, group_tag] if o.table_id > 0 else "[Balcão] "
+		text += "#%03d %s: %s — $%.2f [%s]\n" % [o.id, table_tag, prod_info, o.total_price, o.get_state_string()]
 
 	orders_label.text = text
 

@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://tree_park_scene_uid"]
+
+[sub_resource type="StandardMaterial3D" id="Material_TreeBark"]
+albedo_color = Color(0.42, 0.28, 0.18, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_TreeLeaves"]
+albedo_color = Color(0.22, 0.58, 0.26, 1)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Material_TreeLeavesDark"]
+albedo_color = Color(0.16, 0.48, 0.22, 1)
+roughness = 0.7
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Trunk"]
+material = SubResource("Material_TreeBark")
+top_radius = 0.2
+bottom_radius = 0.26
+height = 2.8
+radial_segments = 12
+
+[sub_resource type="SphereMesh" id="SphereMesh_Canopy1"]
+material = SubResource("Material_TreeLeaves")
+radius = 1.35
+height = 2.4
+radial_segments = 14
+rings = 8
+
+[sub_resource type="SphereMesh" id="SphereMesh_Canopy2"]
+material = SubResource("Material_TreeLeavesDark")
+radius = 1.1
+height = 1.9
+radial_segments = 12
+rings = 8
+
+[sub_resource type="SphereMesh" id="SphereMesh_Canopy3"]
+material = SubResource("Material_TreeLeaves")
+radius = 0.95
+height = 1.6
+radial_segments = 12
+rings = 6
+
+[sub_resource type="SphereMesh" id="SphereMesh_Bush"]
+material = SubResource("Material_TreeLeavesDark")
+radius = 0.45
+height = 0.6
+radial_segments = 10
+rings = 6
+
+[node name="TreePark" type="Node3D"]
+
+[node name="Trunk" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+mesh = SubResource("CylinderMesh_Trunk")
+
+[node name="CanopyMain" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
+mesh = SubResource("SphereMesh_Canopy1")
+
+[node name="CanopyTop" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 4.3, -0.1)
+mesh = SubResource("SphereMesh_Canopy2")
+
+[node name="CanopySide" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 2.9, 0.4)
+mesh = SubResource("SphereMesh_Canopy3")
+
+[node name="BushBase" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.3, 0.3)
+mesh = SubResource("SphereMesh_Bush")

@@ -9,17 +9,27 @@ enum TableState {
 }
 
 @export var table_id: int = 1
-@export var seat_count: int = 2
+@export var seat_count: int = 4
 
 @onready var seat_node: Node3D = $Seat
 @onready var plate_slot: Node3D = $PlateSlot
 @onready var status_label: Label3D = $StatusLabel
 
 var table_state: TableState = TableState.AVAILABLE
-var seated_customer: Customer = null
+var seated_customers: Array[Customer] = []
 var served_items: Array[Node3D] = []
 var dirty_dishes_scene: PackedScene = preload("res://src/items/dirty_dishes.tscn")
 var dirty_dish_instance: Node3D = null
+
+# Compatibilidade para código que acessa seated_customer diretamente
+var seated_customer: Customer:
+	get:
+		return seated_customers[0] if not seated_customers.is_empty() else null
+	set(val):
+		if val == null:
+			seated_customers.clear()
+		elif not seated_customers.has(val):
+			seated_customers.append(val)
 
 func _ready() -> void:
 	var mgr = TableManager.get_instance()
@@ -33,25 +43,51 @@ func _exit_tree() -> void:
 		mgr.unregister_table(self)
 
 func is_available() -> bool:
-	return table_state == TableState.AVAILABLE and seated_customer == null
+	return table_state == TableState.AVAILABLE and seated_customers.is_empty()
+
+func is_available_for_group(group_size: int) -> bool:
+	return is_available() and seat_count >= group_size
+
+func get_available_seats() -> int:
+	if table_state != TableState.AVAILABLE:
+		return 0
+	return max(0, seat_count - seated_customers.size())
+
+func get_seat_position(seat_idx: int) -> Vector3:
+	var seat_node_name = "Seat%d" % seat_idx
+	var target = get_node_or_null(seat_node_name) as Node3D
+	if target:
+		return target.global_position if is_inside_tree() else (position + target.position)
+
+	var angle = (seat_idx - 1) * (PI * 0.5)
+	var base_pos = global_position if is_inside_tree() else position
+	return base_pos + Vector3(sin(angle) * 0.68, 0, cos(angle) * 0.68)
 
 func occupy(customer: Customer) -> Vector3:
-	seated_customer = customer
+	return occupy_seat(customer)
+
+func occupy_seat(customer: Customer) -> Vector3:
+	if not seated_customers.has(customer):
+		seated_customers.append(customer)
+
 	table_state = TableState.RESERVED
 	_update_visual_status()
-	if seat_node:
-		return seat_node.global_position
-	return global_position + Vector3(0, 0, 0.75)
+
+	var seat_idx = seated_customers.find(customer) + 1
+	return get_seat_position(seat_idx)
+
+# Chamado pelo cliente quando ele fisicamente chega e senta na cadeira
+func on_customer_seated(customer: Customer) -> void:
+	table_state = TableState.OCCUPIED
+	_update_visual_status()
 
 func release() -> void:
-	seated_customer = null
-	# Remove os itens de comida consumidos
+	seated_customers.clear()
 	for item in served_items:
 		if is_instance_valid(item):
 			item.queue_free()
 	served_items.clear()
 
-	# Gera pratos sujos e restos na mesa
 	table_state = TableState.DIRTY
 	if plate_slot and not dirty_dish_instance:
 		dirty_dish_instance = dirty_dishes_scene.instantiate()
@@ -73,179 +109,151 @@ func clean_table(player: Node3D) -> void:
 	_update_visual_status()
 
 func get_interaction_prompt(player: Node = null) -> String:
-	# 1. Se a mesa estiver suja
 	if table_state == TableState.DIRTY:
 		return "E — Limpar Mesa #%d (Recolher Restos)" % table_id
 
-	if not seated_customer or not is_instance_valid(seated_customer):
+	if seated_customers.is_empty():
 		return ""
 
-	# 2. Se houver cliente
-	match seated_customer.state:
+	var primary_cust = seated_customers[0]
+	if not is_instance_valid(primary_cust):
+		return ""
+
+	match primary_cust.state:
 		Customer.State.SEATED_WAITING_TO_ORDER:
 			return "E — Atender Mesa #%d" % table_id
-
 		Customer.State.WAITING_FOR_FOOD:
-			var order = seated_customer.current_order
-			if not order:
-				return ""
-
-			var held = player.get("held_item") if player else null
-			if held != null:
-				if held is OrderTray:
-					var tray = held as OrderTray
-					var match_count = 0
-					for p in tray.get_products():
-						var pid = str(p.get("item_id"))
-						if order.has_pending_product(pid):
-							match_count += 1
-					if match_count > 0:
-						return "E — Servir %d Itens da Bandeja (Mesa #%d)" % [match_count, table_id]
-					else:
-						return "❌ Itens da bandeja não pertencem à Mesa #%d" % table_id
-				else:
-					var pid = str(held.get("item_id"))
-					if order.has_pending_product(pid):
-						var pname = held.get_display_name() if held.has_method("get_display_name") else "Item"
-						return "E — Servir %s (Mesa #%d)" % [pname, table_id]
-					else:
-						return "❌ Item não pertence ao pedido da Mesa #%d" % table_id
-			else:
-				var first_item = order.items[0].get("product_name", "Pedido") if not order.items.is_empty() else "Pedido"
-				return "Mesa #%d: Aguardando %s" % [table_id, first_item]
-
+			var order = primary_cust.current_order
+			if order and player and player.get("held_item") is OrderTray:
+				var tray = player.get("held_item") as OrderTray
+				if tray.has_items():
+					return "E — Entregar Pedido na Mesa #%d" % table_id
+			return "Mesa #%d: Aguardando pedido..." % table_id
 		Customer.State.EATING:
-			return "Mesa #%d: Cliente saboreando a refeição..." % table_id
-
+			return "Mesa #%d: Clientes comendo..." % table_id
 		Customer.State.REQUESTING_BILL:
-			var total = seated_customer.current_order.total_price if seated_customer.current_order else 0.0
-			return "E — Entregar Conta (Mesa #%d - $%.2f)" % [table_id, total]
+			return "E — Entregar Conta na Mesa #%d" % table_id
+		Customer.State.PAYING:
+			return "E — Receber Pagamento da Mesa #%d" % table_id
 
-		_:
-			return ""
+	return ""
 
 func interact(player: Node3D) -> void:
-	# 1. Limpeza de mesa suja
 	if table_state == TableState.DIRTY:
 		clean_table(player)
 		return
 
-	if not seated_customer or not is_instance_valid(seated_customer):
+	if seated_customers.is_empty():
 		return
 
-	match seated_customer.state:
+	var primary_cust = seated_customers[0]
+	if not is_instance_valid(primary_cust):
+		return
+
+	match primary_cust.state:
 		Customer.State.SEATED_WAITING_TO_ORDER:
-			seated_customer.take_order_from_player()
-			table_state = TableState.OCCUPIED
-			_show_player_feedback(player, "📝 Pedido da Mesa #%d anotado com sucesso!" % table_id)
+			primary_cust.place_order(player)
+			_show_player_feedback(player, "📝 Pedido recebido da Mesa #%d!" % table_id)
 			_update_visual_status()
 
 		Customer.State.WAITING_FOR_FOOD:
-			var order = seated_customer.current_order
-			if not order or order.items.is_empty():
-				return
-
 			var held = player.get("held_item")
-			if not held:
-				_show_player_feedback(player, "Você precisa segurar a comida ou bandeja para servir a Mesa #%d!" % table_id)
-				return
-
-			# Servir a partir da OrderTray
 			if held is OrderTray:
-				var tray = held as OrderTray
-				var delivered_items = []
-				for p in tray.get_products():
-					var pid = str(p.get("item_id"))
-					if order.has_pending_product(pid):
-						order.register_product_delivered(pid)
-						delivered_items.append(p)
-
-				if not delivered_items.is_empty():
-					for p in delivered_items:
-						tray.remove_product(p)
-						served_items.append(p)
-						if plate_slot:
-							plate_slot.add_child(p)
-							p.position = Vector3(randf_range(-0.15, 0.15), 0, randf_range(-0.15, 0.15))
-							p.rotation = Vector3.ZERO
-							if p.get("collision_shape"):
-								p.collision_shape.disabled = true
-
-					if order.is_all_delivered():
-						seated_customer.serve_food()
-						_show_player_feedback(player, "✅ Pedido completo da Mesa #%d servido!" % table_id)
-					else:
-						_show_player_feedback(player, "📦 %d itens servidos! Faltam %d itens para a Mesa #%d." % [delivered_items.size(), order.get_total_quantity() - order.get_delivered_count(), table_id])
-					_update_visual_status()
-					return
-				else:
-					_show_player_feedback(player, "❌ Nenhum item da bandeja pertence ao pedido pendente da Mesa #%d!" % table_id)
-					return
-
-			# Servir item individual segurado na mão
-			var pid = str(held.get("item_id"))
-			if order.has_pending_product(pid) and player.has_method("take_held_item"):
-				var item = player.take_held_item()
-				served_items.append(item)
-				if plate_slot:
-					plate_slot.add_child(item)
-					item.position = Vector3.ZERO
-					item.rotation = Vector3.ZERO
-					if item.get("collision_shape"):
-						item.collision_shape.disabled = true
-
-				order.register_product_delivered(pid)
-				if order.is_all_delivered():
-					seated_customer.serve_food()
-					_show_player_feedback(player, "✅ Pedido completo da Mesa #%d servido!" % table_id)
-				else:
-					_show_player_feedback(player, "📦 Item entregue! Faltam %d itens para a Mesa #%d." % [order.get_total_quantity() - order.get_delivered_count(), table_id])
-				_update_visual_status()
+				_serve_tray(player, held as OrderTray)
+			elif held != null and held.has_method("get_product_id"):
+				_serve_single_item(player, held)
 			else:
-				_show_player_feedback(player, "❌ Este item não faz parte do pedido da Mesa #%d!" % table_id)
+				_show_player_feedback(player, "Traga o pedido pronto para servir a Mesa #%d." % table_id)
 
 		Customer.State.REQUESTING_BILL:
-			seated_customer.pay_and_leave()
+			primary_cust.present_bill(player)
+			_show_player_feedback(player, "🧾 Conta entregue na Mesa #%d." % table_id)
 			_update_visual_status()
+
+		Customer.State.PAYING:
+			primary_cust.pay_and_leave(player)
+			_show_player_feedback(player, "💰 Pagamento recebido da Mesa #%d!" % table_id)
+			_update_visual_status()
+
+func _serve_single_item(player: Node3D, item: Node3D) -> void:
+	var primary_cust = seated_customers[0]
+	var order = primary_cust.current_order
+	if not order:
+		return
+
+	var pid = item.get_product_id() if item.has_method("get_product_id") else ""
+	if pid != "" and order.has_pending_product(pid):
+		order.mark_product_delivered(pid)
+		player.set("held_item", null)
+		plate_slot.add_child(item)
+		item.position = Vector3.ZERO
+		served_items.append(item)
+
+		_show_player_feedback(player, "🍔 Item servido na Mesa #%d!" % table_id)
+
+		if order.is_fully_delivered():
+			for c in seated_customers:
+				if is_instance_valid(c):
+					c.receive_food()
+			_show_player_feedback(player, "🎉 Pedido da Mesa #%d completo!" % table_id)
+
+	_update_visual_status()
+
+func _serve_tray(player: Node3D, tray: OrderTray) -> void:
+	var primary_cust = seated_customers[0]
+	var order = primary_cust.current_order
+	if not order:
+		return
+
+	var products = tray.get_products()
+	var delivered_count = 0
+
+	for p in products:
+		var pid = str(p.get("item_id"))
+		if order.has_pending_product(pid):
+			order.mark_product_delivered(pid)
+			delivered_count += 1
+
+	if delivered_count > 0:
+		tray.clear_tray()
+		player.set("held_item", null)
+		plate_slot.add_child(tray)
+		tray.position = Vector3.ZERO
+		served_items.append(tray)
+
+		_show_player_feedback(player, "🍽️ Bandeja com %d itens servida na Mesa #%d!" % [delivered_count, table_id])
+
+		if order.is_fully_delivered():
+			for c in seated_customers:
+				if is_instance_valid(c):
+					c.receive_food()
+			_show_player_feedback(player, "🎉 Pedido da Mesa #%d entregue!" % table_id)
+
+	_update_visual_status()
 
 func _update_visual_status() -> void:
 	if not status_label:
+		status_label = get_node_or_null("StatusLabel")
+	if not status_label:
 		return
 
-	if table_state == TableState.DIRTY:
-		status_label.text = "Mesa #%d\n🧹 SUJA (Restos)\n[E] Limpar" % table_id
-		status_label.modulate = Color(1.0, 0.4, 0.2, 1.0)
-		return
+	match table_state:
+		TableState.AVAILABLE:
+			status_label.text = "Mesa %d (%d Lugares)\n🟢 Livre" % [table_id, seat_count]
+			status_label.modulate = Color(0.3, 0.9, 0.4)
+		TableState.RESERVED:
+			status_label.text = "Mesa %d\n🟡 A Caminho..." % table_id
+			status_label.modulate = Color(0.95, 0.85, 0.2)
+		TableState.OCCUPIED:
+			var cust_count = seated_customers.size()
+			status_label.text = "Mesa %d (%d Clientes)\n🔵 Ocupada" % [table_id, cust_count]
+			status_label.modulate = Color(0.4, 0.7, 1.0)
+		TableState.DIRTY:
+			status_label.text = "Mesa %d\n🔴 Pratos Sujos" % table_id
+			status_label.modulate = Color(0.9, 0.3, 0.3)
 
-	if not seated_customer or not is_instance_valid(seated_customer):
-		status_label.text = "Mesa #%d\n🟢 DISPONÍVEL" % table_id
-		status_label.modulate = Color(0.4, 1.0, 0.4, 1.0)
-		return
-
-	match seated_customer.state:
-		Customer.State.LOOKING_FOR_TABLE, Customer.State.WALKING_TO_TABLE:
-			status_label.text = "Mesa #%d\n🟡 Reservada" % table_id
-			status_label.modulate = Color(1.0, 0.85, 0.2, 1.0)
-		Customer.State.SEATED_WAITING_TO_ORDER:
-			status_label.text = "Mesa #%d\n📝 [E] Atender" % table_id
-			status_label.modulate = Color(1.0, 0.85, 0.2, 1.0)
-		Customer.State.WAITING_FOR_FOOD:
-			var name_str = seated_customer.current_order.items[0].get("product_name", "Pedido") if seated_customer.current_order and not seated_customer.current_order.items.is_empty() else "Pedido"
-			var count_info = "(%d/%d)" % [seated_customer.current_order.get_delivered_count(), seated_customer.current_order.get_total_quantity()] if seated_customer.current_order else ""
-			status_label.text = "Mesa #%d\n⏳ Aguarda: %s %s" % [table_id, name_str, count_info]
-			status_label.modulate = Color(0.4, 0.8, 1.0, 1.0)
-		Customer.State.EATING:
-			status_label.text = "Mesa #%d\n😋 Comendo..." % table_id
-			status_label.modulate = Color(0.3, 1.0, 0.5, 1.0)
-		Customer.State.REQUESTING_BILL:
-			var total = seated_customer.current_order.total_price if seated_customer.current_order else 0.0
-			status_label.text = "Mesa #%d\n💳 [E] Conta ($%.2f)" % [table_id, total]
-			status_label.modulate = Color(1.0, 0.5, 0.2, 1.0)
-		Customer.State.PAYING, Customer.State.LEAVING:
-			status_label.text = "Mesa #%d\n💵 Liberando..." % table_id
-			status_label.modulate = Color(0.7, 0.7, 0.7, 1.0)
-
-func _show_player_feedback(player: Node3D, message: String) -> void:
-	var hud = player.get_node_or_null("HUD")
-	if hud and hud.has_method("show_temporary_feedback"):
-		hud.show_temporary_feedback(message)
+func _show_player_feedback(player: Node, message: String) -> void:
+	if player and player.has_node("HUD"):
+		var hud = player.get_node("HUD")
+		if hud.has_method("show_feedback"):
+			hud.show_feedback(message)

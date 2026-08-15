@@ -1,0 +1,125 @@
+[gd_scene format=3 uid="uid://industrial_dumpster_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/trash_bin.gd" id="1_trash"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Dumpster"]
+size = Vector3(1.6, 1.25, 1.1)
+
+[sub_resource type="StandardMaterial3D" id="Material_DumpsterGreen"]
+albedo_color = Color(0.16, 0.32, 0.22, 1)
+roughness = 0.65
+metallic = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_DumpsterSteel"]
+albedo_color = Color(0.28, 0.30, 0.32, 1)
+roughness = 0.4
+metallic = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_LidPlastic"]
+albedo_color = Color(0.14, 0.15, 0.16, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_HazardStripeYellow"]
+albedo_color = Color(0.95, 0.82, 0.12, 1)
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_DumpsterBody"]
+material = SubResource("Material_DumpsterGreen")
+size = Vector3(1.5, 0.9, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DumpsterRim"]
+material = SubResource("Material_DumpsterSteel")
+size = Vector3(1.56, 0.06, 1.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ForkPocket"]
+material = SubResource("Material_DumpsterSteel")
+size = Vector3(0.12, 0.12, 1.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LidHalf"]
+material = SubResource("Material_LidPlastic")
+size = Vector3(0.74, 0.05, 1.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LidHandle"]
+material = SubResource("Material_DumpsterSteel")
+size = Vector3(0.24, 0.04, 0.05)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Wheel"]
+material = SubResource("Material_LidPlastic")
+top_radius = 0.07
+bottom_radius = 0.07
+height = 0.06
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_DecalStripe"]
+material = SubResource("Material_HazardStripeYellow")
+size = Vector3(1.4, 0.06, 0.01)
+
+[node name="IndustrialDumpster" type="StaticBody3D"]
+script = ExtResource("1_trash")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.625, 0)
+shape = SubResource("BoxShape3D_Dumpster")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.58, 0)
+mesh = SubResource("BoxMesh_DumpsterBody")
+
+[node name="TopRim" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.04, 0)
+mesh = SubResource("BoxMesh_DumpsterRim")
+
+[node name="ForkPocketLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.8, 0.6, 0)
+mesh = SubResource("BoxMesh_ForkPocket")
+
+[node name="ForkPocketRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.8, 0.6, 0)
+mesh = SubResource("BoxMesh_ForkPocket")
+
+[node name="LidLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(0.996195, 0.0871557, 0, -0.0871557, 0.996195, 0, 0, 0, 1, -0.37, 1.08, 0)
+mesh = SubResource("BoxMesh_LidHalf")
+
+[node name="LidRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(0.996195, -0.0871557, 0, 0.0871557, 0.996195, 0, 0, 0, 1, 0.37, 1.08, 0)
+mesh = SubResource("BoxMesh_LidHalf")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/LidLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0.3)
+mesh = SubResource("BoxMesh_LidHandle")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/LidRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0.3)
+mesh = SubResource("BoxMesh_LidHandle")
+
+[node name="WheelFL" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.65, 0.07, 0.42)
+mesh = SubResource("CylinderMesh_Wheel")
+
+[node name="WheelFR" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.65, 0.07, 0.42)
+mesh = SubResource("CylinderMesh_Wheel")
+
+[node name="WheelBL" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, -0.65, 0.07, -0.42)
+mesh = SubResource("CylinderMesh_Wheel")
+
+[node name="WheelBR" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.65, 0.07, -0.42)
+mesh = SubResource("CylinderMesh_Wheel")
+
+[node name="DecalFront" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0.505)
+mesh = SubResource("BoxMesh_DecalStripe")
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
+billboard = 1
+double_sided = false
+text = "🗑️ CONTÊINER DE LIXO INDUSTRIAL"
+font_size = 18
+outline_size = 5
+modulate = Color(0.9, 0.9, 0.9, 1)

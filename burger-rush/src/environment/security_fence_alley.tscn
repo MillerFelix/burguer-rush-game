@@ -1,0 +1,202 @@
+[gd_scene format=3 uid="uid://security_fence_alley_scene_uid"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Collision"]
+size = Vector3(0.15, 2.8, 9.0)
+
+[sub_resource type="StandardMaterial3D" id="Material_FenceSteel"]
+albedo_color = Color(0.28, 0.30, 0.34, 1)
+metallic = 0.85
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_SignYellow"]
+albedo_color = Color(0.95, 0.85, 0.15, 1)
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_Post"]
+material = SubResource("Material_FenceSteel")
+size = Vector3(0.12, 2.75, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_RailHorizontal"]
+material = SubResource("Material_FenceSteel")
+size = Vector3(0.06, 0.06, 9.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Picket"]
+material = SubResource("Material_FenceSteel")
+size = Vector3(0.035, 2.45, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GateFrameSide"]
+material = SubResource("Material_FenceSteel")
+size = Vector3(0.08, 2.6, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GateDiag"]
+material = SubResource("Material_FenceSteel")
+size = Vector3(0.04, 0.04, 2.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlate"]
+material = SubResource("Material_SignYellow")
+size = Vector3(0.015, 0.35, 0.6)
+
+[node name="SecurityFenceAlley" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+shape = SubResource("BoxShape3D_Collision")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="RailTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6, 0)
+mesh = SubResource("BoxMesh_RailHorizontal")
+
+[node name="RailMid" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+mesh = SubResource("BoxMesh_RailHorizontal")
+
+[node name="RailBot" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("BoxMesh_RailHorizontal")
+
+[node name="Post1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.375, -4.45)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="Post2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.375, -1.2)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="Post3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.375, 1.2)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="Post4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.375, 4.45)
+mesh = SubResource("BoxMesh_Post")
+
+[node name="GateDiag1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.819152, 0.573576, 0, -0.573576, 0.819152, 0.02, 1.35, -0.55)
+mesh = SubResource("BoxMesh_GateDiag")
+
+[node name="GateDiag2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.819152, -0.573576, 0, 0.573576, 0.819152, 0.02, 1.35, 0.55)
+mesh = SubResource("BoxMesh_GateDiag")
+
+[node name="SignPlate" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 1.6, 0)
+mesh = SubResource("BoxMesh_SignPlate")
+
+[node name="SignLabel" type="Label3D" parent="Model/SignPlate"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.015, 0, 0)
+text = "⛔ ÁREA DE SERVIÇO\nENTRADA PROIBIDA"
+font_size = 13
+outline_size = 4
+modulate = Color(0.12, 0.12, 0.14, 1)
+
+[node name="PicketsNorth" type="Node3D" parent="Model"]
+
+[node name="PicketN1" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -4.15)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN2" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -3.85)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN3" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -3.55)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN4" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -3.25)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN5" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -2.95)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN6" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -2.65)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN7" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -2.35)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN8" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -2.05)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN9" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -1.75)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketN10" type="MeshInstance3D" parent="Model/PicketsNorth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -1.45)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketsGate" type="Node3D" parent="Model"]
+
+[node name="PicketG1" type="MeshInstance3D" parent="Model/PicketsGate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -0.9)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketG2" type="MeshInstance3D" parent="Model/PicketsGate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -0.6)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketG3" type="MeshInstance3D" parent="Model/PicketsGate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -0.3)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketG4" type="MeshInstance3D" parent="Model/PicketsGate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.3)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketG5" type="MeshInstance3D" parent="Model/PicketsGate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.6)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketG6" type="MeshInstance3D" parent="Model/PicketsGate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0.9)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketsSouth" type="Node3D" parent="Model"]
+
+[node name="PicketS1" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 1.45)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS2" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 1.75)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS3" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 2.05)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS4" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 2.35)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS5" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 2.65)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS6" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 2.95)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS7" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 3.25)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS8" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 3.55)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS9" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 3.85)
+mesh = SubResource("BoxMesh_Picket")
+
+[node name="PicketS10" type="MeshInstance3D" parent="Model/PicketsSouth"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 4.15)
+mesh = SubResource("BoxMesh_Picket")

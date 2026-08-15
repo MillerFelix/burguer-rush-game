@@ -1,0 +1,58 @@
+[gd_scene format=3 uid="uid://dining_pendant_lamp_uid"]
+
+[sub_resource type="StandardMaterial3D" id="Material_CordBlack"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_BrassShade"]
+albedo_color = Color(0.82, 0.58, 0.24, 1)
+metallic = 0.85
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_BulbWarm"]
+albedo_color = Color(1.0, 0.94, 0.82, 1)
+emission_enabled = true
+emission = Color(1.0, 0.88, 0.65, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Cord"]
+material = SubResource("Material_CordBlack")
+top_radius = 0.012
+bottom_radius = 0.012
+height = 1.1
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Shade"]
+material = SubResource("Material_BrassShade")
+top_radius = 0.08
+bottom_radius = 0.28
+height = 0.18
+radial_segments = 18
+
+[sub_resource type="SphereMesh" id="SphereMesh_Bulb"]
+material = SubResource("Material_BulbWarm")
+radius = 0.06
+height = 0.10
+radial_segments = 12
+rings = 6
+
+[node name="DiningPendantLamp" type="Node3D"]
+
+[node name="Cord" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, 0)
+mesh = SubResource("CylinderMesh_Cord")
+
+[node name="Shade" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0)
+mesh = SubResource("CylinderMesh_Shade")
+
+[node name="Bulb" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.38, 0)
+mesh = SubResource("SphereMesh_Bulb")
+
+[node name="WarmLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.30, 0)
+light_color = Color(1.0, 0.90, 0.74, 1)
+light_energy = 0.85
+omni_range = 4.5
+omni_attenuation = 1.2

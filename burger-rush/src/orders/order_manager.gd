@@ -18,6 +18,9 @@ var daily_total_wait_time: float = 0.0
 func _enter_tree() -> void:
 	instance = self
 
+func _ready() -> void:
+	instance = self
+
 func _process(delta: float) -> void:
 	for order in active_orders:
 		if order.state == Order.State.WAITING or order.state == Order.State.IN_PROGRESS:
@@ -26,21 +29,71 @@ func _process(delta: float) -> void:
 static func get_instance() -> OrderManager:
 	return instance
 
-func create_order(customer: Node, product_id: String = "", quantity: int = 1, table_id: int = 0, source_type: String = "DINE_IN") -> Order:
+func create_group_order(customer: Node, group_size: int, table_id: int = 0, source_type: String = "DINE_IN") -> Order:
 	var order = Order.new()
 	order.id = next_order_id
 	next_order_id += 1
 	order.customer_ref = customer
 	order.table_id = table_id
+	order.group_size = max(1, group_size)
 	order.source_type = source_type
 	order.created_time = Time.get_ticks_msec() / 1000.0
 
-	if product_id == "":
-		product_id = _pick_random_available_product()
+	var available_burgers = [
+		{"id": "cheeseburger", "name": "Cheeseburger", "price": 18.0},
+		{"id": "burger", "name": "Hambúrguer Clássico", "price": 15.0},
+		{"id": "x_bacon", "name": "X-Bacon", "price": 25.0},
+		{"id": "x_salada", "name": "X-Salada", "price": 22.0}
+	]
+
+	var available_drinks = [
+		{"id": "drink_cola", "name": "Refrigerante Cola", "price": 6.0},
+		{"id": "drink_orange", "name": "Suco de Laranja", "price": 7.0}
+	]
+
+	# 1. Cada pessoa do grupo consome 1 Hambúrguer e 1 Bebida
+	for _p in range(order.group_size):
+		var b = available_burgers[randi() % available_burgers.size()]
+		order.add_item(b.id, b.name, 1, b.price)
+
+		var d = available_drinks[randi() % available_drinks.size()]
+		order.add_item(d.id, d.name, 1, d.price)
+
+	# 2. Acompanhamento (Batata Frita) proporcional e com variação realista
+	var fries_count = 0
+	if order.group_size == 1:
+		if randf() < 0.4:
+			fries_count = 1
+	elif order.group_size == 2:
+		fries_count = 1 if randf() < 0.8 else 2
+	elif order.group_size == 3:
+		fries_count = 1 if randf() < 0.5 else 2
+	elif order.group_size >= 4:
+		fries_count = 2 if randf() < 0.7 else 3
+
+	if fries_count > 0:
+		order.add_item("fries", "Batata Frita", fries_count, 8.0)
+
+	order.state = Order.State.WAITING
+	active_orders.append(order)
+	order_created.emit(order)
+	return order
+
+func create_order(customer: Node, product_id: String = "", quantity: int = 1, table_id: int = 0, source_type: String = "DINE_IN", group_size: int = 1) -> Order:
+	if group_size > 1 or product_id == "":
+		return create_group_order(customer, group_size, table_id, source_type)
+
+	var order = Order.new()
+	order.id = next_order_id
+	next_order_id += 1
+	order.customer_ref = customer
+	order.table_id = table_id
+	order.group_size = 1
+	order.source_type = source_type
+	order.created_time = Time.get_ticks_msec() / 1000.0
 
 	var recipe = RecipeDatabase.get_recipe_by_id(product_id)
 	if recipe and recipe.category == "combo" and not recipe.combo_items.is_empty():
-		# Se for combo, adiciona cada item componente
 		var combo_price_per_item = recipe.base_price / float(recipe.combo_items.size())
 		for sub_id in recipe.combo_items:
 			var sub_info = _get_product_info(sub_id)

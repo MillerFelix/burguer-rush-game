@@ -1,6 +1,9 @@
 class_name Employee
 extends CharacterBody3D
 
+const HumanoidAnimator = preload("res://src/characters/humanoid_animator.gd")
+const CharacterAppearance = preload("res://src/characters/character_appearance.gd")
+
 enum Role {
 	UNASSIGNED,
 	GRILL,
@@ -21,6 +24,7 @@ enum State {
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var label_3d: Label3D = $Label3D
 @onready var hold_position: Node3D = $HoldPosition
+@onready var animator: HumanoidAnimator = $HumanoidAnimator
 
 var employee_id: int = 1
 var employee_name: String = "Funcionário"
@@ -38,6 +42,9 @@ var work_timer: float = 0.0
 var search_task_timer: float = 0.0
 
 func _ready() -> void:
+	if animator:
+		animator.setup($Model)
+	CharacterAppearance.apply_employee_appearance(self, employee_name)
 	_update_visual_label()
 
 func set_role(new_role: Role) -> void:
@@ -83,6 +90,9 @@ func take_held_item() -> Node3D:
 	return it
 
 func _physics_process(delta: float) -> void:
+	if animator:
+		animator.update_animation(delta, velocity, false, false, held_item != null)
+
 	var clock = GameClock.get_instance()
 	if clock and clock.state != GameClock.State.OPEN:
 		state = State.OFF_DUTY
@@ -112,6 +122,8 @@ func _physics_process(delta: float) -> void:
 				var dir = to_target.normalized()
 				velocity.x = dir.x * move_speed
 				velocity.z = dir.z * move_speed
+				if dir.length_squared() > 0.01:
+					look_at(global_position + Vector3(dir.x, 0, dir.z), Vector3.UP)
 				move_and_slide()
 
 		State.WORKING:

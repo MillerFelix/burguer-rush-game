@@ -1,0 +1,101 @@
+[gd_scene format=3 uid="uid://deluxe_potted_plant_uid"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
+height = 1.6
+radius = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_PotCeramic"]
+albedo_color = Color(0.92, 0.90, 0.86, 1)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Material_PotSoil"]
+albedo_color = Color(0.16, 0.12, 0.08, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Material_PlantStem"]
+albedo_color = Color(0.30, 0.20, 0.12, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_LeafGreen"]
+albedo_color = Color(0.18, 0.52, 0.28, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Material_LeafAccent"]
+albedo_color = Color(0.26, 0.62, 0.35, 1)
+roughness = 0.75
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Pot"]
+material = SubResource("Material_PotCeramic")
+top_radius = 0.28
+bottom_radius = 0.20
+height = 0.55
+radial_segments = 20
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Soil"]
+material = SubResource("Material_PotSoil")
+top_radius = 0.25
+bottom_radius = 0.22
+height = 0.12
+radial_segments = 18
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Stem"]
+material = SubResource("Material_PlantStem")
+top_radius = 0.035
+bottom_radius = 0.045
+height = 0.45
+radial_segments = 12
+
+[sub_resource type="SphereMesh" id="SphereMesh_Foliage1"]
+material = SubResource("Material_LeafGreen")
+radius = 0.32
+height = 0.55
+radial_segments = 16
+rings = 8
+
+[sub_resource type="SphereMesh" id="SphereMesh_Foliage2"]
+material = SubResource("Material_LeafAccent")
+radius = 0.26
+height = 0.45
+radial_segments = 16
+rings = 8
+
+[sub_resource type="SphereMesh" id="SphereMesh_Foliage3"]
+material = SubResource("Material_LeafGreen")
+radius = 0.22
+height = 0.38
+radial_segments = 14
+rings = 6
+
+[node name="DeluxePottedPlant" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("CylinderShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Pot" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.275, 0)
+mesh = SubResource("CylinderMesh_Pot")
+
+[node name="Soil" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("CylinderMesh_Soil")
+
+[node name="Stem" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, 0)
+mesh = SubResource("CylinderMesh_Stem")
+
+[node name="FoliageMain" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.98, 0)
+mesh = SubResource("SphereMesh_Foliage1")
+
+[node name="FoliageTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04, 1.28, -0.02)
+mesh = SubResource("SphereMesh_Foliage2")
+
+[node name="FoliageSide" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.90, 0.06)
+mesh = SubResource("SphereMesh_Foliage3")

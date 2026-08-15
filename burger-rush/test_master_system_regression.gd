@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 
 ## test_master_system_regression.gd
 ## Suite mestre de regressao — testa sistemas centrais do Burger Rush.
@@ -134,7 +134,7 @@ func _init() -> void:
 	_section("Employee humanoid model")
 	var emp_scene = load("res://src/employees/employee.tscn").instantiate()
 	_assert(emp_scene.has_node("Model/Head"), "Employee has Model/Head")
-	_assert(emp_scene.has_node("Model/Hat"), "Employee has Model/Hat")
+	_assert(emp_scene.has_node("Model/Head/Hat") or emp_scene.has_node("Model/Hat"), "Employee has Hat on Head")
 	_assert(emp_scene.has_node("Model/Apron"), "Employee has Model/Apron")
 	_assert(emp_scene.has_node("Model/Badge"), "Employee has Model/Badge")
 	emp_scene.free()

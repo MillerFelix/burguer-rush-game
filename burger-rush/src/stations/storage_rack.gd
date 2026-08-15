@@ -4,54 +4,103 @@ extends StaticBody3D
 @onready var status_label: Label3D = $StatusLabel
 
 var items_data: Array[Dictionary] = [
+	# NÍVEL SUPERIOR (y > 0.65m)
 	{
 		"id": "bread_bottom",
 		"name": "Base do Pão",
 		"icon": "🍞",
 		"scene": preload("res://src/items/bread_bottom.tscn"),
-		"tier": "Superior (Esq)"
+		"tier": "Superior",
+		"slot_name": "LabelBreadBot"
 	},
 	{
 		"id": "bread_top",
 		"name": "Tampa do Pão",
 		"icon": "🥯",
 		"scene": preload("res://src/items/bread_top.tscn"),
-		"tier": "Superior (Centro)"
+		"tier": "Superior",
+		"slot_name": "LabelBreadTop"
 	},
 	{
 		"id": "cheese",
 		"name": "Queijo Cheddar",
 		"icon": "🧀",
 		"scene": preload("res://src/items/cheese.tscn"),
-		"tier": "Superior (Dir)"
+		"tier": "Superior",
+		"slot_name": "LabelCheese"
 	},
+	{
+		"id": "onion",
+		"name": "Cebola Roxa",
+		"icon": "🧅",
+		"scene": null,
+		"tier": "Superior (Expansão)",
+		"slot_name": "LabelOnion"
+	},
+	{
+		"id": "bacon",
+		"name": "Bacon Defumado",
+		"icon": "🥓",
+		"scene": null,
+		"tier": "Superior (Expansão)",
+		"slot_name": "LabelBacon"
+	},
+	{
+		"id": "bread",
+		"name": "Pão Reserva",
+		"icon": "🍞",
+		"scene": preload("res://src/items/bread_bottom.tscn"),
+		"tier": "Superior (Reserva)",
+		"slot_name": "LabelBreadExtra"
+	},
+	# NÍVEL INFERIOR (y <= 0.65m)
 	{
 		"id": "potato_raw",
 		"name": "Batata Crua",
 		"icon": "🥔",
 		"scene": preload("res://src/items/potato.tscn"),
-		"tier": "Inferior (Esq)"
+		"tier": "Inferior",
+		"slot_name": "LabelPotato"
 	},
 	{
 		"id": "tomato",
 		"name": "Tomate Fresco",
 		"icon": "🍅",
 		"scene": preload("res://src/items/tomato.tscn"),
-		"tier": "Inferior (Centro)"
+		"tier": "Inferior",
+		"slot_name": "LabelTomato"
 	},
 	{
 		"id": "lettuce",
 		"name": "Alface Crocante",
 		"icon": "🥬",
 		"scene": preload("res://src/items/lettuce.tscn"),
-		"tier": "Inferior (Dir)"
+		"tier": "Inferior",
+		"slot_name": "LabelLettuce"
 	},
 	{
-		"id": "bread",
-		"name": "Pão (Compatibilidade)",
-		"icon": "🍞",
-		"scene": preload("res://src/items/bread_bottom.tscn"),
-		"tier": "Reserva"
+		"id": "pickle",
+		"name": "Picles Artesanal",
+		"icon": "🥒",
+		"scene": null,
+		"tier": "Inferior (Expansão)",
+		"slot_name": "LabelPickle"
+	},
+	{
+		"id": "mushroom",
+		"name": "Cogumelos",
+		"icon": "🍄",
+		"scene": null,
+		"tier": "Inferior (Expansão)",
+		"slot_name": "LabelMushroom"
+	},
+	{
+		"id": "packaging_storage",
+		"name": "Caixas Reserva",
+		"icon": "📦",
+		"scene": null,
+		"tier": "Inferior (Reserva)",
+		"slot_name": "LabelPackaging"
 	}
 ]
 var active_item_index: int = 0
@@ -68,27 +117,31 @@ func get_aimed_item_index(player: Node = null) -> int:
 	var ray = player.get_node_or_null("Head/Camera3D/RayCast3D")
 	if ray and ray is RayCast3D and ray.is_colliding():
 		var col_pt = to_local(ray.get_collision_point())
-		if col_pt.y > 0.65:
-			if col_pt.x < -0.6:
-				return 0 # Base Pão
-			elif col_pt.x < 0.6:
-				return 1 # Tampa Pão
-			else:
-				return 2 # Queijo
+		var col_idx = 0
+		if col_pt.x < -1.375:
+			col_idx = 0
+		elif col_pt.x < -0.825:
+			col_idx = 1
+		elif col_pt.x < -0.275:
+			col_idx = 2
+		elif col_pt.x < 0.275:
+			col_idx = 3
+		elif col_pt.x < 0.825:
+			col_idx = 4
 		else:
-			if col_pt.x < -0.6:
-				return 3 # Batata
-			elif col_pt.x < 0.6:
-				return 4 # Tomate
-			else:
-				return 5 # Alface
+			col_idx = 5
+
+		if col_pt.y > 0.65:
+			return col_idx # 0..5 (Nível Superior)
+		else:
+			return 6 + col_idx # 6..11 (Nível Inferior)
 	return active_item_index
 
 func cycle_item(worker: Node3D = null) -> String:
-	active_item_index = (active_item_index + 1) % (items_data.size() - 1)
+	active_item_index = (active_item_index + 1) % items_data.size()
 	var itm = items_data[active_item_index]
 	if worker:
-		_show_feedback(worker, "📦 Prateleira: %s %s (%s)" % [itm["icon"], itm["name"], itm["tier"]])
+		_show_feedback(worker, "📦 Caixa de Estoque: %s %s (%s)" % [itm["icon"], itm["name"], itm["tier"]])
 	_update_label()
 	return itm["name"]
 
@@ -140,7 +193,7 @@ func interact(player: Node3D) -> void:
 			inv.add_stock(item_id, qty)
 			if item_id == "bread_bottom" or item_id == "bread_top":
 				inv.add_stock("bread", qty)
-			_show_feedback(player, "📦 %s armazenado nas prateleiras (+%d un.)!" % [itm["name"], qty])
+			_show_feedback(player, "📦 %s armazenado nas caixas (+%d un.)!" % [itm["name"], qty])
 			crate.queue_free()
 			_update_label()
 			return
@@ -173,9 +226,6 @@ func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
 	_update_label()
 
 func _update_label() -> void:
-	if not status_label:
-		return
-
 	var inv = InventoryManager.get_instance()
 	var b_bot = inv.get_stock("bread_bottom") if inv else 0
 	var b_top = inv.get_stock("bread_top") if inv else 0
@@ -184,12 +234,27 @@ func _update_label() -> void:
 	var tomato_stock = inv.get_stock("tomato") if inv else 0
 	var lettuce_stock = inv.get_stock("lettuce") if inv else 0
 
-	var itm = items_data[active_item_index]
+	# Atualiza etiquetas visuais das caixas de papelão individuais
+	_update_box_label("Model/BoxBreadBottom/Label", "🍞 BASE\nx%d" % b_bot)
+	_update_box_label("Model/BoxBreadTop/Label", "🥯 TAMPA\nx%d" % b_top)
+	_update_box_label("Model/BoxCheese/Label", "🧀 QUEIJO\nx%d" % cheese_stock)
+	_update_box_label("Model/BoxPotato/Label", "🥔 BATATAS\nx%d" % potato_stock)
+	_update_box_label("Model/BoxTomato/Label", "🍅 TOMATE\nx%d" % tomato_stock)
+	_update_box_label("Model/BoxLettuce/Label", "🥬 ALFACE\nx%d" % lettuce_stock)
 
-	status_label.text = "📦 ESTANTE EM L (2 NÍVEIS)\n🍞 Base: %d │ 🥯 Tampa: %d │ 🧀 Queijo: %d │ 🥔 Batata: %d │ 🍅 Tomate: %d │ 🥬 Alface: %d\n[E] Pegar %s │ [F] Alternar" % [
-		b_bot, b_top, cheese_stock, potato_stock, tomato_stock, lettuce_stock, itm["name"]
+	if not status_label:
+		return
+
+	var itm = items_data[active_item_index]
+	status_label.text = "📦 ESTOQUE DE INGREDIENTES (CAIXAS DE PAPELÃO)\n🍞 Base: %d │ 🥯 Tampa: %d │ 🧀 Queijo: %d │ 🥔 Batata: %d │ 🍅 Tomate: %d │ 🥬 Alface: %d\n[E] Pegar %s %s │ [F] Alternar" % [
+		b_bot, b_top, cheese_stock, potato_stock, tomato_stock, lettuce_stock, itm["icon"], itm["name"]
 	]
-	status_label.modulate = Color(0.9, 0.9, 0.9, 1.0)
+	status_label.modulate = Color(0.95, 0.95, 0.95, 1.0)
+
+func _update_box_label(node_path: String, text: String) -> void:
+	var lbl = get_node_or_null(node_path)
+	if lbl and lbl is Label3D:
+		lbl.text = text
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")
