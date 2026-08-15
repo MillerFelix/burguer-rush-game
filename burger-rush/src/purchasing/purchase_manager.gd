@@ -21,12 +21,17 @@ func buy_ingredient(item_id: String, amount: int) -> Dictionary:
 	if not item:
 		return {"success": false, "message": "Ingrediente inexistente!", "cost": 0.0, "amount_bought": 0}
 
-	var available_space = item.get_available_space()
+	var max_cap: int = item.get("max_capacity", 50)
+	var cur_qty: int = item.get("quantity", 0)
+	var available_space = max_cap - cur_qty
+	var d_name: String = item.get("display_name", item_id)
+	var u_cost: float = item.get("unit_cost", 2.0)
+
 	if available_space <= 0:
-		return {"success": false, "message": "Estoque de %s está cheio (máx: %d)!" % [item.display_name, item.max_capacity], "cost": 0.0, "amount_bought": 0}
+		return {"success": false, "message": "Estoque de %s está cheio (máx: %d)!" % [d_name, max_cap], "cost": 0.0, "amount_bought": 0}
 
 	var to_buy = mini(amount, available_space)
-	var total_cost = to_buy * item.unit_cost
+	var total_cost = to_buy * u_cost
 
 	var economy = EconomyManager.get_instance()
 	if not economy:
@@ -35,7 +40,7 @@ func buy_ingredient(item_id: String, amount: int) -> Dictionary:
 	if economy.get_money() < total_cost:
 		return {"success": false, "message": "Dinheiro insuficiente! Necessário: $%.2f" % total_cost, "cost": total_cost, "amount_bought": 0}
 
-	if not economy.spend_money(total_cost, "Compra: %dx %s" % [to_buy, item.display_name]):
+	if not economy.spend_money(total_cost, "Compra: %dx %s" % [to_buy, d_name]):
 		return {"success": false, "message": "Falha ao processar pagamento!", "cost": total_cost, "amount_bought": 0}
 
 	var recv = ReceivingArea.get_instance()

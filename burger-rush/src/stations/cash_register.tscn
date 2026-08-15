@@ -1,0 +1,122 @@
+[gd_scene format=3 uid="uid://cash_register_station_uid"]
+
+[ext_resource type="Script" path="res://src/stations/cash_register.gd" id="1_cash_reg"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Register"]
+size = Vector3(0.7, 0.55, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="Material_RegisterBody"]
+albedo_color = Color(0.18, 0.20, 0.22, 1)
+roughness = 0.5
+metallic = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_RegisterScreen"]
+albedo_color = Color(0.08, 0.12, 0.16, 1)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.15, 0.45, 0.75, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Keypad"]
+albedo_color = Color(0.85, 0.85, 0.88, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_CashDrawer"]
+albedo_color = Color(0.12, 0.13, 0.15, 1)
+roughness = 0.6
+metallic = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_ScannerAccent"]
+albedo_color = Color(0.85, 0.15, 0.15, 1)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.85, 0.15, 0.15, 1)
+emission_energy_multiplier = 1.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_BaseDrawer"]
+material = SubResource("Material_CashDrawer")
+size = Vector3(0.55, 0.12, 0.48)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Terminal"]
+material = SubResource("Material_RegisterBody")
+size = Vector3(0.42, 0.16, 0.36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ScreenHousing"]
+material = SubResource("Material_RegisterBody")
+size = Vector3(0.38, 0.26, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ScreenGlass"]
+material = SubResource("Material_RegisterScreen")
+size = Vector3(0.35, 0.22, 0.01)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Keypad"]
+material = SubResource("Material_Keypad")
+size = Vector3(0.18, 0.02, 0.16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ReceiptSlot"]
+material = SubResource("Material_Keypad")
+size = Vector3(0.12, 0.04, 0.10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Scanner"]
+material = SubResource("Material_ScannerAccent")
+size = Vector3(0.04, 0.08, 0.04)
+
+[node name="CashRegister" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1_cash_reg")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("BoxShape3D_Register")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="BaseDrawer" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+mesh = SubResource("BoxMesh_BaseDrawer")
+
+[node name="Terminal" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0, 0.18, 0.02)
+mesh = SubResource("BoxMesh_Terminal")
+
+[node name="ScreenHousing" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.36, -0.12)
+mesh = SubResource("BoxMesh_ScreenHousing")
+
+[node name="ScreenGlass" type="MeshInstance3D" parent="Model/ScreenHousing"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.025)
+mesh = SubResource("BoxMesh_ScreenGlass")
+
+[node name="ScreenLabel" type="Label3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.36, -0.09)
+billboard = 0
+double_sided = false
+text = "BURGER RUSH\nR$ 0.00"
+font_size = 12
+outline_size = 3
+modulate = Color(0.9, 0.95, 1.0, 1)
+
+[node name="Keypad" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, -0.09, 0.27, 0.08)
+mesh = SubResource("BoxMesh_Keypad")
+
+[node name="ReceiptSlot" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0.11, 0.27, 0.08)
+mesh = SubResource("BoxMesh_ReceiptSlot")
+
+[node name="Scanner" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.14, 0)
+mesh = SubResource("BoxMesh_Scanner")
+
+[node name="InteractionSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.0)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+billboard = 1
+double_sided = false
+text = "💰 CAIXA REGISTRADORA"
+font_size = 18
+outline_size = 5
+modulate = Color(0.3, 0.9, 0.4, 1)

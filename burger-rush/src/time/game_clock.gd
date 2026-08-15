@@ -16,11 +16,17 @@ signal week_ended(report: WeeklyReport)
 
 static var instance: GameClock = null
 
-@export var start_hour: int = 8
-@export var start_minute: int = 30
-@export var auto_open_hour: int = 9
+# Horário Oficial Burger Rush:
+# 09:00 -> Início do dia (Preparação)
+# 09:00 - 10:00 -> Preparação e abertura manual
+# 10:00 -> Abertura automática
+# 10:00 - 22:00 -> Restaurante Aberto
+# 22:00 -> Fechamento
+@export var start_hour: int = 9
+@export var start_minute: int = 0
+@export var auto_open_hour: int = 10
 @export var auto_open_minute: int = 0
-@export var closing_hour: int = 21
+@export var closing_hour: int = 22
 @export var closing_minute: int = 0
 @export var time_scale: float = 1.0 # 1 segundo real = 1 minuto de jogo
 @export var is_paused: bool = false
@@ -29,7 +35,7 @@ var day_number: int = 1
 var day_of_week: int = 1 # 1 = Segunda, ..., 7 = Domingo
 var week_number: int = 1
 var state: State = State.PREPARATION
-var current_hour: int = 8
+var current_hour: int = 9
 var current_minute: int = 0
 var accumulated_seconds: float = 0.0
 
@@ -74,6 +80,57 @@ func _process(delta: float) -> void:
 		accumulated_seconds -= 1.0
 		_advance_minute()
 
+	# Às 22:00+, o restaurante entra em CLOSING e só fecha o dia quando não houver clientes ou pedidos
+	if state == State.CLOSING:
+		if can_finish_day():
+			close_day()
+
+func can_finish_day() -> bool:
+	if state != State.CLOSING:
+		return false
+
+	var root_scene = get_parent() if get_parent() else self
+
+	# 1. Clientes no salão, mesas, fila ou em trânsito
+	if is_inside_tree() and get_tree():
+		var all_customers = get_tree().get_nodes_in_group("customers")
+		for c in all_customers:
+			if is_instance_valid(c) and not c.is_queued_for_deletion() and c.get("state") != 13: # Customer.State.FINISHED
+				return false
+
+	var spawner = root_scene.get_node_or_null("CustomerSpawner")
+	if not spawner and is_inside_tree() and get_tree() and get_tree().root:
+		spawner = get_tree().root.find_child("CustomerSpawner", true, false)
+	if spawner and spawner.has_method("has_active_customers") and spawner.has_active_customers():
+		return false
+
+	# 2. Carros no Drive-Thru
+	var deliv_mgr = root_scene.get_node_or_null("DeliveryQueueManager")
+	if not deliv_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		deliv_mgr = get_tree().root.find_child("DeliveryQueueManager", true, false)
+	if deliv_mgr and deliv_mgr.has_method("has_active_cars") and deliv_mgr.has_active_cars():
+		return false
+
+	# 3. Pedidos em andamento / preparo
+	var order_mgr = root_scene.get_node_or_null("OrderManager")
+	if not order_mgr:
+		order_mgr = OrderManager.instance
+	if not order_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		order_mgr = get_tree().root.find_child("OrderManager", true, false)
+	if order_mgr and order_mgr.has_method("has_pending_orders") and order_mgr.has_pending_orders():
+		return false
+
+	# 4. Fila da caixa registradora
+	var register = root_scene.get_node_or_null("CashRegister")
+	if not register:
+		register = CashRegister.instance
+	if not register and is_inside_tree() and get_tree() and get_tree().root:
+		register = get_tree().root.find_child("CashRegister", true, false)
+	if register and register.has_method("has_customers_in_queue") and register.has_customers_in_queue():
+		return false
+
+	return true
+
 func _advance_minute() -> void:
 	current_minute += 1
 	if current_minute >= 60:
@@ -82,12 +139,12 @@ func _advance_minute() -> void:
 
 	time_tick.emit(current_hour, current_minute)
 
-	# Transição automática: PREPARATION -> OPEN (às 09:00)
+	# Transição automática: PREPARATION -> OPEN (às 10:00 se ainda estiver fechado)
 	if state == State.PREPARATION:
 		if current_hour > auto_open_hour or (current_hour == auto_open_hour and current_minute >= auto_open_minute):
 			open_restaurant()
 
-	# Transição automática: OPEN -> CLOSING (às 18:00)
+	# Transição automática: OPEN -> CLOSING (às 22:00 - para novos clientes)
 	elif state == State.OPEN:
 		if current_hour > closing_hour or (current_hour == closing_hour and current_minute >= closing_minute):
 			set_state(State.CLOSING)

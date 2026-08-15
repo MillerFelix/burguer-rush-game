@@ -88,12 +88,11 @@ func release() -> void:
 			item.queue_free()
 	served_items.clear()
 
-	table_state = TableState.DIRTY
-	if plate_slot and not dirty_dish_instance:
-		dirty_dish_instance = dirty_dishes_scene.instantiate()
-		plate_slot.add_child(dirty_dish_instance)
-		dirty_dish_instance.position = Vector3.ZERO
+	if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
+		dirty_dish_instance.queue_free()
+		dirty_dish_instance = null
 
+	table_state = TableState.AVAILABLE
 	_update_visual_status()
 
 func clean_table(player: Node3D) -> void:
@@ -131,10 +130,6 @@ func get_interaction_prompt(player: Node = null) -> String:
 			return "Mesa #%d: Aguardando pedido..." % table_id
 		Customer.State.EATING:
 			return "Mesa #%d: Clientes comendo..." % table_id
-		Customer.State.REQUESTING_BILL:
-			return "E — Entregar Conta na Mesa #%d" % table_id
-		Customer.State.PAYING:
-			return "E — Receber Pagamento da Mesa #%d" % table_id
 
 	return ""
 
@@ -164,16 +159,6 @@ func interact(player: Node3D) -> void:
 				_serve_single_item(player, held)
 			else:
 				_show_player_feedback(player, "Traga o pedido pronto para servir a Mesa #%d." % table_id)
-
-		Customer.State.REQUESTING_BILL:
-			primary_cust.present_bill(player)
-			_show_player_feedback(player, "🧾 Conta entregue na Mesa #%d." % table_id)
-			_update_visual_status()
-
-		Customer.State.PAYING:
-			primary_cust.pay_and_leave(player)
-			_show_player_feedback(player, "💰 Pagamento recebido da Mesa #%d!" % table_id)
-			_update_visual_status()
 
 func _serve_single_item(player: Node3D, item: Node3D) -> void:
 	var primary_cust = seated_customers[0]

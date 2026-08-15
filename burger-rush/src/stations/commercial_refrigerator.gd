@@ -1,158 +1,121 @@
-class_name CommercialRefrigerator
-extends StaticBody3D
+class_name MeatRefrigerator
+extends Node3D
 
+# ================================================================
+# GELADEIRA DE CARNES — SIMPLES E FUNCIONAL
+#
+# Arquitetura:
+#  Node3D "CommercialRefrigerator" (raiz, sem física — MeatRefrigerator)
+#  ├── FridgeBody    (StaticBody3D) — corpo + interior + visuais
+#  ├── BeefSlot      (StaticBody3D) — interação da carne bovina
+#  ├── ChickenSlot   (StaticBody3D) — interação da carne frango
+#  ├── DoorPivot     (Node3D)       — pivot na dobradiça esquerda
+#  │   └── FridgeDoor (StaticBody3D) — porta, raycast → abrir/fechar
+#  └── StatusLabel   (Label3D)
+#
+# Os slots (BeefSlot, ChickenSlot) ficam DESABILITADOS enquanto a porta
+# está fechada, e HABILITADOS quando a porta abre — assim o jogador só
+# consegue pegar carne com a geladeira aberta, e a porta não interfere.
+# ================================================================
+
+const DOOR_OPEN_ANGLE_DEG: float = -85.0
+const DOOR_CLOSE_ANGLE_DEG: float = 0.0
+const DOOR_ANIM_SECS: float = 0.50
+
+var is_open: bool = false
+var is_animating: bool = false
+
+@onready var door_pivot: Node3D    = $DoorPivot
 @onready var status_label: Label3D = $StatusLabel
-
-var compartments: Array[Dictionary] = [
-	{
-		"id": "patty",
-		"name": "Carne Bovina",
-		"icon": "🥩",
-		"scene": preload("res://src/items/patty.tscn"),
-		"active": true
-	},
-	{
-		"id": "patty_chicken",
-		"name": "Frango (Em Breve)",
-		"icon": "🍗",
-		"scene": preload("res://src/items/patty.tscn"), # Preparado para expansão futura
-		"active": false
-	},
-	{
-		"id": "bacon",
-		"name": "Bacon / Defumados",
-		"icon": "🥓",
-		"scene": preload("res://src/items/bacon.tscn"),
-		"active": true
-	}
-]
-var active_compartment_index: int = 0
+@onready var beef_slot_col: CollisionShape3D   = $BeefSlot/CollisionShape3D
+@onready var chicken_slot_col: CollisionShape3D = $ChickenSlot/CollisionShape3D
 
 func _ready() -> void:
+	# Inicialmente porta fechada → slots desabilitados
+	_set_slots_enabled(false)
 	var inv = InventoryManager.get_instance()
 	if inv and not inv.stock_changed.is_connected(_on_stock_changed):
 		inv.stock_changed.connect(_on_stock_changed)
 	_update_label()
 
-func _process(_delta: float) -> void:
-	pass
+# ─── Chamado pela FridgeDoor ─────────────────────────────────
+func toggle_door(player: Node3D) -> void:
+	if is_animating:
+		return
+	is_animating = true
 
-func get_aimed_compartment_index(player: Node = null) -> int:
-	if not player:
-		return active_compartment_index
-	var ray = player.get_node_or_null("Head/Camera3D/RayCast3D")
-	if ray and ray is RayCast3D and ray.is_colliding():
-		var col_pt = to_local(ray.get_collision_point())
-		if col_pt.y > 1.3:
-			return 0 # Compartimento Superior: Bovina
-		elif col_pt.y > 0.7:
-			return 1 # Compartimento Médio: Frango
-		else:
-			return 2 # Compartimento Inferior: Bacon
-	return active_compartment_index
+	# Desabilita slots durante a animação para não gerar interação estranha
+	_set_slots_enabled(false)
 
-func cycle_compartment(worker: Node3D = null) -> String:
-	active_compartment_index = (active_compartment_index + 1) % compartments.size()
-	var comp = compartments[active_compartment_index]
-	if worker:
-		_show_feedback(worker, "❄️ Compartimento selecionado: %s %s" % [comp["icon"], comp["name"]])
+	var target_deg = DOOR_OPEN_ANGLE_DEG if not is_open else DOOR_CLOSE_ANGLE_DEG
+	var tween = create_tween()
+	tween.set_ease(Tween.EASE_IN_OUT)
+	tween.set_trans(Tween.TRANS_SINE)
+	tween.tween_property(door_pivot, "rotation_degrees:y", target_deg, DOOR_ANIM_SECS)
+	await tween.finished
+
+	is_open = not is_open
+	is_animating = false
+
+	# Habilita slots somente quando aberta
+	_set_slots_enabled(is_open)
 	_update_label()
-	return comp["name"]
 
-func get_interaction_prompt(player: Node = null) -> String:
-	var inv = InventoryManager.get_instance()
-	if not inv:
-		return ""
+	var msg = "🟢 Geladeira aberta — escolha sua carne!" if is_open else "🔒 Geladeira fechada."
+	_show_feedback(player, msg)
 
-	var aimed_idx = get_aimed_compartment_index(player)
-	var comp = compartments[aimed_idx]
-	var item_id = comp["id"]
-
-	# Reabastecimento com caixa
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held.get("ingredient_id") == item_id or str(held.get("item_type")) == "crate":
-			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			return "E — Armazenar %s (+%d unidades)" % [comp["name"], qty]
-		return ""
-
-	if not comp["active"]:
-		return "🔒 %s (Bloqueado / Expansão Futura)" % comp["name"]
-
-	var stock = inv.get_stock(item_id)
-	var max_cap = inv.get_max_capacity(item_id)
-
-	if stock <= 0:
-		return "🔴 %s Esgotada! Compre no Computador" % comp["name"]
-
-	return "E — Pegar %s %s (%d/%d) | [F] Trocar Seção" % [comp["icon"], comp["name"], stock, max_cap]
-
-func interact(player: Node3D) -> void:
-	var inv = InventoryManager.get_instance()
-	if not inv:
+# ─── Chamado pelos BeefSlot / ChickenSlot ────────────────────
+func pick_meat(player: Node3D, meat_id: String) -> void:
+	if player.get("held_item") != null:
+		_show_feedback(player, "Você já está segurando algo!")
 		return
 
-	var aimed_idx = get_aimed_compartment_index(player)
-	active_compartment_index = aimed_idx
-	var comp = compartments[aimed_idx]
-	var item_id = comp["id"]
-
-	# 1. Abastecimento com Caixa de Ingredientes
-	var held = player.get("held_item")
-	if held != null and (held.get("ingredient_id") == item_id or str(held.get("item_type")) == "crate"):
-		if player.has_method("take_held_item"):
-			var crate = player.take_held_item()
-			var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
-			inv.add_stock(item_id, qty)
-			_show_feedback(player, "❄️ %s armazenada no freezer (+%d unidades)!" % [comp["name"], qty])
-			crate.queue_free()
-			_update_label()
-			return
-
-	if not comp["active"]:
-		_show_feedback(player, "🔒 Este compartimento será liberado em expansões futuras!")
+	var inv = InventoryManager.get_instance()
+	if not inv or not inv.has_stock(meat_id, 1):
+		var nm = "Carne Bovina" if meat_id == "patty_beef" else "Hambúrguer de Frango"
+		_show_feedback(player, "❌ Sem %s! Reabasteça no Computador." % nm)
 		return
 
-	# 2. Pegar carne com as mãos livres
-	if held == null:
-		if not inv.has_stock(item_id, 1):
-			_show_feedback(player, "❌ Sem estoque de %s! Compre no computador." % comp["name"])
-			return
+	inv.consume_stock(meat_id, 1)
 
-		var item_scene: PackedScene = comp["scene"]
-		if item_scene:
-			inv.consume_stock(item_id, 1)
-			var item = item_scene.instantiate()
-			if is_inside_tree() and get_tree().root:
-				get_tree().root.add_child(item)
-			else:
-				add_child(item)
-			if player.has_method("pick_up"):
-				player.pick_up(item)
-			_show_feedback(player, "🥩 Pegou %s (Estoque: %d)" % [comp["name"], inv.get_stock(item_id)])
-			_update_label()
+	# Instanciar patty com tipo correto ANTES de add_child (antes de _ready() disparar)
+	var patty_scene: PackedScene = load("res://src/items/patty.tscn")
+	var patty = patty_scene.instantiate() as Patty
+	if meat_id == "patty_chicken":
+		patty.meat_type = Patty.MeatType.CHICKEN
+	else:
+		patty.meat_type = Patty.MeatType.BEEF
 
-func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
+	# Adicionar na raiz da cena — exatamente como o IngredientDispenser faz
+	player.get_tree().root.add_child(patty)
+	player.pick_up(patty)
+
+	var icon = "🥩" if meat_id == "patty_beef" else "🍗"
+	var nm2 = "Carne Bovina" if meat_id == "patty_beef" else "Hambúrguer de Frango"
+	_show_feedback(player, "%s Pegou %s (Restam: %d)" % [icon, nm2, inv.get_stock(meat_id)])
+	_update_label()
+
+# ─── Helpers ─────────────────────────────────────────────────
+func _set_slots_enabled(enabled: bool) -> void:
+	if beef_slot_col:
+		beef_slot_col.disabled = not enabled
+	if chicken_slot_col:
+		chicken_slot_col.disabled = not enabled
+
+func _on_stock_changed(_id: String, _qty: int) -> void:
 	_update_label()
 
 func _update_label() -> void:
 	if not status_label:
 		return
-
 	var inv = InventoryManager.get_instance()
-	var patty_stock = inv.get_stock("patty") if inv else 0
-	var patty_cap = inv.get_max_capacity("patty") if inv else 50
-	var bacon_stock = inv.get_stock("bacon") if inv else 0
-	var bacon_cap = inv.get_max_capacity("bacon") if inv else 50
+	var beef  = inv.get_stock("patty_beef")    if inv else 0
+	var chick = inv.get_stock("patty_chicken") if inv else 0
+	var door_str = "🟢 ABERTA" if is_open else "🔒 FECHADA"
+	status_label.text = "❄️ GELADEIRA — %s\n🥩 Bovina: %d  │  🍗 Frango: %d" % [door_str, beef, chick]
+	status_label.modulate = Color(0.5, 1.0, 0.7, 1.0) if is_open else Color(0.4, 0.85, 1.0, 1.0)
 
-	var active_comp = compartments[active_compartment_index]
-
-	status_label.text = "❄️ GELADEIRA DE CARNES (3 SEÇÕES)\n🥩 Bovina: %d/%d │ 🍗 Frango: [Expansão] │ 🥓 Bacon: %d/%d\n[E] Pegar %s │ [F] Alternar" % [
-		patty_stock, patty_cap, bacon_stock, bacon_cap, active_comp["name"]
-	]
-	status_label.modulate = Color(0.4, 0.85, 1.0, 1.0)
-
-func _show_feedback(player: Node3D, message: String) -> void:
+func _show_feedback(player: Node3D, msg: String) -> void:
 	var hud = player.get_node_or_null("HUD")
 	if hud and hud.has_method("show_temporary_feedback"):
-		hud.show_temporary_feedback(message)
+		hud.show_temporary_feedback(msg)

@@ -82,7 +82,7 @@ func setup(p_model: Node3D) -> void:
 	next_blink_interval = randf_range(3.0, 5.0)
 	next_glance_interval = randf_range(3.5, 6.0)
 
-func update_animation(delta: float, velocity: Vector3, is_seated: bool, is_eating: bool, is_carrying: bool) -> void:
+func update_animation(delta: float, velocity: Vector3, is_seated: bool, is_eating: bool, is_carrying: bool, raising_hand: bool = false) -> void:
 	var horiz_speed = Vector2(velocity.x, velocity.z).length()
 
 	if is_seated:
@@ -104,9 +104,9 @@ func update_animation(delta: float, velocity: Vector3, is_seated: bool, is_eatin
 		AnimState.CARRY_IDLE:
 			_animate_idle(delta, true)
 		AnimState.SIT:
-			_animate_sit(delta, false)
+			_animate_sit(delta, false, raising_hand)
 		AnimState.EAT:
-			_animate_sit(delta, true)
+			_animate_sit(delta, true, false)
 
 func _update_face(delta: float) -> void:
 	# Sistema de piscar rápido e natural (mantendo olhos abertos 98% do tempo)
@@ -256,7 +256,7 @@ func _animate_idle(delta: float, carrying: bool) -> void:
 			arm_right.rotation.y = 0.0
 			arm_right.rotation.z = deg_to_rad(-3.0) - breath
 
-func _animate_sit(delta: float, eating: bool) -> void:
+func _animate_sit(delta: float, eating: bool, raising_hand: bool = false) -> void:
 	idle_timer += delta * 2.0
 	var breath = sin(idle_timer) * 0.006
 
@@ -296,6 +296,18 @@ func _animate_sit(delta: float, eating: bool) -> void:
 			arm_left.rotation.x = deg_to_rad(-40.0)
 			arm_left.rotation.y = deg_to_rad(12.0)
 			arm_left.rotation.z = deg_to_rad(-8.0)
+	elif raising_hand:
+		# Mão direita levantada chamando atendimento
+		if arm_left:
+			arm_left.position = Vector3(orig_arm_l_pos.x, 1.04, 0.08)
+			arm_left.rotation.x = deg_to_rad(-28.0)
+			arm_left.rotation.y = deg_to_rad(8.0)
+			arm_left.rotation.z = deg_to_rad(-4.0)
+		if arm_right:
+			arm_right.position = Vector3(orig_arm_r_pos.x, 1.18, 0.08)
+			arm_right.rotation.x = deg_to_rad(-145.0) + sin(idle_timer * 2.5) * 0.06
+			arm_right.rotation.y = deg_to_rad(-5.0)
+			arm_right.rotation.z = deg_to_rad(14.0)
 	else:
 		if arm_left:
 			arm_left.position = Vector3(orig_arm_l_pos.x, 1.04, 0.08)

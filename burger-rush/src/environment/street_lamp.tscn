@@ -1,0 +1,99 @@
+[gd_scene format=3 uid="uid://street_lamp_uid"]
+
+[sub_resource type="StandardMaterial3D" id="Material_PoleDarkMetal"]
+albedo_color = Color(0.18, 0.20, 0.22, 1)
+metallic = 0.85
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_LanternHousing"]
+albedo_color = Color(0.14, 0.16, 0.18, 1)
+metallic = 0.9
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_StreetBulb"]
+albedo_color = Color(1.0, 0.92, 0.72, 1)
+emission_enabled = true
+emission = Color(1.0, 0.85, 0.55, 1)
+emission_energy_multiplier = 2.8
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Base"]
+material = SubResource("Material_PoleDarkMetal")
+top_radius = 0.18
+bottom_radius = 0.24
+height = 0.35
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Post"]
+material = SubResource("Material_PoleDarkMetal")
+top_radius = 0.07
+bottom_radius = 0.10
+height = 3.9
+radial_segments = 12
+
+[sub_resource type="SphereMesh" id="SphereMesh_Finial"]
+material = SubResource("Material_PoleDarkMetal")
+radius = 0.09
+height = 0.18
+
+[sub_resource type="BoxMesh" id="BoxMesh_HorizontalArm"]
+material = SubResource("Material_PoleDarkMetal")
+size = Vector3(0.08, 0.08, 0.75)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_DropBracket"]
+material = SubResource("Material_PoleDarkMetal")
+top_radius = 0.03
+bottom_radius = 0.03
+height = 0.22
+radial_segments = 8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_LanternShade"]
+material = SubResource("Material_LanternHousing")
+top_radius = 0.10
+bottom_radius = 0.32
+height = 0.14
+radial_segments = 14
+
+[sub_resource type="SphereMesh" id="SphereMesh_Bulb"]
+material = SubResource("Material_StreetBulb")
+radius = 0.09
+height = 0.16
+radial_segments = 12
+rings = 6
+
+[node name="StreetLamp" type="Node3D"]
+
+[node name="Base" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.175, 0)
+mesh = SubResource("CylinderMesh_Base")
+
+[node name="Post" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
+mesh = SubResource("CylinderMesh_Post")
+
+[node name="TopFinial" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.15, 0)
+mesh = SubResource("SphereMesh_Finial")
+
+[node name="Arm" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.95, 0.38)
+mesh = SubResource("BoxMesh_HorizontalArm")
+
+[node name="DropBracket" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.82, 0.72)
+mesh = SubResource("CylinderMesh_DropBracket")
+
+[node name="LanternShade" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.72, 0.72)
+mesh = SubResource("CylinderMesh_LanternShade")
+
+[node name="Bulb" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.64, 0.72)
+mesh = SubResource("SphereMesh_Bulb")
+
+[node name="LampLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.55, 0.72)
+light_color = Color(1.0, 0.86, 0.58, 1)
+light_energy = 1.35
+omni_range = 9.5
+omni_attenuation = 1.4

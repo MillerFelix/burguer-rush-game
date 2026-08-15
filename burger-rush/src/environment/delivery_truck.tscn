@@ -1,5 +1,14 @@
 [gd_scene format=3 uid="uid://delivery_truck_scene_uid"]
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_Chassis"]
+size = Vector3(2.1, 0.5, 6.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Cab"]
+size = Vector3(2.3, 1.85, 2.2)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_CargoBox"]
+size = Vector3(2.5, 2.5, 4.3)
+
 [sub_resource type="StandardMaterial3D" id="Material_TruckCab"]
 albedo_color = Color(0.78, 0.18, 0.16, 1)
 roughness = 0.45
@@ -59,7 +68,21 @@ radial_segments = 14
 material = SubResource("Material_Headlight")
 size = Vector3(0.35, 0.2, 0.05)
 
-[node name="DeliveryTruck" type="Node3D"]
+[node name="DeliveryTruck" type="StaticBody3D"]
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionChassis" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
+shape = SubResource("BoxShape3D_Chassis")
+
+[node name="CollisionCab" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, -2.0)
+shape = SubResource("BoxShape3D_Cab")
+
+[node name="CollisionCargoBox" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 1.15)
+shape = SubResource("BoxShape3D_CargoBox")
 
 [node name="Chassis" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)

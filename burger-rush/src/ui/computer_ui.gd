@@ -160,7 +160,7 @@ func _refresh_inventory() -> void:
 	if not inv:
 		return
 
-	for item in inv.get_all_items():
+	for item in inv.get_all_items().values():
 		var card = PanelContainer.new()
 		var card_style = StyleBoxFlat.new()
 		card_style.bg_color = Color(0.15, 0.18, 0.23, 0.8)
@@ -178,29 +178,33 @@ func _refresh_inventory() -> void:
 		hbox.add_theme_constant_override("separation", 15)
 		margin.add_child(hbox)
 
-		var icon = _get_item_icon(item.id)
+		var item_id_str: String = item.get("id", "")
+		var icon = _get_item_icon(item_id_str)
 		var name_lbl = Label.new()
 		name_lbl.custom_minimum_size = Vector2(220, 0)
 		name_lbl.add_theme_font_size_override("font_size", 15)
-		name_lbl.text = "%s %s" % [icon, item.display_name]
+		name_lbl.text = "%s %s" % [icon, item.get("display_name", item_id_str)]
 		hbox.add_child(name_lbl)
 
+		var qty: int = item.get("quantity", 0)
+		var max_cap: int = item.get("max_capacity", 0)
+		var reorder: int = item.get("reorder_level", 5)
 		var qty_lbl = Label.new()
 		qty_lbl.custom_minimum_size = Vector2(160, 0)
-		qty_lbl.text = "Estoque: %d / %d un" % [item.quantity, item.max_capacity]
+		qty_lbl.text = "Estoque: %d / %d un" % [qty, max_cap]
 		hbox.add_child(qty_lbl)
 
 		var cost_lbl = Label.new()
 		cost_lbl.custom_minimum_size = Vector2(140, 0)
-		cost_lbl.text = "Custo: $%.2f / un" % item.unit_cost
+		cost_lbl.text = "Custo: $%.2f / un" % item.get("unit_cost", 0.0)
 		hbox.add_child(cost_lbl)
 
 		var status_lbl = Label.new()
 		status_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if item.is_empty():
+		if qty <= 0:
 			status_lbl.text = "🔴 ESGOTADO"
 			status_lbl.modulate = Color(1.0, 0.3, 0.3, 1)
-		elif item.is_low_stock():
+		elif qty <= reorder:
 			status_lbl.text = "🟡 ESTOQUE BAIXO"
 			status_lbl.modulate = Color(1.0, 0.8, 0.2, 1)
 		else:
@@ -226,10 +230,14 @@ func _refresh_purchases() -> void:
 		return
 
 	var categories = {
-		"🍔 HAMBÚRGUERES": ["bread", "patty", "cheese", "bacon", "sauce"],
-		"🍟 BATATAS": ["potato_raw"],
-		"🥤 BEBIDAS": ["syrup_soda"],
-		"📦 EMBALAGENS": ["burger_box", "fries_box", "drink_cup"],
+		"🍞 PADARIA": ["bread", "bread_bottom", "bread_top"],
+		"🥩 CARNES": ["patty_beef", "patty_chicken"],
+		"🧀 QUEIJOS": ["cheese_mozzarella", "cheese_cheddar", "cheese_prato"],
+		"🥗 VEGETAIS": ["lettuce", "tomato", "onion", "red_onion", "pickle"],
+		"🥓 EXTRAS": ["bacon", "egg"],
+		"🥫 MOLHOS": ["sauce_ketchup", "sauce_mustard", "sauce_mayo", "sauce_special"],
+		"🍟 BATATAS": ["potato_raw", "potato_box"],
+		"🥤 BEBIDAS": ["syrup_soda", "cup_empty", "cup_lid"],
 		"🛢️ MANUTENÇÃO": ["cooking_oil"]
 	}
 
@@ -826,25 +834,58 @@ func _refresh_finances() -> void:
 
 func _get_item_icon(item_id: String) -> String:
 	match item_id:
-		"bread":
+		# Padaria
+		"bread", "bread_bottom", "bread_top":
 			return "🍞"
-		"patty":
+		# Carnes
+		"patty_beef", "patty":
 			return "🥩"
-		"cheese":
+		"patty_chicken":
+			return "🍗"
+		# Queijos
+		"cheese_cheddar", "cheese":
 			return "🧀"
+		"cheese_mozzarella":
+			return "🧀"
+		"cheese_prato":
+			return "🧀"
+		# Vegetais
+		"lettuce":
+			return "🥬"
+		"tomato":
+			return "🍅"
+		"onion":
+			return "🧅"
+		"red_onion":
+			return "🧅"
+		"pickle":
+			return "🥒"
+		# Extras
 		"bacon":
 			return "🥓"
-		"sauce":
+		"egg":
+			return "🥚"
+		# Molhos
+		"sauce_ketchup", "sauce":
 			return "🥫"
+		"sauce_mustard":
+			return "🥫"
+		"sauce_mayo":
+			return "🥫"
+		"sauce_special":
+			return "⭐"
+		# Suprimentos
 		"potato_raw":
 			return "🥔"
-		"syrup_soda":
-			return "🥤"
+		"potato_box":
+			return "🍟"
 		"burger_box":
 			return "📦"
-		"fries_box":
-			return "🍟"
-		"drink_cup":
+		"cup_empty":
+			return "🥤"
+		"cup_lid":
+			return "🫙"
+		"syrup_soda":
 			return "🥤"
 		"cooking_oil":
 			return "🛢️"

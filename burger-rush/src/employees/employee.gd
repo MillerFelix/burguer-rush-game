@@ -3,6 +3,7 @@ extends CharacterBody3D
 
 const HumanoidAnimator = preload("res://src/characters/humanoid_animator.gd")
 const CharacterAppearance = preload("res://src/characters/character_appearance.gd")
+const CashRegister = preload("res://src/stations/cash_register.gd")
 
 enum Role {
 	UNASSIGNED,
@@ -166,12 +167,20 @@ func _find_and_assign_task() -> void:
 				var t = table_node as RestaurantTable
 				if t and is_instance_valid(t) and t.seated_customer and is_instance_valid(t.seated_customer):
 					var c = t.seated_customer
-					if c.state == Customer.State.SEATED_WAITING_TO_ORDER or c.state == Customer.State.REQUESTING_BILL:
+					if c.state == Customer.State.SEATED_WAITING_TO_ORDER:
 						current_target_node = t
 						target_position = t.global_position + Vector3(0, 0, 0.8)
 						state = State.WALKING
 						_update_visual_label()
 						return
+
+			var register = main_scene.get_node_or_null("CashRegister") as CashRegister
+			if register and register.can_checkout():
+				current_target_node = register
+				target_position = register.global_position + Vector3(0, 0, -0.6)
+				state = State.WALKING
+				_update_visual_label()
+				return
 
 		Role.GRILL:
 			var grill = main_scene.get_node_or_null("Grill") as Grill
@@ -219,23 +228,35 @@ func _execute_work(delta: float) -> void:
 				current_target_node = null
 
 		Role.ATTENDANT:
-			var table = current_target_node as RestaurantTable
-			if table and table.seated_customer and is_instance_valid(table.seated_customer):
-				var c = table.seated_customer
-				if c.state == Customer.State.SEATED_WAITING_TO_ORDER:
+			if current_target_node is RestaurantTable:
+				var table = current_target_node as RestaurantTable
+				if table and table.seated_customer and is_instance_valid(table.seated_customer):
+					var c = table.seated_customer
+					if c.state == Customer.State.SEATED_WAITING_TO_ORDER:
+						if work_timer >= 0.8:
+							table.interact(self) # Anota o pedido
+							tasks_completed_this_week += 1
+							state = State.IDLE
+							current_target_node = null
+							_update_visual_label()
+					else:
+						state = State.IDLE
+						current_target_node = null
+				else:
+					state = State.IDLE
+					current_target_node = null
+			elif current_target_node is CashRegister:
+				var register = current_target_node as CashRegister
+				if register and register.can_checkout():
 					if work_timer >= 0.8:
-						table.interact(self) # Anota o pedido
+						register.interact(self) # Processa pagamento no caixa
 						tasks_completed_this_week += 1
 						state = State.IDLE
 						current_target_node = null
 						_update_visual_label()
-				elif c.state == Customer.State.REQUESTING_BILL:
-					if work_timer >= 0.8:
-						table.interact(self) # Processa pagamento único da conta
-						tasks_completed_this_week += 1
-						state = State.IDLE
-						current_target_node = null
-						_update_visual_label()
+				else:
+					state = State.IDLE
+					current_target_node = null
 			else:
 				state = State.IDLE
 				current_target_node = null

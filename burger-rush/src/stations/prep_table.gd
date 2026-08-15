@@ -210,7 +210,19 @@ func _update_status_display() -> void:
 func _is_finished_product(item: Node3D) -> bool:
 	var id: String = str(item.get("item_id")) if item.get("item_id") != null else ""
 	var t: String = str(item.get("item_type")) if item.get("item_type") != null else ""
-	return t == "final_product" or id in ["burger", "cheeseburger", "x_salada", "x_bacon"]
+	if t == "final_product":
+		return true
+	# Legacy IDs
+	if id in ["burger", "cheeseburger", "x_salada", "x_bacon"]:
+		return true
+	# Novos IDs do cardápio
+	if id in [
+		"burger_classic", "burger_double", "burger_cheddar", "burger_bacon",
+		"burger_salad", "burger_onion", "burger_chicken", "burger_supreme",
+		"burger_cheese", "burger_vegan", "burger_egg"
+	]:
+		return true
+	return false
 
 func _get_item_ingredient_key(item: Node3D) -> String:
 	if not item:
@@ -229,16 +241,51 @@ func _get_item_label(item: Node3D) -> String:
 
 	var item_id: String = str(item.get("item_id")) if item.get("item_id") != null else ""
 	match item_id:
+		# Pão
 		"bread":
 			return "Pão Brioche"
 		"bread_bottom":
 			return "Base do Pão"
 		"bread_top":
 			return "Tampa do Pão"
-		"cheese":
+		# Carnes
+		"patty", "patty_beef", "patty_beef:cooked", "patty_beef:raw":
+			return "Carne Bovina"
+		"patty_chicken", "patty_chicken:cooked", "patty_chicken:raw":
+			return "Hamburguer de Frango"
+		# Queijos
+		"cheese", "cheese_cheddar":
 			return "Queijo Cheddar"
-		"patty":
-			return "Carne"
+		"cheese_mozzarella":
+			return "Queijo Muçarela"
+		"cheese_prato":
+			return "Queijo Prato"
+		# Vegetais
+		"lettuce":
+			return "Alface"
+		"tomato":
+			return "Tomate"
+		"onion":
+			return "Cebola"
+		"red_onion":
+			return "Cebola Roxa"
+		"pickle":
+			return "Picles"
+		# Extras
+		"bacon":
+			return "Bacon"
+		"egg":
+			return "Ovo"
+		# Molhos
+		"sauce", "sauce_ketchup", "ketchup":
+			return "Ketchup"
+		"sauce_mustard", "mustard":
+			return "Mostarda"
+		"sauce_mayo", "mayo":
+			return "Maionese"
+		"sauce_special", "special_sauce":
+			return "Molho Especial"
+		# Produtos finais (legacy)
 		"burger":
 			return "Hambúrguer"
 		"cheeseburger":
@@ -247,12 +294,29 @@ func _get_item_label(item: Node3D) -> String:
 			return "X-Salada"
 		"x_bacon":
 			return "X-Bacon"
-		"lettuce":
-			return "Alface"
-		"tomato":
-			return "Tomate"
-		"sauce":
-			return "Molho"
+		# Produtos finais (novos)
+		"burger_classic":
+			return "Burger Clássico"
+		"burger_double":
+			return "Burger Duplo"
+		"burger_cheddar":
+			return "Burger Cheddar"
+		"burger_bacon":
+			return "Burger Bacon"
+		"burger_salad":
+			return "Burger Salada"
+		"burger_onion":
+			return "Burger Onion"
+		"burger_chicken":
+			return "Burger Chicken"
+		"burger_supreme":
+			return "Burger Supreme"
+		"burger_cheese":
+			return "Burger Três Queijos"
+		"burger_vegan":
+			return "Burger Vegano"
+		"burger_egg":
+			return "Burger Egg"
 		_:
 			return item.name if item_id == "" else item_id.capitalize()
 

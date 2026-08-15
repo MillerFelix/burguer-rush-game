@@ -33,31 +33,33 @@ func _init() -> void:
 			table_mgr.register_table(child as RestaurantTable)
 
 	# ---------------------------------------------------------
-	# TESTE 1: HORÁRIO OFICIAL 09:00 — 21:00
+	# TESTE 1: HORÁRIO OFICIAL 10:00 — 22:00 (PREPARAÇÃO 09:00 — 10:00)
 	# ---------------------------------------------------------
-	print("\n--- Teste 1: Validação do Horário Oficial 09:00 — 21:00 ---")
-	assert(clock.auto_open_hour == 9, "Abertura automática deve ser às 09:00")
-	assert(clock.closing_hour == 21, "Fechamento oficial deve ser às 21:00")
+	print("\n--- Teste 1: Validação do Horário Oficial 10:00 — 22:00 ---")
+	assert(clock.start_hour == 9, "Início do dia deve ser às 09:00")
+	assert(clock.auto_open_hour == 10, "Abertura automática deve ser às 10:00")
+	assert(clock.closing_hour == 22, "Fechamento oficial deve ser às 22:00")
 
 	clock.set_state(GameClock.State.PREPARATION)
 	open_sign._update_sign()
-	assert("09:00 — 21:00" in open_sign.label_3d.text, "Placa em PREPARAÇÃO deve conter '09:00 — 21:00'")
+	assert("10:00 — 22:00" in open_sign.label_3d.text, "Placa em PREPARAÇÃO deve conter '10:00 — 22:00'")
+	assert("FECHADO" in open_sign.label_3d.text, "Placa em PREPARAÇÃO deve mostrar FECHADO")
 
 	clock.open_restaurant()
 	open_sign._update_sign()
 	print("DEBUG open_sign text: ", open_sign.label_3d.text)
-	assert("09:00 — 21:00" in open_sign.label_3d.text, "Placa em ABERTO deve conter '09:00 — 21:00'")
+	assert("10:00 — 22:00" in open_sign.label_3d.text, "Placa em ABERTO deve conter '10:00 — 22:00'")
 	assert("ABERTO" in open_sign.label_3d.text, "Placa deve mostrar ABERTO")
 
 	clock.set_state(GameClock.State.CLOSING)
 	open_sign._update_sign()
-	assert("09:00 — 21:00" in open_sign.label_3d.text, "Placa em ENCERRANDO deve conter '09:00 — 21:00'")
+	assert("10:00 — 22:00" in open_sign.label_3d.text, "Placa em ENCERRANDO deve conter '10:00 — 22:00'")
 
 	clock.set_state(GameClock.State.CLOSED)
 	open_sign._update_sign()
-	assert("09:00 — 21:00" in open_sign.label_3d.text, "Placa em FECHADO deve conter '09:00 — 21:00'")
+	assert("10:00 — 22:00" in open_sign.label_3d.text, "Placa em FECHADO deve conter '10:00 — 22:00'")
 	assert("FECHADO" in open_sign.label_3d.text, "Placa deve mostrar FECHADO")
-	print("  [PASS] Horário oficial 09:00 — 21:00 validado no relógio e em todos os estados da placa!")
+	print("  [PASS] Horário oficial 10:00 — 22:00 validado no relógio e em todos os estados da placa!")
 
 	# ---------------------------------------------------------
 	# TESTE 2: ATENDIMENTO DE PEDIDO COM 'E' SEM CRASH (FLUXO COMPLETO)

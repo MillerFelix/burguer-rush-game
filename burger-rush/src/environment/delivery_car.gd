@@ -1,0 +1,404 @@
+class_name DeliveryCar
+extends Node3D
+
+signal order_placed(order: Order)
+signal order_completed(order: Order)
+signal car_left(car: Node3D)
+
+const CustomerMood = preload("res://src/customers/customer_mood.gd")
+const CustomerExperience = preload("res://src/customers/customer_experience.gd")
+const CustomerReview = preload("res://src/customers/customer_review.gd")
+const ReputationManager = preload("res://src/customers/reputation_manager.gd")
+
+enum CarState {
+	SPAWNING,
+	MOVING_TO_QUEUE,
+	WAITING_IN_LINE,
+	AT_WINDOW_WAITING_ORDER,
+	AT_WINDOW_WAITING_FOOD,
+	LEAVING
+}
+
+@export var car_id: int = 1
+@export var move_speed: float = 8.5
+
+@onready var model: Node3D = $Model
+@onready var driver: Node3D = $Model/Driver
+@onready var headlight_l: MeshInstance3D = $Model/HeadlightL
+@onready var headlight_r: MeshInstance3D = $Model/HeadlightR
+@onready var taillight_l: MeshInstance3D = $Model/TaillightL
+@onready var taillight_r: MeshInstance3D = $Model/TaillightR
+@onready var status_label: Label3D = $StatusLabel
+
+var current_state: CarState = CarState.SPAWNING
+var target_position: Vector3 = Vector3.ZERO
+var target_queue_index: int = -1
+var current_order: Order = null
+var spot_light: SpotLight3D = null
+
+# Sistema de Humor e Experiência do Drive-Thru
+var mood = null
+var experience = null
+var has_submitted_review: bool = false
+
+var tolerance_order_wait: float = 65.0
+var tolerance_food_wait: float = 110.0
+var tolerance_in_line_wait: float = 100.0
+
+static var last_used_color_idx: int = -1
+
+var paint_colors = [
+	Color(0.92, 0.93, 0.96), # Branco Alpino
+	Color(0.12, 0.13, 0.15), # Preto Ônix
+	Color(0.48, 0.50, 0.54), # Cinza Chumbo
+	Color(0.82, 0.84, 0.88), # Prata Metálico
+	Color(0.82, 0.16, 0.16), # Vermelho Rubi
+	Color(0.18, 0.42, 0.82), # Azul Royal
+	Color(0.16, 0.52, 0.32), # Verde Esmeralda
+	Color(0.92, 0.78, 0.18), # Amarelo Canário
+	Color(0.86, 0.48, 0.16), # Laranja Cobre
+	Color(0.24, 0.32, 0.45)  # Azul Ardósia
+]
+
+func _init() -> void:
+	if mood == null:
+		mood = CustomerMood.new(100.0, 1.0)
+	if experience == null:
+		experience = CustomerExperience.new(car_id, "Drive-Thru", 100.0)
+
+func _enter_tree() -> void:
+	_ensure_spotlight()
+	_randomize_appearance()
+
+func _ready() -> void:
+	if mood == null:
+		mood = CustomerMood.new(100.0, 1.0)
+	if experience == null:
+		experience = CustomerExperience.new(car_id, "Drive-Thru", mood.current_mood)
+	else:
+		experience.customer_id = car_id
+		experience.customer_type = "Drive-Thru"
+
+	_ensure_spotlight()
+	_randomize_appearance()
+	_update_status_label()
+
+func _ensure_spotlight() -> SpotLight3D:
+	if not spot_light:
+		spot_light = get_node_or_null("SpotLight3D") as SpotLight3D
+		if not spot_light:
+			spot_light = SpotLight3D.new()
+			spot_light.name = "SpotLight3D"
+			spot_light.light_color = Color(1.0, 0.95, 0.82)
+			spot_light.light_energy = 2.0
+			spot_light.spot_range = 18.0
+			spot_light.spot_angle = 35.0
+			spot_light.position = Vector3(-2.2, 0.6, 0.0) # Aponta para frente (-X)
+			spot_light.rotation_degrees = Vector3(-5.0, 180.0, 0.0)
+			spot_light.visible = false
+			add_child(spot_light)
+	return spot_light
+
+func _randomize_appearance() -> void:
+	var idx = randi() % paint_colors.size()
+	if idx == last_used_color_idx:
+		idx = (idx + 1 + (randi() % (paint_colors.size() - 1))) % paint_colors.size()
+	last_used_color_idx = idx
+
+	var chosen_color = paint_colors[idx]
+	var paint_mat = StandardMaterial3D.new()
+	paint_mat.albedo_color = chosen_color
+	paint_mat.roughness = 0.30
+	paint_mat.metallic = 0.35
+
+	var chassis = get_node_or_null("Model/Chassis") as MeshInstance3D
+	var roof = get_node_or_null("Model/Roof") as MeshInstance3D
+	if chassis: chassis.material_override = paint_mat
+	if roof: roof.material_override = paint_mat
+
+func set_night_mode(is_night: bool) -> void:
+	_ensure_spotlight()
+	if spot_light:
+		spot_light.visible = is_night
+
+	var hl_mat = StandardMaterial3D.new()
+	hl_mat.albedo_color = Color(1.0, 0.96, 0.85)
+	hl_mat.emission_enabled = is_night
+	hl_mat.emission = Color(1.0, 0.95, 0.75) if is_night else Color.BLACK
+	hl_mat.emission_energy_multiplier = 3.0 if is_night else 0.0
+
+	var tl_mat = StandardMaterial3D.new()
+	tl_mat.albedo_color = Color(0.85, 0.1, 0.1)
+	tl_mat.emission_enabled = is_night
+	tl_mat.emission = Color(0.9, 0.1, 0.1) if is_night else Color.BLACK
+	tl_mat.emission_energy_multiplier = 2.0 if is_night else 0.0
+
+	if not headlight_l: headlight_l = get_node_or_null("Model/HeadlightL") as MeshInstance3D
+	if not headlight_r: headlight_r = get_node_or_null("Model/HeadlightR") as MeshInstance3D
+	if not taillight_l: taillight_l = get_node_or_null("Model/TaillightL") as MeshInstance3D
+	if not taillight_r: taillight_r = get_node_or_null("Model/TaillightR") as MeshInstance3D
+
+	if headlight_l: headlight_l.material_override = hl_mat
+	if headlight_r: headlight_r.material_override = hl_mat
+	if taillight_l: taillight_l.material_override = tl_mat
+	if taillight_r: taillight_r.material_override = tl_mat
+
+func set_target_position(pos: Vector3, queue_idx: int) -> void:
+	target_position = pos
+	target_queue_index = queue_idx
+	current_state = CarState.MOVING_TO_QUEUE
+	_update_status_label()
+
+func _physics_process(delta: float) -> void:
+	if experience:
+		experience.total_time_in_restaurant += delta
+
+	match current_state:
+		CarState.MOVING_TO_QUEUE:
+			var target_h = Vector3(target_position.x, position.y, target_position.z)
+			position = position.move_toward(target_h, move_speed * delta)
+			if position.distance_to(target_h) <= 0.1:
+				position = target_h
+				if target_queue_index == 0:
+					if current_order == null:
+						current_state = CarState.AT_WINDOW_WAITING_ORDER
+					else:
+						current_state = CarState.AT_WINDOW_WAITING_FOOD
+				else:
+					current_state = CarState.WAITING_IN_LINE
+				_update_status_label()
+
+		CarState.WAITING_IN_LINE:
+			if experience:
+				experience.wait_time_in_line += delta
+			if mood:
+				mood.decay_progressively(experience.wait_time_in_line, tolerance_in_line_wait, delta * 0.4)
+			_update_status_label()
+
+		CarState.AT_WINDOW_WAITING_ORDER:
+			if experience:
+				experience.wait_time_to_order += delta
+			if mood:
+				mood.decay_progressively(experience.wait_time_to_order, tolerance_order_wait, delta)
+				if mood.is_exhausted() or (experience and experience.wait_time_to_order >= tolerance_order_wait):
+					abandon_drive_thru("Demora no atendimento do Drive-Thru")
+					return
+			_update_status_label()
+
+		CarState.AT_WINDOW_WAITING_FOOD:
+			if experience:
+				experience.wait_time_for_food += delta
+			if mood:
+				mood.decay_progressively(experience.wait_time_for_food, tolerance_food_wait, delta)
+				if mood.is_exhausted() or (experience and experience.wait_time_for_food >= tolerance_food_wait):
+					abandon_drive_thru("Demora na entrega do Drive-Thru")
+					return
+			_update_status_label()
+
+		CarState.LEAVING:
+			var target_h = Vector3(target_position.x, position.y, target_position.z)
+			position = position.move_toward(target_h, (move_speed * 1.3) * delta)
+			if position.distance_to(target_h) <= 0.5:
+				car_left.emit(self)
+				queue_free()
+
+func get_interaction_prompt(player: Node = null) -> String:
+	match current_state:
+		CarState.AT_WINDOW_WAITING_ORDER:
+			return "[E] Atender Pedido (Drive-Thru Carro #%d)" % car_id
+		CarState.AT_WINDOW_WAITING_FOOD:
+			if current_order:
+				return "Carro #%d aguardando pedido #%03d (R$ %.2f)" % [car_id, current_order.id, current_order.total_price]
+			return "Carro #%d aguardando pedido" % car_id
+		CarState.WAITING_IN_LINE:
+			return "Carro #%d na fila (Posição #%d)" % [car_id, target_queue_index + 1]
+		_:
+			return ""
+
+func interact(player: Node3D) -> void:
+	if current_state == CarState.AT_WINDOW_WAITING_ORDER:
+		take_order(player)
+
+func take_order(player: Node3D = null) -> Order:
+	if current_order != null:
+		return current_order
+
+	var order_mgr = OrderManager.instance
+	if not order_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		order_mgr = get_tree().root.find_child("OrderManager", true, false) as OrderManager
+	if not order_mgr:
+		var curr = self.get_parent()
+		while curr:
+			if curr.has_node("OrderManager"):
+				order_mgr = curr.get_node("OrderManager") as OrderManager
+				break
+			curr = curr.get_parent()
+	if not order_mgr:
+		return null
+
+	var group_size = 1
+	var r = randf()
+	if r < 0.45:
+		group_size = 1
+	elif r < 0.85:
+		group_size = 2
+	else:
+		group_size = 3
+
+	current_order = order_mgr.create_group_order(self, group_size, 0, "DELIVERY")
+	current_state = CarState.AT_WINDOW_WAITING_FOOD
+
+	if mood:
+		mood.boost(15.0) # Anotou o pedido -> motorista fica animado
+
+	_update_status_label()
+
+	if player:
+		var hud = player.get_node_or_null("HUD")
+		if hud and hud.has_method("show_temporary_feedback"):
+			hud.show_temporary_feedback("🚗 Drive-Thru: Pedido #%03d registrado (R$ %.2f)" % [current_order.id, current_order.total_price])
+
+	order_placed.emit(current_order)
+	return current_order
+
+func receive_order(product_id: String) -> void:
+	if current_order == null:
+		return
+
+	if current_order.is_all_delivered() or current_order.state == Order.State.DELIVERED or current_order.state == Order.State.COMPLETED:
+		finish_and_leave()
+
+func finish_and_leave() -> void:
+	if current_state == CarState.LEAVING:
+		return
+
+	if mood:
+		mood.boost(25.0)
+
+	if experience and current_order:
+		experience.final_mood = mood.current_mood if mood else 100.0
+		experience.food_quality = 1.0
+		experience.order_correct = true
+		var items_str: Array[String] = []
+		for it in current_order.items:
+			items_str.append("%dx %s" % [it.get("quantity", 1), it.get("product_name", "Lanche")])
+		experience.order_summary = ", ".join(items_str)
+
+	_submit_review()
+
+	current_state = CarState.LEAVING
+	target_position = Vector3(-42.0, position.y, position.z) # Rumo à saída oeste
+	_update_status_label()
+
+	if current_order:
+		order_completed.emit(current_order)
+
+func abandon_drive_thru(reason: String) -> void:
+	if current_state == CarState.LEAVING:
+		return
+
+	if experience:
+		experience.abandoned = true
+		experience.abandon_reason = reason
+		experience.final_mood = mood.current_mood if mood else 0.0
+
+	# Cancela o pedido no OrderManager se existir
+	if current_order and current_order.state != Order.State.COMPLETED:
+		current_order.state = Order.State.CANCELLED
+		var order_mgr = OrderManager.instance
+		if not order_mgr and is_inside_tree() and get_tree() and get_tree().root:
+			order_mgr = get_tree().root.find_child("OrderManager", true, false)
+		if not order_mgr:
+			var curr = self.get_parent()
+			while curr:
+				if curr.has_node("OrderManager"):
+					order_mgr = curr.get_node("OrderManager")
+					break
+				curr = curr.get_parent()
+		if order_mgr:
+			order_mgr.active_orders.erase(current_order)
+			if order_mgr.has_signal("order_cancelled"):
+				order_mgr.order_cancelled.emit(current_order)
+
+	_submit_review()
+
+	current_state = CarState.LEAVING
+	target_position = Vector3(-42.0, position.y, position.z)
+	_update_status_label()
+
+func _submit_review() -> void:
+	if has_submitted_review or not experience:
+		return
+	has_submitted_review = true
+
+	if mood:
+		experience.final_mood = mood.current_mood
+
+	var clock_day = 1
+	var clock_time = "12:00"
+	var clock = null
+	if is_inside_tree() and get_tree() and get_tree().root:
+		clock = get_tree().root.find_child("GameClock", true, false)
+	if clock:
+		clock_day = clock.get("day_number") if clock.get("day_number") != null else 1
+		clock_time = clock.get_formatted_time() if clock.has_method("get_formatted_time") else "12:00"
+
+	var review = experience.generate_review(clock_day, clock_time)
+	var rep_mgr = ReputationManager.instance
+	if not rep_mgr:
+		var curr = self.get_parent()
+		while curr:
+			if curr.has_node("ReputationManager"):
+				rep_mgr = curr.get_node("ReputationManager")
+				break
+			curr = curr.get_parent()
+	if not rep_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		rep_mgr = get_tree().root.find_child("ReputationManager", true, false)
+
+	if rep_mgr:
+		rep_mgr.add_review(review)
+
+func _update_status_label() -> void:
+	if not status_label:
+		status_label = get_node_or_null("StatusLabel") as Label3D
+	if not status_label:
+		return
+
+	var emoji = mood.get_emoji() if mood else "🙂"
+	var mood_color = mood.get_color() if mood else Color(1, 1, 1)
+
+	match current_state:
+		CarState.SPAWNING, CarState.MOVING_TO_QUEUE:
+			status_label.text = "%s 🚗 Carro #%d" % [emoji, car_id]
+			status_label.modulate = Color(1.0, 1.0, 1.0, 0.8)
+
+		CarState.WAITING_IN_LINE:
+			status_label.text = "%s ⏳ Fila (#%d)" % [emoji, target_queue_index + 1]
+			status_label.modulate = mood_color
+
+		CarState.AT_WINDOW_WAITING_ORDER:
+			var pct = int(mood.current_mood) if mood else 100
+			if pct <= 25:
+				status_label.text = "%s ⚠️ Quase Desistindo! (%d%%)" % [emoji, pct]
+				status_label.modulate = Color(1.0, 0.25, 0.25)
+			else:
+				status_label.text = "%s 💬 [E] Fazer Pedido (%d%%)" % [emoji, pct]
+				status_label.modulate = mood_color
+
+		CarState.AT_WINDOW_WAITING_FOOD:
+			var pend = current_order.get_total_quantity() - current_order.get_delivered_count() if current_order else 1
+			var pct = int(mood.current_mood) if mood else 100
+			if pct <= 25:
+				status_label.text = "%s ⚠️ Demora na Entrega! (%d%%)" % [emoji, pct]
+				status_label.modulate = Color(1.0, 0.25, 0.25)
+			else:
+				status_label.text = "%s 🍔 Aguardando (%d)" % [emoji, pend]
+				status_label.modulate = mood_color
+
+		CarState.LEAVING:
+			if experience and experience.abandoned:
+				status_label.text = "😡 🚗 Desistiu do Drive-Thru!"
+				status_label.modulate = Color(1.0, 0.2, 0.2)
+			else:
+				status_label.text = "%s ✓ Obrigado!" % emoji
+				status_label.modulate = Color(0.4, 1.0, 0.5, 1.0)

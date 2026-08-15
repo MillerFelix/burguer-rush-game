@@ -165,40 +165,8 @@ $bmp.Dispose()
 $bmp = New-Object System.Drawing.Bitmap(1024, 512)
 $g = [System.Drawing.Graphics]::FromImage($bmp)
 $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-$g.Clear([System.Drawing.Color]::FromArgb(255, 24, 28, 30))
-$penBorder = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(255, 160, 110, 60), 16)
-$g.DrawRectangle($penBorder, 8, 8, 1008, 496)
-$penChalkLine = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(180, 240, 240, 220), 3)
-$g.DrawRectangle($penChalkLine, 24, 24, 976, 464)
-
-$fontTitle = New-Object System.Drawing.Font("Arial", 36, [System.Drawing.FontStyle]::Bold)
-$fontItem = New-Object System.Drawing.Font("Arial", 26, [System.Drawing.FontStyle]::Bold)
-$fontPrice = New-Object System.Drawing.Font("Arial", 26, [System.Drawing.FontStyle]::Bold)
-$brushTitle = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 210, 60))
-$brushItem = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 245, 245, 240))
-$brushPrice = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 110, 230, 110))
-$sf = New-Object System.Drawing.StringFormat
-$sf.Alignment = [System.Drawing.StringAlignment]::Center
-
-$g.DrawString("BURGER RUSH MENU", $fontTitle, $brushTitle, 512, 45, $sf)
-$g.DrawLine($penChalkLine, 120, 105, 904, 105)
-
-$items = @(
-    @("CHEESEBURGER", "`$18.00", "Pao brioche, carne grelhada, queijo cheddar"),
-    @("X-BACON ARTISANAL", "`$25.00", "Pao brioche, carne dupla, cheddar, bacon crocante"),
-    @("BATATA FRITA CROCANTE", "`$8.00", "Porcao de batatas douradas e salgadas"),
-    @("REFRIGERANTE GELADO (500ml)", "`$6.00", "Cola, Guarana da Amazonia ou Limao")
-)
-for ($i = 0; $i -lt $items.Length; $i++) {
-    $y = 135 + $i * 80
-    $g.DrawString($items[$i][0], $fontItem, $brushItem, 60, $y)
-    $g.DrawString($items[$i][1], $fontPrice, $brushPrice, 850, $y)
-    $fontDesc = New-Object System.Drawing.Font("Arial", 16, [System.Drawing.FontStyle]::Italic)
-    $brushDesc = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(200, 200, 200, 190))
-    $g.DrawString($items[$i][2], $fontDesc, $brushDesc, 60, $y + 36)
-    $fontDesc.Dispose(); $brushDesc.Dispose()
-}
-$penBorder.Dispose(); $penChalkLine.Dispose(); $fontTitle.Dispose(); $fontItem.Dispose(); $fontPrice.Dispose(); $brushTitle.Dispose(); $brushItem.Dispose(); $brushPrice.Dispose(); $sf.Dispose(); $g.Dispose()
+$g.Clear([System.Drawing.Color]::FromArgb(255, 26, 29, 33))
+$g.Dispose()
 $bmp.Save("$texDir\chalkboard_menu.png", [System.Drawing.Imaging.ImageFormat]::Png)
 $bmp.Dispose()
 

@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://kitchen_ceiling_light_uid"]
+
+[sub_resource type="StandardMaterial3D" id="Material_PanelFrame"]
+albedo_color = Color(0.35, 0.36, 0.38, 1)
+metallic = 0.5
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_PanelDiffuser"]
+albedo_color = Color(0.96, 0.98, 1.0, 1)
+emission_enabled = true
+emission = Color(0.92, 0.96, 1.0, 1)
+emission_energy_multiplier = 2.5
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_PanelFrame"]
+material = SubResource("Material_PanelFrame")
+size = Vector3(1.4, 0.08, 0.7)
+
+[sub_resource type="BoxMesh" id="BoxMesh_PanelDiffuser"]
+material = SubResource("Material_PanelDiffuser")
+size = Vector3(1.25, 0.04, 0.55)
+
+[node name="KitchenCeilingLight" type="Node3D"]
+
+[node name="Frame" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.48, 0)
+mesh = SubResource("BoxMesh_PanelFrame")
+
+[node name="Diffuser" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.45, 0)
+mesh = SubResource("BoxMesh_PanelDiffuser")

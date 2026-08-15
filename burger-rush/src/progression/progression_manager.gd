@@ -6,41 +6,67 @@ signal feature_unlocked(feature_id: String)
 static var instance: ProgressionManager = null
 
 var unlocked_features: Dictionary = {
+	# Sistema base
 	"dine_in": true,
-	"burger": true,
-	"cheeseburger": true,
+	"delivery": true,
+	# Ingredientes
 	"bread": true,
-	"patty": true,
-	"cheese": true,
-	"sauce": true,
-	"burger_box": true,
+	"bread_bottom": true,
+	"bread_top": true,
+	"patty_beef": true,
+	"patty_chicken": true,
+	"cheese_mozzarella": true,
+	"cheese_cheddar": true,
+	"cheese_prato": true,
+	"lettuce": true,
+	"tomato": true,
+	"onion": true,
+	"red_onion": true,
+	"pickle": true,
+	"bacon": true,
+	"egg": true,
+	"sauce_ketchup": true,
+	"sauce_mustard": true,
+	"sauce_mayo": true,
+	"sauce_special": true,
+	# Acompanhamentos e embalagens
 	"fries": true,
 	"potato_raw": true,
 	"potato_box": true,
-	"soda": true,
+	"burger_box": true,
 	"cup_empty": true,
 	"cup_lid": true,
 	"syrup_soda": true,
+	"cooking_oil": true,
+	# Bebidas
+	"soda_cola": true,
+	"soda_guarana": true,
+	"soda_sprite": true,
+	"soda_grape": true,
+	"soda_cola_zero": true,
+	"soda": true,
+	"juice_orange": true,
+	"juice_grape": true,
+	"juice_passion": true,
+	# Novos burgers — TODOS DESBLOQUEADOS desde o início
+	"burger_classic": true,
+	"burger_double": true,
+	"burger_cheddar": true,
+	"burger_bacon": true,
+	"burger_salad": true,
+	"burger_onion": true,
+	"burger_chicken": true,
+	"burger_supreme": true,
+	"burger_cheese": true,
+	"burger_vegan": true,
+	"burger_egg": true,
+	# Combos
 	"combo_classic": true,
-	"x_salada": true,
-	"lettuce": true,
-	"tomato": true,
-	"onion": false,
-	"x_bacon": false,
-	"bacon": false,
-	"combo_bacon": false,
-	"delivery": false
+	"combo_cheddar": true,
 }
 
 var unlock_costs: Dictionary = {
-	"x_salada": 250.0,
-	"x_bacon": 400.0,
-	"combo_bacon": 500.0,
-	"delivery": 600.0,
-	"lettuce": 100.0,
-	"tomato": 100.0,
-	"onion": 80.0,
-	"bacon": 150.0
+	# Reservado para futuras expansões de progressão
 }
 
 func _enter_tree() -> void:
@@ -50,7 +76,15 @@ static func get_instance() -> ProgressionManager:
 	return instance
 
 func is_unlocked(feature_id: String) -> bool:
-	return unlocked_features.get(feature_id, false)
+	# Verifica no dicionário de features primeiro
+	if unlocked_features.has(feature_id):
+		return unlocked_features[feature_id]
+	# Fallback: verifica se a própria receita está marcada como unlocked
+	var recipe = RecipeDatabase.get_recipe_by_id(feature_id)
+	if recipe:
+		return recipe.is_unlocked
+	# Ingredientes do inventário: se não estiver explicitamente bloqueado, considera liberado
+	return true
 
 func get_unlock_cost(feature_id: String) -> float:
 	return unlock_costs.get(feature_id, 0.0)
@@ -76,17 +110,6 @@ func unlock_with_money(feature_id: String) -> Dictionary:
 
 	if economy and economy.spend_money(cost, "Desbloqueio: %s" % feature_id.capitalize()):
 		unlocked_features[feature_id] = true
-
-		if feature_id == "x_salada":
-			unlocked_features["lettuce"] = true
-			unlocked_features["tomato"] = true
-			unlocked_features["onion"] = true
-		elif feature_id == "x_bacon":
-			unlocked_features["bacon"] = true
-		elif feature_id == "combo_bacon":
-			unlocked_features["x_bacon"] = true
-			unlocked_features["bacon"] = true
-
 		feature_unlocked.emit(feature_id)
 		return {"success": true, "message": "🎉 %s desbloqueado com sucesso por $%.2f!" % [feature_id.capitalize(), cost]}
 

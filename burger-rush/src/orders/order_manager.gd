@@ -39,16 +39,25 @@ func create_group_order(customer: Node, group_size: int, table_id: int = 0, sour
 	order.source_type = source_type
 	order.created_time = Time.get_ticks_msec() / 1000.0
 
-	var available_burgers = [
-		{"id": "cheeseburger", "name": "Cheeseburger", "price": 18.0},
-		{"id": "burger", "name": "Hambúrguer Clássico", "price": 15.0},
-		{"id": "x_bacon", "name": "X-Bacon", "price": 25.0},
-		{"id": "x_salada", "name": "X-Salada", "price": 22.0}
+	# Pega os burgers do cardápio atualizado
+	var burger_recipe_ids = [
+		"burger_classic", "burger_double", "burger_cheddar", "burger_bacon",
+		"burger_salad", "burger_onion", "burger_chicken", "burger_supreme",
+		"burger_cheese", "burger_vegan", "burger_egg"
 	]
+	var available_burgers: Array[Dictionary] = []
+	for bid in burger_recipe_ids:
+		var r = RecipeDatabase.get_recipe_by_id(bid)
+		if r and r.is_unlocked:
+			available_burgers.append({"id": r.id, "name": r.display_name, "price": r.base_price})
+	if available_burgers.is_empty():
+		available_burgers = [{"id": "burger_classic", "name": "Burger Clássico", "price": 22.90}]
 
 	var available_drinks = [
-		{"id": "drink_cola", "name": "Refrigerante Cola", "price": 6.0},
-		{"id": "drink_orange", "name": "Suco de Laranja", "price": 7.0}
+		{"id": "soda_cola", "name": "Refrigerante Cola", "price": 6.0},
+		{"id": "soda_guarana", "name": "Refrigerante Guaraná", "price": 6.0},
+		{"id": "juice_orange", "name": "Suco de Laranja", "price": 7.0},
+		{"id": "juice_grape", "name": "Suco de Uva", "price": 7.0}
 	]
 
 	# 1. Cada pessoa do grupo consome 1 Hambúrguer e 1 Bebida
@@ -154,6 +163,13 @@ func get_avg_wait_time() -> float:
 		return 0.0
 	return daily_total_wait_time / float(daily_completed_orders)
 
+func has_pending_orders() -> bool:
+	for order in active_orders:
+		if order and is_instance_valid(order) and (order.state == Order.State.RECEIVED or order.state == Order.State.WAITING or order.state == Order.State.IN_PROGRESS):
+			if not order.is_all_delivered():
+				return true
+	return false
+
 func start_new_day() -> void:
 	active_orders.clear()
 	daily_completed_orders = 0
@@ -182,23 +198,26 @@ func _get_product_info(product_id: String) -> Dictionary:
 		}
 
 	match product_id:
-		"burger":
-			return {"name": "Hambúrguer", "price": 15.0}
-		"cheeseburger":
-			return {"name": "Cheeseburger", "price": 18.0}
-		"x_salada":
-			return {"name": "X-Salada", "price": 22.0}
-		"x_bacon":
-			return {"name": "X-Bacon", "price": 25.0}
+		# Acompanhamentos e Bebidas (fallback caso não estejam no RecipeDatabase)
 		"fries":
 			return {"name": "Batata Frita", "price": 8.0}
-		"soda_cola":
+		"soda_cola", "drink_cola":
 			return {"name": "Refrigerante Cola", "price": 6.0}
 		"soda_guarana":
 			return {"name": "Refrigerante Guaraná", "price": 6.0}
 		"soda_sprite":
 			return {"name": "Refrigerante Limão", "price": 6.0}
-		"soda":
+		"soda_grape":
+			return {"name": "Refrigerante Uva", "price": 6.0}
+		"soda_cola_zero":
+			return {"name": "Cola Zero", "price": 6.0}
+		"soda", "drink_orange":
 			return {"name": "Refrigerante", "price": 6.0}
+		"juice_orange":
+			return {"name": "Suco de Laranja", "price": 7.0}
+		"juice_grape":
+			return {"name": "Suco de Uva", "price": 7.0}
+		"juice_passion":
+			return {"name": "Suco de Maracujá", "price": 7.0}
 		_:
 			return {"name": product_id.capitalize(), "price": 10.0}

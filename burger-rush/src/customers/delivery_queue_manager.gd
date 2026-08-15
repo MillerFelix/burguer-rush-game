@@ -1,0 +1,158 @@
+class_name DeliveryQueueManager
+extends Node3D
+
+signal car_spawned(car: Node3D)
+signal car_served(car: Node3D)
+
+static var instance: DeliveryQueueManager = null
+
+@export var car_scene: PackedScene = preload("res://src/environment/delivery_car.tscn")
+@export var max_queue_size: int = 4
+@export var auto_spawn: bool = true
+@export var base_spawn_interval: float = 20.0
+
+# Posições da fila de delivery ao longo da rua dos fundos (Z = -11.5)
+# Pos 0: Exatamente em frente à janela de atendimento (X = 6.45)
+# Pos 1, 2, 3: Alinhados longitudinalmente atrás do primeiro com distância segura (6.2m)
+const QUEUE_POSITIONS = [
+	Vector3(6.45, 0.0, -11.5),  # Janela de atendimento
+	Vector3(12.65, 0.0, -11.5), # 2º Carro
+	Vector3(18.85, 0.0, -11.5), # 3º Carro
+	Vector3(25.05, 0.0, -11.5)  # 4º Carro
+]
+
+const SPAWN_POS = Vector3(38.0, 0.0, -11.5) # Entrada leste
+const EXIT_POS = Vector3(-42.0, 0.0, -11.5) # Saída oeste
+
+var car_queue: Array[Node3D] = []
+var next_car_id: int = 1
+var spawn_timer: float = 0.0
+var current_target_interval: float = 20.0
+var is_night: bool = false
+
+func _enter_tree() -> void:
+	instance = self
+
+func _ready() -> void:
+	instance = self
+	current_target_interval = _calculate_interval_for_time(10.0)
+	spawn_timer = current_target_interval - 4.0 # Primeiro carro chega logo após abrir
+
+func static_get() -> DeliveryQueueManager:
+	return instance
+
+static func get_instance() -> DeliveryQueueManager:
+	return instance
+
+func has_active_cars() -> bool:
+	car_queue = car_queue.filter(func(c): return is_instance_valid(c) and c.get("current_state") != 5)
+	return not car_queue.is_empty()
+
+func _get_clock() -> Node:
+	if is_inside_tree() and get_tree() and get_tree().root:
+		return get_tree().root.find_child("GameClock", true, false)
+	return null
+
+func _process(delta: float) -> void:
+	# Limpa instâncias inválidas
+	car_queue = car_queue.filter(func(c): return is_instance_valid(c) and c.get("current_state") != 5)
+
+	if not auto_spawn:
+		return
+
+	var clock = _get_clock()
+	if clock and (clock.get("state") != 1 or clock.get("current_hour") >= 22):
+		return
+
+	var current_hour_f = 10.0
+	if clock:
+		current_hour_f = clock.get("current_hour") + (clock.get("current_minute") / 60.0)
+
+	if car_queue.size() < max_queue_size:
+		spawn_timer += delta
+		if spawn_timer >= current_target_interval:
+			spawn_timer = 0.0
+			current_target_interval = _calculate_interval_for_time(current_hour_f)
+			spawn_car()
+
+func _calculate_interval_for_time(time_h: float) -> float:
+	# CURVA DE INTERVALOS DINÂMICOS PARA DELIVERY (10:00 — 22:00):
+	# 10:00 - 11:30 (Manhã calma):        30.0s a 45.0s
+	# 11:30 - 14:00 (Pico Almoço):         15.0s a 22.0s
+	# 14:00 - 17:00 (Tarde moderada):      24.0s a 35.0s
+	# 17:00 - 19:00 (Fim de Tarde):        16.0s a 24.0s
+	# 19:00 - 22:00 (Pico Noite / Jantar): 10.0s a 16.0s (MAIOR FREQUÊNCIA)
+	if time_h < 11.5:
+		return randf_range(30.0, 45.0)
+	elif time_h < 14.0:
+		return randf_range(15.0, 22.0)
+	elif time_h < 17.0:
+		return randf_range(24.0, 35.0)
+	elif time_h < 19.0:
+		return randf_range(16.0, 24.0)
+	elif time_h <= 22.0:
+		return randf_range(10.0, 16.0)
+	return randf_range(30.0, 50.0)
+
+func spawn_car() -> Node3D:
+	if not car_scene:
+		car_scene = load("res://src/environment/delivery_car.tscn")
+
+	if car_queue.size() >= max_queue_size:
+		return null
+
+	var car = car_scene.instantiate() as Node3D
+	car.set("car_id", next_car_id)
+	next_car_id += 1
+	add_child(car)
+
+	car.position = SPAWN_POS
+	var target_idx = car_queue.size()
+	car_queue.append(car)
+
+	if car.has_method("set_target_position"):
+		car.set_target_position(QUEUE_POSITIONS[target_idx], target_idx)
+	if car.has_method("set_night_mode"):
+		car.set_night_mode(is_night)
+
+	if car.has_signal("order_completed"):
+		car.order_completed.connect(_on_car_order_completed.bind(car))
+	if car.has_signal("car_left"):
+		car.car_left.connect(_on_car_left)
+
+	car_spawned.emit(car)
+	return car
+
+func _on_car_order_completed(order: Order, car: Node3D) -> void:
+	car_served.emit(car)
+
+func _on_car_left(car: Node3D) -> void:
+	if car_queue.has(car):
+		car_queue.erase(car)
+	_advance_queue()
+
+func _advance_queue() -> void:
+	# Limpa referências inválidas
+	car_queue = car_queue.filter(func(c): return is_instance_valid(c) and c.get("current_state") != 5)
+
+	# Atualiza o destino de todos os carros na fila
+	for i in range(car_queue.size()):
+		var c = car_queue[i]
+		if is_instance_valid(c) and i < QUEUE_POSITIONS.size() and c.has_method("set_target_position"):
+			c.set_target_position(QUEUE_POSITIONS[i], i)
+
+func get_car_at_window() -> Node3D:
+	if car_queue.size() > 0 and is_instance_valid(car_queue[0]):
+		var first = car_queue[0]
+		if first.get("target_queue_index") == 0:
+			return first
+	return null
+
+func get_queue_count() -> int:
+	return car_queue.size()
+
+func set_night_mode(night: bool) -> void:
+	is_night = night
+	for car in car_queue:
+		if is_instance_valid(car) and car.has_method("set_night_mode"):
+			car.set_night_mode(is_night)
