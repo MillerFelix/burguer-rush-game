@@ -1,0 +1,117 @@
+[gd_scene format=3 uid="uid://syrup_canister_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/syrup_canister.gd" id="1_canister"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_Canister"]
+height = 0.38
+radius = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Material_StainlessSteel"]
+albedo_color = Color(0.82, 0.84, 0.86, 1)
+metallic = 0.85
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_DarkRubber"]
+albedo_color = Color(0.15, 0.15, 0.18, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_ColorBand"]
+albedo_color = Color(0.85, 0.12, 0.12, 1)
+roughness = 0.35
+emission_enabled = true
+emission = Color(0.85, 0.12, 0.12, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_BrassValve"]
+albedo_color = Color(0.85, 0.72, 0.25, 1)
+metallic = 0.9
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_GaugeFrame"]
+albedo_color = Color(0.08, 0.08, 0.10, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_LevelIndicator"]
+albedo_color = Color(0.85, 0.12, 0.12, 1)
+emission_enabled = true
+emission = Color(0.85, 0.12, 0.12, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Body"]
+material = SubResource("Material_StainlessSteel")
+top_radius = 0.11
+bottom_radius = 0.11
+height = 0.30
+radial_segments = 18
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Rim"]
+material = SubResource("Material_DarkRubber")
+top_radius = 0.115
+bottom_radius = 0.115
+height = 0.04
+radial_segments = 18
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ColorBand"]
+material = SubResource("Material_ColorBand")
+top_radius = 0.112
+bottom_radius = 0.112
+height = 0.08
+radial_segments = 18
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Valve"]
+material = SubResource("Material_BrassValve")
+top_radius = 0.02
+bottom_radius = 0.025
+height = 0.05
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_GaugeFrame"]
+material = SubResource("Material_GaugeFrame")
+size = Vector3(0.024, 0.18, 0.008)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LevelIndicator"]
+material = SubResource("Material_LevelIndicator")
+size = Vector3(0.016, 0.16, 0.012)
+
+[node name="SyrupCanister" type="StaticBody3D"]
+script = ExtResource("1_canister")
+item_id = "syrup_cola"
+display_name = "Barril de Xarope de Cola"
+item_type = "ingredient"
+prompt_text = "🖱️ [Clique Esquerdo] Pegar Barril de Xarope"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19, 0)
+shape = SubResource("CylinderShape3D_Canister")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="BottomRim" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0)
+mesh = SubResource("CylinderMesh_Rim")
+
+[node name="Body" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+mesh = SubResource("CylinderMesh_Body")
+
+[node name="ColorBand" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+mesh = SubResource("CylinderMesh_ColorBand")
+
+[node name="Gauge" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0.112)
+
+[node name="Frame" type="MeshInstance3D" parent="Model/Gauge"]
+mesh = SubResource("BoxMesh_GaugeFrame")
+
+[node name="LevelIndicator" type="MeshInstance3D" parent="Model/Gauge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.002)
+mesh = SubResource("BoxMesh_LevelIndicator")
+
+[node name="TopRim" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34, 0)
+mesh = SubResource("CylinderMesh_Rim")
+
+[node name="Valve" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.37, 0)
+mesh = SubResource("CylinderMesh_Valve")

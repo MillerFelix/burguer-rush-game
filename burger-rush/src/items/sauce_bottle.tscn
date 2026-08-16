@@ -1,80 +1,99 @@
 [gd_scene format=3 uid="uid://sauce_bottle_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/sauce_bottle.gd" id="1_bottle"]
+[ext_resource type="Script" path="res://src/items/sauce_bottle.gd" id="1_bottle_script"]
 
-[sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 0.32
-radius = 0.07
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_Bottle"]
+height = 0.24
+radius = 0.045
 
-[sub_resource type="StandardMaterial3D" id="Material_BottlePlastic"]
-albedo_color = Color(0.92, 0.93, 0.94, 0.92)
+[sub_resource type="StandardMaterial3D" id="Material_TranslucentBottle"]
+transparency = 1
+albedo_color = Color(0.96, 0.96, 0.98, 0.40)
+roughness = 0.15
+clearcoat_enabled = true
+clearcoat = 0.8
+refraction_enabled = true
+refraction_scale = 0.01
+
+[sub_resource type="StandardMaterial3D" id="Material_SauceFill"]
+albedo_color = Color(0.85, 0.12, 0.1, 1)
+roughness = 0.25
+clearcoat_enabled = true
+clearcoat = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Cap"]
+albedo_color = Color(0.72, 0.1, 0.08, 1)
 roughness = 0.35
 
-[sub_resource type="StandardMaterial3D" id="Material_SauceRed"]
-albedo_color = Color(0.85, 0.12, 0.12, 1)
-roughness = 0.45
+[sub_resource type="StandardMaterial3D" id="Material_Stream"]
+shading_mode = 0
+albedo_color = Color(0.85, 0.12, 0.1, 1)
 
-[sub_resource type="StandardMaterial3D" id="Material_CapNozzle"]
-albedo_color = Color(0.9, 0.15, 0.15, 1)
-roughness = 0.4
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Body"]
-material = SubResource("Material_BottlePlastic")
-top_radius = 0.055
-bottom_radius = 0.06
-height = 0.18
-radial_segments = 14
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_SauceCore"]
-material = SubResource("Material_SauceRed")
-top_radius = 0.052
-bottom_radius = 0.057
+; Frasco plástico translúcido
+[sub_resource type="CylinderMesh" id="CylinderMesh_TranslucentBody"]
+material = SubResource("Material_TranslucentBottle")
+top_radius = 0.038
+bottom_radius = 0.040
 height = 0.14
-radial_segments = 14
+radial_segments = 18
+
+; Conteúdo interno de molho visível (nível físico que sobe/desce)
+[sub_resource type="CylinderMesh" id="CylinderMesh_SauceFill"]
+material = SubResource("Material_SauceFill")
+top_radius = 0.036
+bottom_radius = 0.038
+height = 0.136
+radial_segments = 16
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Neck"]
-material = SubResource("Material_CapNozzle")
-top_radius = 0.03
-bottom_radius = 0.04
+material = SubResource("Material_Cap")
+top_radius = 0.02
+bottom_radius = 0.038
 height = 0.04
-radial_segments = 12
+radial_segments = 16
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Tip"]
-material = SubResource("Material_CapNozzle")
-top_radius = 0.008
-bottom_radius = 0.02
-height = 0.06
-radial_segments = 10
+[sub_resource type="CylinderMesh" id="CylinderMesh_Nozzle"]
+material = SubResource("Material_Cap")
+top_radius = 0.006
+bottom_radius = 0.016
+height = 0.05
+radial_segments = 16
 
 [node name="SauceBottle" type="StaticBody3D"]
-script = ExtResource("1_bottle")
+script = ExtResource("1_bottle_script")
+sauce_type = "ketchup"
+item_id = "ketchup"
+display_name = "Bisnaga de Ketchup"
+item_type = "sauce_bottle"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
-shape = SubResource("CylinderShape3D_1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0)
+shape = SubResource("CylinderShape3D_Bottle")
 
 [node name="Model" type="Node3D" parent="."]
 
+; Frasco translúcido externo
 [node name="BottleBody" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
-mesh = SubResource("CylinderMesh_Body")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+mesh = SubResource("CylinderMesh_TranslucentBody")
 
-[node name="SauceBand" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
-mesh = SubResource("CylinderMesh_SauceCore")
+; Pivot do nível de molho físico interno (ancorado na base)
+[node name="SauceFillPivot" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
 
+[node name="SauceFill" type="MeshInstance3D" parent="Model/SauceFillPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.068, 0)
+mesh = SubResource("CylinderMesh_SauceFill")
+
+; Tampa e bico dosador
 [node name="BottleNeck" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.21, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
 mesh = SubResource("CylinderMesh_Neck")
 
 [node name="NozzleTip" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
-mesh = SubResource("CylinderMesh_Tip")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.20, 0)
+mesh = SubResource("CylinderMesh_Nozzle")
 
-[node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.38, 0)
-billboard = 1
-double_sided = false
-text = "🥫 Bisnaga Ketchup"
-font_size = 18
-outline_size = 5
+[node name="StreamMesh" type="MeshInstance3D" parent="."]
+material_override = SubResource("Material_Stream")
+visible = false

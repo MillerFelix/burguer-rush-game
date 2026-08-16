@@ -57,7 +57,7 @@ func _initialize_default_inventory() -> void:
 	# 5. EXTRAS
 	# =========================================================================
 	_register_item("bacon", "Bacon", "extras", 15, 50, 3.0, 5, load("res://src/items/bacon.tscn"))
-	_register_item("egg", "Ovo", "extras", 15, 50, 1.5, 5, load("res://src/items/bacon.tscn"))
+	_register_item("egg", "Ovo", "extras", 15, 50, 1.5, 5, load("res://src/items/egg.tscn"))
 
 	# =========================================================================
 	# 6. MOLHOS (SAUCES) - PRESERVANDO SISTEMA NA BANCADA
@@ -71,12 +71,20 @@ func _initialize_default_inventory() -> void:
 	# 7. ACOMPANHAMENTOS, BEBIDAS E EMBALAGENS (SUPPLIES)
 	# =========================================================================
 	_register_item("burger_box", "Caixa de Hambúrguer", "supplies", 25, 100, 0.5, 5, load("res://src/items/burger_box.tscn"))
+	_register_item("packaged_burger", "Burger Embalado", "supplies", 0, 50, 0.0, 0, load("res://src/items/packaged_burger.tscn"))
 	_register_item("potato_raw", "Batata Crua", "supplies", 25, 80, 1.0, 5, load("res://src/items/potato.tscn"))
 	_register_item("potato_box", "Recipiente de Batata", "supplies", 25, 80, 0.3, 5, load("res://src/items/potato_box_item.tscn"))
 	_register_item("cup_empty", "Copo Descartável", "supplies", 30, 100, 0.2, 5, load("res://src/items/drink_cup.tscn"))
 	_register_item("cup_lid", "Tampa de Copo", "supplies", 30, 100, 0.1, 5, null)
 	_register_item("syrup_soda", "Xarope de Refrigerante", "supplies", 30, 100, 0.5, 5, load("res://src/items/soda_syrup_bottle.tscn"))
 	_register_item("cooking_oil", "Galão de Óleo", "supplies", 5, 20, 4.0, 2, load("res://src/items/cooking_oil.tscn"))
+
+	# =========================================================================
+	# 8. POLPAS DE FRUTA CONGELADA (FROZEN PULP) - 5 DOSES CADA
+	# =========================================================================
+	_register_item("pulp_orange", "Polpa de Laranja", "pulps", 10, 50, 2.5, 5, load("res://src/items/juice_pulp.tscn"))
+	_register_item("pulp_grape", "Polpa de Uva", "pulps", 10, 50, 2.5, 5, load("res://src/items/juice_pulp.tscn"))
+	_register_item("pulp_strawberry", "Polpa de Morango", "pulps", 10, 50, 2.8, 5, load("res://src/items/juice_pulp.tscn"))
 
 func _register_item(
 	id: String,

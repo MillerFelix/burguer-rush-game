@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://burger_assembly_scene_uid"]
+
+[ext_resource type="Script" path="res://src/recipes/burger_assembly.gd" id="1_assembly_script"]
+
+[node name="BurgerAssembly" type="Node3D"]
+script = ExtResource("1_assembly_script")
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.40, 0)
+billboard = 1
+double_sided = false
+text = ""
+font_size = 16
+outline_size = 4
+modulate = Color(0.95, 0.95, 0.95, 0.9)
+outline_modulate = Color(0.15, 0.15, 0.15, 1)

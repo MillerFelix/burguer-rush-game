@@ -16,6 +16,10 @@ extends StaticBody3D
 #  │   │   └── Badge/Label (Etiqueta da caixa)
 #  │   └── TableBadge (Placa frontal "🍞 PÃO" fixada na mesa)
 #  └── StatusLabel (Label3D)
+#
+# REGRA DE CONTROLE:
+#  - E: Reabastecer com caixa de mercadoria / Equipamentos
+#  - CLIQUE ESQUERDO: Pegar / manipular pães
 # ================================================================
 
 @onready var status_label: Label3D = get_node_or_null("StatusLabel")
@@ -76,12 +80,20 @@ func get_interaction_prompt(player: Node = null) -> String:
 	var itm = items_data[aimed_idx]
 	var item_id = itm["id"]
 
-	# Reabastecimento com caixa de entrega
+	# Reabastecimento com caixa de entrega ou devolução de pão
 	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
-		if held.get("ingredient_id") == item_id or (item_id.begins_with("bread") and (held.get("ingredient_id") == "bread" or held.get("ingredient_id") == "bread_bottom" or held.get("ingredient_id") == "bread_top")) or str(held.get("item_type")) == "crate" or str(held.get("item_type")) == "storage_box":
+		var held_id = str(held.get("item_id"))
+
+		# Devolução de pão individual
+		if held_id == item_id or (item_id.begins_with("bread") and (held_id == "bread_bottom" or held_id == "bread_top" or held_id == "bread")):
+			return "🖱️ Clique para Devolver %s ao Estoque" % itm["name"]
+
+		# Reabastecimento com caixa
+		if held.get("ingredient_id") == item_id or (item_id.begins_with("bread") and (held.get("ingredient_id") == "bread" or held.get("ingredient_id") == "bread_bottom" or held.get("ingredient_id") == "bread_top")) or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			return "E — Armazenar %s (+%d unidades)" % [itm["name"], qty]
+			return "E / 🖱️ Armazenar %s (+%d unidades)" % [itm["name"], qty]
+
 		return ""
 
 	var stock = inv.get_stock(item_id)
@@ -94,9 +106,11 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if stock <= 0:
 		return "🔴 %s Esgotado! Compre no Computador" % itm["name"]
 
-	return "E — Pegar %s %s (%d/%d)" % [itm["icon"], itm["name"], stock, max_cap]
+	# Interação EXCLUSIVA com clique esquerdo para pegar ingredientes
+	return "🖱️ Pegar %s %s (%d/%d)" % [itm["icon"], itm["name"], stock, max_cap]
 
-func interact(player: Node3D) -> void:
+# [Clique Esquerdo do Mouse] — Manipulação de Itens (Pegar / Devolver)
+func interact_item(player: Node3D) -> void:
 	var inv = InventoryManager.get_instance()
 	if not inv:
 		return
@@ -106,21 +120,39 @@ func interact(player: Node3D) -> void:
 	var itm = items_data[aimed_idx]
 	var item_id = itm["id"]
 
-	# 1. Abastecimento com Caixa
 	var held = player.get("held_item")
-	if held != null and (held.get("ingredient_id") == item_id or (item_id.begins_with("bread") and (held.get("ingredient_id") == "bread" or held.get("ingredient_id") == "bread_bottom" or held.get("ingredient_id") == "bread_top")) or str(held.get("item_type")) == "crate" or str(held.get("item_type")) == "storage_box"):
-		if player.has_method("take_held_item"):
-			var crate = player.take_held_item()
-			var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
-			inv.add_stock(item_id, qty)
-			if item_id == "bread_bottom" or item_id == "bread_top":
-				inv.add_stock("bread", qty)
-			_show_feedback(player, "📦 %s armazenado na mesa (+%d un.)!" % [itm["name"], qty])
-			crate.queue_free()
-			_update_label()
-			return
 
-	# 2. Pegar pão com as mãos livres
+	# 1. Devolução de pão individual com as mãos ocupadas
+	if held != null:
+		var held_id = str(held.get("item_id"))
+		if held_id == item_id or (item_id.begins_with("bread") and (held_id == "bread_bottom" or held_id == "bread_top" or held_id == "bread")):
+			if player.has_method("take_held_item"):
+				var returned_bread = player.take_held_item()
+				inv.add_stock(item_id, 1)
+				if item_id == "bread_bottom" or item_id == "bread_top":
+					inv.add_stock("bread", 1)
+				_show_feedback(player, "🍞 %s devolvido à mesa (Estoque: %d)" % [itm["name"], inv.get_stock(item_id)])
+				returned_bread.queue_free()
+				_update_label()
+				return
+
+		# Reabastecimento com Caixa de Entrega
+		if held.get("ingredient_id") == item_id or (item_id.begins_with("bread") and (held.get("ingredient_id") == "bread" or held.get("ingredient_id") == "bread_bottom" or held.get("ingredient_id") == "bread_top")) or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			if player.has_method("take_held_item"):
+				var crate = player.take_held_item()
+				var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
+				inv.add_stock(item_id, qty)
+				if item_id == "bread_bottom" or item_id == "bread_top":
+					inv.add_stock("bread", qty)
+				_show_feedback(player, "📦 %s armazenado na mesa (+%d un.)!" % [itm["name"], qty])
+				crate.queue_free()
+				_update_label()
+				return
+
+		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
+		return
+
+	# 2. Pegar pão com clique esquerdo (Mãos Livres)
 	if held == null:
 		var has_it = inv.has_stock(item_id, 1) or (item_id.begins_with("bread") and inv.has_stock("bread", 1))
 		if not has_it:
@@ -144,6 +176,34 @@ func interact(player: Node3D) -> void:
 			_show_feedback(player, "🍞 Pegou %s (Estoque: %d)" % [itm["name"], inv.get_stock(item_id)])
 			_update_label()
 
+# [E] — Interação com Equipamento (NÃO pega pão; apenas reabastecimento com caixa)
+func interact(player: Node3D) -> void:
+	var held = player.get("held_item")
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		return
+
+	var aimed_idx = get_aimed_item_index(player)
+	var itm = items_data[aimed_idx]
+	var item_id = itm["id"]
+
+	# Reabastecimento com Caixa de Entrega acionado com E
+	if held != null and (held.get("ingredient_id") == item_id or (item_id.begins_with("bread") and (held.get("ingredient_id") == "bread" or held.get("ingredient_id") == "bread_bottom" or held.get("ingredient_id") == "bread_top")) or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]):
+		if player.has_method("take_held_item"):
+			var crate = player.take_held_item()
+			var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
+			inv.add_stock(item_id, qty)
+			if item_id == "bread_bottom" or item_id == "bread_top":
+				inv.add_stock("bread", qty)
+			_show_feedback(player, "📦 %s armazenado na mesa (+%d un.)!" % [itm["name"], qty])
+			crate.queue_free()
+			_update_label()
+			return
+
+	# Se tentar apertar E com as mãos vazias, orienta que a tecla correta para ingredientes é o Clique Esquerdo
+	if held == null:
+		_show_feedback(player, "ℹ️ Use o Clique Esquerdo do mouse para pegar pães.")
+
 func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
 	_update_label()
 
@@ -158,7 +218,7 @@ func _update_label() -> void:
 	if not status_label:
 		return
 
-	status_label.text = "🍞 ÁREA DE PÃES — ESTOQUE\n🥯 Tampas (Gergelim): %d  │  🍞 Bases: %d\n[E] Pegar ingrediente apontado" % [b_top, b_bot]
+	status_label.text = "🍞 ÁREA DE PÃES — ESTOQUE\n🥯 Tampas (Gergelim): %d  │  🍞 Bases: %d\n[Clique Esquerdo] Pegar ingrediente apontado" % [b_top, b_bot]
 	status_label.modulate = Color(0.96, 0.90, 0.75, 1.0)
 
 func _update_box_label(node_path: String, text: String) -> void:

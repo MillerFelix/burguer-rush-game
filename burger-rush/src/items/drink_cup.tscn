@@ -1,51 +1,62 @@
 [gd_scene format=3 uid="uid://drink_cup_item_scene_uid"]
 
 [ext_resource type="Script" path="res://src/items/drink_cup.gd" id="1_drink"]
-[ext_resource type="PackedScene" path="res://assets/models/food/cup.glb" id="2_cup_glb"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
 height = 0.24
-radius = 0.1
+radius = 0.10
+
+[sub_resource type="StandardMaterial3D" id="Material_ClearPlastic"]
+transparency = 1
+albedo_color = Color(0.92, 0.96, 1, 0.28)
+roughness = 0.08
+metallic = 0.05
+metallic_specular = 0.95
+clearcoat_enabled = true
+clearcoat = 1.0
+clearcoat_roughness = 0.05
 
 [sub_resource type="StandardMaterial3D" id="Material_Liquid"]
-albedo_color = Color(0.18, 0.1, 0.08, 1)
-roughness = 0.2
+albedo_color = Color(0.12, 0.05, 0.03, 0.95)
+roughness = 0.08
+metallic_specular = 0.85
+clearcoat_enabled = true
+clearcoat = 0.8
 
-[sub_resource type="StandardMaterial3D" id="Material_LidPlastic"]
-albedo_color = Color(0.95, 0.95, 0.95, 1)
-roughness = 0.35
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupBody"]
+material = SubResource("Material_ClearPlastic")
+top_radius = 0.065
+bottom_radius = 0.048
+height = 0.18
+radial_segments = 22
 
-[sub_resource type="StandardMaterial3D" id="Material_StrawRed"]
-albedo_color = Color(0.85, 0.15, 0.15, 1)
-roughness = 0.4
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupRim"]
+material = SubResource("Material_ClearPlastic")
+top_radius = 0.068
+bottom_radius = 0.065
+height = 0.012
+radial_segments = 22
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Liquid"]
 material = SubResource("Material_Liquid")
-top_radius = 0.075
-bottom_radius = 0.065
-height = 0.02
-radial_segments = 14
+top_radius = 0.058
+bottom_radius = 0.044
+height = 0.15
+radial_segments = 20
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Lid"]
-material = SubResource("Material_LidPlastic")
-top_radius = 0.082
-bottom_radius = 0.085
-height = 0.025
-radial_segments = 14
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Straw"]
-material = SubResource("Material_StrawRed")
-top_radius = 0.008
-bottom_radius = 0.008
-height = 0.12
-radial_segments = 8
+[sub_resource type="CylinderMesh" id="CylinderMesh_LiquidSurface"]
+material = SubResource("Material_Liquid")
+top_radius = 0.058
+bottom_radius = 0.058
+height = 0.005
+radial_segments = 20
 
 [node name="DrinkCup" type="StaticBody3D"]
 script = ExtResource("1_drink")
 item_id = "drink_cup"
-display_name = "Copo de Refrigerante"
-item_type = "drink"
-prompt_text = "E — Pegar Copo"
+display_name = "Copo Vazio"
+item_type = "tool"
+prompt_text = "🖱️ [Clique Esquerdo] Pegar Copo Vazio"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
@@ -53,20 +64,22 @@ shape = SubResource("CylinderShape3D_1")
 
 [node name="MeshInstance3D" type="Node3D" parent="."]
 
-[node name="cup" parent="MeshInstance3D" instance=ExtResource("2_cup_glb")]
-transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 0, 0)
+[node name="CupBody" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0)
+mesh = SubResource("CylinderMesh_CupBody")
 
-[node name="LiquidMesh" type="MeshInstance3D" parent="MeshInstance3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
+[node name="CupRim" type="MeshInstance3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.185, 0)
+mesh = SubResource("CylinderMesh_CupRim")
+
+[node name="LiquidPivot" type="Node3D" parent="MeshInstance3D"]
+
+[node name="LiquidMesh" type="MeshInstance3D" parent="MeshInstance3D/LiquidPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
 visible = false
 mesh = SubResource("CylinderMesh_Liquid")
 
-[node name="LidMesh" type="MeshInstance3D" parent="MeshInstance3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+[node name="LiquidSurface" type="MeshInstance3D" parent="MeshInstance3D/LiquidPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
 visible = false
-mesh = SubResource("CylinderMesh_Lid")
-
-[node name="StrawMesh" type="MeshInstance3D" parent="MeshInstance3D"]
-transform = Transform3D(0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 0, 0, 1, 0.02, 0.23, 0)
-visible = false
-mesh = SubResource("CylinderMesh_Straw")
+mesh = SubResource("CylinderMesh_LiquidSurface")

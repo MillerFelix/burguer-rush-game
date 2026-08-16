@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://egg_item_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/egg.gd" id="1_egg_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Egg"]
+size = Vector3(0.18, 0.12, 0.18)
+
+; Materiais do Ovo
+[sub_resource type="StandardMaterial3D" id="Material_EggShell"]
+albedo_color = Color(0.96, 0.88, 0.78, 1.0)
+roughness = 0.40
+rim_enabled = true
+rim = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_EggWhite"]
+transparency = 1
+albedo_color = Color(0.95, 0.96, 0.98, 0.6)
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_EggYolk"]
+albedo_color = Color(0.98, 0.72, 0.08, 1.0)
+roughness = 0.30
+rim_enabled = true
+rim = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_CrispEdge"]
+albedo_color = Color(0.85, 0.62, 0.25, 0.8)
+roughness = 0.55
+
+; Meshes do Ovo
+[sub_resource type="SphereMesh" id="SphereMesh_WholeEgg"]
+material = SubResource("Material_EggShell")
+radius = 0.048
+height = 0.115
+radial_segments = 20
+rings = 12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_EggWhite"]
+material = SubResource("Material_EggWhite")
+top_radius = 0.085
+bottom_radius = 0.092
+height = 0.008
+radial_segments = 24
+
+[sub_resource type="SphereMesh" id="SphereMesh_EggYolk"]
+material = SubResource("Material_EggYolk")
+radius = 0.034
+height = 0.038
+radial_segments = 20
+rings = 10
+
+[sub_resource type="TorusMesh" id="TorusMesh_CrispEdge"]
+material = SubResource("Material_CrispEdge")
+inner_radius = 0.082
+outer_radius = 0.092
+rings = 16
+ring_segments = 8
+
+[node name="Egg" type="StaticBody3D"]
+script = ExtResource("1_egg_script")
+item_id = "egg"
+display_name = "Ovo"
+item_type = "ingredient"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
+shape = SubResource("BoxShape3D_Egg")
+
+[node name="VisualRoot" type="Node3D" parent="."]
+
+[node name="MeshWholeEgg" type="Node3D" parent="VisualRoot"]
+
+[node name="Shell" type="MeshInstance3D" parent="VisualRoot/MeshWholeEgg"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, 0, 0.055, 0)
+mesh = SubResource("SphereMesh_WholeEgg")
+
+[node name="FriedEggRoot" type="Node3D" parent="VisualRoot"]
+visible = false
+
+[node name="EggWhite" type="MeshInstance3D" parent="VisualRoot/FriedEggRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
+mesh = SubResource("CylinderMesh_EggWhite")
+
+[node name="CrispEdge" type="MeshInstance3D" parent="VisualRoot/FriedEggRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, 0)
+mesh = SubResource("TorusMesh_CrispEdge")
+
+[node name="EggYolk" type="MeshInstance3D" parent="VisualRoot/FriedEggRoot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01, 0.016, -0.005)
+mesh = SubResource("SphereMesh_EggYolk")

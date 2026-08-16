@@ -62,6 +62,9 @@
 [ext_resource type="Script" uid="uid://cb4u0fmol7xrf" path="res://src/customers/reputation_manager.gd" id="72_reputation"]
 [ext_resource type="Script" uid="uid://desmxb53bg2to" path="res://src/environment/weather_manager.gd" id="73_weather"]
 [ext_resource type="PackedScene" path="res://src/stations/ingredient_refrigerator.tscn" id="74_ingredient_refrigerator"]
+[ext_resource type="PackedScene" path="res://src/stations/bacon_egg_station.tscn" id="75_bacon_egg_station"]
+[ext_resource type="PackedScene" path="res://src/stations/prep_island.tscn" id="76_prep_island"]
+[ext_resource type="PackedScene" path="res://src/stations/pulp_storage_table.tscn" id="77_pulp_table"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.35, 0.62, 0.9, 1)
@@ -1135,7 +1138,7 @@ table_id = 9
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 0, -2.5)
 
 [node name="TrashBin" parent="." unique_id=1106595047 instance=ExtResource("26_trash")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.7, 0, -8.35)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.75, 0, -8.35)
 
 [node name="CommercialRefrigerator" parent="." unique_id=1675697131 instance=ExtResource("48_refrigerator")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, -8.2)
@@ -1146,8 +1149,17 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.25, 0, -8.2)
 [node name="IngredientRefrigerator" parent="." unique_id=2099381726 instance=ExtResource("74_ingredient_refrigerator")]
 transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -8.6, 0, -6.3)
 
+[node name="PulpStorageTable" parent="." unique_id=2099381727 instance=ExtResource("77_pulp_table")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -7.7, 0, -0.55)
+
 [node name="StorageRack" parent="." unique_id=50939419 instance=ExtResource("49_storagerack")]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -6, 0, -0.55)
+
+[node name="BaconEggStation" parent="." unique_id=50939420 instance=ExtResource("75_bacon_egg_station")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -4.3, 0, -0.55)
+
+[node name="PrepIsland" parent="." unique_id=50939421 instance=ExtResource("76_prep_island")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4, 0, -4.55)
 
 [node name="Grill" parent="." unique_id=1852450906 instance=ExtResource("4_grill")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.85, 0, -8.35)

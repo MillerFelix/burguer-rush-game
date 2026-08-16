@@ -1,0 +1,47 @@
+Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
+
+============================================================
+BURGER RUSH - TESTE DE PROMPTS E INTERAÇÃO SEM STACK OVERFLOW
+============================================================
+
+--- Teste 1: Testando get_interaction_prompt em todas as bancadas/estações ---
+  [PASS] PrepIsland prompt sem mãos ocupadas: ''
+  [PASS] PrepTable prompt sem mãos ocupadas: ''
+  [PASS] StorageRack prompt sem mãos ocupadas: '🖱️ Pegar 🥯 Tampa do Pão (Gergelim) (20/60)'
+  [PASS] BaconEggStation prompt sem mãos ocupadas: '🖱️ Pegar 🥓 Tirinha de Bacon (15/50)'
+  [PASS] Grill prompt sem mãos ocupadas: '♨️ [E] Ligar Grelha'
+  [PASS] Fryer prompt sem mãos ocupadas: '♨️ [E] Ligar Fritadeira Industrial'
+  [PASS] PackagingStation prompt sem mãos ocupadas: '🖱️ Pegar 📦 Embalagem de Lanche'
+
+--- Teste 2: Testando prompts de itens individuais no mundo e nas mãos ---
+  [PASS] Item no mundo: Base do Pão -> '🖱️ Pegar Base do Pão'
+  [PASS] Ilha com item segurado (Base do Pão): '🖱️ Colocar Base do Pão na Ilha'
+  [PASS] Item no mundo: Carne -> '✋ [Clique] Pegar Hambúrguer Cru'
+  [PASS] Ilha com item segurado (Carne): '🖱️ Colocar Carne Bovina (Cru) na Ilha'
+  [PASS] Item no mundo: Queijo -> 'E — Pegar Queijo Cheddar'
+  [PASS] Ilha com item segurado (Queijo): '🖱️ Colocar Queijo Cheddar na Ilha'
+  [PASS] Item no mundo: Alface -> 'E — Pegar Alface'
+  [PASS] Ilha com item segurado (Alface): '🖱️ Colocar Alface Fresca na Ilha'
+  [PASS] Item no mundo: Tomate -> 'E — Pegar Tomate'
+  [PASS] Ilha com item segurado (Tomate): '🖱️ Colocar Fatia de Tomate Fresco na Ilha'
+  [PASS] Item no mundo: Cebola -> 'E — Pegar Cebola'
+  [PASS] Ilha com item segurado (Cebola): '🖱️ Colocar Cebola Normal na Ilha'
+  [PASS] Item no mundo: Bacon -> '🖱️ Pegar Tirinha de Bacon Crua'
+  [PASS] Ilha com item segurado (Bacon): '🖱️ Colocar Tirinha de Bacon (Crua) na Ilha'
+  [PASS] Item no mundo: Ovo -> '🖱️ Pegar Ovo Cru'
+  [PASS] Ilha com item segurado (Ovo): '🖱️ Colocar Ovo Cru (Inteiro) na Ilha'
+  [PASS] Item no mundo: Tampa do Pão -> 'E — Pegar Tampa do Pão'
+  [PASS] Ilha com item segurado (Tampa do Pão): '🖱️ Colocar Tampa do Pão Brioche na Ilha'
+  [PASS] Item no mundo: Bisnaga de Ketchup -> '🖱️ [Clique] Pegar Bisnaga de Ketchup'
+  [PASS] Ilha com item segurado (Bisnaga de Ketchup): '🖱️ Colocar Bisnaga de Ketchup na Ilha'
+  [PASS] Item no mundo: Caixa de Hambúrguer -> '🖱️ Pegar Caixa de Hambúrguer'
+  [PASS] Ilha com item segurado (Caixa de Hambúrguer): '🖱️ Colocar Caixa de Hambúrguer na Ilha'
+
+--- Teste 3: Montagem e Prompts de Burger em Andamento ---
+  [PASS] Prompt pão vazio: '🖱️ Pegar Base do Pão'
+  [PASS] Prompt pão com carne na mão: '🖱️ Adicionar Carne Bovina (Cru) ao Lanche'
+  [PASS] Prompt pão em montagem: '🥪 Lanche em Montagem (1 ing.) — [Clique] Pegar Lanche'
+
+============================================================
+TODOS OS TESTES DE PROMPTS E INTERAÇÃO FORAM APROVADOS COM SUCESSO!
+============================================================

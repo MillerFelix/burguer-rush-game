@@ -43,11 +43,12 @@ func _init() -> void:
 	print("\n--- Teste 1: Área de Embalagem e Dispensador de Copos ---")
 	assert(packaging_station.has_node("Model/BoxStack"), "Bancada deve possuir pilha de caixas de hambúrguer")
 	assert(packaging_station.has_node("Model/FriesStack"), "Bancada deve possuir suporte de embalagens de batata")
-	assert(packaging_station.has_node("Model/CupStack"), "Bancada deve possuir suporte/coluna dispensadora de copos")
+	assert(packaging_station.has_node("Model/CupDispenser"), "Bancada deve possuir suporte/coluna dispensadora de copos")
 	assert(packaging_station.has_node("PackagingSlot"), "Bancada deve possuir PackagingSlot")
 	print("  [PASS] Elementos visuais de embalagem (Caixas, Batatas, Copos) validados")
 
 	# Pegar copo vazio da bancada com a mão livre
+	packaging_station.active_item_index = 2
 	packaging_station.interact(player)
 	assert(player.held_item != null and player.held_item is DrinkCup, "Jogador deve pegar um Copo Vazio")
 	var empty_cup = player.held_item as DrinkCup
@@ -116,10 +117,11 @@ func _init() -> void:
 	# ---------------------------------------------------------
 	# TESTE 3: CICLO COMPLETO NA MÁQUINA DE REFRIGERANTE
 	# ---------------------------------------------------------
-	print("\n--- Teste 3: Máquina de Refrigerante (5 Sabores Físicos) ---")
-	var soda_flavors = ["soda_cola", "soda_guarana", "soda_sprite", "soda_grape", "soda_cola_zero"]
+	print("\n--- Teste 3: Máquina de Refrigerante (4 Sabores Físicos) ---")
+	var soda_flavors = ["soda_cola", "soda_cola_zero", "soda_sprite", "juice_orange"]
 	for i in range(soda_flavors.size()):
 		drink_machine.select_flavor_by_index(i)
+		packaging_station.active_item_index = 2
 		packaging_station.interact(player)
 		drink_machine.interact(player)
 		drink_machine.interact(player) # Encher
@@ -128,12 +130,13 @@ func _init() -> void:
 		drink_machine.interact(player) # Retirar
 		assert(player.held_item != null and player.held_item is DrinkCup, "Refrigerante retirado")
 		player.take_held_item().queue_free()
-	print("  [PASS] Todos os 5 sabores de refrigerante servidos e selados com sucesso")
+	print("  [PASS] Todos os 4 sabores de refrigerante servidos e selados com sucesso")
 
 	# ---------------------------------------------------------
 	# TESTE 4: SELAGEM DE BEBIDA NA BANCADA DE EMBALAGEM
 	# ---------------------------------------------------------
 	print("\n--- Teste 4: Preparar Suco Aberto -> Levar para Selagem na Bancada de Embalagem ---")
+	packaging_station.active_item_index = 2
 	packaging_station.interact(player)
 	juice_machine.select_flavor_by_index(0) # Laranja
 	juice_machine.interact(player)
@@ -147,17 +150,10 @@ func _init() -> void:
 	juice_machine.cup_slot.remove_child(cup_open)
 	player.pick_up(cup_open)
 
-	# Coloca na bancada de embalagem
-	packaging_station.interact(player)
-	assert(packaging_station.packaged_item == cup_open, "Copo aberto posicionado na bancada de embalagem")
-
 	# Executa selagem na bancada
 	packaging_station.interact(player)
 	assert(cup_open.state == DrinkCup.State.CLOSED, "Copo selado na bancada de embalagem")
-
-	# Retira copo pronto da bancada
-	packaging_station.interact(player)
-	assert(player.held_item == cup_open, "Copo selado retirado da bancada de embalagem")
+	assert(player.held_item == cup_open, "Copo selado permanece na mão do jogador")
 	player.take_held_item().queue_free()
 	print("  [PASS] Suco aberto selado na bancada de embalagem e retirado com sucesso")
 

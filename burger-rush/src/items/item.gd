@@ -7,6 +7,7 @@ enum ItemLocation {
 	STATION,
 	TRAY,
 	TABLE,
+	FRIDGE,
 	CONSUMED
 }
 
@@ -25,6 +26,7 @@ enum QualityLevel {
 @export var quality: QualityLevel = QualityLevel.GOOD
 
 var location: ItemLocation = ItemLocation.WORLD
+var is_held: bool = false
 var _is_falling: bool = false
 
 func get_quality_name() -> String:
@@ -85,34 +87,58 @@ func interact(player: Node3D) -> void:
 		player.pick_up(self)
 
 func on_picked_up() -> void:
+	is_held = true
 	location = ItemLocation.PLAYER_HAND
 	_is_falling = false
-	if collision_shape:
-		collision_shape.disabled = true
+	collision_layer = 0
+	collision_mask = 0
+	_set_all_colliders_disabled(self, true)
 
 func on_dropped() -> void:
+	is_held = false
 	location = ItemLocation.WORLD
 	_is_falling = true
-	if collision_shape:
-		collision_shape.disabled = false
+	collision_layer = 1
+	collision_mask = 1
+	_set_all_colliders_disabled(self, false)
 
 func on_placed_in_station() -> void:
+	is_held = false
 	location = ItemLocation.STATION
 	_is_falling = false
-	if collision_shape:
-		collision_shape.disabled = true
+	collision_layer = 1
+	collision_mask = 1
+	_set_all_colliders_disabled(self, false)
 
 func on_placed_in_tray() -> void:
+	is_held = false
 	location = ItemLocation.TRAY
 	_is_falling = false
-	if collision_shape:
-		collision_shape.disabled = true
+	collision_layer = 0
+	collision_mask = 0
+	_set_all_colliders_disabled(self, true)
 
 func on_placed_on_table() -> void:
+	is_held = false
 	location = ItemLocation.TABLE
 	_is_falling = false
-	if collision_shape:
-		collision_shape.disabled = true
+	collision_layer = 1
+	collision_mask = 1
+	_set_all_colliders_disabled(self, false)
+
+func on_stored_in_fridge() -> void:
+	is_held = false
+	location = ItemLocation.FRIDGE
+	_is_falling = false
+	collision_layer = 0
+	collision_mask = 0
+	_set_all_colliders_disabled(self, true)
+
+func _set_all_colliders_disabled(node: Node, is_disabled: bool) -> void:
+	if node is CollisionShape3D:
+		node.disabled = is_disabled
+	for child in node.get_children():
+		_set_all_colliders_disabled(child, is_disabled)
 
 func get_ingredient_key() -> String:
 	return item_id

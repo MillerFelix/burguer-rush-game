@@ -14,6 +14,13 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_DiscreetPill"]
+bg_color = Color(0.05, 0.06, 0.08, 0.45)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
@@ -111,21 +118,59 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -300.0
-offset_top = -120.0
+offset_top = -90.0
 offset_right = 300.0
-offset_bottom = -80.0
+offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_colors/font_color = Color(1, 0.9, 0.2, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Feedback"
 horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="FeedbackTimer" type="Timer" parent="."]
 one_shot = true
+
+; HUD MINIMALISTA E DISCRETO DE FERRAMENTAS
+[node name="ToolHotbar" type="PanelContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -95.0
+offset_top = -36.0
+offset_right = 95.0
+offset_bottom = -12.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_DiscreetPill")
+
+[node name="HBox" type="HBoxContainer" parent="ToolHotbar"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Slot1Label" type="Label" parent="ToolHotbar/HBox"]
+modulate = Color(0.65, 0.68, 0.75, 0.5)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "1 🍳"
+
+[node name="Slot2Label" type="Label" parent="ToolHotbar/HBox"]
+modulate = Color(0.65, 0.68, 0.75, 0.5)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "2 🧽"
+
+[node name="Slot3Label" type="Label" parent="ToolHotbar/HBox"]
+modulate = Color(1, 0.9, 0.35, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "3 ✋"
 
 [node name="DayReportModal" type="PanelContainer" parent="."]
 visible = false

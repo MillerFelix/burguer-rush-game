@@ -5,81 +5,199 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
 size = Vector3(2.0, 1.05, 0.8)
 
-[sub_resource type="StandardMaterial3D" id="Material_SatinCabinet"]
-albedo_color = Color(0.76, 0.78, 0.8, 1)
-metallic = 0.5
-roughness = 0.42
+[sub_resource type="StandardMaterial3D" id="Material_BrushedSteel"]
+albedo_color = Color(0.72, 0.74, 0.76, 1)
+metallic = 0.85
+roughness = 0.35
 
-[sub_resource type="StandardMaterial3D" id="Material_CastIronGriddle"]
-albedo_color = Color(0.2, 0.2, 0.22, 1)
-metallic = 0.6
-roughness = 0.45
+[sub_resource type="StandardMaterial3D" id="Material_CastIronCooktop"]
+albedo_color = Color(0.16, 0.17, 0.18, 1)
+metallic = 0.75
+roughness = 0.52
 
-[sub_resource type="StandardMaterial3D" id="Material_KnobRed"]
-albedo_color = Color(0.85, 0.18, 0.18, 1)
-roughness = 0.4
+[sub_resource type="StandardMaterial3D" id="Material_ChromeTrim"]
+albedo_color = Color(0.92, 0.92, 0.94, 1)
+metallic = 0.95
+roughness = 0.18
 
-[sub_resource type="StandardMaterial3D" id="Material_LedGreen"]
-albedo_color = Color(0.18, 0.88, 0.3, 1)
-emission_enabled = true
-emission = Color(0.18, 0.88, 0.3, 1)
-emission_energy_multiplier = 0.85
+[sub_resource type="StandardMaterial3D" id="Material_GlassCover"]
+transparency = 1
+albedo_color = Color(0.92, 0.96, 1.0, 0.22)
+roughness = 0.05
+refraction_enabled = true
+refraction_scale = 0.015
 
-[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
-albedo_color = Color(0.18, 0.18, 0.2, 1)
+[sub_resource type="StandardMaterial3D" id="Material_ThermoBacking"]
+albedo_color = Color(0.08, 0.09, 0.11, 1)
 roughness = 0.7
 
-[sub_resource type="StandardMaterial3D" id="Material_ChromeAccent"]
-albedo_color = Color(0.88, 0.88, 0.9, 1)
-metallic = 0.7
+[sub_resource type="StandardMaterial3D" id="Material_ZoneCold"]
+albedo_color = Color(0.2, 0.35, 0.6, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_ZoneWarm"]
+albedo_color = Color(0.85, 0.5, 0.1, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_ZoneGreen"]
+albedo_color = Color(0.12, 0.9, 0.28, 1)
+emission_enabled = true
+emission = Color(0.12, 0.9, 0.28, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_ThermoFluid"]
+albedo_color = Color(1.0, 0.38, 0.12, 1)
+emission_enabled = true
+emission = Color(1.0, 0.38, 0.12, 1)
+emission_energy_multiplier = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Material_IndustrialKnob"]
+albedo_color = Color(0.18, 0.18, 0.2, 1)
+metallic = 0.3
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_KnobPointer"]
+albedo_color = Color(0.95, 0.2, 0.2, 1)
 roughness = 0.3
 
+[sub_resource type="StandardMaterial3D" id="Material_PilotJewel"]
+albedo_color = Color(0.2, 0.2, 0.22, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
+albedo_color = Color(0.14, 0.14, 0.16, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_SteamSmoke"]
+transparency = 1
+albedo_color = Color(0.92, 0.92, 0.95, 0.25)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_OilSparks"]
+albedo_color = Color(1.0, 0.85, 0.3, 0.9)
+emission_enabled = true
+emission = Color(1.0, 0.75, 0.2, 1)
+emission_energy_multiplier = 1.2
+
 [sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
-material = SubResource("Material_SatinCabinet")
+material = SubResource("Material_BrushedSteel")
 size = Vector3(2.0, 0.78, 0.8)
 
 [sub_resource type="BoxMesh" id="BoxMesh_ToeKick"]
 material = SubResource("Material_ToeKick")
 size = Vector3(1.98, 0.1, 0.76)
 
-[sub_resource type="BoxMesh" id="BoxMesh_Griddle"]
-material = SubResource("Material_CastIronGriddle")
+[sub_resource type="BoxMesh" id="BoxMesh_Cooktop"]
+material = SubResource("Material_CastIronCooktop")
 size = Vector3(1.94, 0.05, 0.68)
 
 [sub_resource type="BoxMesh" id="BoxMesh_SplashBack"]
-material = SubResource("Material_SatinCabinet")
+material = SubResource("Material_BrushedSteel")
 size = Vector3(1.98, 0.22, 0.03)
 
 [sub_resource type="BoxMesh" id="BoxMesh_SplashSide"]
-material = SubResource("Material_SatinCabinet")
+material = SubResource("Material_BrushedSteel")
 size = Vector3(0.03, 0.18, 0.7)
 
 [sub_resource type="BoxMesh" id="BoxMesh_GreaseTrough"]
-material = SubResource("Material_CastIronGriddle")
+material = SubResource("Material_CastIronCooktop")
 size = Vector3(1.94, 0.02, 0.06)
 
-[sub_resource type="BoxMesh" id="BoxMesh_ControlPanel"]
-material = SubResource("Material_SatinCabinet")
-size = Vector3(1.96, 0.12, 0.02)
+[sub_resource type="BoxMesh" id="BoxMesh_GreaseDrawer"]
+material = SubResource("Material_BrushedSteel")
+size = Vector3(0.36, 0.09, 0.03)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Knob"]
-material = SubResource("Material_KnobRed")
-top_radius = 0.032
-bottom_radius = 0.036
-height = 0.03
+[sub_resource type="CylinderMesh" id="CylinderMesh_DrawerHandle"]
+material = SubResource("Material_ChromeTrim")
+top_radius = 0.008
+bottom_radius = 0.008
+height = 0.26
+radial_segments = 10
+
+[sub_resource type="BoxMesh" id="BoxMesh_ControlPanel"]
+material = SubResource("Material_BrushedSteel")
+size = Vector3(1.96, 0.14, 0.02)
+
+; Componentes do Termômetro Horizontal Amplo
+[sub_resource type="BoxMesh" id="BoxMesh_ThermoFrame"]
+material = SubResource("Material_ChromeTrim")
+size = Vector3(0.58, 0.068, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ScaleBacking"]
+material = SubResource("Material_ThermoBacking")
+size = Vector3(0.56, 0.054, 0.004)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ColdBand"]
+material = SubResource("Material_ZoneCold")
+size = Vector3(0.18, 0.012, 0.005)
+
+[sub_resource type="BoxMesh" id="BoxMesh_WarmBand"]
+material = SubResource("Material_ZoneWarm")
+size = Vector3(0.16, 0.012, 0.005)
+
+[sub_resource type="BoxMesh" id="BoxMesh_IdealBand"]
+material = SubResource("Material_ZoneGreen")
+size = Vector3(0.18, 0.020, 0.006)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FluidBarH"]
+material = SubResource("Material_ThermoFluid")
+size = Vector3(0.50, 0.024, 0.008)
+
+[sub_resource type="SphereMesh" id="SphereMesh_FluidBulbH"]
+material = SubResource("Material_ThermoFluid")
+radius = 0.018
+height = 0.036
 radial_segments = 14
 
-[sub_resource type="SphereMesh" id="SphereMesh_Led"]
-material = SubResource("Material_LedGreen")
-radius = 0.015
+[sub_resource type="BoxMesh" id="BoxMesh_GlassH"]
+material = SubResource("Material_GlassCover")
+size = Vector3(0.564, 0.056, 0.004)
+
+; Componentes do Botão e Piloto
+[sub_resource type="CylinderMesh" id="CylinderMesh_KnobBezel"]
+material = SubResource("Material_ChromeTrim")
+top_radius = 0.042
+bottom_radius = 0.042
+height = 0.008
+radial_segments = 18
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_KnobBody"]
+material = SubResource("Material_IndustrialKnob")
+top_radius = 0.036
+bottom_radius = 0.038
 height = 0.03
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_KnobPointer"]
+material = SubResource("Material_KnobPointer")
+size = Vector3(0.006, 0.032, 0.032)
+
+[sub_resource type="SphereMesh" id="SphereMesh_Pilot"]
+material = SubResource("Material_PilotJewel")
+radius = 0.018
+height = 0.036
+radial_segments = 16
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Leg"]
-material = SubResource("Material_ChromeAccent")
+material = SubResource("Material_ChromeTrim")
 top_radius = 0.035
 bottom_radius = 0.03
 height = 0.12
 radial_segments = 12
+
+[sub_resource type="SphereMesh" id="SphereMesh_Smoke"]
+material = SubResource("Material_SteamSmoke")
+radius = 0.03
+height = 0.06
+radial_segments = 6
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_Oil"]
+material = SubResource("Material_OilSparks")
+radius = 0.006
+height = 0.012
+radial_segments = 4
+rings = 2
 
 [node name="Grill" type="StaticBody3D"]
 script = ExtResource("1_grill")
@@ -90,6 +208,7 @@ shape = SubResource("BoxShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
 
+; Base e pés niveladores
 [node name="ToeKick" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("BoxMesh_ToeKick")
@@ -110,22 +229,98 @@ mesh = SubResource("CylinderMesh_Leg")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.92, 0.06, -0.32)
 mesh = SubResource("CylinderMesh_Leg")
 
+; Gabinete de aço escovado
 [node name="Cabinet" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49, 0)
 mesh = SubResource("BoxMesh_Cabinet")
 
+; Painel de controle frontal
 [node name="ControlPanel" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0.405)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.77, 0.405)
 mesh = SubResource("BoxMesh_ControlPanel")
 
+; Gaveta coletora de gordura frontal com puxador
+[node name="GreaseDrawer" type="MeshInstance3D" parent="Model/ControlPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15, -0.01, 0.012)
+mesh = SubResource("BoxMesh_GreaseDrawer")
+
+[node name="DrawerHandle" type="MeshInstance3D" parent="Model/ControlPanel/GreaseDrawer"]
+transform = Transform3D(-4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0, 1, 0, 0, 0.02)
+mesh = SubResource("CylinderMesh_DrawerHandle")
+
+; TERMÔMETRO HORIZONTAL AMPLO INTEGRADO AO PAINEL
+[node name="HorizontalThermometer" type="Node3D" parent="Model/ControlPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.38, 0, 0.012)
+
+[node name="RecessFrame" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+mesh = SubResource("BoxMesh_ThermoFrame")
+
+[node name="BackingPlate" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.003)
+mesh = SubResource("BoxMesh_ScaleBacking")
+
+; Marcações de zonas de temperatura (Fria -> Aquecendo -> Verde Ideal)
+[node name="ColdZone" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, -0.014, 0.004)
+mesh = SubResource("BoxMesh_ColdBand")
+
+[node name="WarmZone" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.01, -0.014, 0.004)
+mesh = SubResource("BoxMesh_WarmBand")
+
+[node name="IdealZoneMarker" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0, 0.004)
+mesh = SubResource("BoxMesh_IdealBand")
+
+; Bulbo esquerdo do termômetro
+[node name="FluidBulb" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 0, 0.006)
+mesh = SubResource("SphereMesh_FluidBulbH")
+
+; Coluna/Barra horizontal de temperatura com pivô à esquerda
+[node name="FluidColumnPivot" type="Node3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.25, 0, 0.006)
+
+[node name="FluidBar" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer/FluidColumnPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 0, 0)
+mesh = SubResource("BoxMesh_FluidBarH")
+
+; Vidro protetor externo
+[node name="GlassCover" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.008)
+mesh = SubResource("BoxMesh_GlassH")
+
+; LUZ DE TEMPERATURA À DIREITA DO INDICADOR (INDICAÇÃO CLARA QUANDO VERDE)
+[node name="TempPilotLight" type="MeshInstance3D" parent="Model/ControlPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.72, 0, 0.014)
+mesh = SubResource("SphereMesh_Pilot")
+
+; CONTROLE ROTATIVO INDUSTRIAL DE LIGAR/DESLIGAR
+[node name="PowerControl" type="Node3D" parent="Model/ControlPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0, 0.012)
+
+[node name="KnobBezel" type="MeshInstance3D" parent="Model/ControlPanel/PowerControl"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.004)
+mesh = SubResource("CylinderMesh_KnobBezel")
+
+[node name="PowerKnob" type="MeshInstance3D" parent="Model/ControlPanel/PowerControl"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.018)
+mesh = SubResource("CylinderMesh_KnobBody")
+
+[node name="KnobPointer" type="MeshInstance3D" parent="Model/ControlPanel/PowerControl/PowerKnob"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0.016)
+mesh = SubResource("BoxMesh_KnobPointer")
+
+; Chapa grossa de ferro fundido e calha de gordura
 [node name="GrillPlate" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.905, -0.02)
-mesh = SubResource("BoxMesh_Griddle")
+mesh = SubResource("BoxMesh_Cooktop")
 
 [node name="GreaseTrough" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.89, 0.34)
 mesh = SubResource("BoxMesh_GreaseTrough")
 
+; Protetores laterais e traseiro contra respingos
 [node name="SplashGuardBack" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -0.375)
 mesh = SubResource("BoxMesh_SplashBack")
@@ -138,45 +333,37 @@ mesh = SubResource("BoxMesh_SplashSide")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.975, 0.98, -0.02)
 mesh = SubResource("BoxMesh_SplashSide")
 
-[node name="Knob1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.75, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
-
-[node name="Knob2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.45, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
-
-[node name="Knob3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.15, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
-
-[node name="Knob4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.15, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
-
-[node name="Knob5" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.45, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
-
-[node name="Knob6" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.75, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
-
-[node name="StatusLed1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88, 0.82, 0.415)
-mesh = SubResource("SphereMesh_Led")
-
-[node name="StatusLed2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88, 0.82, 0.415)
-mesh = SubResource("SphereMesh_Led")
-
 [node name="CookingSlot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, -0.02)
 
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
-billboard = 1
-double_sided = false
-text = "🥩 CHAPA PROFISSIONAL DUPLA"
-font_size = 20
-outline_size = 6
+; Partículas de vapor e fumaça leve de fritura
+[node name="SizzleParticles" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.96, -0.02)
+emitting = false
+amount = 14
+lifetime = 1.2
+mesh = SubResource("SphereMesh_Smoke")
+emission_shape = 3
+emission_box_extents = Vector3(0.8, 0.02, 0.25)
+direction = Vector3(0, 1, 0)
+spread = 15.0
+gravity = Vector3(0, 0.4, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.5
+scale_amount_min = 0.8
+scale_amount_max = 1.8
+
+; Respingos sutis e ocasionais de óleo quente
+[node name="OilSplatterParticles" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, -0.02)
+emitting = false
+amount = 6
+lifetime = 0.4
+mesh = SubResource("SphereMesh_Oil")
+emission_shape = 3
+emission_box_extents = Vector3(0.75, 0.01, 0.25)
+direction = Vector3(0, 1, 0)
+spread = 45.0
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 1.2
+initial_velocity_max = 2.2

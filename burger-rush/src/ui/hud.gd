@@ -60,6 +60,26 @@ func show_prompt(text: String) -> void:
 		interaction_label.text = text
 		interaction_label.visible = true
 
+@onready var slot1_label: Label = get_node_or_null("ToolHotbar/HBox/Slot1Label")
+@onready var slot2_label: Label = get_node_or_null("ToolHotbar/HBox/Slot2Label")
+@onready var slot3_label: Label = get_node_or_null("ToolHotbar/HBox/Slot3Label")
+
+func update_active_tool(slot_number: int) -> void:
+	if not slot1_label or not slot2_label or not slot3_label:
+		slot1_label = get_node_or_null("ToolHotbar/HBox/Slot1Label")
+		slot2_label = get_node_or_null("ToolHotbar/HBox/Slot2Label")
+		slot3_label = get_node_or_null("ToolHotbar/HBox/Slot3Label")
+
+	var col_active = Color(1.0, 0.9, 0.35, 1.0)
+	var col_dimmed = Color(0.65, 0.68, 0.75, 0.45)
+
+	if slot1_label:
+		slot1_label.modulate = col_active if slot_number == 1 else col_dimmed
+	if slot2_label:
+		slot2_label.modulate = col_active if slot_number == 2 else col_dimmed
+	if slot3_label:
+		slot3_label.modulate = col_active if slot_number == 3 else col_dimmed
+
 func hide_prompt() -> void:
 	if interaction_label:
 		interaction_label.text = ""

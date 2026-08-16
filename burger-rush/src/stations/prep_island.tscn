@@ -1,0 +1,369 @@
+[gd_scene format=3 uid="uid://prep_island_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/prep_island.gd" id="1_prep_island_script"]
+
+; ================================================================
+; COLISÃO FÍSICA (ILHA DUPLA COM 6 BANCADAS CONECTADAS)
+; ================================================================
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Island"]
+size = Vector3(3.80, 0.88, 1.90)
+
+; ================================================================
+; MATERIAIS DE COZINHA PROFISSIONAL
+; ================================================================
+
+; Aço Inoxidável Escovado do Tampo
+[sub_resource type="StandardMaterial3D" id="Material_StainlessSteelTop"]
+albedo_color = Color(0.86, 0.88, 0.90, 1.0)
+metallic = 0.88
+roughness = 0.28
+clearcoat_enabled = true
+clearcoat = 0.4
+
+; Aço Inoxidável Estrutural / Pés / Prateleiras
+[sub_resource type="StandardMaterial3D" id="Material_StainlessSteelBody"]
+albedo_color = Color(0.75, 0.77, 0.80, 1.0)
+metallic = 0.80
+roughness = 0.35
+
+; Detalhes Escuros / Junções / Puxadores
+[sub_resource type="StandardMaterial3D" id="Material_SteelDark"]
+albedo_color = Color(0.30, 0.32, 0.35, 1.0)
+metallic = 0.90
+roughness = 0.30
+
+; Pranchas de Corte em Polietileno Sanitário (Branco e Amadeirado Suave)
+[sub_resource type="StandardMaterial3D" id="Material_CuttingBoardHDPE"]
+albedo_color = Color(0.96, 0.96, 0.95, 1.0)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_CuttingBoardChef"]
+albedo_color = Color(0.88, 0.68, 0.48, 1.0)
+roughness = 0.55
+
+; Placa de Identificação Frontal
+[sub_resource type="StandardMaterial3D" id="Material_FrontBadge"]
+albedo_color = Color(0.95, 0.93, 0.85, 1.0)
+roughness = 0.35
+
+; ================================================================
+; MESHES DA ILHA EXPANDIDA
+; ================================================================
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
+material = SubResource("Material_StainlessSteelTop")
+size = Vector3(3.80, 0.05, 1.90)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BoardCenter"]
+material = SubResource("Material_CuttingBoardChef")
+size = Vector3(0.90, 0.012, 0.60)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BoardSide"]
+material = SubResource("Material_CuttingBoardHDPE")
+size = Vector3(0.80, 0.012, 0.55)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CabinetBody"]
+material = SubResource("Material_StainlessSteelBody")
+size = Vector3(1.15, 0.56, 0.85)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CabinetDoor"]
+material = SubResource("Material_StainlessSteelTop")
+size = Vector3(0.52, 0.50, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Handle"]
+material = SubResource("Material_SteelDark")
+size = Vector3(0.02, 0.14, 0.03)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Leg"]
+material = SubResource("Material_SteelDark")
+top_radius = 0.028
+bottom_radius = 0.028
+height = 0.85
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_LowerShelf"]
+material = SubResource("Material_StainlessSteelBody")
+size = Vector3(3.64, 0.03, 1.74)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FrontBadge"]
+material = SubResource("Material_FrontBadge")
+size = Vector3(0.60, 0.09, 0.008)
+
+; ================================================================
+; CENA PRINCIPAL DA ILHA (6 BANCADAS CONECTADAS)
+; ================================================================
+
+[node name="PrepIsland" type="StaticBody3D"]
+script = ExtResource("1_prep_island_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0)
+shape = SubResource("BoxShape3D_Island")
+
+[node name="Model" type="Node3D" parent="."]
+
+; Tampo Duplo Gigante de Aço Inox (3.80m x 1.90m)
+[node name="TableTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.855, 0)
+mesh = SubResource("BoxMesh_TableTop")
+
+; 6 Pranchas de Corte Higiênicas Embutidas (3 Sul + 3 Norte)
+[node name="CuttingBoardSouthWest" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.20, 0.886, 0.45)
+mesh = SubResource("BoxMesh_BoardSide")
+
+[node name="CuttingBoardSouthCenter" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.886, 0.45)
+mesh = SubResource("BoxMesh_BoardCenter")
+
+[node name="CuttingBoardSouthEast" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.20, 0.886, 0.45)
+mesh = SubResource("BoxMesh_BoardSide")
+
+[node name="CuttingBoardNorthWest" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.20, 0.886, -0.45)
+mesh = SubResource("BoxMesh_BoardSide")
+
+[node name="CuttingBoardNorthCenter" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.886, -0.45)
+mesh = SubResource("BoxMesh_BoardCenter")
+
+[node name="CuttingBoardNorthEast" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.20, 0.886, -0.45)
+mesh = SubResource("BoxMesh_BoardSide")
+
+; 6 MÓDULOS DE GABINETE INFERIOR (3 SUL + 3 NORTE)
+
+; Módulo 1 (Sul - Oeste)
+[node name="ModuleSouthWest" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.22, 0, 0.44)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model/ModuleSouthWest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+mesh = SubResource("BoxMesh_CabinetBody")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="Model/ModuleSouthWest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/ModuleSouthWest/DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model/ModuleSouthWest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/ModuleSouthWest/DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+; Módulo 2 (Sul - Centro)
+[node name="ModuleSouthCenter" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0, 0.44)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model/ModuleSouthCenter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+mesh = SubResource("BoxMesh_CabinetBody")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="Model/ModuleSouthCenter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/ModuleSouthCenter/DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model/ModuleSouthCenter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/ModuleSouthCenter/DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+; Módulo 3 (Sul - Leste)
+[node name="ModuleSouthEast" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.22, 0, 0.44)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model/ModuleSouthEast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+mesh = SubResource("BoxMesh_CabinetBody")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="Model/ModuleSouthEast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/ModuleSouthEast/DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model/ModuleSouthEast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/ModuleSouthEast/DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+; Módulo 4 (Norte - Oeste)
+[node name="ModuleNorthWest" type="Node3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -1.22, 0, -0.44)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model/ModuleNorthWest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+mesh = SubResource("BoxMesh_CabinetBody")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="Model/ModuleNorthWest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/ModuleNorthWest/DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model/ModuleNorthWest"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/ModuleNorthWest/DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+; Módulo 5 (Norte - Centro)
+[node name="ModuleNorthCenter" type="Node3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0.0, 0, -0.44)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model/ModuleNorthCenter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+mesh = SubResource("BoxMesh_CabinetBody")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="Model/ModuleNorthCenter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/ModuleNorthCenter/DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model/ModuleNorthCenter"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/ModuleNorthCenter/DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+; Módulo 6 (Norte - Leste)
+[node name="ModuleNorthEast" type="Node3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 1.22, 0, -0.44)
+
+[node name="Cabinet" type="MeshInstance3D" parent="Model/ModuleNorthEast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+mesh = SubResource("BoxMesh_CabinetBody")
+
+[node name="DoorLeft" type="MeshInstance3D" parent="Model/ModuleNorthEast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/ModuleNorthEast/DoorLeft"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model/ModuleNorthEast"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.52, 0.43)
+mesh = SubResource("BoxMesh_CabinetDoor")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/ModuleNorthEast/DoorRight"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 0, 0.02)
+mesh = SubResource("BoxMesh_Handle")
+
+; 12 PÉS TUBULARES DE APOIO
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.425, -0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.61, 0.425, -0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.61, 0.425, -0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.82, 0.425, -0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg5" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.425, 0.0)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg6" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.61, 0.425, 0.0)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg7" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.61, 0.425, 0.0)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg8" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.82, 0.425, 0.0)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg9" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.82, 0.425, 0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg10" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.61, 0.425, 0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg11" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.61, 0.425, 0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+[node name="Leg12" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.82, 0.425, 0.88)
+mesh = SubResource("CylinderMesh_Leg")
+
+; Prateleira Inferior Ampla de Aço Inox
+[node name="LowerShelf" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+mesh = SubResource("BoxMesh_LowerShelf")
+
+; Placa de Identificação Frontal (Sul)
+[node name="FrontBadge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.81, 0.952)
+mesh = SubResource("BoxMesh_FrontBadge")
+
+[node name="FrontBadgeLabel" type="Label3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.81, 0.958)
+double_sided = false
+text = "🍽️ ILHA DE MONTAGEM & PREPARO 🍽️"
+font_size = 18
+modulate = Color(0.18, 0.20, 0.22, 1.0)
+
+; Placa de Identificação Traseira (Norte - voltada para as chapas)
+[node name="RearBadge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.81, -0.952)
+mesh = SubResource("BoxMesh_FrontBadge")
+
+[node name="RearBadgeLabel" type="Label3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.81, -0.958)
+double_sided = false
+text = "🍽️ ILHA DE MONTAGEM & PREPARO 🍽️"
+font_size = 18
+modulate = Color(0.18, 0.20, 0.22, 1.0)
+
+; Status Flutuante
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+billboard = 1
+double_sided = false
+text = ""
+font_size = 18
+outline_size = 5
+modulate = Color(0.95, 0.95, 0.95, 0.85)
+outline_modulate = Color(0.15, 0.15, 0.15, 1.0)

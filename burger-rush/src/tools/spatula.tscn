@@ -1,0 +1,127 @@
+[gd_scene format=3 uid="uid://spatula_tool_scene_uid"]
+
+[ext_resource type="Script" path="res://src/tools/spatula.gd" id="1_spatula_script"]
+
+[sub_resource type="StandardMaterial3D" id="Material_StainlessBlade"]
+albedo_color = Color(0.84, 0.86, 0.88, 1)
+metallic = 0.92
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_SlotCutout"]
+albedo_color = Color(0.3, 0.32, 0.35, 1)
+metallic = 0.8
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_HardwoodHandle"]
+albedo_color = Color(0.36, 0.2, 0.1, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_Brass"]
+albedo_color = Color(0.88, 0.72, 0.28, 1)
+metallic = 0.95
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_SteelRivets"]
+albedo_color = Color(0.9, 0.9, 0.92, 1)
+metallic = 0.95
+roughness = 0.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_Blade"]
+material = SubResource("Material_StainlessBlade")
+size = Vector3(0.12, 0.003, 0.18)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BladeSlot"]
+material = SubResource("Material_SlotCutout")
+size = Vector3(0.012, 0.004, 0.11)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BladeFrontBevel"]
+material = SubResource("Material_StainlessBlade")
+size = Vector3(0.12, 0.0015, 0.015)
+
+[sub_resource type="BoxMesh" id="BoxMesh_NeckCurve"]
+material = SubResource("Material_StainlessBlade")
+size = Vector3(0.042, 0.004, 0.09)
+
+[sub_resource type="BoxMesh" id="BoxMesh_NeckTang"]
+material = SubResource("Material_StainlessBlade")
+size = Vector3(0.032, 0.004, 0.11)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_BrassFerrule"]
+material = SubResource("Material_Brass")
+top_radius = 0.018
+bottom_radius = 0.019
+height = 0.016
+radial_segments = 14
+
+[sub_resource type="BoxMesh" id="BoxMesh_WoodScales"]
+material = SubResource("Material_HardwoodHandle")
+size = Vector3(0.034, 0.026, 0.14)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Rivet"]
+material = SubResource("Material_SteelRivets")
+top_radius = 0.004
+bottom_radius = 0.004
+height = 0.028
+radial_segments = 8
+
+[node name="Spatula" type="Node3D"]
+script = ExtResource("1_spatula_script")
+
+[node name="Model" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0)
+
+; Lâmina ampla de inox
+[node name="Blade" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.16)
+mesh = SubResource("BoxMesh_Blade")
+
+; Borda frontal afilada
+[node name="FrontBevel" type="MeshInstance3D" parent="Model/Blade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.001, -0.095)
+mesh = SubResource("BoxMesh_BladeFrontBevel")
+
+; Ranhuras de drenagem de gordura na lâmina
+[node name="Slot1" type="MeshInstance3D" parent="Model/Blade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.032, 0.001, -0.01)
+mesh = SubResource("BoxMesh_BladeSlot")
+
+[node name="Slot2" type="MeshInstance3D" parent="Model/Blade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.001, -0.01)
+mesh = SubResource("BoxMesh_BladeSlot")
+
+[node name="Slot3" type="MeshInstance3D" parent="Model/Blade"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.032, 0.001, -0.01)
+mesh = SubResource("BoxMesh_BladeSlot")
+
+; Ponto exato de repouso do alimento sobre a lâmina (sem clipping)
+[node name="BladeRestPoint" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.004, -0.16)
+
+; Curva em pescoço de ganso (offset vertical)
+[node name="NeckCurved" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.022, -0.055)
+mesh = SubResource("BoxMesh_NeckCurve")
+
+; Haste espiga que entra no cabo
+[node name="NeckTang" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.044, 0.025)
+mesh = SubResource("BoxMesh_NeckTang")
+
+; Anel de reforço em latão (ferrule)
+[node name="BrassFerrule" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.044, 0.045)
+mesh = SubResource("CylinderMesh_BrassFerrule")
+
+; Cabo ergonômico de madeira nobre
+[node name="WoodHandle" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.044, 0.13)
+mesh = SubResource("BoxMesh_WoodScales")
+
+; Rebites em aço inox
+[node name="Rivet1" type="MeshInstance3D" parent="Model/WoodHandle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.038)
+mesh = SubResource("CylinderMesh_Rivet")
+
+[node name="Rivet2" type="MeshInstance3D" parent="Model/WoodHandle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.032)
+mesh = SubResource("CylinderMesh_Rivet")

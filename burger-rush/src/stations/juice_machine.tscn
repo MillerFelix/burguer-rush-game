@@ -1,99 +1,195 @@
-[gd_scene format=3 uid="uid://juice_machine_scene_uid"]
+[gd_scene format=3]
 
-[ext_resource type="Script" path="res://src/stations/juice_machine.gd" id="1_juice"]
+[ext_resource type="Script" path="res://src/stations/juice_machine.gd" id="1_juice_machine"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_Machine"]
 size = Vector3(1.4, 1.95, 0.8)
 
 [sub_resource type="StandardMaterial3D" id="Material_SatinSteel"]
-albedo_color = Color(0.76, 0.78, 0.8, 1)
-metallic = 0.75
-roughness = 0.3
+albedo_color = Color(0.78, 0.80, 0.82, 1)
+metallic = 0.85
+roughness = 0.28
 
 [sub_resource type="StandardMaterial3D" id="Material_TankAcrylic"]
+render_priority = 1
 transparency = 1
-albedo_color = Color(0.92, 0.96, 0.98, 0.35)
-roughness = 0.15
+albedo_color = Color(0.92, 0.96, 0.98, 0.25)
+roughness = 0.08
+metallic_specular = 0.95
 
 [sub_resource type="StandardMaterial3D" id="Material_JuiceOrange"]
+render_priority = 0
+depth_draw_mode = 1
 transparency = 1
-albedo_color = Color(0.95, 0.55, 0.08, 0.9)
-roughness = 0.2
+albedo_color = Color(0.98, 0.52, 0.05, 0.92)
+roughness = 0.12
+clearcoat = 0.6
+emission_enabled = true
+emission = Color(0.98, 0.52, 0.05, 1)
+emission_energy_multiplier = 0.22
 
 [sub_resource type="StandardMaterial3D" id="Material_JuiceGrape"]
+render_priority = 0
+depth_draw_mode = 1
 transparency = 1
-albedo_color = Color(0.42, 0.10, 0.55, 0.9)
-roughness = 0.2
+albedo_color = Color(0.48, 0.12, 0.65, 0.92)
+roughness = 0.12
+clearcoat = 0.6
+emission_enabled = true
+emission = Color(0.48, 0.12, 0.65, 1)
+emission_energy_multiplier = 0.22
 
-[sub_resource type="StandardMaterial3D" id="Material_JuicePassion"]
+[sub_resource type="StandardMaterial3D" id="Material_JuiceStrawberry"]
+render_priority = 0
+depth_draw_mode = 1
 transparency = 1
-albedo_color = Color(0.96, 0.82, 0.14, 0.9)
-roughness = 0.2
+albedo_color = Color(0.92, 0.12, 0.28, 0.92)
+roughness = 0.12
+clearcoat = 0.6
+emission_enabled = true
+emission = Color(0.92, 0.12, 0.28, 1)
+emission_energy_multiplier = 0.22
 
 [sub_resource type="StandardMaterial3D" id="Material_Chrome"]
-albedo_color = Color(0.88, 0.9, 0.92, 1)
-metallic = 0.9
-roughness = 0.18
+albedo_color = Color(0.90, 0.92, 0.94, 1)
+metallic = 0.95
+roughness = 0.12
 
 [sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
-albedo_color = Color(0.18, 0.18, 0.2, 1)
-roughness = 0.7
+albedo_color = Color(0.18, 0.18, 0.20, 1)
+roughness = 0.70
+
+[sub_resource type="StandardMaterial3D" id="Material_DrawerTray"]
+albedo_color = Color(0.22, 0.24, 0.26, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="Material_CupPadRubber"]
+albedo_color = Color(0.16, 0.18, 0.20, 1)
+roughness = 0.80
+
+[sub_resource type="StandardMaterial3D" id="Material_PowerLED_Green"]
+albedo_color = Color(0.2, 0.95, 0.3, 1)
+emission_enabled = true
+emission = Color(0.2, 0.95, 0.3, 1)
+emission_energy_multiplier = 1.3
+
+[sub_resource type="StandardMaterial3D" id="Material_StreamOrange"]
+albedo_color = Color(0.98, 0.52, 0.05, 0.95)
+roughness = 0.08
+metallic_specular = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_StreamGrape"]
+albedo_color = Color(0.48, 0.12, 0.65, 0.95)
+roughness = 0.08
+metallic_specular = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_StreamStrawberry"]
+albedo_color = Color(0.92, 0.12, 0.28, 0.95)
+roughness = 0.08
+metallic_specular = 0.85
 
 [sub_resource type="BoxMesh" id="BoxMesh_ToeKick"]
 material = SubResource("Material_ToeKick")
-size = Vector3(1.38, 0.1, 0.76)
+size = Vector3(1.38, 0.10, 0.76)
 
 [sub_resource type="BoxMesh" id="BoxMesh_BaseCabinet"]
 material = SubResource("Material_SatinSteel")
-size = Vector3(1.4, 0.78, 0.8)
+size = Vector3(1.40, 0.78, 0.80)
 
 [sub_resource type="BoxMesh" id="BoxMesh_DripTray"]
 material = SubResource("Material_SatinSteel")
 size = Vector3(1.36, 0.06, 0.28)
 
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupCoasterRing"]
+material = SubResource("Material_Chrome")
+top_radius = 0.080
+bottom_radius = 0.080
+height = 0.008
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupCoasterPad"]
+material = SubResource("Material_CupPadRubber")
+top_radius = 0.072
+bottom_radius = 0.072
+height = 0.006
+radial_segments = 24
+
 [sub_resource type="BoxMesh" id="BoxMesh_TankJar"]
 material = SubResource("Material_TankAcrylic")
-size = Vector3(0.36, 0.62, 0.44)
+size = Vector3(0.36, 0.56, 0.42)
 
-[sub_resource type="BoxMesh" id="BoxMesh_LiquidOrange"]
-material = SubResource("Material_JuiceOrange")
-size = Vector3(0.34, 0.56, 0.42)
-
-[sub_resource type="BoxMesh" id="BoxMesh_LiquidGrape"]
-material = SubResource("Material_JuiceGrape")
-size = Vector3(0.34, 0.56, 0.42)
-
-[sub_resource type="BoxMesh" id="BoxMesh_LiquidPassion"]
-material = SubResource("Material_JuicePassion")
-size = Vector3(0.34, 0.56, 0.42)
+[sub_resource type="BoxMesh" id="BoxMesh_LiquidInitial"]
+size = Vector3(0.33, 0.04, 0.39)
 
 [sub_resource type="BoxMesh" id="BoxMesh_TankLid"]
 material = SubResource("Material_SatinSteel")
-size = Vector3(0.38, 0.04, 0.46)
+size = Vector3(0.38, 0.04, 0.44)
+
+; Peças da gaveta com compartimento interno real (fundo e 4 paredes)
+[sub_resource type="BoxMesh" id="BoxMesh_DrawerFrontFace"]
+material = SubResource("Material_SatinSteel")
+size = Vector3(0.28, 0.20, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DrawerFloor"]
+material = SubResource("Material_DrawerTray")
+size = Vector3(0.26, 0.015, 0.26)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DrawerSideWall"]
+material = SubResource("Material_DrawerTray")
+size = Vector3(0.012, 0.13, 0.26)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DrawerBackWall"]
+material = SubResource("Material_DrawerTray")
+size = Vector3(0.26, 0.13, 0.012)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_DrawerHandle"]
+material = SubResource("Material_Chrome")
+top_radius = 0.012
+bottom_radius = 0.012
+height = 0.14
+radial_segments = 12
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Spout"]
 material = SubResource("Material_Chrome")
-top_radius = 0.02
+top_radius = 0.022
 bottom_radius = 0.015
-height = 0.08
-radial_segments = 12
+height = 0.07
+radial_segments = 14
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_LeverHandle"]
 material = SubResource("Material_Chrome")
 top_radius = 0.012
 bottom_radius = 0.012
-height = 0.16
+height = 0.14
 radial_segments = 10
 
+[sub_resource type="CylinderMesh" id="CylinderMesh_Stream"]
+top_radius = 0.014
+bottom_radius = 0.014
+height = 0.16
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_SwitchBezel"]
+material = SubResource("Material_ToeKick")
+size = Vector3(0.08, 0.08, 0.02)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_PowerLED"]
+material = SubResource("Material_PowerLED_Green")
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.018
+radial_segments = 16
+
 [node name="JuiceMachine" type="StaticBody3D"]
-script = ExtResource("1_juice")
+script = ExtResource("1_juice_machine")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.975, 0)
-shape = SubResource("BoxShape3D_1")
+shape = SubResource("BoxShape3D_Machine")
 
 [node name="Model" type="Node3D" parent="."]
 
+; Base industrial de aço inox com rodapé
 [node name="ToeKick" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("BoxMesh_ToeKick")
@@ -102,86 +198,307 @@ mesh = SubResource("BoxMesh_ToeKick")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49, 0)
 mesh = SubResource("BoxMesh_BaseCabinet")
 
+; Bandeja de pingos de inox
 [node name="DripTray" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, 0.22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.86, 0.22)
 mesh = SubResource("BoxMesh_DripTray")
 
-[node name="Tank1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.34, -0.04)
+; ================================================================
+; BASES DESTACADAS PARA APOIO DOS COPOS (COASTER DE BORRACHA COM ARO CROMADO)
+; ================================================================
+[node name="CupBase_0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.892, 0.22)
+
+[node name="CoasterRing" type="MeshInstance3D" parent="Model/CupBase_0"]
+mesh = SubResource("CylinderMesh_CupCoasterRing")
+
+[node name="CoasterPad" type="MeshInstance3D" parent="Model/CupBase_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
+mesh = SubResource("CylinderMesh_CupCoasterPad")
+
+[node name="CupBase_1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.892, 0.22)
+
+[node name="CoasterRing" type="MeshInstance3D" parent="Model/CupBase_1"]
+mesh = SubResource("CylinderMesh_CupCoasterRing")
+
+[node name="CoasterPad" type="MeshInstance3D" parent="Model/CupBase_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
+mesh = SubResource("CylinderMesh_CupCoasterPad")
+
+[node name="CupBase_2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.892, 0.22)
+
+[node name="CoasterRing" type="MeshInstance3D" parent="Model/CupBase_2"]
+mesh = SubResource("CylinderMesh_CupCoasterRing")
+
+[node name="CoasterPad" type="MeshInstance3D" parent="Model/CupBase_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0)
+mesh = SubResource("CylinderMesh_CupCoasterPad")
+
+; ================================================================
+; BOTÃO POWER LIGA/DESLIGA NO PAINEL LATERAL
+; ================================================================
+[node name="PowerSwitch" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.58, 0.96, 0.24)
+
+[node name="SwitchBezel" type="MeshInstance3D" parent="Model/PowerSwitch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
+mesh = SubResource("BoxMesh_SwitchBezel")
+
+[node name="StatusLED" type="MeshInstance3D" parent="Model/PowerSwitch"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.015)
+mesh = SubResource("CylinderMesh_PowerLED")
+
+[node name="PowerLabel" type="Label3D" parent="Model/PowerSwitch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.055, 0.012)
+text = "POWER"
+font_size = 11
+outline_size = 2
+outline_modulate = Color(0, 0, 0, 1)
+
+; ================================================================
+; 3 GAVETAS DE POLPA COM COMPARTIMENTO INTERNO REAL (FUNDO E LATERAIS)
+; ================================================================
+; Gaveta 0: Laranja
+[node name="Drawer_0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.52, 0)
+
+[node name="FrontFace" type="MeshInstance3D" parent="Model/Drawer_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.40)
+mesh = SubResource("BoxMesh_DrawerFrontFace")
+
+[node name="Handle" type="MeshInstance3D" parent="Model/Drawer_0"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0.42)
+mesh = SubResource("CylinderMesh_DrawerHandle")
+
+[node name="BottomFloor" type="MeshInstance3D" parent="Model/Drawer_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0.26)
+mesh = SubResource("BoxMesh_DrawerFloor")
+
+[node name="LeftWall" type="MeshInstance3D" parent="Model/Drawer_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.125, -0.01, 0.26)
+mesh = SubResource("BoxMesh_DrawerSideWall")
+
+[node name="RightWall" type="MeshInstance3D" parent="Model/Drawer_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125, -0.01, 0.26)
+mesh = SubResource("BoxMesh_DrawerSideWall")
+
+[node name="BackWall" type="MeshInstance3D" parent="Model/Drawer_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0.13)
+mesh = SubResource("BoxMesh_DrawerBackWall")
+
+[node name="PulpHolder" type="Node3D" parent="Model/Drawer_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0.26)
+
+; Gaveta 1: Uva
+[node name="Drawer_1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.52, 0)
+
+[node name="FrontFace" type="MeshInstance3D" parent="Model/Drawer_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.40)
+mesh = SubResource("BoxMesh_DrawerFrontFace")
+
+[node name="Handle" type="MeshInstance3D" parent="Model/Drawer_1"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0.42)
+mesh = SubResource("CylinderMesh_DrawerHandle")
+
+[node name="BottomFloor" type="MeshInstance3D" parent="Model/Drawer_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0.26)
+mesh = SubResource("BoxMesh_DrawerFloor")
+
+[node name="LeftWall" type="MeshInstance3D" parent="Model/Drawer_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.125, -0.01, 0.26)
+mesh = SubResource("BoxMesh_DrawerSideWall")
+
+[node name="RightWall" type="MeshInstance3D" parent="Model/Drawer_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125, -0.01, 0.26)
+mesh = SubResource("BoxMesh_DrawerSideWall")
+
+[node name="BackWall" type="MeshInstance3D" parent="Model/Drawer_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0.13)
+mesh = SubResource("BoxMesh_DrawerBackWall")
+
+[node name="PulpHolder" type="Node3D" parent="Model/Drawer_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0.26)
+
+; Gaveta 2: Morango
+[node name="Drawer_2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.52, 0)
+
+[node name="FrontFace" type="MeshInstance3D" parent="Model/Drawer_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.40)
+mesh = SubResource("BoxMesh_DrawerFrontFace")
+
+[node name="Handle" type="MeshInstance3D" parent="Model/Drawer_2"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, 0.42)
+mesh = SubResource("CylinderMesh_DrawerHandle")
+
+[node name="BottomFloor" type="MeshInstance3D" parent="Model/Drawer_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0.26)
+mesh = SubResource("BoxMesh_DrawerFloor")
+
+[node name="LeftWall" type="MeshInstance3D" parent="Model/Drawer_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.125, -0.01, 0.26)
+mesh = SubResource("BoxMesh_DrawerSideWall")
+
+[node name="RightWall" type="MeshInstance3D" parent="Model/Drawer_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.125, -0.01, 0.26)
+mesh = SubResource("BoxMesh_DrawerSideWall")
+
+[node name="BackWall" type="MeshInstance3D" parent="Model/Drawer_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.01, 0.13)
+mesh = SubResource("BoxMesh_DrawerBackWall")
+
+[node name="PulpHolder" type="Node3D" parent="Model/Drawer_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.03, 0.26)
+
+; ================================================================
+; 3 RESERVATÓRIOS ACRÍLICOS TRANSPARENTES COM EMBLEMA VISUAL DA FRUTA
+; ================================================================
+[node name="Reservoir_0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0, -0.04)
+
+[node name="Jar" type="MeshInstance3D" parent="Model/Reservoir_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48, 0)
 mesh = SubResource("BoxMesh_TankJar")
 
-[node name="Juice1" type="MeshInstance3D" parent="Model/Tank1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
-mesh = SubResource("BoxMesh_LiquidOrange")
+[node name="FruitEmblem" type="Label3D" parent="Model/Reservoir_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.50, 0.215)
+text = "🍊"
+font_size = 28
+outline_size = 0
+shaded = true
+double_sided = false
 
-[node name="Lid1" type="MeshInstance3D" parent="Model/Tank1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+[node name="Liquid" type="MeshInstance3D" parent="Model/Reservoir_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.22, 0)
+material_override = SubResource("Material_JuiceOrange")
+mesh = SubResource("BoxMesh_LiquidInitial")
+visible = false
+
+[node name="Lid" type="MeshInstance3D" parent="Model/Reservoir_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.77, 0)
 mesh = SubResource("BoxMesh_TankLid")
 
-[node name="Spout1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.02, 0.16)
+[node name="Reservoir_1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.04)
+
+[node name="Jar" type="MeshInstance3D" parent="Model/Reservoir_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48, 0)
+mesh = SubResource("BoxMesh_TankJar")
+
+[node name="FruitEmblem" type="Label3D" parent="Model/Reservoir_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.50, 0.215)
+text = "🍇"
+font_size = 28
+outline_size = 0
+shaded = true
+double_sided = false
+
+[node name="Liquid" type="MeshInstance3D" parent="Model/Reservoir_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.22, 0)
+material_override = SubResource("Material_JuiceGrape")
+mesh = SubResource("BoxMesh_LiquidInitial")
+visible = false
+
+[node name="Lid" type="MeshInstance3D" parent="Model/Reservoir_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.77, 0)
+mesh = SubResource("BoxMesh_TankLid")
+
+[node name="Reservoir_2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0, -0.04)
+
+[node name="Jar" type="MeshInstance3D" parent="Model/Reservoir_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.48, 0)
+mesh = SubResource("BoxMesh_TankJar")
+
+[node name="FruitEmblem" type="Label3D" parent="Model/Reservoir_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.50, 0.215)
+text = "🍓"
+font_size = 28
+outline_size = 0
+shaded = true
+double_sided = false
+
+[node name="Liquid" type="MeshInstance3D" parent="Model/Reservoir_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.22, 0)
+material_override = SubResource("Material_JuiceStrawberry")
+mesh = SubResource("BoxMesh_LiquidInitial")
+visible = false
+
+[node name="Lid" type="MeshInstance3D" parent="Model/Reservoir_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.77, 0)
+mesh = SubResource("BoxMesh_TankLid")
+
+; ================================================================
+; TORNEIRAS ELEVADAS EM CROMO (COM ESPAÇO LIVRE PARA O COPO)
+; ================================================================
+; Estação 0: Laranja
+[node name="Nozzle_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.18, 0.20)
 mesh = SubResource("CylinderMesh_Spout")
 
-[node name="Lever1" type="Node3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.08, 0.18)
+[node name="LeverPivot_0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.22, 0.22)
 
-[node name="LeverMesh" type="MeshInstance3D" parent="Model/Lever1"]
+[node name="LeverArm_0" type="MeshInstance3D" parent="Model/LeverPivot_0"]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.06, 0)
 mesh = SubResource("CylinderMesh_LeverHandle")
 
-[node name="Tank2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.34, -0.04)
-mesh = SubResource("BoxMesh_TankJar")
+[node name="Stream_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 1.06, 0.20)
+material_override = SubResource("Material_StreamOrange")
+visible = false
+mesh = SubResource("CylinderMesh_Stream")
 
-[node name="Juice2" type="MeshInstance3D" parent="Model/Tank2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
-mesh = SubResource("BoxMesh_LiquidGrape")
-
-[node name="Lid2" type="MeshInstance3D" parent="Model/Tank2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
-mesh = SubResource("BoxMesh_TankLid")
-
-[node name="Spout2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, 0.16)
+; Estação 1: Uva
+[node name="Nozzle_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.18, 0.20)
 mesh = SubResource("CylinderMesh_Spout")
 
-[node name="Lever2" type="Node3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.08, 0.18)
+[node name="LeverPivot_1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.22, 0.22)
 
-[node name="LeverMesh" type="MeshInstance3D" parent="Model/Lever2"]
+[node name="LeverArm_1" type="MeshInstance3D" parent="Model/LeverPivot_1"]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.06, 0)
 mesh = SubResource("CylinderMesh_LeverHandle")
 
-[node name="Tank3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.34, -0.04)
-mesh = SubResource("BoxMesh_TankJar")
+[node name="Stream_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.06, 0.20)
+material_override = SubResource("Material_StreamGrape")
+visible = false
+mesh = SubResource("CylinderMesh_Stream")
 
-[node name="Juice3" type="MeshInstance3D" parent="Model/Tank3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
-mesh = SubResource("BoxMesh_LiquidPassion")
-
-[node name="Lid3" type="MeshInstance3D" parent="Model/Tank3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
-mesh = SubResource("BoxMesh_TankLid")
-
-[node name="Spout3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.02, 0.16)
+; Estação 2: Morango
+[node name="Nozzle_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.18, 0.20)
 mesh = SubResource("CylinderMesh_Spout")
 
-[node name="Lever3" type="Node3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.08, 0.18)
+[node name="LeverPivot_2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.22, 0.22)
 
-[node name="LeverMesh" type="MeshInstance3D" parent="Model/Lever3"]
+[node name="LeverArm_2" type="MeshInstance3D" parent="Model/LeverPivot_2"]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.06, 0)
 mesh = SubResource("CylinderMesh_LeverHandle")
+
+[node name="Stream_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 1.06, 0.20)
+material_override = SubResource("Material_StreamStrawberry")
+visible = false
+mesh = SubResource("CylinderMesh_Stream")
+
+; ================================================================
+; SLOTS DE COPOS NA BANDEJA DE PINGOS
+; ================================================================
+[node name="CupSlot_0" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.894, 0.22)
+
+[node name="CupSlot_1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.894, 0.22)
+
+[node name="CupSlot_2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.894, 0.22)
 
 [node name="CupSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.14)
-
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, 0)
-billboard = 1
-double_sided = false
-text = "🍹 SUQUEIRA INDUSTRIAL (3 SABORES)"
-font_size = 20
-outline_size = 6
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.894, 0.22)

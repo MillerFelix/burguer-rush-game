@@ -1,228 +1,628 @@
 [gd_scene format=3 uid="uid://drink_machine_scene_uid"]
 
 [ext_resource type="Script" path="res://src/stations/drink_machine.gd" id="1_drink_machine"]
-[ext_resource type="Texture2D" path="res://assets/textures/soda_machine_panel.png" id="2_soda_tex"]
+[ext_resource type="PackedScene" path="res://src/items/syrup_canister.tscn" id="2_canister_scene"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.8, 1.6, 0.8)
+[sub_resource type="BoxShape3D" id="BoxShape3D_Machine"]
+size = Vector3(1.8, 1.65, 0.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Door"]
+size = Vector3(0.855, 0.72, 0.12)
 
 [sub_resource type="StandardMaterial3D" id="Material_SatinCabinet"]
-albedo_color = Color(0.76, 0.78, 0.8, 1)
-metallic = 0.6
-roughness = 0.35
+albedo_color = Color(0.78, 0.80, 0.82, 1)
+metallic = 0.80
+roughness = 0.28
 
-[sub_resource type="StandardMaterial3D" id="Material_MachineBody"]
-albedo_color = Color(0.2, 0.22, 0.25, 1)
-roughness = 0.5
+[sub_resource type="StandardMaterial3D" id="Material_DarkInterior"]
+albedo_color = Color(0.18, 0.19, 0.22, 1)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Material_InteriorWall"]
+albedo_color = Color(0.24, 0.25, 0.28, 1)
+metallic = 0.4
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="Material_UpperHousing"]
+albedo_color = Color(0.22, 0.24, 0.28, 1)
+metallic = 0.35
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_Header"]
+albedo_color = Color(0.14, 0.15, 0.17, 1)
+metallic = 0.6
+roughness = 0.30
 
 [sub_resource type="StandardMaterial3D" id="Material_DripTray"]
-albedo_color = Color(0.28, 0.3, 0.34, 1)
-metallic = 0.6
-roughness = 0.4
+albedo_color = Color(0.35, 0.37, 0.40, 1)
+metallic = 0.88
+roughness = 0.22
+
+[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
+albedo_color = Color(0.92, 0.94, 0.96, 1)
+metallic = 0.95
+roughness = 0.12
+
+[sub_resource type="StandardMaterial3D" id="Material_Brass"]
+albedo_color = Color(0.85, 0.72, 0.25, 1)
+metallic = 0.90
+roughness = 0.25
 
 [sub_resource type="StandardMaterial3D" id="Material_Nozzle"]
-albedo_color = Color(0.15, 0.15, 0.18, 1)
-roughness = 0.4
-
-[sub_resource type="StandardMaterial3D" id="Material_HeaderTex"]
-albedo_texture = ExtResource("2_soda_tex")
-uv1_scale = Vector3(2, 1, 1)
-emission_enabled = true
-emission_texture = ExtResource("2_soda_tex")
-emission_energy_multiplier = 0.5
+albedo_color = Color(0.15, 0.16, 0.18, 1)
 roughness = 0.35
 
-[sub_resource type="StandardMaterial3D" id="Material_FlavorCola"]
-albedo_color = Color(0.85, 0.14, 0.14, 1)
-emission_enabled = true
-emission = Color(0.75, 0.12, 0.12, 1)
-emission_energy_multiplier = 0.6
-roughness = 0.35
+[sub_resource type="StandardMaterial3D" id="Material_GaugeFrame"]
+albedo_color = Color(0.08, 0.08, 0.10, 1)
+roughness = 0.8
 
-[sub_resource type="StandardMaterial3D" id="Material_FlavorGuarana"]
-albedo_color = Color(0.88, 0.52, 0.12, 1)
-emission_enabled = true
-emission = Color(0.82, 0.45, 0.10, 1)
-emission_energy_multiplier = 0.6
+[sub_resource type="StandardMaterial3D" id="Material_BadgeCola"]
+albedo_color = Color(0.75, 0.12, 0.12, 1)
 roughness = 0.35
+emission_enabled = true
+emission = Color(0.60, 0.10, 0.10, 1)
+emission_energy_multiplier = 0.3
 
-[sub_resource type="StandardMaterial3D" id="Material_FlavorLemon"]
-albedo_color = Color(0.25, 0.78, 0.22, 1)
-emission_enabled = true
-emission = Color(0.20, 0.70, 0.18, 1)
-emission_energy_multiplier = 0.6
+[sub_resource type="StandardMaterial3D" id="Material_BadgeZero"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
 roughness = 0.35
+emission_enabled = true
+emission = Color(0.25, 0.25, 0.30, 1)
+emission_energy_multiplier = 0.25
 
-[sub_resource type="StandardMaterial3D" id="Material_FlavorGrape"]
-albedo_color = Color(0.55, 0.15, 0.75, 1)
-emission_enabled = true
-emission = Color(0.48, 0.12, 0.68, 1)
-emission_energy_multiplier = 0.6
+[sub_resource type="StandardMaterial3D" id="Material_BadgeSoda"]
+albedo_color = Color(0.14, 0.60, 0.20, 1)
 roughness = 0.35
+emission_enabled = true
+emission = Color(0.12, 0.50, 0.15, 1)
+emission_energy_multiplier = 0.3
 
-[sub_resource type="StandardMaterial3D" id="Material_FlavorZero"]
-albedo_color = Color(0.12, 0.12, 0.15, 1)
-emission_enabled = true
-emission = Color(0.65, 0.65, 0.7, 1)
-emission_energy_multiplier = 0.4
+[sub_resource type="StandardMaterial3D" id="Material_BadgeCitrus"]
+albedo_color = Color(0.88, 0.45, 0.08, 1)
 roughness = 0.35
+emission_enabled = true
+emission = Color(0.75, 0.38, 0.06, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_LED_On"]
+albedo_color = Color(0.2, 0.95, 0.3, 1)
+emission_enabled = true
+emission = Color(0.2, 0.95, 0.3, 1)
+emission_energy_multiplier = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Material_PowerLED_Green"]
+albedo_color = Color(0.2, 0.95, 0.3, 1)
+emission_enabled = true
+emission = Color(0.2, 0.95, 0.3, 1)
+emission_energy_multiplier = 1.3
 
 [sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
-albedo_color = Color(0.18, 0.18, 0.2, 1)
+albedo_color = Color(0.15, 0.15, 0.18, 1)
 roughness = 0.7
 
-[sub_resource type="StandardMaterial3D" id="Material_ChromeLever"]
-albedo_color = Color(0.88, 0.88, 0.9, 1)
-metallic = 0.85
-roughness = 0.2
+[sub_resource type="StandardMaterial3D" id="Material_CupCradle"]
+albedo_color = Color(0.18, 0.20, 0.24, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_StreamCola"]
+albedo_color = Color(0.12, 0.05, 0.03, 0.98)
+roughness = 0.08
+metallic_specular = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_StreamZero"]
+albedo_color = Color(0.06, 0.06, 0.08, 0.98)
+roughness = 0.08
+metallic_specular = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_StreamSoda"]
+albedo_color = Color(0.75, 0.95, 0.65, 0.9)
+roughness = 0.08
+metallic_specular = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_StreamCitrus"]
+albedo_color = Color(0.95, 0.55, 0.08, 0.98)
+roughness = 0.08
+metallic_specular = 0.85
 
 [sub_resource type="BoxMesh" id="BoxMesh_ToeKick"]
 material = SubResource("Material_ToeKick")
-size = Vector3(1.78, 0.1, 0.76)
+size = Vector3(1.78, 0.08, 0.76)
 
-[sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
+[sub_resource type="BoxMesh" id="BoxMesh_SideWall"]
 material = SubResource("Material_SatinCabinet")
-size = Vector3(1.8, 0.78, 0.8)
+size = Vector3(0.04, 0.74, 0.76)
 
-[sub_resource type="BoxMesh" id="BoxMesh_UpperDispenser"]
-material = SubResource("Material_MachineBody")
-size = Vector3(1.76, 0.68, 0.54)
+[sub_resource type="BoxMesh" id="BoxMesh_BackWall"]
+material = SubResource("Material_InteriorWall")
+size = Vector3(1.72, 0.74, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CabinetFloor"]
+material = SubResource("Material_DarkInterior")
+size = Vector3(1.72, 0.02, 0.74)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CabinetCeiling"]
+material = SubResource("Material_DarkInterior")
+size = Vector3(1.72, 0.02, 0.74)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CenterDivider"]
+material = SubResource("Material_InteriorWall")
+size = Vector3(0.03, 0.74, 0.72)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Manifold"]
+material = SubResource("Material_Chrome")
+size = Vector3(1.64, 0.03, 0.03)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Coupler"]
+material = SubResource("Material_Brass")
+top_radius = 0.016
+bottom_radius = 0.02
+height = 0.04
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CanisterCradle"]
+material = SubResource("Material_CupCradle")
+top_radius = 0.13
+bottom_radius = 0.13
+height = 0.015
+radial_segments = 18
+
+[sub_resource type="BoxMesh" id="BoxMesh_UpperHousing"]
+material = SubResource("Material_UpperHousing")
+size = Vector3(1.76, 0.74, 0.54)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Header"]
-material = SubResource("Material_HeaderTex")
-size = Vector3(1.74, 0.24, 0.04)
+material = SubResource("Material_Header")
+size = Vector3(1.74, 0.16, 0.04)
 
 [sub_resource type="BoxMesh" id="BoxMesh_DripTray"]
 material = SubResource("Material_DripTray")
-size = Vector3(1.72, 0.06, 0.32)
+size = Vector3(1.72, 0.06, 0.34)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupCradle"]
+material = SubResource("Material_CupCradle")
+top_radius = 0.078
+bottom_radius = 0.078
+height = 0.006
+radial_segments = 20
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Nozzle"]
 material = SubResource("Material_Nozzle")
-top_radius = 0.025
-bottom_radius = 0.018
-height = 0.08
+top_radius = 0.026
+bottom_radius = 0.016
+height = 0.09
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_LeverArm"]
+material = SubResource("Material_Chrome")
+size = Vector3(0.024, 0.14, 0.016)
+
+[sub_resource type="SphereMesh" id="SphereMesh_LeverKnob"]
+material = SubResource("Material_Nozzle")
+radius = 0.022
+height = 0.044
+
+[sub_resource type="BoxMesh" id="BoxMesh_BadgeCompact"]
+size = Vector3(0.12, 0.042, 0.010)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GaugeFrame"]
+material = SubResource("Material_GaugeFrame")
+size = Vector3(0.13, 0.020, 0.010)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LevelBar"]
+size = Vector3(0.12, 0.016, 0.012)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Stream"]
+top_radius = 0.014
+bottom_radius = 0.014
+height = 0.20
+radial_segments = 14
+
+[sub_resource type="BoxMesh" id="BoxMesh_DoorHalf"]
+material = SubResource("Material_SatinCabinet")
+size = Vector3(0.855, 0.72, 0.025)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_DoorHandle"]
+material = SubResource("Material_Chrome")
+top_radius = 0.012
+bottom_radius = 0.012
+height = 0.28
 radial_segments = 12
 
-[sub_resource type="BoxMesh" id="BoxMesh_PushLever"]
-material = SubResource("Material_ChromeLever")
-size = Vector3(0.04, 0.12, 0.015)
+[sub_resource type="BoxMesh" id="BoxMesh_SwitchBezel"]
+material = SubResource("Material_GaugeFrame")
+size = Vector3(0.08, 0.08, 0.02)
 
-[sub_resource type="BoxMesh" id="BoxMesh_BadgeCola"]
-material = SubResource("Material_FlavorCola")
-size = Vector3(0.18, 0.12, 0.02)
-
-[sub_resource type="BoxMesh" id="BoxMesh_BadgeGuarana"]
-material = SubResource("Material_FlavorGuarana")
-size = Vector3(0.18, 0.12, 0.02)
-
-[sub_resource type="BoxMesh" id="BoxMesh_BadgeLemon"]
-material = SubResource("Material_FlavorLemon")
-size = Vector3(0.18, 0.12, 0.02)
-
-[sub_resource type="BoxMesh" id="BoxMesh_BadgeGrape"]
-material = SubResource("Material_FlavorGrape")
-size = Vector3(0.18, 0.12, 0.02)
-
-[sub_resource type="BoxMesh" id="BoxMesh_BadgeZero"]
-material = SubResource("Material_FlavorZero")
-size = Vector3(0.18, 0.12, 0.02)
+[sub_resource type="CylinderMesh" id="CylinderMesh_PowerLED"]
+material = SubResource("Material_PowerLED_Green")
+top_radius = 0.024
+bottom_radius = 0.024
+height = 0.020
+radial_segments = 16
 
 [node name="DrinkMachine" type="StaticBody3D"]
 script = ExtResource("1_drink_machine")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
-shape = SubResource("BoxShape3D_1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82, 0)
+shape = SubResource("BoxShape3D_Machine")
 
 [node name="Model" type="Node3D" parent="."]
 
 [node name="ToeKick" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0)
 mesh = SubResource("BoxMesh_ToeKick")
 
-[node name="BaseCabinet" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49, 0)
-mesh = SubResource("BoxMesh_Cabinet")
+; ================================================================
+; COMPARTIMENTO TÉCNICO INTERNO REAL (PAREDES, PISO, TETO E DIVISÓRIA)
+; ================================================================
+[node name="Interior" type="Node3D" parent="Model"]
 
+[node name="Floor" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
+mesh = SubResource("BoxMesh_CabinetFloor")
+
+[node name="Ceiling" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.83, 0)
+mesh = SubResource("BoxMesh_CabinetCeiling")
+
+[node name="BackWall" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46, -0.37)
+mesh = SubResource("BoxMesh_BackWall")
+
+[node name="LeftWall" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88, 0.46, 0)
+mesh = SubResource("BoxMesh_SideWall")
+
+[node name="RightWall" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.88, 0.46, 0)
+mesh = SubResource("BoxMesh_SideWall")
+
+[node name="CenterDivider" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46, 0)
+mesh = SubResource("BoxMesh_CenterDivider")
+
+[node name="Manifold" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.76, -0.22)
+mesh = SubResource("BoxMesh_Manifold")
+
+; Berços/Encaixes de suporte dos 4 barris
+[node name="CanisterCradle_0" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.10, 0)
+mesh = SubResource("CylinderMesh_CanisterCradle")
+
+[node name="Coupler_0" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.74, -0.22)
+mesh = SubResource("CylinderMesh_Coupler")
+
+[node name="CanisterCradle_1" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.10, 0)
+mesh = SubResource("CylinderMesh_CanisterCradle")
+
+[node name="Coupler_1" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.74, -0.22)
+mesh = SubResource("CylinderMesh_Coupler")
+
+[node name="CanisterCradle_2" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.10, 0)
+mesh = SubResource("CylinderMesh_CanisterCradle")
+
+[node name="Coupler_2" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.74, -0.22)
+mesh = SubResource("CylinderMesh_Coupler")
+
+[node name="CanisterCradle_3" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.10, 0)
+mesh = SubResource("CylinderMesh_CanisterCradle")
+
+[node name="Coupler_3" type="MeshInstance3D" parent="Model/Interior"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.74, -0.22)
+mesh = SubResource("CylinderMesh_Coupler")
+
+; ================================================================
+; ESTRUTURA SUPERIOR E BANDEJA DE PINGOS
+; ================================================================
 [node name="UpperHousing" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.22, -0.12)
-mesh = SubResource("BoxMesh_UpperDispenser")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, -0.12)
+mesh = SubResource("BoxMesh_UpperHousing")
 
 [node name="HeaderPanel" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.44, 0.16)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.54, 0.16)
 mesh = SubResource("BoxMesh_Header")
 
+[node name="PowerSwitch" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70, 1.54, 0.17)
+
+[node name="SwitchBezel" type="MeshInstance3D" parent="Model/PowerSwitch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
+mesh = SubResource("BoxMesh_SwitchBezel")
+
+[node name="StatusLED" type="MeshInstance3D" parent="Model/PowerSwitch"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.015)
+mesh = SubResource("CylinderMesh_PowerLED")
+
+[node name="PowerLabel" type="Label3D" parent="Model/PowerSwitch"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.055, 0.012)
+text = "POWER"
+font_size = 11
+outline_size = 2
+outline_modulate = Color(0, 0, 0, 1)
+
 [node name="DripTray" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, 0.22)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0.18)
 mesh = SubResource("BoxMesh_DripTray")
 
-[node name="Nozzle1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.56, 1.15, 0.12)
+; Áreas demarcadas de apoio/encaixe dos 4 copos
+[node name="CupCradle_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.912, 0.18)
+mesh = SubResource("CylinderMesh_CupCradle")
+
+[node name="CupCradle_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.912, 0.18)
+mesh = SubResource("CylinderMesh_CupCradle")
+
+[node name="CupCradle_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.912, 0.18)
+mesh = SubResource("CylinderMesh_CupCradle")
+
+[node name="CupCradle_3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.912, 0.18)
+mesh = SubResource("CylinderMesh_CupCradle")
+
+; ================================================================
+; ESTAÇÃO 1: COLA (Posição X = -0.48, Z = 0.18)
+; ================================================================
+[node name="Badge_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.40, 0.16)
+material_override = SubResource("Material_BadgeCola")
+mesh = SubResource("BoxMesh_BadgeCompact")
+
+[node name="Label_0" type="Label3D" parent="Model/Badge_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.008)
+text = "COLA"
+font_size = 14
+outline_size = 2
+outline_modulate = Color(0, 0, 0, 1)
+
+[node name="GaugeFrame_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.33, 0.155)
+mesh = SubResource("BoxMesh_GaugeFrame")
+
+[node name="LevelMeter_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.33, 0.16)
+material_override = SubResource("Material_LED_On")
+mesh = SubResource("BoxMesh_LevelBar")
+
+[node name="Nozzle_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.18, 0.18)
 mesh = SubResource("CylinderMesh_Nozzle")
 
-[node name="Lever1" type="MeshInstance3D" parent="Model/Nozzle1"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.04, -0.04)
-mesh = SubResource("BoxMesh_PushLever")
+[node name="LeverPivot_0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.20, 0.18)
 
-[node name="Badge1" type="MeshInstance3D" parent="Model/Nozzle1"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.04)
-mesh = SubResource("BoxMesh_BadgeCola")
+[node name="LeverArm_0" type="MeshInstance3D" parent="Model/LeverPivot_0"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.06, -0.02)
+mesh = SubResource("BoxMesh_LeverArm")
 
-[node name="Nozzle2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.15, 0.12)
+[node name="LeverKnob_0" type="MeshInstance3D" parent="Model/LeverPivot_0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0.015)
+mesh = SubResource("SphereMesh_LeverKnob")
+
+[node name="Stream_0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 1.04, 0.18)
+material_override = SubResource("Material_StreamCola")
+visible = false
+mesh = SubResource("CylinderMesh_Stream")
+
+; ================================================================
+; ESTAÇÃO 2: ZERO (Posição X = -0.16, Z = 0.18)
+; ================================================================
+[node name="Badge_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.40, 0.16)
+material_override = SubResource("Material_BadgeZero")
+mesh = SubResource("BoxMesh_BadgeCompact")
+
+[node name="Label_1" type="Label3D" parent="Model/Badge_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.008)
+text = "ZERO"
+font_size = 14
+outline_size = 2
+outline_modulate = Color(0, 0, 0, 1)
+
+[node name="GaugeFrame_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.33, 0.155)
+mesh = SubResource("BoxMesh_GaugeFrame")
+
+[node name="LevelMeter_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.33, 0.16)
+material_override = SubResource("Material_LED_On")
+mesh = SubResource("BoxMesh_LevelBar")
+
+[node name="Nozzle_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.18, 0.18)
 mesh = SubResource("CylinderMesh_Nozzle")
 
-[node name="Lever2" type="MeshInstance3D" parent="Model/Nozzle2"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.04, -0.04)
-mesh = SubResource("BoxMesh_PushLever")
+[node name="LeverPivot_1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.20, 0.18)
 
-[node name="Badge2" type="MeshInstance3D" parent="Model/Nozzle2"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.04)
-mesh = SubResource("BoxMesh_BadgeGuarana")
+[node name="LeverArm_1" type="MeshInstance3D" parent="Model/LeverPivot_1"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.06, -0.02)
+mesh = SubResource("BoxMesh_LeverArm")
 
-[node name="Nozzle3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0.12)
+[node name="LeverKnob_1" type="MeshInstance3D" parent="Model/LeverPivot_1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0.015)
+mesh = SubResource("SphereMesh_LeverKnob")
+
+[node name="Stream_1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 1.04, 0.18)
+material_override = SubResource("Material_StreamZero")
+visible = false
+mesh = SubResource("CylinderMesh_Stream")
+
+; ================================================================
+; ESTAÇÃO 3: SODA (Posição X = 0.16, Z = 0.18)
+; ================================================================
+[node name="Badge_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.40, 0.16)
+material_override = SubResource("Material_BadgeSoda")
+mesh = SubResource("BoxMesh_BadgeCompact")
+
+[node name="Label_2" type="Label3D" parent="Model/Badge_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.008)
+text = "SODA"
+font_size = 14
+outline_size = 2
+outline_modulate = Color(0, 0, 0, 1)
+
+[node name="GaugeFrame_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.33, 0.155)
+mesh = SubResource("BoxMesh_GaugeFrame")
+
+[node name="LevelMeter_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.33, 0.16)
+material_override = SubResource("Material_LED_On")
+mesh = SubResource("BoxMesh_LevelBar")
+
+[node name="Nozzle_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.18, 0.18)
 mesh = SubResource("CylinderMesh_Nozzle")
 
-[node name="Lever3" type="MeshInstance3D" parent="Model/Nozzle3"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.04, -0.04)
-mesh = SubResource("BoxMesh_PushLever")
+[node name="LeverPivot_2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.20, 0.18)
 
-[node name="Badge3" type="MeshInstance3D" parent="Model/Nozzle3"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.04)
-mesh = SubResource("BoxMesh_BadgeLemon")
+[node name="LeverArm_2" type="MeshInstance3D" parent="Model/LeverPivot_2"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.06, -0.02)
+mesh = SubResource("BoxMesh_LeverArm")
 
-[node name="Nozzle4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 1.15, 0.12)
+[node name="LeverKnob_2" type="MeshInstance3D" parent="Model/LeverPivot_2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0.015)
+mesh = SubResource("SphereMesh_LeverKnob")
+
+[node name="Stream_2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 1.04, 0.18)
+material_override = SubResource("Material_StreamSoda")
+visible = false
+mesh = SubResource("CylinderMesh_Stream")
+
+; ================================================================
+; ESTAÇÃO 4: CITRUS (Posição X = 0.48, Z = 0.18)
+; ================================================================
+[node name="Badge_3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.40, 0.16)
+material_override = SubResource("Material_BadgeCitrus")
+mesh = SubResource("BoxMesh_BadgeCompact")
+
+[node name="Label_3" type="Label3D" parent="Model/Badge_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.008)
+text = "CITRUS"
+font_size = 14
+outline_size = 2
+outline_modulate = Color(0, 0, 0, 1)
+
+[node name="GaugeFrame_3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.33, 0.155)
+mesh = SubResource("BoxMesh_GaugeFrame")
+
+[node name="LevelMeter_3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.33, 0.16)
+material_override = SubResource("Material_LED_On")
+mesh = SubResource("BoxMesh_LevelBar")
+
+[node name="Nozzle_3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.18, 0.18)
 mesh = SubResource("CylinderMesh_Nozzle")
 
-[node name="Lever4" type="MeshInstance3D" parent="Model/Nozzle4"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.04, -0.04)
-mesh = SubResource("BoxMesh_PushLever")
+[node name="LeverPivot_3" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.20, 0.18)
 
-[node name="Badge4" type="MeshInstance3D" parent="Model/Nozzle4"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.04)
-mesh = SubResource("BoxMesh_BadgeGrape")
+[node name="LeverArm_3" type="MeshInstance3D" parent="Model/LeverPivot_3"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.06, -0.02)
+mesh = SubResource("BoxMesh_LeverArm")
 
-[node name="Nozzle5" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.56, 1.15, 0.12)
-mesh = SubResource("CylinderMesh_Nozzle")
+[node name="LeverKnob_3" type="MeshInstance3D" parent="Model/LeverPivot_3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 0.015)
+mesh = SubResource("SphereMesh_LeverKnob")
 
-[node name="Lever5" type="MeshInstance3D" parent="Model/Nozzle5"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, -0.04, -0.04)
-mesh = SubResource("BoxMesh_PushLever")
+[node name="Stream_3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 1.04, 0.18)
+material_override = SubResource("Material_StreamCitrus")
+visible = false
+mesh = SubResource("CylinderMesh_Stream")
 
-[node name="Badge5" type="MeshInstance3D" parent="Model/Nozzle5"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.04)
-mesh = SubResource("BoxMesh_BadgeZero")
+; ================================================================
+; COMPARTIMENTO INFERIOR COM DUAS PORTAS ARTICULADAS INDEPENDENTES
+; ================================================================
+[node name="LeftDoorHinge" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.86, 0.46, 0.38)
 
+[node name="DoorLeft" type="MeshInstance3D" parent="Model/LeftDoorHinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.428, 0, 0)
+mesh = SubResource("BoxMesh_DoorHalf")
+
+[node name="HandleLeft" type="MeshInstance3D" parent="Model/LeftDoorHinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.78, 0, 0.035)
+mesh = SubResource("CylinderMesh_DoorHandle")
+
+[node name="LeftDoorCollider" type="StaticBody3D" parent="Model/LeftDoorHinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.428, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Model/LeftDoorHinge/LeftDoorCollider"]
+shape = SubResource("BoxShape3D_Door")
+
+[node name="RightDoorHinge" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.86, 0.46, 0.38)
+
+[node name="DoorRight" type="MeshInstance3D" parent="Model/RightDoorHinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.428, 0, 0)
+mesh = SubResource("BoxMesh_DoorHalf")
+
+[node name="HandleRight" type="MeshInstance3D" parent="Model/RightDoorHinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 0, 0.035)
+mesh = SubResource("CylinderMesh_DoorHandle")
+
+[node name="RightDoorCollider" type="StaticBody3D" parent="Model/RightDoorHinge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.428, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Model/RightDoorHinge/RightDoorCollider"]
+shape = SubResource("BoxShape3D_Door")
+
+; 4 SLOTS INTERNOS PARA RECIPIENTES DE XAROPE
+[node name="CanisterSlot_0" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.11, 0.0)
+
+[node name="Canister_0" parent="CanisterSlot_0" instance=ExtResource("2_canister_scene")]
+flavor_type = "soda_cola"
+
+[node name="CanisterSlot_1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.11, 0.0)
+
+[node name="Canister_1" parent="CanisterSlot_1" instance=ExtResource("2_canister_scene")]
+flavor_type = "soda_cola_zero"
+
+[node name="CanisterSlot_2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.11, 0.0)
+
+[node name="Canister_2" parent="CanisterSlot_2" instance=ExtResource("2_canister_scene")]
+flavor_type = "soda_lime"
+
+[node name="CanisterSlot_3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.11, 0.0)
+
+[node name="Canister_3" parent="CanisterSlot_3" instance=ExtResource("2_canister_scene")]
+flavor_type = "soda_citrus"
+
+; 4 SLOTS EXTERNOS PARA COPOS NA BANDEJA DE PINGOS (ALINHADOS COM OS BICOS EM Z = 0.18)
+[node name="CupSlot_0" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.912, 0.18)
+
+[node name="CupSlot_1" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0.912, 0.18)
+
+[node name="CupSlot_2" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0.912, 0.18)
+
+[node name="CupSlot_3" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.912, 0.18)
+
+; Compatibilidade legada para referências a cup_slot
 [node name="CupSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.14)
-
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.70, 0)
-billboard = 1
-double_sided = false
-text = "🥤 MÁQUINA DE REFRIGERANTES (5 SABORES)"
-font_size = 20
-outline_size = 6
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.912, 0.18)

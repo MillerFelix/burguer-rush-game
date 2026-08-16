@@ -1,0 +1,370 @@
+[gd_scene format=3 uid="uid://bacon_egg_station_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/bacon_egg_station.gd" id="1_bacon_egg_station_script"]
+[ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]
+[ext_resource type="Texture2D" path="res://assets/textures/cardboard_kraft.png" id="3_cardboard_tex"]
+
+; ================================================================
+; COLISÃO
+; ================================================================
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Table"]
+size = Vector3(1.36, 0.85, 0.68)
+
+; ================================================================
+; MATERIAIS
+; ================================================================
+
+; Madeira do tampo e prateleira
+[sub_resource type="StandardMaterial3D" id="Material_WoodTable"]
+albedo_color = Color(0.78, 0.60, 0.42, 1)
+albedo_texture = ExtResource("2_wood_tex")
+uv1_scale = Vector3(2, 2, 1)
+roughness = 0.75
+
+; Madeira escura das pernas
+[sub_resource type="StandardMaterial3D" id="Material_WoodLegs"]
+albedo_color = Color(0.45, 0.32, 0.20, 1)
+roughness = 0.80
+
+; Papelão Kraft / Esteira
+[sub_resource type="StandardMaterial3D" id="Material_CardboardKraft"]
+albedo_color = Color(0.88, 0.76, 0.60, 1)
+albedo_texture = ExtResource("3_cardboard_tex")
+uv1_scale = Vector3(2, 2, 1)
+roughness = 0.85
+
+; Placa de identificação frontal
+[sub_resource type="StandardMaterial3D" id="Material_BadgeCream"]
+albedo_color = Color(0.96, 0.94, 0.88, 1)
+roughness = 0.35
+
+; Materiais da Embalagem de Bacon
+[sub_resource type="StandardMaterial3D" id="Material_BaconPackTray"]
+albedo_color = Color(0.20, 0.22, 0.25, 1.0)
+roughness = 0.60
+
+[sub_resource type="StandardMaterial3D" id="Material_BaconPackPlastic"]
+albedo_color = Color(0.92, 0.95, 0.98, 0.88)
+roughness = 0.15
+metallic = 0.05
+clearcoat_enabled = true
+clearcoat = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_BaconMeat"]
+albedo_color = Color(0.82, 0.22, 0.24, 1.0)
+roughness = 0.45
+rim_enabled = true
+rim = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_BaconFat"]
+albedo_color = Color(0.96, 0.92, 0.86, 1.0)
+roughness = 0.35
+
+; Materiais do Cesto e Ovos
+[sub_resource type="StandardMaterial3D" id="Material_BasketWicker"]
+albedo_color = Color(0.65, 0.48, 0.30, 1.0)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_EggShell"]
+albedo_color = Color(0.96, 0.88, 0.78, 1.0)
+roughness = 0.38
+rim_enabled = true
+rim = 0.15
+
+; ================================================================
+; MESHES DA BANCADA
+; ================================================================
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
+material = SubResource("Material_WoodTable")
+size = Vector3(1.36, 0.05, 0.68)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableLeg"]
+material = SubResource("Material_WoodLegs")
+size = Vector3(0.06, 0.77, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_LowerShelf"]
+material = SubResource("Material_WoodTable")
+size = Vector3(1.22, 0.03, 0.54)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableFrontBadge"]
+material = SubResource("Material_BadgeCream")
+size = Vector3(0.48, 0.10, 0.008)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SlotBadge"]
+material = SubResource("Material_BadgeCream")
+size = Vector3(0.22, 0.06, 0.008)
+
+; Meshes do Bacon Armazenado
+[sub_resource type="BoxMesh" id="BoxMesh_PackTray"]
+material = SubResource("Material_BaconPackTray")
+size = Vector3(0.26, 0.022, 0.16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_PackFilm"]
+material = SubResource("Material_BaconPackPlastic")
+size = Vector3(0.264, 0.026, 0.164)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BaconSlice"]
+material = SubResource("Material_BaconMeat")
+size = Vector3(0.22, 0.006, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BaconFatStripe"]
+material = SubResource("Material_BaconFat")
+size = Vector3(0.22, 0.007, 0.015)
+
+; Meshes do Cesto de Ovos
+[sub_resource type="BoxMesh" id="BoxMesh_BasketBottom"]
+material = SubResource("Material_BasketWicker")
+size = Vector3(0.38, 0.02, 0.38)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BasketWallX"]
+material = SubResource("Material_BasketWicker")
+size = Vector3(0.38, 0.09, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BasketWallZ"]
+material = SubResource("Material_BasketWicker")
+size = Vector3(0.02, 0.09, 0.38)
+
+[sub_resource type="SphereMesh" id="SphereMesh_IndividualEgg"]
+material = SubResource("Material_EggShell")
+radius = 0.038
+height = 0.090
+radial_segments = 16
+rings = 10
+
+; ================================================================
+; CENA PRINCIPAL
+; ================================================================
+
+[node name="BaconEggStation" type="StaticBody3D"]
+script = ExtResource("1_bacon_egg_station_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.425, 0)
+shape = SubResource("BoxShape3D_Table")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="TableTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.795, 0)
+mesh = SubResource("BoxMesh_TableTop")
+
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 0.385, -0.28)
+mesh = SubResource("BoxMesh_TableLeg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.385, -0.28)
+mesh = SubResource("BoxMesh_TableLeg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.62, 0.385, 0.28)
+mesh = SubResource("BoxMesh_TableLeg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.62, 0.385, 0.28)
+mesh = SubResource("BoxMesh_TableLeg")
+
+[node name="LowerShelf" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.20, 0)
+mesh = SubResource("BoxMesh_LowerShelf")
+
+[node name="TableFrontBadge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0.342)
+mesh = SubResource("BoxMesh_TableFrontBadge")
+
+[node name="TableFrontLabel" type="Label3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.74, 0.348)
+double_sided = false
+text = "🥓 BACON & OVOS 🥚"
+font_size = 20
+modulate = Color(0.18, 0.18, 0.2, 1)
+
+; ================================================================
+; LADO ESQUERDO: ÁREA DE BACON (PACOTES EMPILHADOS)
+; ================================================================
+
+[node name="BaconArea" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.82, 0)
+
+[node name="Packs" type="Node3D" parent="Model/BaconArea"]
+
+; Pacote 1 (Base esquerda)
+[node name="Pack1" type="Node3D" parent="Model/BaconArea/Packs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.011, -0.06)
+
+[node name="Tray" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack1"]
+mesh = SubResource("BoxMesh_PackTray")
+
+[node name="Slice1" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.04)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Fat1" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack1/Slice1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.001, 0.012)
+mesh = SubResource("BoxMesh_BaconFatStripe")
+
+[node name="Slice2" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.01)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Fat2" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack1/Slice2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.001, -0.01)
+mesh = SubResource("BoxMesh_BaconFatStripe")
+
+[node name="Slice3" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.05)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Film" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_PackFilm")
+
+; Pacote 2 (Base direita/frente)
+[node name="Pack2" type="Node3D" parent="Model/BaconArea/Packs"]
+transform = Transform3D(0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 0.02, 0.011, 0.10)
+
+[node name="Tray" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack2"]
+mesh = SubResource("BoxMesh_PackTray")
+
+[node name="Slice1" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.04)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Fat1" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack2/Slice1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.001, 0.012)
+mesh = SubResource("BoxMesh_BaconFatStripe")
+
+[node name="Slice2" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.01)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Slice3" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.05)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Film" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_PackFilm")
+
+; Pacote 3 (Empilhado em cima)
+[node name="Pack3" type="Node3D" parent="Model/BaconArea/Packs"]
+transform = Transform3D(0.984808, 0, -0.173648, 0, 1, 0, 0.173648, 0, 0.984808, -0.01, 0.035, -0.04)
+
+[node name="Tray" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack3"]
+mesh = SubResource("BoxMesh_PackTray")
+
+[node name="Slice1" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.04)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Slice2" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.01)
+mesh = SubResource("BoxMesh_BaconSlice")
+
+[node name="Film" type="MeshInstance3D" parent="Model/BaconArea/Packs/Pack3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_PackFilm")
+
+; Placa e Label do Bacon
+[node name="Badge" type="MeshInstance3D" parent="Model/BaconArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0.28)
+mesh = SubResource("BoxMesh_SlotBadge")
+
+[node name="Label" type="Label3D" parent="Model/BaconArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0.286)
+double_sided = false
+text = "🥓 BACON\nx15"
+font_size = 18
+modulate = Color(0.18, 0.18, 0.2, 1)
+
+; ================================================================
+; LADO DIREITO: ÁREA DE OVOS (CESTO COM OVOS INDIVIDUAIS)
+; ================================================================
+
+[node name="EggArea" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.82, 0)
+
+[node name="Basket" type="Node3D" parent="Model/EggArea"]
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/EggArea/Basket"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_BasketBottom")
+
+[node name="WallFront" type="MeshInstance3D" parent="Model/EggArea/Basket"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0.18)
+mesh = SubResource("BoxMesh_BasketWallX")
+
+[node name="WallBack" type="MeshInstance3D" parent="Model/EggArea/Basket"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, -0.18)
+mesh = SubResource("BoxMesh_BasketWallX")
+
+[node name="WallLeft" type="MeshInstance3D" parent="Model/EggArea/Basket"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.045, 0)
+mesh = SubResource("BoxMesh_BasketWallZ")
+
+[node name="WallRight" type="MeshInstance3D" parent="Model/EggArea/Basket"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.045, 0)
+mesh = SubResource("BoxMesh_BasketWallZ")
+
+[node name="Eggs" type="Node3D" parent="Model/EggArea"]
+
+; Ovos individuais organizados
+[node name="Egg1" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, -0.10, 0.045, -0.10)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+[node name="Egg2" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, 0.0, 0.045, -0.10)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+[node name="Egg3" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, 0.10, 0.045, -0.10)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+[node name="Egg4" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, -0.10, 0.045, 0.0)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+[node name="Egg5" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, 0.0, 0.045, 0.0)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+[node name="Egg6" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, 0.10, 0.045, 0.0)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+[node name="Egg7" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, -0.05, 0.045, 0.10)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+[node name="Egg8" type="MeshInstance3D" parent="Model/EggArea/Eggs"]
+transform = Transform3D(0.95, 0, 0, 0, 1.15, 0, 0, 0, 0.95, 0.05, 0.045, 0.10)
+mesh = SubResource("SphereMesh_IndividualEgg")
+
+; Placa e Label dos Ovos
+[node name="Badge" type="MeshInstance3D" parent="Model/EggArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0.28)
+mesh = SubResource("BoxMesh_SlotBadge")
+
+[node name="Label" type="Label3D" parent="Model/EggArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.04, 0.286)
+double_sided = false
+text = "🥚 OVOS\nx15"
+font_size = 18
+modulate = Color(0.18, 0.18, 0.2, 1)
+
+; ================================================================
+; STATUS GERAL FLUTUANTE
+; ================================================================
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+billboard = 1
+double_sided = false
+text = "🥓 BANCADA DE BACON & OVOS 🥚"
+font_size = 20
+outline_size = 6
+modulate = Color(0.98, 0.92, 0.82, 1)
+outline_modulate = Color(0.15, 0.15, 0.15, 1)

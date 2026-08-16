@@ -1,74 +1,125 @@
 [gd_scene format=3 uid="uid://fryer_scene_uid"]
 
 [ext_resource type="Script" path="res://src/stations/fryer.gd" id="1_fryer"]
+[ext_resource type="Texture2D" path="res://assets/textures/wire_mesh_grid.png" id="2_wire_mesh"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.8, 1.05, 0.8)
+[sub_resource type="BoxShape3D" id="BoxShape3D_Main"]
+size = Vector3(1.85, 1.05, 0.85)
 
 [sub_resource type="StandardMaterial3D" id="Material_SatinCabinet"]
-albedo_color = Color(0.76, 0.78, 0.8, 1)
-metallic = 0.5
-roughness = 0.42
-
-[sub_resource type="StandardMaterial3D" id="Material_HotOil"]
-albedo_color = Color(0.85, 0.65, 0.15, 0.85)
-metallic = 0.3
-roughness = 0.15
-emission_enabled = true
-emission = Color(0.9, 0.65, 0.1, 1)
-emission_energy_multiplier = 0.3
-
-[sub_resource type="StandardMaterial3D" id="Material_WireBasket"]
-albedo_color = Color(0.85, 0.85, 0.88, 1)
-metallic = 0.8
-roughness = 0.35
-
-[sub_resource type="StandardMaterial3D" id="Material_HandleRed"]
-albedo_color = Color(0.85, 0.15, 0.15, 1)
-roughness = 0.5
-
-[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
-albedo_color = Color(0.18, 0.18, 0.2, 1)
-roughness = 0.7
+albedo_color = Color(0.72, 0.74, 0.77, 1)
+metallic = 0.88
+roughness = 0.32
 
 [sub_resource type="StandardMaterial3D" id="Material_ChromeAccent"]
-albedo_color = Color(0.88, 0.88, 0.9, 1)
-metallic = 0.7
+albedo_color = Color(0.92, 0.92, 0.95, 1)
+metallic = 0.96
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_VatSteel"]
+albedo_color = Color(0.65, 0.67, 0.70, 1)
+metallic = 0.92
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_GoldenOilLiquid"]
+transparency = 1
+albedo_color = Color(0.96, 0.78, 0.18, 0.78)
+metallic = 0.08
+roughness = 0.04
+emission_enabled = true
+emission = Color(0.96, 0.70, 0.12, 1)
+emission_energy_multiplier = 0.38
+refraction_enabled = true
+refraction_scale = 0.015
+
+[sub_resource type="StandardMaterial3D" id="Material_WireMeshOpen"]
+transparency = 1
+cull_mode = 0
+albedo_color = Color(0.9, 0.92, 0.95, 1)
+albedo_texture = ExtResource("2_wire_mesh")
+metallic = 0.9
+roughness = 0.25
+uv1_scale = Vector3(6, 4, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_BasketFrame"]
+albedo_color = Color(0.88, 0.9, 0.93, 1)
+metallic = 0.95
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_HandleGripRed"]
+albedo_color = Color(0.85, 0.12, 0.12, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_LeverArm"]
+albedo_color = Color(0.9, 0.9, 0.92, 1)
+metallic = 0.95
+roughness = 0.2
+
+[sub_resource type="StandardMaterial3D" id="Material_FriesFrozen"]
+albedo_color = Color(0.96, 0.93, 0.76, 1)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
+albedo_color = Color(0.14, 0.14, 0.16, 1)
+roughness = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_GlassCover"]
+transparency = 1
+albedo_color = Color(0.92, 0.96, 1.0, 0.22)
+roughness = 0.05
+refraction_enabled = true
+refraction_scale = 0.015
+
+[sub_resource type="StandardMaterial3D" id="Material_ThermoBacking"]
+albedo_color = Color(0.08, 0.09, 0.11, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_ZoneGreen"]
+albedo_color = Color(0.12, 0.9, 0.28, 1)
+emission_enabled = true
+emission = Color(0.12, 0.9, 0.28, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="StandardMaterial3D" id="Material_ThermoFluid"]
+albedo_color = Color(1.0, 0.38, 0.12, 1)
+emission_enabled = true
+emission = Color(1.0, 0.38, 0.12, 1)
+emission_energy_multiplier = 1.0
+
+[sub_resource type="StandardMaterial3D" id="Material_PilotJewel"]
+albedo_color = Color(0.2, 0.2, 0.22, 1)
 roughness = 0.3
 
-[sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
+[sub_resource type="StandardMaterial3D" id="Material_PowerPilot"]
+albedo_color = Color(0.2, 0.2, 0.22, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_KnobPointerRed"]
+albedo_color = Color(0.95, 0.2, 0.2, 1)
+roughness = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_Bubble"]
+transparency = 1
+albedo_color = Color(1.0, 0.95, 0.8, 0.65)
+roughness = 0.1
+
+[sub_resource type="StandardMaterial3D" id="Material_Steam"]
+transparency = 1
+albedo_color = Color(0.95, 0.95, 0.98, 0.25)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_OilDrip"]
+albedo_color = Color(0.95, 0.7, 0.15, 0.9)
+roughness = 0.2
+
+; Malhas estruturais do gabinete
+[sub_resource type="BoxMesh" id="BoxMesh_CabinetBase"]
 material = SubResource("Material_SatinCabinet")
-size = Vector3(1.8, 0.78, 0.8)
+size = Vector3(1.8, 0.44, 0.8)
 
 [sub_resource type="BoxMesh" id="BoxMesh_ToeKick"]
 material = SubResource("Material_ToeKick")
 size = Vector3(1.78, 0.1, 0.76)
-
-[sub_resource type="BoxMesh" id="BoxMesh_OilWell"]
-material = SubResource("Material_HotOil")
-size = Vector3(0.36, 0.04, 0.54)
-
-[sub_resource type="BoxMesh" id="BoxMesh_Basket"]
-material = SubResource("Material_WireBasket")
-size = Vector3(0.32, 0.22, 0.48)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_BasketHandle"]
-material = SubResource("Material_HandleRed")
-top_radius = 0.02
-bottom_radius = 0.02
-height = 0.24
-radial_segments = 12
-
-[sub_resource type="BoxMesh" id="BoxMesh_ControlPanel"]
-material = SubResource("Material_SatinCabinet")
-size = Vector3(1.76, 0.12, 0.02)
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_Knob"]
-material = SubResource("Material_HandleRed")
-top_radius = 0.03
-bottom_radius = 0.035
-height = 0.025
-radial_segments = 14
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Leg"]
 material = SubResource("Material_ChromeAccent")
@@ -77,15 +128,174 @@ bottom_radius = 0.03
 height = 0.12
 radial_segments = 12
 
+; Moldura superior com 4 aberturas
+[sub_resource type="BoxMesh" id="BoxMesh_TopFrontLip"]
+material = SubResource("Material_SatinCabinet")
+size = Vector3(1.82, 0.04, 0.14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopBackLip"]
+material = SubResource("Material_SatinCabinet")
+size = Vector3(1.82, 0.04, 0.14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopSideLip"]
+material = SubResource("Material_SatinCabinet")
+size = Vector3(0.18, 0.04, 0.54)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopDivider"]
+material = SubResource("Material_SatinCabinet")
+size = Vector3(0.06, 0.04, 0.54)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ControlPanel"]
+material = SubResource("Material_SatinCabinet")
+size = Vector3(1.76, 0.13, 0.02)
+
+; Paredes e fundo das 4 cubas vazadas e profundas
+[sub_resource type="BoxMesh" id="BoxMesh_VatBottom"]
+material = SubResource("Material_VatSteel")
+size = Vector3(0.28, 0.02, 0.50)
+
+[sub_resource type="BoxMesh" id="BoxMesh_VatWallSide"]
+material = SubResource("Material_VatSteel")
+size = Vector3(0.015, 0.40, 0.50)
+
+[sub_resource type="BoxMesh" id="BoxMesh_VatWallFront"]
+material = SubResource("Material_VatSteel")
+size = Vector3(0.28, 0.40, 0.015)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DripRestBar"]
+material = SubResource("Material_BasketFrame")
+size = Vector3(0.26, 0.015, 0.03)
+
+; Superfície líquida de óleo visível
+[sub_resource type="BoxMesh" id="BoxMesh_OilPlane"]
+material = SubResource("Material_GoldenOilLiquid")
+size = Vector3(0.265, 0.015, 0.485)
+
+; Cesto Aramado Vazado
+[sub_resource type="BoxMesh" id="BoxMesh_BasketWireWalls"]
+material = SubResource("Material_WireMeshOpen")
+size = Vector3(0.23, 0.14, 0.40)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BasketRimTop"]
+material = SubResource("Material_BasketFrame")
+size = Vector3(0.24, 0.012, 0.41)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_BasketHandleStem"]
+material = SubResource("Material_ChromeAccent")
+top_radius = 0.007
+bottom_radius = 0.007
+height = 0.16
+radial_segments = 10
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_BasketHandleGrip"]
+material = SubResource("Material_HandleGripRed")
+top_radius = 0.015
+bottom_radius = 0.015
+height = 0.14
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_FriesCluster"]
+material = SubResource("Material_FriesFrozen")
+size = Vector3(0.20, 0.05, 0.34)
+
+; Alavanca Mecânica
+[sub_resource type="CylinderMesh" id="CylinderMesh_LeverBase"]
+material = SubResource("Material_ChromeAccent")
+top_radius = 0.024
+bottom_radius = 0.024
+height = 0.014
+radial_segments = 14
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_LeverRod"]
+material = SubResource("Material_LeverArm")
+top_radius = 0.006
+bottom_radius = 0.006
+height = 0.11
+radial_segments = 10
+
+[sub_resource type="SphereMesh" id="SphereMesh_LeverKnob"]
+material = SubResource("Material_HandleGripRed")
+radius = 0.015
+height = 0.03
+radial_segments = 12
+
+; Botão Geral Liga/Desliga
+[sub_resource type="CylinderMesh" id="CylinderMesh_PowerKnobBody"]
+material = SubResource("Material_SatinCabinet")
+top_radius = 0.034
+bottom_radius = 0.036
+height = 0.026
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_KnobPointer"]
+material = SubResource("Material_KnobPointerRed")
+size = Vector3(0.006, 0.028, 0.028)
+
+[sub_resource type="SphereMesh" id="SphereMesh_PowerPilot"]
+material = SubResource("Material_PowerPilot")
+radius = 0.012
+height = 0.024
+radial_segments = 12
+
+; Medidor Horizontal de Temperatura
+[sub_resource type="BoxMesh" id="BoxMesh_ThermoFrame"]
+material = SubResource("Material_ChromeAccent")
+size = Vector3(0.38, 0.052, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ScaleBacking"]
+material = SubResource("Material_ThermoBacking")
+size = Vector3(0.36, 0.040, 0.004)
+
+[sub_resource type="BoxMesh" id="BoxMesh_IdealBand"]
+material = SubResource("Material_ZoneGreen")
+size = Vector3(0.11, 0.015, 0.006)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FluidBarH"]
+material = SubResource("Material_ThermoFluid")
+size = Vector3(0.32, 0.016, 0.008)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GlassH"]
+material = SubResource("Material_GlassCover")
+size = Vector3(0.364, 0.042, 0.004)
+
+[sub_resource type="SphereMesh" id="SphereMesh_Pilot"]
+material = SubResource("Material_PilotJewel")
+radius = 0.015
+height = 0.03
+radial_segments = 14
+
+; Partículas
+[sub_resource type="SphereMesh" id="SphereMesh_Bubble"]
+material = SubResource("Material_Bubble")
+radius = 0.012
+height = 0.024
+radial_segments = 6
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_Steam"]
+material = SubResource("Material_Steam")
+radius = 0.035
+height = 0.07
+radial_segments = 6
+rings = 4
+
+[sub_resource type="SphereMesh" id="SphereMesh_Drip"]
+material = SubResource("Material_OilDrip")
+radius = 0.005
+height = 0.010
+radial_segments = 4
+rings = 2
+
 [node name="Fryer" type="StaticBody3D"]
 script = ExtResource("1_fryer")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-shape = SubResource("BoxShape3D_1")
+shape = SubResource("BoxShape3D_Main")
 
 [node name="Model" type="Node3D" parent="."]
 
+; Base e pés niveladores
 [node name="ToeKick" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("BoxMesh_ToeKick")
@@ -98,85 +308,564 @@ mesh = SubResource("CylinderMesh_Leg")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 0.06, 0.32)
 mesh = SubResource("CylinderMesh_Leg")
 
-[node name="Cabinet" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49, 0)
-mesh = SubResource("BoxMesh_Cabinet")
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82, 0.06, -0.32)
+mesh = SubResource("CylinderMesh_Leg")
 
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 0.06, -0.32)
+mesh = SubResource("CylinderMesh_Leg")
+
+; Gabinete inferior (sem cobrir as cubas superiores)
+[node name="CabinetBase" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("BoxMesh_CabinetBase")
+
+; TAMPO SUPERIOR COM 4 ABERTURAS FÍSICAS REAIS
+[node name="TopFrameFront" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.89, 0.34)
+mesh = SubResource("BoxMesh_TopFrontLip")
+
+[node name="TopFrameBack" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.89, -0.34)
+mesh = SubResource("BoxMesh_TopBackLip")
+
+[node name="TopFrameLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.82, 0.89, 0)
+mesh = SubResource("BoxMesh_TopSideLip")
+
+[node name="TopFrameRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.82, 0.89, 0)
+mesh = SubResource("BoxMesh_TopSideLip")
+
+[node name="Divider1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.36, 0.89, 0)
+mesh = SubResource("BoxMesh_TopDivider")
+
+[node name="Divider2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.89, 0)
+mesh = SubResource("BoxMesh_TopDivider")
+
+[node name="Divider3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0.89, 0)
+mesh = SubResource("BoxMesh_TopDivider")
+
+; Painel frontal de controles
 [node name="ControlPanel" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0.405)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.77, 0.405)
 mesh = SubResource("BoxMesh_ControlPanel")
 
-[node name="OilMesh" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.585, 0.82, -0.05)
-mesh = SubResource("BoxMesh_OilWell")
+; TERMÔMETRO HORIZONTAL AMPLO
+[node name="HorizontalThermometer" type="Node3D" parent="Model/ControlPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, -0.015, 0.012)
+
+[node name="RecessFrame" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+mesh = SubResource("BoxMesh_ThermoFrame")
+
+[node name="BackingPlate" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.003)
+mesh = SubResource("BoxMesh_ScaleBacking")
+
+[node name="IdealZoneMarker" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.115, 0, 0.004)
+mesh = SubResource("BoxMesh_IdealBand")
+
+[node name="FluidColumnPivot" type="Node3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.16, 0, 0.006)
+
+[node name="FluidBar" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer/FluidColumnPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16, 0, 0)
+mesh = SubResource("BoxMesh_FluidBarH")
+
+[node name="GlassCover" type="MeshInstance3D" parent="Model/ControlPanel/HorizontalThermometer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.008)
+mesh = SubResource("BoxMesh_GlassH")
+
+; LUZ PILOTO VERDE
+[node name="TempPilotLight" type="MeshInstance3D" parent="Model/ControlPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.23, -0.015, 0.014)
+mesh = SubResource("SphereMesh_Pilot")
+
+; BOTÃO LIGA/DESLIGA INDUSTRIAL ISOLADO
+[node name="PowerControl" type="Node3D" parent="Model/ControlPanel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 0.02, 0.012)
+
+[node name="KnobBezel" type="MeshInstance3D" parent="Model/ControlPanel/PowerControl"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.004)
+mesh = SubResource("CylinderMesh_LeverBase")
+
+[node name="PowerKnob" type="MeshInstance3D" parent="Model/ControlPanel/PowerControl"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0.018)
+mesh = SubResource("CylinderMesh_PowerKnobBody")
+
+[node name="KnobPointer" type="MeshInstance3D" parent="Model/ControlPanel/PowerControl/PowerKnob"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0.014)
+mesh = SubResource("BoxMesh_KnobPointer")
+
+[node name="PowerPilotLight" type="MeshInstance3D" parent="Model/ControlPanel/PowerControl"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.045, 0.02, 0.014)
+mesh = SubResource("SphereMesh_PowerPilot")
+
+; ================================================================
+; COMPARTIMENTO 0 (X = -0.54) — CUBA PROFUNDA VAZADA COM ÓLEO REAL
+; ================================================================
+[node name="Vat0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Vat0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("BoxMesh_VatBottom")
+
+[node name="WallLeft" type="MeshInstance3D" parent="Model/Vat0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallRight" type="MeshInstance3D" parent="Model/Vat0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallFront" type="MeshInstance3D" parent="Model/Vat0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, 0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="WallBack" type="MeshInstance3D" parent="Model/Vat0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, -0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="DripRest0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.89, -0.22)
+mesh = SubResource("BoxMesh_DripRestBar")
+
+; Superfície líquida de óleo visível dentro da cuba (em Y = 0.74m)
+[node name="OilMesh0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.74, 0)
+mesh = SubResource("BoxMesh_OilPlane")
+
+[node name="Basket0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.98, 0)
+
+[node name="WireWalls" type="MeshInstance3D" parent="Model/Basket0"]
+mesh = SubResource("BoxMesh_BasketWireWalls")
+
+[node name="RimTop" type="MeshInstance3D" parent="Model/Basket0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+mesh = SubResource("BoxMesh_BasketRimTop")
+
+[node name="HandleStem" type="MeshInstance3D" parent="Model/Basket0"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.09, 0.24)
+mesh = SubResource("CylinderMesh_BasketHandleStem")
+
+[node name="HandleGrip" type="MeshInstance3D" parent="Model/Basket0"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.15, 0.33)
+mesh = SubResource("CylinderMesh_BasketHandleGrip")
+
+[node name="FriesMesh" type="MeshInstance3D" parent="Model/Basket0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+visible = false
+mesh = SubResource("BoxMesh_FriesCluster")
+
+[node name="Lever0" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.77, 0.415)
+
+[node name="LeverBase" type="MeshInstance3D" parent="Model/Lever0"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_LeverBase")
+
+[node name="LeverArm" type="Node3D" parent="Model/Lever0"]
+
+[node name="Rod" type="MeshInstance3D" parent="Model/Lever0/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0.006)
+mesh = SubResource("CylinderMesh_LeverRod")
+
+[node name="Knob" type="MeshInstance3D" parent="Model/Lever0/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0.006)
+mesh = SubResource("SphereMesh_LeverKnob")
+
+[node name="Bubbles0" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.75, 0)
+emitting = false
+amount = 30
+lifetime = 0.55
+mesh = SubResource("SphereMesh_Bubble")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 25.0
+gravity = Vector3(0, 0.8, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.6
+
+[node name="Steam0" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.82, 0)
+emitting = false
+amount = 14
+lifetime = 1.0
+mesh = SubResource("SphereMesh_Steam")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 15.0
+gravity = Vector3(0, 0.5, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.6
+
+[node name="Drips0" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.90, 0)
+emitting = false
+amount = 8
+lifetime = 0.4
+mesh = SubResource("SphereMesh_Drip")
+emission_shape = 3
+emission_box_extents = Vector3(0.09, 0.01, 0.15)
+direction = Vector3(0, -1, 0)
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
+
+; ================================================================
+; COMPARTIMENTO 1 (X = -0.18) — CUBA PROFUNDA VAZADA COM ÓLEO REAL
+; ================================================================
+[node name="Vat1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Vat1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("BoxMesh_VatBottom")
+
+[node name="WallLeft" type="MeshInstance3D" parent="Model/Vat1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallRight" type="MeshInstance3D" parent="Model/Vat1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallFront" type="MeshInstance3D" parent="Model/Vat1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, 0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="WallBack" type="MeshInstance3D" parent="Model/Vat1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, -0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="DripRest1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.89, -0.22)
+mesh = SubResource("BoxMesh_DripRestBar")
+
+[node name="OilMesh1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.74, 0)
+mesh = SubResource("BoxMesh_OilPlane")
+
+[node name="Basket1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.98, 0)
+
+[node name="WireWalls" type="MeshInstance3D" parent="Model/Basket1"]
+mesh = SubResource("BoxMesh_BasketWireWalls")
+
+[node name="RimTop" type="MeshInstance3D" parent="Model/Basket1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+mesh = SubResource("BoxMesh_BasketRimTop")
+
+[node name="HandleStem" type="MeshInstance3D" parent="Model/Basket1"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.09, 0.24)
+mesh = SubResource("CylinderMesh_BasketHandleStem")
+
+[node name="HandleGrip" type="MeshInstance3D" parent="Model/Basket1"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.15, 0.33)
+mesh = SubResource("CylinderMesh_BasketHandleGrip")
+
+[node name="FriesMesh" type="MeshInstance3D" parent="Model/Basket1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+visible = false
+mesh = SubResource("BoxMesh_FriesCluster")
+
+[node name="Lever1" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.77, 0.415)
+
+[node name="LeverBase" type="MeshInstance3D" parent="Model/Lever1"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_LeverBase")
+
+[node name="LeverArm" type="Node3D" parent="Model/Lever1"]
+
+[node name="Rod" type="MeshInstance3D" parent="Model/Lever1/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0.006)
+mesh = SubResource("CylinderMesh_LeverRod")
+
+[node name="Knob" type="MeshInstance3D" parent="Model/Lever1/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0.006)
+mesh = SubResource("SphereMesh_LeverKnob")
+
+[node name="Bubbles1" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.75, 0)
+emitting = false
+amount = 30
+lifetime = 0.55
+mesh = SubResource("SphereMesh_Bubble")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 25.0
+gravity = Vector3(0, 0.8, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.6
+
+[node name="Steam1" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.82, 0)
+emitting = false
+amount = 14
+lifetime = 1.0
+mesh = SubResource("SphereMesh_Steam")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 15.0
+gravity = Vector3(0, 0.5, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.6
+
+[node name="Drips1" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.90, 0)
+emitting = false
+amount = 8
+lifetime = 0.4
+mesh = SubResource("SphereMesh_Drip")
+emission_shape = 3
+emission_box_extents = Vector3(0.09, 0.01, 0.15)
+direction = Vector3(0, -1, 0)
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
+
+; ================================================================
+; COMPARTIMENTO 2 (X = 0.18) — CUBA PROFUNDA VAZADA COM ÓLEO REAL
+; ================================================================
+[node name="Vat2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Vat2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("BoxMesh_VatBottom")
+
+[node name="WallLeft" type="MeshInstance3D" parent="Model/Vat2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallRight" type="MeshInstance3D" parent="Model/Vat2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallFront" type="MeshInstance3D" parent="Model/Vat2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, 0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="WallBack" type="MeshInstance3D" parent="Model/Vat2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, -0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="DripRest2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.89, -0.22)
+mesh = SubResource("BoxMesh_DripRestBar")
 
 [node name="OilMesh2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.195, 0.82, -0.05)
-mesh = SubResource("BoxMesh_OilWell")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.74, 0)
+mesh = SubResource("BoxMesh_OilPlane")
+
+[node name="Basket2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.98, 0)
+
+[node name="WireWalls" type="MeshInstance3D" parent="Model/Basket2"]
+mesh = SubResource("BoxMesh_BasketWireWalls")
+
+[node name="RimTop" type="MeshInstance3D" parent="Model/Basket2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+mesh = SubResource("BoxMesh_BasketRimTop")
+
+[node name="HandleStem" type="MeshInstance3D" parent="Model/Basket2"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.09, 0.24)
+mesh = SubResource("CylinderMesh_BasketHandleStem")
+
+[node name="HandleGrip" type="MeshInstance3D" parent="Model/Basket2"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.15, 0.33)
+mesh = SubResource("CylinderMesh_BasketHandleGrip")
+
+[node name="FriesMesh" type="MeshInstance3D" parent="Model/Basket2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+visible = false
+mesh = SubResource("BoxMesh_FriesCluster")
+
+[node name="Lever2" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.77, 0.415)
+
+[node name="LeverBase" type="MeshInstance3D" parent="Model/Lever2"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_LeverBase")
+
+[node name="LeverArm" type="Node3D" parent="Model/Lever2"]
+
+[node name="Rod" type="MeshInstance3D" parent="Model/Lever2/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0.006)
+mesh = SubResource("CylinderMesh_LeverRod")
+
+[node name="Knob" type="MeshInstance3D" parent="Model/Lever2/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0.006)
+mesh = SubResource("SphereMesh_LeverKnob")
+
+[node name="Bubbles2" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.75, 0)
+emitting = false
+amount = 30
+lifetime = 0.55
+mesh = SubResource("SphereMesh_Bubble")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 25.0
+gravity = Vector3(0, 0.8, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.6
+
+[node name="Steam2" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.82, 0)
+emitting = false
+amount = 14
+lifetime = 1.0
+mesh = SubResource("SphereMesh_Steam")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 15.0
+gravity = Vector3(0, 0.5, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.6
+
+[node name="Drips2" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.90, 0)
+emitting = false
+amount = 8
+lifetime = 0.4
+mesh = SubResource("SphereMesh_Drip")
+emission_shape = 3
+emission_box_extents = Vector3(0.09, 0.01, 0.15)
+direction = Vector3(0, -1, 0)
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
+
+; ================================================================
+; COMPARTIMENTO 3 (X = 0.54) — CUBA PROFUNDA VAZADA COM ÓLEO REAL
+; ================================================================
+[node name="Vat3" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Vat3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("BoxMesh_VatBottom")
+
+[node name="WallLeft" type="MeshInstance3D" parent="Model/Vat3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallRight" type="MeshInstance3D" parent="Model/Vat3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.135, 0.68, 0)
+mesh = SubResource("BoxMesh_VatWallSide")
+
+[node name="WallFront" type="MeshInstance3D" parent="Model/Vat3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, 0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="WallBack" type="MeshInstance3D" parent="Model/Vat3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.68, -0.245)
+mesh = SubResource("BoxMesh_VatWallFront")
+
+[node name="DripRest3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.89, -0.22)
+mesh = SubResource("BoxMesh_DripRestBar")
 
 [node name="OilMesh3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.195, 0.82, -0.05)
-mesh = SubResource("BoxMesh_OilWell")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.74, 0)
+mesh = SubResource("BoxMesh_OilPlane")
 
-[node name="OilMesh4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.585, 0.82, -0.05)
-mesh = SubResource("BoxMesh_OilWell")
+[node name="Basket3" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.98, 0)
 
-[node name="BasketWire" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.585, 0.88, -0.05)
-mesh = SubResource("BoxMesh_Basket")
+[node name="WireWalls" type="MeshInstance3D" parent="Model/Basket3"]
+mesh = SubResource("BoxMesh_BasketWireWalls")
 
-[node name="BasketWire2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.195, 0.88, -0.05)
-mesh = SubResource("BoxMesh_Basket")
+[node name="RimTop" type="MeshInstance3D" parent="Model/Basket3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0)
+mesh = SubResource("BoxMesh_BasketRimTop")
 
-[node name="BasketWire3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.195, 0.88, -0.05)
-mesh = SubResource("BoxMesh_Basket")
+[node name="HandleStem" type="MeshInstance3D" parent="Model/Basket3"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.09, 0.24)
+mesh = SubResource("CylinderMesh_BasketHandleStem")
 
-[node name="BasketWire4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.585, 0.88, -0.05)
-mesh = SubResource("BoxMesh_Basket")
+[node name="HandleGrip" type="MeshInstance3D" parent="Model/Basket3"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0.15, 0.33)
+mesh = SubResource("CylinderMesh_BasketHandleGrip")
 
-[node name="BasketHandle" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -0.585, 1.05, 0.28)
-mesh = SubResource("CylinderMesh_BasketHandle")
+[node name="FriesMesh" type="MeshInstance3D" parent="Model/Basket3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.04, 0)
+visible = false
+mesh = SubResource("BoxMesh_FriesCluster")
 
-[node name="BasketHandle2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -0.195, 1.05, 0.28)
-mesh = SubResource("CylinderMesh_BasketHandle")
+[node name="Lever3" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.77, 0.415)
 
-[node name="BasketHandle3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0.195, 1.05, 0.28)
-mesh = SubResource("CylinderMesh_BasketHandle")
+[node name="LeverBase" type="MeshInstance3D" parent="Model/Lever3"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("CylinderMesh_LeverBase")
 
-[node name="BasketHandle4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0.585, 1.05, 0.28)
-mesh = SubResource("CylinderMesh_BasketHandle")
+[node name="LeverArm" type="Node3D" parent="Model/Lever3"]
 
-[node name="Knob1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.585, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
+[node name="Rod" type="MeshInstance3D" parent="Model/Lever3/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.045, 0.006)
+mesh = SubResource("CylinderMesh_LeverRod")
 
-[node name="Knob2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, -0.195, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
+[node name="Knob" type="MeshInstance3D" parent="Model/Lever3/LeverArm"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0.006)
+mesh = SubResource("SphereMesh_LeverKnob")
 
-[node name="Knob3" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.195, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
+[node name="Bubbles3" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.75, 0)
+emitting = false
+amount = 30
+lifetime = 0.55
+mesh = SubResource("SphereMesh_Bubble")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 25.0
+gravity = Vector3(0, 0.8, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.6
 
-[node name="Knob4" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0.585, 0.78, 0.42)
-mesh = SubResource("CylinderMesh_Knob")
+[node name="Steam3" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.82, 0)
+emitting = false
+amount = 14
+lifetime = 1.0
+mesh = SubResource("SphereMesh_Steam")
+emission_shape = 3
+emission_box_extents = Vector3(0.11, 0.02, 0.17)
+direction = Vector3(0, 1, 0)
+spread = 15.0
+gravity = Vector3(0, 0.5, 0)
+initial_velocity_min = 0.3
+initial_velocity_max = 0.6
+
+[node name="Drips3" type="CPUParticles3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.90, 0)
+emitting = false
+amount = 8
+lifetime = 0.4
+mesh = SubResource("SphereMesh_Drip")
+emission_shape = 3
+emission_box_extents = Vector3(0.09, 0.01, 0.15)
+direction = Vector3(0, -1, 0)
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.0
 
 [node name="FryerSlot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, -0.05)
-
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
-billboard = 1
-double_sided = false
-text = "🍟 FRITADEIRA INDUSTRIAL (4 CESTOS)"
-font_size = 20
-outline_size = 6

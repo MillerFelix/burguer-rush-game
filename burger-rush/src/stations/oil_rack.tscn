@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://oil_rack_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/oil_rack.gd" id="1_oil_rack"]
+[ext_resource type="PackedScene" path="res://assets/models/food/bottleOil.glb" id="2_bottleoil_glb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.1, 1.3, 0.45)
+
+[sub_resource type="StandardMaterial3D" id="Material_MetalRack"]
+albedo_color = Color(0.28, 0.3, 0.33, 1)
+metallic = 0.85
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_ShelfChrome"]
+albedo_color = Color(0.85, 0.88, 0.9, 1)
+metallic = 0.95
+roughness = 0.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShelfPost"]
+material = SubResource("Material_MetalRack")
+size = Vector3(0.04, 1.2, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ShelfTier"]
+material = SubResource("Material_ShelfChrome")
+size = Vector3(1.04, 0.03, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BadgePlate"]
+material = SubResource("Material_MetalRack")
+size = Vector3(0.36, 0.08, 0.015)
+
+[node name="OilRack" type="StaticBody3D"]
+script = ExtResource("1_oil_rack")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+; 4 Colunas verticais da estante
+[node name="Post1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.6, 0.16)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+[node name="Post2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.6, 0.16)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+[node name="Post3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48, 0.6, -0.16)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+[node name="Post4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.48, 0.6, -0.16)
+mesh = SubResource("BoxMesh_ShelfPost")
+
+; Prateleiras
+[node name="ShelfBottom" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("BoxMesh_ShelfTier")
+
+[node name="ShelfMid" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.60, 0)
+mesh = SubResource("BoxMesh_ShelfTier")
+
+[node name="ShelfTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+mesh = SubResource("BoxMesh_ShelfTier")
+
+; Placa de identificação "🛢️ ÓLEO"
+[node name="Badge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.60, 0.20)
+mesh = SubResource("BoxMesh_BadgePlate")
+
+; Garrafas de exibição na prateleira
+[node name="BottleSlots" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, 0)
+
+[node name="Bottle0" type="Node3D" parent="BottleSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.36, 0, 0)
+
+[node name="Mesh" parent="BottleSlots/Bottle0" instance=ExtResource("2_bottleoil_glb")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
+
+[node name="Bottle1" type="Node3D" parent="BottleSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0, 0)
+
+[node name="Mesh" parent="BottleSlots/Bottle1" instance=ExtResource("2_bottleoil_glb")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
+
+[node name="Bottle2" type="Node3D" parent="BottleSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0, 0)
+
+[node name="Mesh" parent="BottleSlots/Bottle2" instance=ExtResource("2_bottleoil_glb")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
+
+[node name="Bottle3" type="Node3D" parent="BottleSlots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0, 0)
+
+[node name="Mesh" parent="BottleSlots/Bottle3" instance=ExtResource("2_bottleoil_glb")]
+transform = Transform3D(1.1, 0, 0, 0, 1.1, 0, 0, 0, 1.1, 0, 0, 0)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
+billboard = 1
+double_sided = false
+text = "🛢️ ÓLEO VEGETAL\nEstoque: 5 un"
+font_size = 20
+outline_size = 6

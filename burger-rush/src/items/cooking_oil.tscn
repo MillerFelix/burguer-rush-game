@@ -1,18 +1,34 @@
 [gd_scene format=3 uid="uid://cooking_oil_item_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
+[ext_resource type="Script" path="res://src/items/cooking_oil.gd" id="1_cooking_oil"]
 [ext_resource type="PackedScene" path="res://assets/models/food/bottleOil.glb" id="2_bottleoil_glb"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
 height = 0.3
 radius = 0.08
 
+[sub_resource type="StandardMaterial3D" id="Material_OilPourStream"]
+transparency = 1
+albedo_color = Color(0.96, 0.78, 0.22, 0.85)
+metallic = 0.1
+roughness = 0.1
+emission_enabled = true
+emission = Color(0.96, 0.72, 0.15, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_PourDrip"]
+material = SubResource("Material_OilPourStream")
+radius = 0.008
+height = 0.018
+radial_segments = 6
+rings = 4
+
 [node name="CookingOil" type="StaticBody3D"]
-script = ExtResource("1_item")
+script = ExtResource("1_cooking_oil")
 item_id = "cooking_oil"
-display_name = "Óleo Vegetal para Fritura"
+display_name = "Galão de Óleo de Cozinha"
 item_type = "ingredient"
-prompt_text = "E — Pegar Óleo de Fritura"
+prompt_text = "🖱️ [Clique] Pegar Galão de Óleo"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
@@ -22,3 +38,17 @@ shape = SubResource("CylinderShape3D_1")
 
 [node name="bottleOil" parent="MeshInstance3D" instance=ExtResource("2_bottleoil_glb")]
 transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, 0, 0)
+
+[node name="PourSpout" type="Node3D" parent="MeshInstance3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0)
+
+[node name="PourParticles" type="CPUParticles3D" parent="MeshInstance3D/PourSpout"]
+emitting = false
+amount = 16
+lifetime = 0.4
+mesh = SubResource("SphereMesh_PourDrip")
+direction = Vector3(0, -1, 0)
+spread = 10.0
+gravity = Vector3(0, -9.8, 0)
+initial_velocity_min = 1.0
+initial_velocity_max = 1.6

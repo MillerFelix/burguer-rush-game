@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://packaged_burger_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/packaged_burger.gd" id="1_packaged_script"]
+[ext_resource type="Texture2D" path="res://assets/textures/burger_box_top.png" id="2_box_tex"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Box"]
+size = Vector3(0.24, 0.15, 0.24)
+
+[sub_resource type="StandardMaterial3D" id="Material_KraftBoxClosed"]
+albedo_texture = ExtResource("2_box_tex")
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_SealBadge"]
+albedo_color = Color(0.92, 0.22, 0.24, 1.0)
+roughness = 0.40
+
+[sub_resource type="BoxMesh" id="BoxMesh_ClosedBox"]
+material = SubResource("Material_KraftBoxClosed")
+size = Vector3(0.23, 0.13, 0.23)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SealSticker"]
+material = SubResource("Material_SealBadge")
+size = Vector3(0.06, 0.005, 0.08)
+
+[node name="PackagedBurger" type="StaticBody3D"]
+script = ExtResource("1_packaged_script")
+item_id = "packaged_burger"
+display_name = "Burger Embalado"
+item_type = "final_product"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.075, 0)
+shape = SubResource("BoxShape3D_Box")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="BoxMesh" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.065, 0)
+mesh = SubResource("BoxMesh_ClosedBox")
+
+[node name="SealSticker" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.131, 0.08)
+mesh = SubResource("BoxMesh_SealSticker")
+
+[node name="Label3D" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28, 0)
+billboard = 1
+double_sided = false
+text = "📦 Burger Embalado"
+font_size = 16
+outline_size = 4
+modulate = Color(0.3, 1, 0.4, 1)

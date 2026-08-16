@@ -23,7 +23,7 @@ func _update_visuals() -> void:
 	match state:
 		State.RAW:
 			display_name = "Saco de Batata Frita Congelada"
-			prompt_text = "E — Pegar Saco de Batata"
+			prompt_text = "🖱️ [Clique] Pegar Saco de Batata Congelada"
 			item_id = "potato_raw"
 		State.COOKING:
 			display_name = "Batata Fritando"
@@ -31,11 +31,11 @@ func _update_visuals() -> void:
 			item_id = "potato_cooking"
 		State.COOKED:
 			display_name = "Porção de Batata Frita"
-			prompt_text = "E — Pegar Batata Frita"
+			prompt_text = "🖱️ [Clique] Pegar Batata Frita"
 			item_id = "potato"
 		State.BURNT:
 			display_name = "Batata Queimada"
-			prompt_text = "Batata Queimada"
+			prompt_text = "🗑️ [Clique] Pegar Batata Queimada"
 			item_id = "potato_burnt"
 
 	var mesh_bag = get_node_or_null("MeshBag")

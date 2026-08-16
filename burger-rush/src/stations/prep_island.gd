@@ -1,0 +1,152 @@
+class_name PrepIsland
+extends StaticBody3D
+
+# ================================================================
+# ILHA CENTRAL DE PREPARO E MONTAGEM (ÁREA DE TRABALHO LIVRE)
+#
+# Oferece superfície ampla e conveniente para colocação de itens,
+# organização livre e montagem de sanduíches.
+# ================================================================
+
+@onready var collision_shape: CollisionShape3D = $CollisionShape3D
+@onready var status_label: Label3D = get_node_or_null("StatusLabel")
+
+const SURFACE_TOP_Y: float = 0.88
+const BOUNDS_X_MIN: float = -1.80
+const BOUNDS_X_MAX: float = 1.80
+const BOUNDS_Z_MIN: float = -0.85
+const BOUNDS_Z_MAX: float = 0.85
+
+var placed_items: Array[Node3D] = []
+
+func _ready() -> void:
+	_update_status()
+
+func get_interaction_prompt(player: Node = null) -> String:
+	if not player:
+		return ""
+
+	var held = player.get("held_item")
+	if held != null:
+		var d_name = held.get_display_name() if held.has_method("get_display_name") else held.name
+		return "🖱️ Colocar %s na Ilha" % d_name
+
+	return ""
+
+# [Clique Esquerdo do Mouse] — Colocar item/ingrediente no ponto exato da mira
+func interact_item(player: Node3D) -> void:
+	if not player:
+		return
+
+	var held = player.get("held_item")
+	if held == null:
+		return
+
+	# Se for bisnaga de molho, o clique é para espremer (não soltar)
+	if held is SauceBottle or str(held.get("item_type")) == "sauce_bottle":
+		return
+
+	var hit_pos = _calculate_placement_position(player)
+
+	# 1. Verifica se há uma base de pão ou montagem próxima ao ponto clicado
+	var nearby_bread = _find_nearby_bread(hit_pos, 0.22)
+	if nearby_bread:
+		nearby_bread.interact_item(player)
+		return
+
+	# 2. Solta o item fisicamente no ponto exato clicado sobre a bancada
+	if player.has_method("take_held_item"):
+		var item: Node3D = player.take_held_item()
+		if item:
+			_place_item_on_surface(item, hit_pos, player.rotation.y)
+			var d_name = item.get_display_name() if item.has_method("get_display_name") else item.name
+			_show_feedback(player, "🥪 %s colocado na ilha de preparo" % d_name)
+
+func interact(player: Node3D) -> void:
+	interact_item(player)
+
+func _find_nearby_bread(world_pos: Vector3, max_dist: float) -> Node3D:
+	var world_node = get_parent() if get_parent() else get_tree().current_scene
+	if not world_node:
+		return null
+
+	var closest: Node3D = null
+	var closest_dist: float = max_dist
+
+	for child in world_node.get_children():
+		if child is Item and (child.get("assembly") != null or child.item_id == "bread_bottom" or child.has_node("BurgerAssembly")):
+			var d = Vector2(child.global_position.x - world_pos.x, child.global_position.z - world_pos.z).length()
+			if d < closest_dist:
+				closest_dist = d
+				closest = child
+	return closest
+
+func _calculate_placement_position(player: Node3D) -> Vector3:
+	var ray = player.get_node_or_null("Head/Camera3D/RayCast3D")
+	if ray and ray is RayCast3D and ray.is_colliding():
+		var col_pt = to_local(ray.get_collision_point())
+		var clamped_x = clampf(col_pt.x, BOUNDS_X_MIN, BOUNDS_X_MAX)
+		var clamped_z = clampf(col_pt.z, BOUNDS_Z_MIN, BOUNDS_Z_MAX)
+		return to_global(Vector3(clamped_x, SURFACE_TOP_Y + 0.02, clamped_z))
+
+	var forward_dir = -player.transform.basis.z
+	var approx_pos = to_local(player.global_position + forward_dir * 1.0)
+	var clamped_x = clampf(approx_pos.x, BOUNDS_X_MIN, BOUNDS_X_MAX)
+	var clamped_z = clampf(approx_pos.z, BOUNDS_Z_MIN, BOUNDS_Z_MAX)
+	return to_global(Vector3(clamped_x, SURFACE_TOP_Y + 0.02, clamped_z))
+
+func _place_item_on_surface(item: Node3D, target_world_pos: Vector3, player_rot_y: float) -> void:
+	var prev_parent = item.get_parent()
+	if prev_parent:
+		prev_parent.remove_child(item)
+
+	var world_node: Node = get_parent()
+	if not world_node:
+		world_node = get_tree().current_scene
+	if not world_node:
+		world_node = get_tree().root
+
+	world_node.add_child(item)
+	item.global_position = target_world_pos
+	item.rotation = Vector3(0, player_rot_y, 0)
+
+	if item.has_method("on_dropped"):
+		item.on_dropped()
+	elif item.get("collision_shape") != null and item.collision_shape:
+		item.collision_shape.disabled = false
+
+	if "location" in item:
+		item.location = Item.ItemLocation.WORLD
+	if "_is_falling" in item:
+		item._is_falling = false
+
+	placed_items.append(item)
+	_cleanup_placed_items()
+	_update_status()
+
+func _process(_delta: float) -> void:
+	_cleanup_placed_items()
+
+func _cleanup_placed_items() -> void:
+	var valid: Array[Node3D] = []
+	for it in placed_items:
+		if is_instance_valid(it) and it.is_inside_tree():
+			if "location" in it and it.location == Item.ItemLocation.WORLD:
+				var local_p = to_local(it.global_position)
+				if absf(local_p.x) <= 2.0 and absf(local_p.z) <= 1.05 and local_p.y >= 0.7 and local_p.y <= 1.3:
+					valid.append(it)
+	placed_items = valid
+
+func _update_status() -> void:
+	if not status_label:
+		return
+	if placed_items.is_empty():
+		status_label.text = ""
+	else:
+		status_label.text = "🥪 %d itens na bancada" % placed_items.size()
+		status_label.modulate = Color(0.95, 0.95, 0.95, 0.85)
+
+func _show_feedback(player: Node3D, message: String) -> void:
+	var hud = player.get_node_or_null("HUD")
+	if hud and hud.has_method("show_temporary_feedback"):
+		hud.show_temporary_feedback(message)

@@ -12,8 +12,10 @@ func _init() -> void:
 	inv.items["cup_lid"]["quantity"] = 20
 	inv.items["syrup_soda"]["quantity"] = 20
 
-	var player = Node3D.new()
+	var player_scene = load("res://src/player/player.tscn")
+	var player = player_scene.instantiate() as Player
 	root.add_child(player)
+	player._ready()
 
 	var machine_scene = load("res://src/stations/drink_machine.tscn")
 	assert(machine_scene != null, "Cena drink_machine.tscn deve existir")
@@ -21,17 +23,16 @@ func _init() -> void:
 	root.add_child(machine)
 	machine._ready()
 
-	assert(machine.available_flavors.size() == 5, "Máquina deve suportar 5 sabores de refrigerante")
-	assert(machine.syrup_current == 50, "Capacidade inicial deve ser 50 doses de xarope")
+	assert(machine.available_flavors.size() == 4, "Máquina deve suportar 4 sabores de refrigerante")
+	assert(machine.syrup_current == 25, "Capacidade inicial deve ser 25 doses de xarope")
 
-	# Teste dos 5 Sabores Individuais
-	print("\n--- Teste 1: Validação dos 5 Sabores de Bebida ---")
+	# Teste dos 4 Sabores Individuais
+	print("\n--- Teste 1: Validação dos 4 Sabores de Bebida ---")
 	var flavors_expected = [
-		{"id": "soda_cola", "name": "Cola"},
-		{"id": "soda_guarana", "name": "Guaraná"},
-		{"id": "soda_sprite", "name": "Limão"},
-		{"id": "soda_grape", "name": "Uva"},
-		{"id": "soda_cola_zero", "name": "Cola Zero"}
+		{"id": "soda_cola", "name": "COLA"},
+		{"id": "soda_cola_zero", "name": "ZERO"},
+		{"id": "soda_lime", "name": "SODA"},
+		{"id": "soda_citrus", "name": "CITRUS"}
 	]
 
 	for i in range(flavors_expected.size()):
@@ -64,16 +65,15 @@ func _init() -> void:
 		assert(not machine.is_filling, "Enchimento deve finalizar em 100%")
 		assert(machine.current_cup.state == DrinkCup.State.FILLED, "Copo deve estar CHEIO")
 
-		# 4. Sela com tampa e canudo
+		# 4. Retira da máquina para a mão do jogador
 		machine.interact(player)
-		assert(machine.current_cup.state == DrinkCup.State.CLOSED, "Copo deve estar SELADO e PRONTO")
-		assert(machine.current_cup.get_flavor_display_name().contains(f["name"]), "Nome da bebida selada deve conter o sabor")
+		assert(player.held_item == cup, "Copo deve estar na mão do jogador")
+		assert(cup.state == DrinkCup.State.FILLED or cup.state == DrinkCup.State.CLOSED, "Copo deve estar CHEIO e PRONTO")
+		assert(cup.get_flavor_display_name().to_lower().contains(f["name"].to_lower()), "Nome da bebida deve conter o sabor")
 
-		# 5. Retira da máquina
-		machine.cup_slot.remove_child(cup)
-		machine.current_cup = null
+		player.take_held_item()
 		cup.queue_free()
-		print("  [PASS] Bebida %s servida, cheia e selada com sucesso!" % f["name"])
+		print("  [PASS] Bebida %s servida e pronta com sucesso!" % f["name"])
 
 	# Teste de Bloqueio quando sem xarope
 	print("\n--- Teste 3: Bloqueio quando Reservatório Esgota ---")

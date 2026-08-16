@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bread_bottom_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
+[ext_resource type="Script" path="res://src/items/bread_bottom.gd" id="1_bread_bottom_script"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
 height = 0.05
@@ -32,11 +32,11 @@ height = 0.008
 radial_segments = 20
 
 [node name="BreadBottom" type="StaticBody3D"]
-script = ExtResource("1_item")
+script = ExtResource("1_bread_bottom_script")
 item_id = "bread_bottom"
-display_name = "Base do Pão Brioche"
+display_name = "Base do Pão"
 item_type = "ingredient"
-prompt_text = "E — Pegar Base do Pão"
+prompt_text = "🖱️ Pegar Base do Pão"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)

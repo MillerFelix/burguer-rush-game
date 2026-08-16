@@ -60,6 +60,10 @@ func _normalize_key(k: String) -> String:
 		return "patty_beef:raw"
 	elif s == "cheese":
 		return "cheese_cheddar"
+	elif s == "bacon:cooked":
+		return "bacon"
+	elif s == "egg:cooked":
+		return "egg"
 	return s
 
 func calculate_cost() -> float:

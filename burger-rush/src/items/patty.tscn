@@ -1,40 +1,69 @@
 [gd_scene format=3 uid="uid://patty_item_scene_uid"]
 
 [ext_resource type="Script" path="res://src/items/patty.gd" id="1_patty"]
-[ext_resource type="Texture2D" path="res://assets/textures/meat_patty_beef_raw.png" id="2_tex_beef_raw"]
-[ext_resource type="Texture2D" path="res://assets/textures/meat_patty_normal.png" id="3_tex_normal"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 0.04
-radius = 0.09
+height = 0.034
+radius = 0.085
 
-[sub_resource type="StandardMaterial3D" id="Mat_PattyDefault"]
-albedo_texture = ExtResource("2_tex_beef_raw")
-normal_enabled = true
-normal_scale = 0.60
-normal_texture = ExtResource("3_tex_normal")
-roughness = 0.62
-uv1_scale = Vector3(2, 2, 2)
+[sub_resource type="StandardMaterial3D" id="Mat_PattySideA"]
+albedo_color = Color(0.78, 0.28, 0.24, 1)
+roughness = 0.65
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_Patty"]
-material = SubResource("Mat_PattyDefault")
+[sub_resource type="StandardMaterial3D" id="Mat_PattySideB"]
+albedo_color = Color(0.78, 0.28, 0.24, 1)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Mat_PattyRim"]
+albedo_color = Color(0.75, 0.26, 0.22, 1)
+roughness = 0.65
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Body"]
+material = SubResource("Mat_PattyRim")
 top_radius = 0.082
 bottom_radius = 0.082
-height = 0.034
-radial_segments = 20
+height = 0.032
+radial_segments = 24
 rings = 2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CapA"]
+material = SubResource("Mat_PattySideA")
+top_radius = 0.081
+bottom_radius = 0.081
+height = 0.003
+radial_segments = 24
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_CapB"]
+material = SubResource("Mat_PattySideB")
+top_radius = 0.081
+bottom_radius = 0.081
+height = 0.003
+radial_segments = 24
 
 [node name="Patty" type="StaticBody3D"]
 script = ExtResource("1_patty")
 item_id = "patty_beef"
 display_name = "Carne Bovina (Cru)"
 item_type = "ingredient"
-prompt_text = "E — Pegar Carne"
+prompt_text = "✋ [Clique] Pegar Carne"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.017, 0)
 shape = SubResource("CylinderShape3D_1")
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+; Modelo com pivô na base (Y = 0)
+[node name="VisualModel" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.017, 0)
-mesh = SubResource("CylinderMesh_Patty")
+
+[node name="BodyMesh" type="MeshInstance3D" parent="VisualModel"]
+mesh = SubResource("CylinderMesh_Body")
+
+; Face do Lado A (topo inicial)
+[node name="SideAFace" type="MeshInstance3D" parent="VisualModel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("CylinderMesh_CapA")
+
+; Face do Lado B (base inicial)
+[node name="SideBFace" type="MeshInstance3D" parent="VisualModel"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.015, 0)
+mesh = SubResource("CylinderMesh_CapB")

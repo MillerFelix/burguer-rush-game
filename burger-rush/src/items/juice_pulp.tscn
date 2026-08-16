@@ -1,0 +1,50 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/items/juice_pulp.gd" id="1_pulp"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Pulp"]
+size = Vector3(0.14, 0.09, 0.09)
+
+[sub_resource type="StandardMaterial3D" id="Material_FrozenPulp"]
+albedo_color = Color(0.98, 0.52, 0.05, 1)
+roughness = 0.55
+rim_enabled = true
+rim = 0.6
+clearcoat = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Material_PlasticWrap"]
+albedo_color = Color(1, 1, 1, 0.3)
+transparency = 1
+roughness = 0.1
+metallic_specular = 0.9
+
+[sub_resource type="BoxMesh" id="BoxMesh_PulpCore"]
+material = SubResource("Material_FrozenPulp")
+size = Vector3(0.13, 0.08, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_PlasticWrap"]
+material = SubResource("Material_PlasticWrap")
+size = Vector3(0.136, 0.086, 0.086)
+
+[node name="JuicePulp" type="StaticBody3D"]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_pulp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_Pulp")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="PulpBlock" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_PulpCore")
+
+[node name="PlasticWrap" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_PlasticWrap")
+
+[node name="FruitEmblem" type="Label3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0.044, 0)
+text = "🍊"
+font_size = 20
+shaded = true
+double_sided = false

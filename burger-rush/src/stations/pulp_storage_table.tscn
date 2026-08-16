@@ -1,0 +1,318 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/stations/pulp_storage_table.gd" id="1_pulp_table"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Table"]
+size = Vector3(1.2, 0.95, 0.75)
+
+[sub_resource type="StandardMaterial3D" id="Material_StainlessTable"]
+albedo_color = Color(0.75, 0.78, 0.80, 1)
+metallic = 0.85
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_WoodTop"]
+albedo_color = Color(0.55, 0.38, 0.22, 1)
+roughness = 0.60
+
+[sub_resource type="StandardMaterial3D" id="Material_PlasticCrate"]
+albedo_color = Color(0.18, 0.45, 0.78, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_PulpOrange"]
+albedo_color = Color(0.98, 0.52, 0.05, 1)
+roughness = 0.55
+rim_enabled = true
+rim = 0.6
+clearcoat = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_PulpGrape"]
+albedo_color = Color(0.48, 0.12, 0.65, 1)
+roughness = 0.55
+rim_enabled = true
+rim = 0.6
+clearcoat = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_PulpStrawberry"]
+albedo_color = Color(0.92, 0.12, 0.28, 1)
+roughness = 0.55
+rim_enabled = true
+rim = 0.6
+clearcoat = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_BadgePlate"]
+albedo_color = Color(0.95, 0.95, 0.95, 1)
+metallic = 0.2
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_Leg"]
+material = SubResource("Material_StainlessTable")
+size = Vector3(0.06, 0.85, 0.06)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
+material = SubResource("Material_WoodTop")
+size = Vector3(1.18, 0.06, 0.72)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CrateBottom"]
+material = SubResource("Material_PlasticCrate")
+size = Vector3(1.04, 0.02, 0.52)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CrateWallLong"]
+material = SubResource("Material_PlasticCrate")
+size = Vector3(1.04, 0.16, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CrateWallShort"]
+material = SubResource("Material_PlasticCrate")
+size = Vector3(0.02, 0.16, 0.52)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CrateDivider"]
+material = SubResource("Material_PlasticCrate")
+size = Vector3(0.015, 0.14, 0.50)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CrateBadge"]
+material = SubResource("Material_BadgePlate")
+size = Vector3(0.26, 0.05, 0.005)
+
+[sub_resource type="BoxMesh" id="BoxMesh_PulpVisualBlock"]
+size = Vector3(0.13, 0.055, 0.075)
+
+[node name="PulpStorageTable" type="StaticBody3D"]
+script = ExtResource("1_pulp_table")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.475, 0)
+shape = SubResource("BoxShape3D_Table")
+
+[node name="Model" type="Node3D" parent="."]
+
+; Pernas da mesa
+[node name="Leg1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.52, 0.425, -0.30)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="Leg2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.52, 0.425, -0.30)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="Leg3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.52, 0.425, 0.30)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="Leg4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.52, 0.425, 0.30)
+mesh = SubResource("BoxMesh_Leg")
+
+; Tampo da Mesa
+[node name="TableTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
+mesh = SubResource("BoxMesh_TableTop")
+
+; ================================================================
+; CESTO PLÁSTICO COM 3 COMPARTIMENTOS PARA POLPAS
+; ================================================================
+[node name="Crate" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.91, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_CrateBottom")
+
+[node name="FrontWall" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0.25)
+mesh = SubResource("BoxMesh_CrateWallLong")
+
+[node name="BackWall" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, -0.25)
+mesh = SubResource("BoxMesh_CrateWallLong")
+
+[node name="LeftWall" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.51, 0.09, 0)
+mesh = SubResource("BoxMesh_CrateWallShort")
+
+[node name="RightWall" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.51, 0.09, 0)
+mesh = SubResource("BoxMesh_CrateWallShort")
+
+[node name="Divider1" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.08, 0)
+mesh = SubResource("BoxMesh_CrateDivider")
+
+[node name="Divider2" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17, 0.08, 0)
+mesh = SubResource("BoxMesh_CrateDivider")
+
+; Identificação única e elegante na frente da caixa
+[node name="CrateBadge" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0.262)
+mesh = SubResource("BoxMesh_CrateBadge")
+
+[node name="CrateLabel" type="Label3D" parent="Model/Crate/CrateBadge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
+text = "POLPA DE FRUTAS"
+font_size = 12
+modulate = Color(0.1, 0.1, 0.1, 1)
+outline_size = 0
+
+; ================================================================
+; 10 PEDRAS FÍSICAS DE POLPA DE LARANJA (TOTAL: 10)
+; ================================================================
+; Camada Inferior (5)
+[node name="Pulp_0_0" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.035, -0.18)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_1" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.035, -0.09)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_2" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.035, 0.0)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_3" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.035, 0.09)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_4" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.035, 0.18)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+; Camada Superior (5)
+[node name="Pulp_0_5" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.095, -0.18)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_6" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.095, -0.09)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_7" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.095, 0.0)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_8" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.095, 0.09)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_0_9" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.34, 0.095, 0.18)
+material_override = SubResource("Material_PulpOrange")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+; ================================================================
+; 10 PEDRAS FÍSICAS DE POLPA DE UVA (TOTAL: 10)
+; ================================================================
+; Camada Inferior (5)
+[node name="Pulp_1_0" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.035, -0.18)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_1" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.035, -0.09)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_2" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.035, 0.0)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_3" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.035, 0.09)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_4" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.035, 0.18)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+; Camada Superior (5)
+[node name="Pulp_1_5" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.095, -0.18)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_6" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.095, -0.09)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_7" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.095, 0.0)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_8" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.095, 0.09)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_1_9" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.095, 0.18)
+material_override = SubResource("Material_PulpGrape")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+; ================================================================
+; 10 PEDRAS FÍSICAS DE POLPA DE MORANGO (TOTAL: 10)
+; ================================================================
+; Camada Inferior (5)
+[node name="Pulp_2_0" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.035, -0.18)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_1" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.035, -0.09)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_2" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.035, 0.0)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_3" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.035, 0.09)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_4" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.035, 0.18)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+; Camada Superior (5)
+[node name="Pulp_2_5" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.095, -0.18)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_6" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.095, -0.09)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_7" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.095, 0.0)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_8" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.095, 0.09)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")
+
+[node name="Pulp_2_9" type="MeshInstance3D" parent="Model/Crate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.34, 0.095, 0.18)
+material_override = SubResource("Material_PulpStrawberry")
+mesh = SubResource("BoxMesh_PulpVisualBlock")

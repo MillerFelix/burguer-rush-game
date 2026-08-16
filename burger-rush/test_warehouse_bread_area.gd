@@ -69,25 +69,30 @@ func _init() -> void:
 	print("  [PASS] Outros produtos antigos removidos da apresentação visual do armazém.")
 
 	# 6. Interação e Retirada de Pães
-	print("\n--- Teste 6: Interação e Retirada de Tampas e Bases ---")
-	# Retira Tampa do Pão (index 0)
+	print("\n--- Teste 6: Interação e Retirada Exclusiva com Clique Esquerdo ---")
+	# Tecla E (interact) NÃO deve pegar o pão com mãos vazias
 	station.active_item_index = 0
+	station.interact(player)
+	assert(player.held_item == null, "Tecla E NÃO deve pegar pão com mãos vazias")
+	assert(inv.get_stock("bread_top") == 25, "Estoque permanece inalterado no aperto de E")
+
+	# Retira Tampa do Pão via Clique Esquerdo (interact_item)
 	var prompt_top = station.get_interaction_prompt(player)
 	assert(prompt_top.contains("Tampa") or prompt_top.contains("🥯"), "Prompt para pegar tampa")
-	station.interact(player)
-	assert(player.held_item != null and player.held_item.item_id == "bread_top", "Jogador pegou Tampa do Pão")
+	station.interact_item(player)
+	assert(player.held_item != null and player.held_item.item_id == "bread_top", "Jogador pegou Tampa do Pão com Clique Esquerdo")
 	assert(inv.get_stock("bread_top") == 24, "Estoque de bread_top atualizado para 24")
 	player.take_held_item().queue_free()
 
-	# Retira Base do Pão (index 1)
+	# Retira Base do Pão via Clique Esquerdo (interact_item)
 	station.active_item_index = 1
 	var prompt_bot = station.get_interaction_prompt(player)
 	assert(prompt_bot.contains("Base") or prompt_bot.contains("🍞"), "Prompt para pegar base")
-	station.interact(player)
-	assert(player.held_item != null and player.held_item.item_id == "bread_bottom", "Jogador pegou Base do Pão")
+	station.interact_item(player)
+	assert(player.held_item != null and player.held_item.item_id == "bread_bottom", "Jogador pegou Base do Pão com Clique Esquerdo")
 	assert(inv.get_stock("bread_bottom") == 24, "Estoque de bread_bottom atualizado para 24")
 	player.take_held_item().queue_free()
-	print("  [PASS] Retirada de tampas e bases de pão funcionando perfeitamente.")
+	print("  [PASS] Retirada de tampas e bases de pão funcionando exclusivamente com Clique Esquerdo.")
 
 	# Limpeza
 	station.queue_free()

@@ -55,9 +55,9 @@ func create_group_order(customer: Node, group_size: int, table_id: int = 0, sour
 
 	var available_drinks = [
 		{"id": "soda_cola", "name": "Refrigerante Cola", "price": 6.0},
-		{"id": "soda_guarana", "name": "Refrigerante Guaraná", "price": 6.0},
-		{"id": "juice_orange", "name": "Suco de Laranja", "price": 7.0},
-		{"id": "juice_grape", "name": "Suco de Uva", "price": 7.0}
+		{"id": "soda_cola_zero", "name": "Refrigerante Zero", "price": 6.0},
+		{"id": "soda_lime", "name": "Refrigerante Soda", "price": 6.0},
+		{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0}
 	]
 
 	# 1. Cada pessoa do grupo consome 1 Hambúrguer e 1 Bebida

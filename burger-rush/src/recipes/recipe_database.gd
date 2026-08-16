@@ -180,95 +180,46 @@ static func _initialize_recipes() -> void:
 	fries_recipe.is_unlocked = true
 	_recipes.append(fries_recipe)
 
+	# --- BEBIDAS (4 SABORES DEFINITIVOS) ---
 	var cola_recipe = Recipe.new()
 	cola_recipe.id = "soda_cola"
 	cola_recipe.display_name = "Refrigerante Cola"
 	cola_recipe.category = "drink"
-	cola_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
+	cola_recipe.required_ingredients.assign(["cup_empty", "syrup_cola"])
 	cola_recipe.result_scene = soda_scene
 	cola_recipe.base_price = 6.0
 	cola_recipe.is_unlocked = true
 	_recipes.append(cola_recipe)
 
-	var guarana_recipe = Recipe.new()
-	guarana_recipe.id = "soda_guarana"
-	guarana_recipe.display_name = "Refrigerante Guaraná"
-	guarana_recipe.category = "drink"
-	guarana_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
-	guarana_recipe.result_scene = soda_scene
-	guarana_recipe.base_price = 6.0
-	guarana_recipe.is_unlocked = true
-	_recipes.append(guarana_recipe)
-
-	var sprite_recipe = Recipe.new()
-	sprite_recipe.id = "soda_sprite"
-	sprite_recipe.display_name = "Refrigerante Limão"
-	sprite_recipe.category = "drink"
-	sprite_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
-	sprite_recipe.result_scene = soda_scene
-	sprite_recipe.base_price = 6.0
-	sprite_recipe.is_unlocked = true
-	_recipes.append(sprite_recipe)
-
-	var grape_soda_recipe = Recipe.new()
-	grape_soda_recipe.id = "soda_grape"
-	grape_soda_recipe.display_name = "Refrigerante Uva"
-	grape_soda_recipe.category = "drink"
-	grape_soda_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
-	grape_soda_recipe.result_scene = soda_scene
-	grape_soda_recipe.base_price = 6.0
-	grape_soda_recipe.is_unlocked = true
-	_recipes.append(grape_soda_recipe)
-
 	var zero_soda_recipe = Recipe.new()
 	zero_soda_recipe.id = "soda_cola_zero"
-	zero_soda_recipe.display_name = "Refrigerante Cola Zero"
+	zero_soda_recipe.display_name = "Refrigerante Zero"
 	zero_soda_recipe.category = "drink"
-	zero_soda_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
+	zero_soda_recipe.required_ingredients.assign(["cup_empty", "syrup_cola_zero"])
 	zero_soda_recipe.result_scene = soda_scene
 	zero_soda_recipe.base_price = 6.0
 	zero_soda_recipe.is_unlocked = true
 	_recipes.append(zero_soda_recipe)
 
-	var soda_recipe = Recipe.new()
-	soda_recipe.id = "soda"
-	soda_recipe.display_name = "Refrigerante"
-	soda_recipe.category = "drink"
-	soda_recipe.required_ingredients.assign(["cup_empty", "syrup_soda", "cup_lid"])
-	soda_recipe.result_scene = soda_scene
-	soda_recipe.base_price = 6.0
-	soda_recipe.is_unlocked = true
-	_recipes.append(soda_recipe)
+	var soda_lime_recipe = Recipe.new()
+	soda_lime_recipe.id = "soda_lime"
+	soda_lime_recipe.display_name = "Refrigerante Soda"
+	soda_lime_recipe.category = "drink"
+	soda_lime_recipe.required_ingredients.assign(["cup_empty", "syrup_lemon"])
+	soda_lime_recipe.result_scene = soda_scene
+	soda_lime_recipe.base_price = 6.0
+	soda_lime_recipe.is_unlocked = true
+	_recipes.append(soda_lime_recipe)
 
-	var juice_orange_recipe = Recipe.new()
-	juice_orange_recipe.id = "juice_orange"
-	juice_orange_recipe.display_name = "Suco de Laranja"
-	juice_orange_recipe.category = "drink"
-	juice_orange_recipe.required_ingredients.assign(["cup_empty", "cup_lid"])
-	juice_orange_recipe.result_scene = soda_scene
-	juice_orange_recipe.base_price = 7.0
-	juice_orange_recipe.is_unlocked = true
-	_recipes.append(juice_orange_recipe)
-
-	var juice_grape_recipe = Recipe.new()
-	juice_grape_recipe.id = "juice_grape"
-	juice_grape_recipe.display_name = "Suco de Uva"
-	juice_grape_recipe.category = "drink"
-	juice_grape_recipe.required_ingredients.assign(["cup_empty", "cup_lid"])
-	juice_grape_recipe.result_scene = soda_scene
-	juice_grape_recipe.base_price = 7.0
-	juice_grape_recipe.is_unlocked = true
-	_recipes.append(juice_grape_recipe)
-
-	var juice_passion_recipe = Recipe.new()
-	juice_passion_recipe.id = "juice_passion"
-	juice_passion_recipe.display_name = "Suco de Maracujá"
-	juice_passion_recipe.category = "drink"
-	juice_passion_recipe.required_ingredients.assign(["cup_empty", "cup_lid"])
-	juice_passion_recipe.result_scene = soda_scene
-	juice_passion_recipe.base_price = 7.0
-	juice_passion_recipe.is_unlocked = true
-	_recipes.append(juice_passion_recipe)
+	var citrus_recipe = Recipe.new()
+	citrus_recipe.id = "soda_citrus"
+	citrus_recipe.display_name = "Refrigerante Citrus"
+	citrus_recipe.category = "drink"
+	citrus_recipe.required_ingredients.assign(["cup_empty", "syrup_orange"])
+	citrus_recipe.result_scene = soda_scene
+	citrus_recipe.base_price = 6.0
+	citrus_recipe.is_unlocked = true
+	_recipes.append(citrus_recipe)
 
 	# Combos
 	var combo_classic = Recipe.new()

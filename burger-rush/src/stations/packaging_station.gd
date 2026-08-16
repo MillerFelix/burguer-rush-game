@@ -65,28 +65,36 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if packaged_item != null:
 		var d_name = packaged_item.get_display_name() if packaged_item.has_method("get_display_name") else packaged_item.name
 		if held == null:
-			return "E — Pegar %s Embalado" % d_name
+			return "🖱️ / [E] Pegar %s Embalado" % d_name
 		return ""
 
 	# 2. Se o jogador estiver segurando copo aberto para selar com tampa
 	if held != null and held.has_method("has_lid") and not held.has_lid():
 		var flv = held.get("flavor") if held.get("flavor") != null else "Bebida"
-		return "E — Selar %s com Tampa e Canudo" % flv
+		return "🖱️ / [E] Selar %s com Tampa e Canudo" % flv
 
 	# 3. Se o jogador estiver segurando comida/lanche para embalar
 	if held != null and (held.has_method("can_be_packaged") or str(held.get("item_type")) in ["final_product", "food", "burger", "fries"]):
 		var d_name = held.get_display_name() if held.has_method("get_display_name") else held.name
-		return "E — Embalar %s para Viagem" % d_name
+		return "🖱️ / [E] Embalar %s para Viagem" % d_name
 
-	# 4. Mão vazia: pode pegar embalagem ou copo diretamente
+	# 4. Mão vazia: pode pegar embalagem ou copo diretamente com o clique esquerdo
 	if held == null:
 		var aimed_idx = get_aimed_item_index(player)
 		var itm = items_data[aimed_idx]
-		return "E — Pegar %s %s | [F] Alternar" % [itm["icon"], itm["name"]]
+		return "🖱️ Pegar %s %s" % [itm["icon"], itm["name"]]
 
 	return ""
 
+# [Clique Esquerdo do Mouse] — Manipulação de Itens / Embalagens
+func interact_item(player: Node3D) -> void:
+	_handle_packaging_interaction(player)
+
+# [E] — Interação com Equipamento
 func interact(player: Node3D) -> void:
+	_handle_packaging_interaction(player)
+
+func _handle_packaging_interaction(player: Node3D) -> void:
 	var held = player.get("held_item")
 
 	# 1. Retirar item embalado da bancada
@@ -122,7 +130,7 @@ func interact(player: Node3D) -> void:
 				_show_feedback(player, "📦 %s embalado para viagem!" % (food_item.get_display_name() if food_item.has_method("get_display_name") else food_item.name))
 		return
 
-	# 4. Pegar Embalagem ou Copo individual com as mãos livres
+	# 4. Pegar Embalagem ou Copo individual com as mãos livres (Clique Esquerdo)
 	if held == null:
 		var aimed_idx = get_aimed_item_index(player)
 		active_item_index = aimed_idx
@@ -140,39 +148,27 @@ func interact(player: Node3D) -> void:
 			_update_label()
 
 func _package_item_on_station(food_item: Node3D) -> void:
-	var prev_parent = food_item.get_parent()
-	if prev_parent:
-		prev_parent.remove_child(food_item)
-
 	if packaging_slot:
+		var prev_p = food_item.get_parent()
+		if prev_p:
+			prev_p.remove_child(food_item)
 		packaging_slot.add_child(food_item)
-	else:
-		add_child(food_item)
-
-	food_item.position = Vector3.ZERO
-	food_item.rotation = Vector3.ZERO
-
-	if food_item.has_method("set_packaged"):
-		food_item.set_packaged(true)
-	elif "is_packaged" in food_item:
-		food_item.is_packaged = true
-
-	packaged_item = food_item
+		food_item.position = Vector3.ZERO
+		food_item.rotation = Vector3.ZERO
+		packaged_item = food_item
 	_update_label()
 
 func _update_label() -> void:
 	if not status_label:
 		return
-
 	if packaged_item != null:
 		var d_name = packaged_item.get_display_name() if packaged_item.has_method("get_display_name") else packaged_item.name
-		status_label.text = "📦 %s Embalado Pronto" % d_name
+		status_label.text = "📦 %s (Pronto)" % d_name
 		status_label.modulate = Color(0.3, 1.0, 0.4, 1.0)
-		return
-
-	var itm = items_data[active_item_index]
-	status_label.text = "📦 ESTAÇÃO DE EMBALAGEM\n[📦 Lanches] │ [🍟 Batatas] │ [🥤 Copos]\n[E] Pegar %s │ [F] Alternar" % itm["name"]
-	status_label.modulate = Color(0.9, 0.9, 0.9, 1.0)
+	else:
+		var itm = items_data[active_item_index]
+		status_label.text = "📦 EMBALAGENS\n[Clique] Pegar %s" % itm["name"]
+		status_label.modulate = Color(0.9, 0.9, 0.9, 1.0)
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")
