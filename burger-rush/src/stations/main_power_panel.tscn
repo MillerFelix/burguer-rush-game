@@ -1,0 +1,324 @@
+[gd_scene format=3 uid="uid://main_power_panel_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/main_power_panel.gd" id="1_panel_script"]
+
+; ================================================================
+; COLISÃO DO QUADRO DE ENERGIA
+; ================================================================
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_PanelCol"]
+size = Vector3(0.58, 0.78, 0.30)
+
+; ================================================================
+; MATERIAIS REALISTAS E LIMPOS
+; ================================================================
+
+; Gabinete externo fosco texturizado cinza industrial
+[sub_resource type="StandardMaterial3D" id="Material_CabinetBody"]
+albedo_color = Color(0.28, 0.30, 0.33, 1)
+metallic = 0.22
+roughness = 0.58
+
+; Moldura e chanfro da porta
+[sub_resource type="StandardMaterial3D" id="Material_DoorTrim"]
+albedo_color = Color(0.22, 0.24, 0.26, 1)
+metallic = 0.30
+roughness = 0.65
+
+; Fundo interno galvanizado
+[sub_resource type="StandardMaterial3D" id="Material_InnerChassis"]
+albedo_color = Color(0.55, 0.58, 0.62, 1)
+metallic = 0.65
+roughness = 0.45
+
+; Trilho DIN metálico
+[sub_resource type="StandardMaterial3D" id="Material_DINRail"]
+albedo_color = Color(0.78, 0.72, 0.45, 1)
+metallic = 0.80
+roughness = 0.32
+
+; Disjuntores modulares discretos
+[sub_resource type="StandardMaterial3D" id="Material_BreakerCase"]
+albedo_color = Color(0.90, 0.90, 0.92, 1)
+roughness = 0.38
+
+[sub_resource type="StandardMaterial3D" id="Material_BreakerSwitch"]
+albedo_color = Color(0.16, 0.17, 0.19, 1)
+roughness = 0.45
+
+; Fiações coloridas internas visíveis
+[sub_resource type="StandardMaterial3D" id="Material_WireRed"]
+albedo_color = Color(0.85, 0.18, 0.14, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_WireBlue"]
+albedo_color = Color(0.15, 0.42, 0.85, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_WireEarth"]
+albedo_color = Color(0.82, 0.78, 0.12, 1)
+roughness = 0.45
+
+; Eletrodutos e conexões metálicas
+[sub_resource type="StandardMaterial3D" id="Material_ConduitTube"]
+albedo_color = Color(0.70, 0.73, 0.76, 1)
+metallic = 0.75
+roughness = 0.35
+
+; Pequena placa identificadora ENERGIA
+[sub_resource type="StandardMaterial3D" id="Material_BadgePlate"]
+albedo_color = Color(0.92, 0.92, 0.94, 1)
+roughness = 0.40
+
+; Chave seccionadora e alavanca física hero
+[sub_resource type="StandardMaterial3D" id="Material_HubCast"]
+albedo_color = Color(0.24, 0.26, 0.28, 1)
+metallic = 0.50
+roughness = 0.50
+
+[sub_resource type="StandardMaterial3D" id="Material_LeverMetal"]
+albedo_color = Color(0.90, 0.92, 0.94, 1)
+metallic = 0.92
+roughness = 0.18
+
+[sub_resource type="StandardMaterial3D" id="Material_GripRed"]
+albedo_color = Color(0.85, 0.14, 0.12, 1)
+roughness = 0.40
+
+; Indicadores luminosos (LEDs)
+[sub_resource type="StandardMaterial3D" id="Material_LEDGreen"]
+albedo_color = Color(0.15, 0.92, 0.25, 1)
+emission_enabled = true
+emission = Color(0.15, 0.92, 0.25, 1)
+emission_energy_multiplier = 1.6
+
+[sub_resource type="StandardMaterial3D" id="Material_LEDRed"]
+albedo_color = Color(0.95, 0.15, 0.12, 1)
+emission_enabled = true
+emission = Color(0.95, 0.15, 0.12, 1)
+emission_energy_multiplier = 1.6
+
+; ================================================================
+; MESHES DA ESTRUTURA
+; ================================================================
+
+[sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
+material = SubResource("Material_CabinetBody")
+size = Vector3(0.50, 0.66, 0.20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Door"]
+material = SubResource("Material_DoorTrim")
+size = Vector3(0.52, 0.68, 0.02)
+
+[sub_resource type="BoxMesh" id="BoxMesh_InnerPlate"]
+material = SubResource("Material_InnerChassis")
+size = Vector3(0.42, 0.58, 0.015)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DINRail"]
+material = SubResource("Material_DINRail")
+size = Vector3(0.38, 0.03, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BreakerPack"]
+material = SubResource("Material_BreakerCase")
+size = Vector3(0.045, 0.08, 0.05)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BreakerSwitch"]
+material = SubResource("Material_BreakerSwitch")
+size = Vector3(0.02, 0.02, 0.02)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Wire"]
+top_radius = 0.005
+bottom_radius = 0.005
+height = 0.14
+radial_segments = 6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Conduit"]
+material = SubResource("Material_ConduitTube")
+top_radius = 0.022
+bottom_radius = 0.022
+height = 0.32
+radial_segments = 12
+
+[sub_resource type="BoxMesh" id="BoxMesh_SimpleBadge"]
+material = SubResource("Material_BadgePlate")
+size = Vector3(0.18, 0.045, 0.006)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_HubBoss"]
+material = SubResource("Material_HubCast")
+top_radius = 0.045
+bottom_radius = 0.045
+height = 0.035
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_LeverShaft"]
+material = SubResource("Material_LeverMetal")
+size = Vector3(0.022, 0.22, 0.022)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Grip"]
+material = SubResource("Material_GripRed")
+top_radius = 0.026
+bottom_radius = 0.026
+height = 0.11
+radial_segments = 14
+
+[sub_resource type="SphereMesh" id="SphereMesh_LED"]
+radius = 0.015
+height = 0.03
+radial_segments = 10
+rings = 4
+
+; ================================================================
+; HIERARQUIA DA CENA
+; ================================================================
+
+[node name="MainPowerPanel" type="StaticBody3D"]
+script = ExtResource("1_panel_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_PanelCol")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Enclosure" type="Node3D" parent="Model"]
+
+; Caixa metálica principal
+[node name="Cabinet" type="MeshInstance3D" parent="Model/Enclosure"]
+mesh = SubResource("BoxMesh_Cabinet")
+
+; Moldura frontal
+[node name="DoorFrame" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.09)
+mesh = SubResource("BoxMesh_Door")
+
+; Placa de fundo interna
+[node name="InnerPlate" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.088)
+mesh = SubResource("BoxMesh_InnerPlate")
+
+; Eletrodutos superior e inferior
+[node name="ConduitTop" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0.46, 0)
+mesh = SubResource("CylinderMesh_Conduit")
+
+[node name="ConduitBottom" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, -0.46, 0)
+mesh = SubResource("CylinderMesh_Conduit")
+
+; Pequena identificação simples "ENERGIA" no topo
+[node name="BadgePlate" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26, 0.102)
+mesh = SubResource("BoxMesh_SimpleBadge")
+
+[node name="BadgeText" type="Label3D" parent="Model/Enclosure/BadgePlate"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
+text = "ENERGIA"
+font_size = 14
+modulate = Color(0.12, 0.12, 0.14, 1)
+outline_size = 0
+
+; Trilho DIN e disjuntores discretos
+[node name="DINRail" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.095)
+mesh = SubResource("BoxMesh_DINRail")
+
+[node name="BreakersRow" type="Node3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.12, 0.105)
+
+[node name="MCB1" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11, 0, 0)
+mesh = SubResource("BoxMesh_BreakerPack")
+
+[node name="Sw1" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow/MCB1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.026)
+mesh = SubResource("BoxMesh_BreakerSwitch")
+
+[node name="MCB2" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.055, 0, 0)
+mesh = SubResource("BoxMesh_BreakerPack")
+
+[node name="Sw2" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow/MCB2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.026)
+mesh = SubResource("BoxMesh_BreakerSwitch")
+
+[node name="MCB3" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.055, 0, 0)
+mesh = SubResource("BoxMesh_BreakerPack")
+
+[node name="Sw3" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow/MCB3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.026)
+mesh = SubResource("BoxMesh_BreakerSwitch")
+
+[node name="MCB4" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.11, 0, 0)
+mesh = SubResource("BoxMesh_BreakerPack")
+
+[node name="Sw4" type="MeshInstance3D" parent="Model/Enclosure/BreakersRow/MCB4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.026)
+mesh = SubResource("BoxMesh_BreakerSwitch")
+
+; Fiações elétricas visíveis
+[node name="WiringHarness" type="Node3D" parent="Model/Enclosure"]
+
+[node name="WireRed" type="MeshInstance3D" parent="Model/Enclosure/WiringHarness"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.11, 0.20, 0.098)
+mesh = SubResource("CylinderMesh_Wire")
+surface_material_override/0 = SubResource("Material_WireRed")
+
+[node name="WireBlue" type="MeshInstance3D" parent="Model/Enclosure/WiringHarness"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.055, 0.20, 0.098)
+mesh = SubResource("CylinderMesh_Wire")
+surface_material_override/0 = SubResource("Material_WireBlue")
+
+[node name="WireEarth" type="MeshInstance3D" parent="Model/Enclosure/WiringHarness"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.055, 0.20, 0.098)
+mesh = SubResource("CylinderMesh_Wire")
+surface_material_override/0 = SubResource("Material_WireEarth")
+
+; Indicador ON / LIGADO (Verde)
+[node name="LEDGreen" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13, -0.06, 0.112)
+mesh = SubResource("SphereMesh_LED")
+surface_material_override/0 = SubResource("Material_LEDGreen")
+
+[node name="LabelON" type="Label3D" parent="Model/Enclosure/LEDGreen"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.028, 0)
+text = "ON"
+font_size = 11
+modulate = Color(0.15, 0.88, 0.25, 1)
+outline_size = 0
+
+; Indicador OFF / DESLIGADO (Vermelho)
+[node name="LEDRed" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.13, -0.06, 0.112)
+mesh = SubResource("SphereMesh_LED")
+surface_material_override/0 = SubResource("Material_LEDRed")
+
+[node name="LabelOFF" type="Label3D" parent="Model/Enclosure/LEDRed"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.028, 0)
+text = "OFF"
+font_size = 11
+modulate = Color(0.92, 0.18, 0.15, 1)
+outline_size = 0
+
+; Cubo e Eixo Mecânico Central
+[node name="LeverHub" type="MeshInstance3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 0, -1, 0, 1, 0, 0, -0.06, 0.10)
+mesh = SubResource("CylinderMesh_HubBoss")
+
+; Alavanca Seccionadora Principal (Hero Element)
+[node name="LeverPivot" type="Node3D" parent="Model/Enclosure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.06, 0.115)
+
+[node name="LeverShaft" type="MeshInstance3D" parent="Model/Enclosure/LeverPivot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0.02)
+mesh = SubResource("BoxMesh_LeverShaft")
+
+[node name="LeverGrip" type="MeshInstance3D" parent="Model/Enclosure/LeverPivot"]
+transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 0.19, 0.038)
+mesh = SubResource("CylinderMesh_Grip")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+unit_size = 3.0
+max_distance = 18.0
+volume_db = -3.0
+bus = &"Master"

@@ -13,6 +13,7 @@ enum State {
 	ARRIVING,                  # Nascendo na calçada externa
 	GOING_TO_ENTRANCE,         # Caminhando em direção à entrada principal (z = 9.5)
 	ENTERING_RESTAURANT,       # Cruzando fisicamente a porta (z = 9.0 -> 7.8)
+	WAITING_FOR_TABLE,         # Aguardando uma mesa livre e limpa no salão
 	GOING_TO_SEAT,             # No salão, caminhando pelos corredores até a cadeira
 	SITTING,                   # Posicionando-se na cadeira e alinhando com a mesa
 	SEATED_WAITING_TO_ORDER,   # Sentado na cadeira esperando atendimento com a mão levantada
@@ -251,8 +252,40 @@ func assign_seat(table: RestaurantTable, seat_pos: Vector3, seat_idx: int = 1) -
 	assigned_seat_index = seat_idx
 	target_position = seat_pos
 	_build_entrance_path(seat_pos)
-	state = State.GOING_TO_ENTRANCE
+	if is_inside_restaurant or position.z <= 8.2:
+		state = State.GOING_TO_SEAT
+	else:
+		state = State.GOING_TO_ENTRANCE
 	_update_visual_status()
+
+func assign_waiting_area() -> void:
+	assigned_table = null
+	assigned_table_id = 0
+	state = State.WAITING_FOR_TABLE
+	path_waypoints.clear()
+	path_waypoints.append(Vector3(0.0, 0.0, 9.6))
+	path_waypoints.append(Vector3(0.0, 0.0, 7.8))
+	path_waypoints.append(Vector3(randf_range(-1.2, 1.2), 0.0, 7.2))
+	_update_visual_status()
+
+var _table_check_timer: float = 0.0
+
+func _process_table_waiting(delta: float) -> void:
+	if not path_waypoints.is_empty():
+		_follow_path_to_destination(delta, false)
+
+	_table_check_timer -= delta
+	if _table_check_timer <= 0.0:
+		_table_check_timer = 0.5
+		var table_mgr = TableManager.get_instance() if is_inside_tree() else null
+		if not table_mgr and get_tree() and get_tree().current_scene:
+			table_mgr = get_tree().current_scene.get_node_or_null("TableManager")
+
+		if table_mgr:
+			var table = table_mgr.get_available_table()
+			if table and table.is_available():
+				var seat_pos = table.occupy_seat(self)
+				assign_seat(table, seat_pos, 1)
 
 func _build_entrance_path(seat_pos: Vector3) -> void:
 	path_waypoints.clear()
@@ -303,6 +336,9 @@ func _physics_process(delta: float) -> void:
 				_has_played_arrival_sound = true
 				_play_customer_sound("customer_arrive", -10.0, 0.08)
 			_follow_path_to_destination(delta, true)
+
+		State.WAITING_FOR_TABLE:
+			_process_table_waiting(delta)
 
 		State.SITTING:
 			_complete_sitting_transition()
@@ -475,6 +511,18 @@ func _head_to_checkout_queue() -> void:
 
 		# 1. Desocupa a mesa imediatamente
 		table.release()
+
+		# Ocasionalmente (20% de chance) pequenas manchas/gotas caem no chão ao redor da mesa
+		if randf() < 0.20:
+			var scene_root = get_tree().current_scene if get_tree() else get_tree().root
+			if scene_root:
+				var spot_scene = load("res://src/stations/floor_dirt_spot.tscn")
+				if spot_scene:
+					var spot = spot_scene.instantiate()
+					scene_root.add_child(spot)
+					spot.global_position = table.global_position + Vector3(randf_range(-0.45, 0.45), 0.004, randf_range(-0.45, 0.45))
+					spot.dirt_amount = randf_range(0.6, 1.0)
+
 		assigned_table = null
 
 		if all_members.size() > 1:
@@ -580,9 +628,9 @@ func abandon_restaurant(reason: String) -> void:
 
 	_play_customer_sound("customer_leave", -12.0, 0.06)
 
-	# Libera a mesa imediatamente
+	# Libera a mesa imediatamente sem sujar (cliente não comeu)
 	if assigned_table and is_instance_valid(assigned_table):
-		assigned_table.release()
+		assigned_table.release(false)
 		assigned_table = null
 
 	# Cancela o pedido no OrderManager se ainda não consumido

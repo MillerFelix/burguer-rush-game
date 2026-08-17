@@ -60,13 +60,24 @@ func create_group_order(customer: Node, group_size: int, table_id: int = 0, sour
 		{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0}
 	]
 
-	# 1. Cada pessoa do grupo consome 1 Hambúrguer e 1 Bebida
+	# 1. Cada pessoa do grupo consome Hambúrguer e Bebida (com maior demanda em dias quentes)
+	var bev_mult = 1.0
+	if is_inside_tree() and get_tree() and get_tree().root:
+		var dem = get_tree().root.find_child("DailyEventManager", true, false)
+		if dem and dem.has_method("get_beverage_demand_multiplier"):
+			bev_mult = dem.get_beverage_demand_multiplier()
+
 	for _p in range(order.group_size):
 		var b = available_burgers[randi() % available_burgers.size()]
 		order.add_item(b.id, b.name, 1, b.price)
 
-		var d = available_drinks[randi() % available_drinks.size()]
-		order.add_item(d.id, d.name, 1, d.price)
+		var drinks_for_person = 1
+		if bev_mult >= 1.8:
+			drinks_for_person = 2 if randf() < 0.70 else 1
+
+		for _k in range(drinks_for_person):
+			var d = available_drinks[randi() % available_drinks.size()]
+			order.add_item(d.id, d.name, 1, d.price)
 
 	# 2. Acompanhamento (Batata Frita) proporcional e com variação realista
 	var fries_count = 0

@@ -1,0 +1,80 @@
+[gd_scene format=3 uid="uid://floor_puddle_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/floor_puddle.gd" id="1_puddle_script"]
+
+; ================================================================
+; COLISÃO DA POÇA D'ÁGUA NO CHÃO
+; ================================================================
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_Puddle"]
+height = 0.12
+radius = 0.45
+
+; ================================================================
+; MATERIAIS DE ÁGUA LÍMPIDA COM BRILHO E REFLEXO
+; ================================================================
+
+[sub_resource type="StandardMaterial3D" id="Material_PuddleWater"]
+transparency = 1
+albedo_color = Color(0.35, 0.72, 0.95, 0.65)
+roughness = 0.05
+refraction_enabled = true
+refraction_scale = 0.04
+
+[sub_resource type="StandardMaterial3D" id="Material_DropletWater"]
+transparency = 1
+albedo_color = Color(0.40, 0.78, 0.98, 0.75)
+roughness = 0.04
+
+; ================================================================
+; MESHES DA POÇA
+; ================================================================
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_PuddleBase"]
+material = SubResource("Material_PuddleWater")
+top_radius = 0.38
+bottom_radius = 0.42
+height = 0.003
+radial_segments = 24
+
+[sub_resource type="SphereMesh" id="SphereMesh_Droplet"]
+material = SubResource("Material_DropletWater")
+radius = 0.03
+height = 0.015
+radial_segments = 10
+rings = 4
+
+; ================================================================
+; HIERARQUIA
+; ================================================================
+
+[node name="FloorPuddle" type="StaticBody3D"]
+script = ExtResource("1_puddle_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+shape = SubResource("CylinderShape3D_Puddle")
+
+[node name="Model" type="Node3D" parent="."]
+
+; Poça principal
+[node name="MainPuddle" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.003, 0)
+mesh = SubResource("CylinderMesh_PuddleBase")
+
+; Gotas e respingos periféricos
+[node name="Drop1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0.004, 0.18)
+mesh = SubResource("SphereMesh_Droplet")
+
+[node name="Drop2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 0.8, -0.32, 0.004, -0.22)
+mesh = SubResource("SphereMesh_Droplet")
+
+[node name="Drop3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(0.6, 0, 0, 0, 1, 0, 0, 0, 0.6, 0.15, 0.004, -0.38)
+mesh = SubResource("SphereMesh_Droplet")
+
+[node name="Drop4" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(0.7, 0, 0, 0, 1, 0, 0, 0, 0.7, -0.25, 0.004, 0.28)
+mesh = SubResource("SphereMesh_Droplet")

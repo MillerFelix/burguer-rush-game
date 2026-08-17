@@ -2,42 +2,36 @@ class_name StorageRack
 extends StaticBody3D
 
 # ================================================================
-# ÁREA DE PÃES DO ARMAZÉM — REORGANIZAÇÃO INDIVIDUAL
-#
-# Estrutura:
-#  StaticBody3D "StorageRack" (Mesa de Armazenamento de Pães)
-#  ├── Model (Node3D)
-#  │   ├── Table (Tampo + 4 Pernas + Prateleira Inferior)
-#  │   ├── BoxBreadTop (Caixa 1: Tampas de Pão com Gergelim)
-#  │   │   ├── Buns (Modelos visuais de pães superiores com gergelim)
-#  │   │   └── Badge/Label (Etiqueta da caixa)
-#  │   ├── BoxBreadBottom (Caixa 2: Bases de Pão)
-#  │   │   ├── Buns (Modelos visuais de bases de pão)
-#  │   │   └── Badge/Label (Etiqueta da caixa)
-#  │   └── TableBadge (Placa frontal "🍞 PÃO" fixada na mesa)
-#  └── StatusLabel (Label3D)
+# ÁREA DE PÃES DO ARMAZÉM — ESTOQUE VISUAL DINÂMICO DE 3 ESTÁGIOS
+# Regra: CHEIO | MÉDIO | BAIXO | ZERO
+# Sem textos ou labels 3D flutuantes
 #
 # REGRA DE CONTROLE:
 #  - E: Reabastecer com caixa de mercadoria / Equipamentos
 #  - CLIQUE ESQUERDO: Pegar / manipular pães
 # ================================================================
 
-@onready var status_label: Label3D = get_node_or_null("StatusLabel")
+# Nós de Estoque Visual Dinâmico (3 Estágios)
+@onready var bread_top_full: Node3D = get_node_or_null("Model/BoxBreadTop/Full")
+@onready var bread_top_med: Node3D = get_node_or_null("Model/BoxBreadTop/Medium")
+@onready var bread_top_low: Node3D = get_node_or_null("Model/BoxBreadTop/Low")
+
+@onready var bread_bot_full: Node3D = get_node_or_null("Model/BoxBreadBottom/Full")
+@onready var bread_bot_med: Node3D = get_node_or_null("Model/BoxBreadBottom/Medium")
+@onready var bread_bot_low: Node3D = get_node_or_null("Model/BoxBreadBottom/Low")
 
 var items_data: Array[Dictionary] = [
 	{
 		"id": "bread_top",
-		"name": "Tampa do Pão (Gergelim)",
+		"name": "Tampa do Pão",
 		"icon": "🥯",
-		"scene": preload("res://src/items/bread_top.tscn"),
-		"slot_name": "LabelBreadTop"
+		"scene": preload("res://src/items/bread_top.tscn")
 	},
 	{
 		"id": "bread_bottom",
 		"name": "Base do Pão",
 		"icon": "🍞",
-		"scene": preload("res://src/items/bread_bottom.tscn"),
-		"slot_name": "LabelBreadBot"
+		"scene": preload("res://src/items/bread_bottom.tscn")
 	}
 ]
 
@@ -47,7 +41,7 @@ func _ready() -> void:
 	var inv = InventoryManager.get_instance()
 	if inv and not inv.stock_changed.is_connected(_on_stock_changed):
 		inv.stock_changed.connect(_on_stock_changed)
-	_update_label()
+	_update_all_visual_stocks()
 
 func get_aimed_item_index(player: Node = null) -> int:
 	if not player:
@@ -68,7 +62,7 @@ func cycle_item(worker: Node3D = null) -> String:
 	var itm = items_data[active_item_index]
 	if worker:
 		_show_feedback(worker, "📦 Pão Selecionado: %s %s" % [itm["icon"], itm["name"]])
-	_update_label()
+	_update_all_visual_stocks()
 	return itm["name"]
 
 func get_interaction_prompt(player: Node = null) -> String:
@@ -87,27 +81,24 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 		# Devolução de pão individual
 		if held_id == item_id or (item_id.begins_with("bread") and (held_id == "bread_bottom" or held_id == "bread_top" or held_id == "bread")):
-			return "🖱️ Clique para Devolver %s ao Estoque" % itm["name"]
+			return "%s 🖱️ Devolver %s ao Estoque" % [itm["icon"], itm["name"]]
 
 		# Reabastecimento com caixa
 		if held.get("ingredient_id") == item_id or (item_id.begins_with("bread") and (held.get("ingredient_id") == "bread" or held.get("ingredient_id") == "bread_bottom" or held.get("ingredient_id") == "bread_top")) or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			return "E / 🖱️ Armazenar %s (+%d unidades)" % [itm["name"], qty]
+			return "📦 🖱️ Armazenar %s (+%d un.)" % [itm["name"], qty]
 
 		return ""
 
 	var stock = inv.get_stock(item_id)
 	if stock == 0 and item_id.begins_with("bread"):
 		stock = inv.get_stock("bread")
-	var max_cap = inv.get_max_capacity(item_id)
-	if max_cap == 0:
-		max_cap = 60
 
 	if stock <= 0:
-		return "🔴 %s Esgotado! Compre no Computador" % itm["name"]
+		return "🔴 %s Esgotado" % itm["name"]
 
 	# Interação EXCLUSIVA com clique esquerdo para pegar ingredientes
-	return "🖱️ Pegar %s %s (%d/%d)" % [itm["icon"], itm["name"], stock, max_cap]
+	return "%s 🖱️ Pegar %s" % [itm["icon"], itm["name"]]
 
 # [Clique Esquerdo do Mouse] — Manipulação de Itens (Pegar / Devolver)
 func interact_item(player: Node3D) -> void:
@@ -131,9 +122,9 @@ func interact_item(player: Node3D) -> void:
 				inv.add_stock(item_id, 1)
 				if item_id == "bread_bottom" or item_id == "bread_top":
 					inv.add_stock("bread", 1)
-				_show_feedback(player, "🍞 %s devolvido à mesa (Estoque: %d)" % [itm["name"], inv.get_stock(item_id)])
+				_show_feedback(player, "🍞 %s devolvido à bancada" % itm["name"])
 				returned_bread.queue_free()
-				_update_label()
+				_update_all_visual_stocks()
 				return
 
 		# Reabastecimento com Caixa de Entrega
@@ -146,7 +137,7 @@ func interact_item(player: Node3D) -> void:
 					inv.add_stock("bread", qty)
 				_show_feedback(player, "📦 %s armazenado na mesa (+%d un.)!" % [itm["name"], qty])
 				crate.queue_free()
-				_update_label()
+				_update_all_visual_stocks()
 				return
 
 		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
@@ -173,8 +164,8 @@ func interact_item(player: Node3D) -> void:
 				add_child(item)
 			if player.has_method("pick_up"):
 				player.pick_up(item)
-			_show_feedback(player, "🍞 Pegou %s (Estoque: %d)" % [itm["name"], inv.get_stock(item_id)])
-			_update_label()
+			_show_feedback(player, "🍞 Pegou %s" % itm["name"])
+			_update_all_visual_stocks()
 
 # [E] — Interação com Equipamento (NÃO pega pão; apenas reabastecimento com caixa)
 func interact(player: Node3D) -> void:
@@ -197,34 +188,50 @@ func interact(player: Node3D) -> void:
 				inv.add_stock("bread", qty)
 			_show_feedback(player, "📦 %s armazenado na mesa (+%d un.)!" % [itm["name"], qty])
 			crate.queue_free()
-			_update_label()
+			_update_all_visual_stocks()
 			return
 
-	# Se tentar apertar E com as mãos vazias, orienta que a tecla correta para ingredientes é o Clique Esquerdo
 	if held == null:
 		_show_feedback(player, "ℹ️ Use o Clique Esquerdo do mouse para pegar pães.")
 
 func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
-	_update_label()
+	_update_all_visual_stocks()
 
-func _update_label() -> void:
+func _update_all_visual_stocks() -> void:
 	var inv = InventoryManager.get_instance()
-	var b_top = inv.get_stock("bread_top") if inv else 0
-	var b_bot = inv.get_stock("bread_bottom") if inv else 0
+	var b_top = inv.get_stock("bread_top") if inv else 20
+	var b_bot = inv.get_stock("bread_bottom") if inv else 20
 
-	_update_box_label("Model/BoxBreadTop/Label", "🥯 TAMPA\nx%d" % b_top)
-	_update_box_label("Model/BoxBreadBottom/Label", "🍞 BASE\nx%d" % b_bot)
+	_update_section_visual(b_top, bread_top_full, bread_top_med, bread_top_low, 20, 8)
+	_update_section_visual(b_bot, bread_bot_full, bread_bot_med, bread_bot_low, 20, 8)
 
-	if not status_label:
+func _update_section_visual(
+	stock_qty: int,
+	node_full: Node3D,
+	node_med: Node3D,
+	node_low: Node3D,
+	full_thresh: int = 20,
+	med_thresh: int = 8
+) -> void:
+	if not node_full and not node_med and not node_low:
 		return
 
-	status_label.text = "🍞 ÁREA DE PÃES — ESTOQUE\n🥯 Tampas (Gergelim): %d  │  🍞 Bases: %d\n[Clique Esquerdo] Pegar ingrediente apontado" % [b_top, b_bot]
-	status_label.modulate = Color(0.96, 0.90, 0.75, 1.0)
-
-func _update_box_label(node_path: String, text: String) -> void:
-	var lbl = get_node_or_null(node_path)
-	if lbl and lbl is Label3D:
-		lbl.text = text
+	if stock_qty >= full_thresh:
+		if node_full: node_full.visible = true
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
+	elif stock_qty >= med_thresh:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = true
+		if node_low: node_low.visible = false
+	elif stock_qty > 0:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = true
+	else:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")

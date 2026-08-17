@@ -105,6 +105,14 @@ static func get_stream(sound_id: String) -> AudioStreamWAV:
 			stream = _generate_item_pickup()
 		"item_drop":
 			stream = _generate_item_drop()
+		"trash_dispose":
+			stream = _generate_trash_dispose()
+		"sponge_scrub_loop", "sponge_scrub":
+			stream = _generate_sponge_scrub()
+		"sink_running_water":
+			stream = _generate_sink_water()
+		"sink_faucet_turn":
+			stream = _generate_faucet_turn()
 		"tool_spatula_equip":
 			stream = _generate_tool_equip("spatula")
 		"tool_sponge_equip":
@@ -167,6 +175,13 @@ static func get_stream(sound_id: String) -> AudioStreamWAV:
 			stream = _generate_customer_thank()
 		"customer_leave":
 			stream = _generate_customer_leave()
+		# --- QUADRO GERAL & AR-CONDICIONADO ---
+		"breaker_switch_on":
+			stream = _generate_breaker_switch(true)
+		"breaker_switch_off":
+			stream = _generate_breaker_switch(false)
+		"air_conditioner_loop":
+			stream = _generate_air_conditioner_loop()
 		_:
 			stream = _generate_generic_click()
 
@@ -1511,7 +1526,181 @@ static func _generate_warehouse_ambience() -> AudioStreamWAV:
 static func _generate_generic_click() -> AudioStreamWAV:
 	return _generate_switch_click(true)
 
+# 37. Som natural de descarte de item na lixeira (impacto abafado + leve ruído de forro plástico)
+static func _generate_trash_dispose() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.20
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
 
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		var progress = float(i) / float(num_samples)
 
+		# Impacto abafado de fundo de lixeira / saco plástico
+		var thud_env = exp(-progress * 24.0)
+		var thud = sin(2.0 * PI * (130.0 - progress * 45.0) * t) * thud_env * 0.65
+
+		# Ruído sutil e orgânico de saco plástico/embalagem
+		var rustle_env = exp(-progress * 18.0)
+		var noise = (randf() * 2.0 - 1.0) * rustle_env * 0.20
+
+		var sample = clampf((thud + noise) * 0.70, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 38. Som suave e agradável de bucha esfregando / limpando superfície
+static func _generate_sponge_scrub() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.45
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		# Dois ciclos de esfregar (ida e volta)
+		var cycle = sin(2.0 * PI * 4.4 * t)
+		var cycle_amp = absf(cycle)
+
+		# Ruído filtrado e aveludado de esponja macia
+		var base_noise = (randf() * 2.0 - 1.0)
+		var low_foam = sin(2.0 * PI * 340.0 * t + base_noise * 0.3)
+		var friction = (base_noise * 0.45 + low_foam * 0.55) * cycle_amp
+
+		var sample = clampf(friction * 0.55, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = int(sample_rate * 0.05)
+	stream.loop_end = int(sample_rate * 0.42)
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 39. Som natural de água corrente saindo da torneira e caindo na cuba de inox
+static func _generate_sink_water() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.80
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		var n1 = (randf() * 2.0 - 1.0)
+		var n2 = (randf() * 2.0 - 1.0)
+
+		# Fluxo de jato d'água + respingos suaves na cuba
+		var stream_splash = (n1 * 0.5 + n2 * 0.5) * (0.65 + 0.15 * sin(2.0 * PI * 8.0 * t))
+		var low_gurgle = sin(2.0 * PI * 180.0 * t + n1 * 0.4) * 0.30
+
+		var sample = clampf((stream_splash * 0.70 + low_gurgle * 0.30) * 0.50, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = int(sample_rate * 0.10)
+	stream.loop_end = int(sample_rate * 0.75)
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 40. Clique metálico suave da manivela da torneira
+static func _generate_faucet_turn() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.10
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		var progress = float(i) / float(num_samples)
+		var click_env = exp(-progress * 30.0)
+		var click = sin(2.0 * PI * 1200.0 * t) * click_env * 0.45
+		var sample = clampf(click, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 41. Chave geral do quadro elétrico (LIGAR)
+static func _generate_breaker_switch(turn_on: bool) -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.22
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		var progress = float(i) / float(num_samples)
+		var env = exp(-progress * 18.0)
+
+		# Impacto mecânico pesado da alavanca
+		var mech_thud = sin(2.0 * PI * 140.0 * t) * exp(-progress * 25.0) * 0.70
+		var latch_snap = (randf() * 2.0 - 1.0) * exp(-progress * 40.0) * 0.50
+		var contact_hum = sin(2.0 * PI * (60.0 if turn_on else 120.0) * t) * env * (0.35 if turn_on else 0.10)
+
+		var sample = clampf((mech_thud + latch_snap + contact_hum) * 0.75, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 42. Fluxo contínuo de ventilação do ar-condicionado (Suave e Discreto)
+static func _generate_air_conditioner_loop() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 1.0
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		# Ruído rosa/suave de brisa leve
+		var air_flow = (randf() * 2.0 - 1.0) * 0.06
+		# Zumbido acústico muito discreto e relaxante
+		var low_hum = sin(2.0 * PI * 85.0 * t) * 0.025 + sin(2.0 * PI * 170.0 * t) * 0.012
+
+		var sample = clampf(air_flow + low_hum, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = int(sample_rate * 0.10)
+	stream.loop_end = int(sample_rate * 0.90)
+	stream.stereo = false
+	stream.data = pcm
+	return stream
 
 

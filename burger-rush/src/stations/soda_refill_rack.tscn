@@ -1,0 +1,161 @@
+[gd_scene format=3 uid="uid://soda_refill_rack_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/soda_refill_rack.gd" id="1_rack_script"]
+
+; ================================================================
+; COLISÃO DO SUPORTE DE REFIS
+; ================================================================
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Rack"]
+size = Vector3(1.50, 0.75, 0.50)
+
+; ================================================================
+; MATERIAIS
+; ================================================================
+
+[sub_resource type="StandardMaterial3D" id="Material_IndustrialSteel"]
+albedo_color = Color(0.20, 0.22, 0.24, 1)
+metallic = 0.80
+roughness = 0.38
+
+[sub_resource type="StandardMaterial3D" id="Material_RubberFoot"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_BadgeWhite"]
+albedo_color = Color(0.96, 0.96, 0.94, 1)
+roughness = 0.50
+
+; ================================================================
+; MESHES DA ESTRUTURA ELEVADA
+; ================================================================
+
+; Pés e suportes estruturais verticais
+[sub_resource type="BoxMesh" id="BoxMesh_StandLeg"]
+material = SubResource("Material_IndustrialSteel")
+size = Vector3(0.04, 0.16, 0.44)
+
+; Plataforma superior para os refis
+[sub_resource type="BoxMesh" id="BoxMesh_MainBase"]
+material = SubResource("Material_IndustrialSteel")
+size = Vector3(1.44, 0.03, 0.44)
+
+; Painel frontal de base para fixação da etiqueta
+[sub_resource type="BoxMesh" id="BoxMesh_FrontBasePanel"]
+material = SubResource("Material_IndustrialSteel")
+size = Vector3(1.44, 0.10, 0.02)
+
+; Trilhos de contenção lateral e traseiro
+[sub_resource type="BoxMesh" id="BoxMesh_RailBack"]
+material = SubResource("Material_IndustrialSteel")
+size = Vector3(1.44, 0.08, 0.03)
+
+[sub_resource type="BoxMesh" id="BoxMesh_RailSide"]
+material = SubResource("Material_IndustrialSteel")
+size = Vector3(0.03, 0.08, 0.44)
+
+; Berços de apoio para cada barril
+[sub_resource type="CylinderMesh" id="CylinderMesh_Cradle"]
+material = SubResource("Material_RubberFoot")
+top_radius = 0.14
+bottom_radius = 0.14
+height = 0.015
+
+; Placa de Identificação Física Branca na Base Frontal
+[sub_resource type="BoxMesh" id="BoxMesh_BadgePlate"]
+material = SubResource("Material_BadgeWhite")
+size = Vector3(1.10, 0.06, 0.006)
+
+; ================================================================
+; HIERARQUIA
+; ================================================================
+
+[node name="SodaRefillRack" type="StaticBody3D"]
+script = ExtResource("1_rack_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.375, 0)
+shape = SubResource("BoxShape3D_Rack")
+
+[node name="Model" type="Node3D" parent="."]
+
+; Pés da estrutura metálica
+[node name="LegLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.70, 0.08, 0)
+mesh = SubResource("BoxMesh_StandLeg")
+
+[node name="LegRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70, 0.08, 0)
+mesh = SubResource("BoxMesh_StandLeg")
+
+[node name="LegMid" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.08, 0)
+mesh = SubResource("BoxMesh_StandLeg")
+
+; Painel inferior/frontal de base (estrutura para identificação)
+[node name="FrontBasePanel" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0.22)
+mesh = SubResource("BoxMesh_FrontBasePanel")
+
+; Plataforma superior elevada
+[node name="Base" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.155, 0)
+mesh = SubResource("BoxMesh_MainBase")
+
+; Trilhos de contenção traseiro e laterais
+[node name="RailBack" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19, -0.22)
+mesh = SubResource("BoxMesh_RailBack")
+
+[node name="RailLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.72, 0.19, 0)
+mesh = SubResource("BoxMesh_RailSide")
+
+[node name="RailRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.72, 0.19, 0)
+mesh = SubResource("BoxMesh_RailSide")
+
+; Berços de borracha para cada refil
+[node name="Cradle0" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.165, 0)
+mesh = SubResource("CylinderMesh_Cradle")
+
+[node name="Cradle1" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.165, 0)
+mesh = SubResource("CylinderMesh_Cradle")
+
+[node name="Cradle2" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.165, 0)
+mesh = SubResource("CylinderMesh_Cradle")
+
+[node name="Cradle3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.165, 0)
+mesh = SubResource("CylinderMesh_Cradle")
+
+; Área de identificação física na base frontal
+[node name="FrontBadge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0.232)
+mesh = SubResource("BoxMesh_BadgePlate")
+
+[node name="Label" type="Label3D" parent="Model/FrontBadge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.004)
+double_sided = false
+text = "INSUMOS DE REFRIGERANTE"
+font_size = 14
+modulate = Color(0.12, 0.12, 0.12, 1)
+outline_size = 0
+
+; Nós de Slot para os 4 refis
+[node name="Slots" type="Node3D" parent="Model"]
+
+[node name="Slot0" type="Node3D" parent="Model/Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.54, 0.17, 0)
+
+[node name="Slot1" type="Node3D" parent="Model/Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.18, 0.17, 0)
+
+[node name="Slot2" type="Node3D" parent="Model/Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.17, 0)
+
+[node name="Slot3" type="Node3D" parent="Model/Slots"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.17, 0)

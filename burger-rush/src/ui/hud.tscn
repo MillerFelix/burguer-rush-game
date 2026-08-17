@@ -238,4 +238,64 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 18
 text = "Iniciar Próximo Dia (08:00) [E / Enter]"
 
+[node name="DailyNoticeModal" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -160.0
+offset_right = 260.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_Modal")
+
+[node name="VBox" type="VBoxContainer" parent="DailyNoticeModal"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DateTagLabel" type="Label" parent="DailyNoticeModal/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.82, 1)
+theme_override_font_sizes/font_size = 13
+text = "NOTÍCIAS DA MANHÃ"
+horizontal_alignment = 1
+
+[node name="NoticeTitle" type="Label" parent="DailyNoticeModal/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 21
+text = "AVISO DO DIA"
+horizontal_alignment = 1
+
+[node name="NoticeHeadline" type="Label" parent="DailyNoticeModal/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.92, 0.94, 0.97, 1)
+theme_override_font_sizes/font_size = 16
+text = "Comunicado"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="DailyNoticeModal/VBox"]
+layout_mode = 2
+
+[node name="NoticeBody" type="Label" parent="DailyNoticeModal/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.92, 1)
+theme_override_font_sizes/font_size = 14
+text = "Detalhes da notícia..."
+autowrap_mode = 3
+
+[node name="HSeparator2" type="HSeparator" parent="DailyNoticeModal/VBox"]
+layout_mode = 2
+
+[node name="DismissNoticeButton" type="Button" parent="DailyNoticeModal/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Iniciar Expediente [E / Enter]"
+
 [connection signal="timeout" from="FeedbackTimer" to="." method="_on_feedback_timer_timeout"]

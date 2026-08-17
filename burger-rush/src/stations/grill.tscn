@@ -199,6 +199,15 @@ height = 0.012
 radial_segments = 4
 rings = 2
 
+[sub_resource type="StandardMaterial3D" id="Material_GrillCarbonStain"]
+transparency = 1
+albedo_color = Color(0.14, 0.11, 0.08, 0.90)
+roughness = 0.95
+
+[sub_resource type="BoxMesh" id="BoxMesh_GrillDirtPatch"]
+material = SubResource("Material_GrillCarbonStain")
+size = Vector3(0.32, 0.004, 0.32)
+
 [node name="Grill" type="StaticBody3D"]
 script = ExtResource("1_grill")
 
@@ -311,10 +320,28 @@ mesh = SubResource("CylinderMesh_KnobBody")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.002, 0.016)
 mesh = SubResource("BoxMesh_KnobPointer")
 
-; Chapa grossa de ferro fundido e calha de gordura
 [node name="GrillPlate" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.905, -0.02)
 mesh = SubResource("BoxMesh_Cooktop")
+
+[node name="GrillDirt" type="Node3D" parent="Model/GrillPlate"]
+visible = false
+
+[node name="DirtPatch0" type="MeshInstance3D" parent="Model/GrillPlate/GrillDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.65, 0.026, 0)
+mesh = SubResource("BoxMesh_GrillDirtPatch")
+
+[node name="DirtPatch1" type="MeshInstance3D" parent="Model/GrillPlate/GrillDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.22, 0.026, 0)
+mesh = SubResource("BoxMesh_GrillDirtPatch")
+
+[node name="DirtPatch2" type="MeshInstance3D" parent="Model/GrillPlate/GrillDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.026, 0)
+mesh = SubResource("BoxMesh_GrillDirtPatch")
+
+[node name="DirtPatch3" type="MeshInstance3D" parent="Model/GrillPlate/GrillDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.65, 0.026, 0)
+mesh = SubResource("BoxMesh_GrillDirtPatch")
 
 [node name="GreaseTrough" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.89, 0.34)

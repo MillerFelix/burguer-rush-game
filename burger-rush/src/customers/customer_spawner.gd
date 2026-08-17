@@ -57,8 +57,6 @@ func _process(delta: float) -> void:
 	var table_mgr = TableManager.get_instance()
 	if not table_mgr and get_parent():
 		table_mgr = get_parent().get_node_or_null("TableManager")
-	if not table_mgr or table_mgr.get_available_table_count() <= 0:
-		return
 
 	var current_hour_f = 10.0
 	if clock:
@@ -165,7 +163,15 @@ func _calculate_interval_for_time(time_h: float) -> float:
 		DayIntensity.VERY_BUSY:
 			intensity_multiplier = 0.68
 
-	return base_interval * intensity_multiplier
+	# Modificadores de Eventos Diários e Finais de Semana (DailyEventManager)
+	var event_demand_mult = 1.0
+	if is_inside_tree() and get_tree() and get_tree().root:
+		var dem = get_tree().root.find_child("DailyEventManager", true, false)
+		if dem and dem.has_method("get_customer_demand_multiplier"):
+			event_demand_mult = dem.get_customer_demand_multiplier(time_h) * dem.get_dine_in_multiplier()
+
+	var final_interval = (base_interval * intensity_multiplier) / maxf(0.2, event_demand_mult)
+	return final_interval
 
 func _pick_group_size_for_time(time_h: float) -> Dictionary:
 	var rand_val = randf()
@@ -240,9 +246,6 @@ func spawn_customer_group() -> Array[Customer]:
 		if table:
 			group_size = min(group_size, table.seat_count)
 
-	if not table:
-		return []
-
 	var spawned_group: Array[Customer] = []
 
 	for i in range(group_size):
@@ -254,8 +257,11 @@ func spawn_customer_group() -> Array[Customer]:
 		var member_spawn_pos = spawn_position + spawn_offset
 
 		customer.setup(member_spawn_pos, exit_position, "", is_kid)
-		var seat_pos = table.occupy_seat(customer)
-		customer.assign_seat(table, seat_pos, i + 1)
+		if table and table.is_available():
+			var seat_pos = table.occupy_seat(customer)
+			customer.assign_seat(table, seat_pos, i + 1)
+		else:
+			customer.assign_waiting_area()
 
 		active_customers.append(customer)
 		spawned_group.append(customer)
@@ -269,18 +275,17 @@ func spawn_customer(product_id: String = "") -> Customer:
 	var table_mgr = TableManager.get_instance()
 	if not table_mgr and get_parent():
 		table_mgr = get_parent().get_node_or_null("TableManager")
-	if not table_mgr:
-		return null
 
-	var table = table_mgr.get_available_table()
-	if not table:
-		return null
+	var table = table_mgr.get_available_table() if table_mgr else null
 
 	var customer = customer_scene.instantiate() as Customer
 	add_child(customer)
 	customer.setup(spawn_position, exit_position, product_id, false)
-	var seat_pos = table.occupy_seat(customer)
-	customer.assign_seat(table, seat_pos, 1)
+	if table and table.is_available():
+		var seat_pos = table.occupy_seat(customer)
+		customer.assign_seat(table, seat_pos, 1)
+	else:
+		customer.assign_waiting_area()
 
 	active_customers.append(customer)
 	return customer

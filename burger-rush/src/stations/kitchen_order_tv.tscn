@@ -44,8 +44,14 @@ material = SubResource("Material_PowerLED")
 radius = 0.015
 height = 0.03
 
-[node name="KitchenOrderTV" type="Node3D"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_TVCol"]
+size = Vector3(2.5, 1.25, 0.2)
+
+[node name="KitchenOrderTV" type="StaticBody3D"]
 script = ExtResource("1_tv")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_TVCol")
 
 [node name="Model" type="Node3D" parent="."]
 

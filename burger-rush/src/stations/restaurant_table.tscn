@@ -4,8 +4,8 @@
 [ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_1"]
-height = 1.0
-radius = 0.95
+height = 0.805
+radius = 0.62
 
 [sub_resource type="StandardMaterial3D" id="Material_WoodTable"]
 albedo_texture = ExtResource("2_wood_tex")
@@ -60,6 +60,25 @@ top_radius = 0.018
 bottom_radius = 0.014
 height = 0.45
 
+[sub_resource type="StandardMaterial3D" id="Material_TableDirtStain"]
+transparency = 1
+albedo_color = Color(0.40, 0.28, 0.18, 0.85)
+roughness = 0.90
+
+[sub_resource type="StandardMaterial3D" id="Material_TableCrumb"]
+albedo_color = Color(0.85, 0.72, 0.45, 1.0)
+roughness = 0.95
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_TableStain"]
+material = SubResource("Material_TableDirtStain")
+top_radius = 0.18
+bottom_radius = 0.18
+height = 0.003
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableCrumb"]
+material = SubResource("Material_TableCrumb")
+size = Vector3(0.015, 0.006, 0.015)
+
 [sub_resource type="BoxMesh" id="BoxMesh_NapkinHolder"]
 material = SubResource("Material_CeramicNapkin")
 size = Vector3(0.08, 0.08, 0.06)
@@ -68,7 +87,7 @@ size = Vector3(0.08, 0.08, 0.06)
 script = ExtResource("1_table")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4025, 0)
 shape = SubResource("CylinderShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
@@ -84,6 +103,29 @@ mesh = SubResource("CylinderMesh_TablePole")
 [node name="TableTop" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.78, 0)
 mesh = SubResource("CylinderMesh_TableTop")
+
+[node name="TableTopDirt" type="Node3D" parent="Model/TableTop"]
+visible = false
+
+[node name="Stain1" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.18, 0.026, 0.12)
+mesh = SubResource("CylinderMesh_TableStain")
+
+[node name="Stain2" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(0.7, 0, 0, 0, 1, 0, 0, 0, 0.7, -0.20, 0.026, -0.14)
+mesh = SubResource("CylinderMesh_TableStain")
+
+[node name="Crumb1" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.027, 0.22)
+mesh = SubResource("BoxMesh_TableCrumb")
+
+[node name="Crumb2" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.027, 0.18)
+mesh = SubResource("BoxMesh_TableCrumb")
+
+[node name="Crumb3" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.027, -0.08)
+mesh = SubResource("BoxMesh_TableCrumb")
 
 [node name="Centerpiece" type="MeshInstance3D" parent="Model/TableTop"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.065, 0)
@@ -213,7 +255,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.68, 0, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0, 0)
 
 [node name="PlateSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.81, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.805, 0)
 
 [node name="StatusLabel" type="Label3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)

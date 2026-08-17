@@ -16,6 +16,7 @@ extends StaticBody3D
 # ================================================================
 
 const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+const PowerManager = preload("res://src/core/power_manager.gd")
 
 @export var is_on: bool = false
 @export var current_temperature: float = 25.0
@@ -68,7 +69,22 @@ const SLOT_OFFSETS = [
 
 func _ready() -> void:
 	_setup_audio()
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.register_appliance(self, "grill", "Chapa / Grelha Comercial", 3.0, is_on)
+		if not pm.power_state_changed.is_connected(on_power_state_changed):
+			pm.power_state_changed.connect(on_power_state_changed)
 	_update_visuals_instant()
+
+func _exit_tree() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.unregister_appliance(self)
+
+func on_power_state_changed(main_power_on: bool) -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.set_appliance_state(self, is_on and main_power_on)
 
 func _setup_audio() -> void:
 	if not hum_audio:
@@ -112,9 +128,13 @@ func get_cooking_speed_factor() -> float:
 		return 1.0
 
 func _process(delta: float) -> void:
+	var pm = PowerManager.get_instance()
+	var has_power = pm.is_main_power_on if pm else false
+	var is_actively_heating = is_on and has_power
+
 	# 1. Simulação física contínua da temperatura
 	var prev_temp = current_temperature
-	if is_on:
+	if is_actively_heating:
 		current_temperature = move_toward(current_temperature, target_temperature, heating_rate * delta)
 	else:
 		current_temperature = move_toward(current_temperature, ambient_temperature, cooling_rate * delta)
@@ -397,14 +417,42 @@ func interact_item(player: Node3D) -> void:
 
 	# CASO 3: Jogador com BUCHA DE LIMPEZA (Slot 2)
 	if tool_slot == 2:
-		if dirt_level > 0.0:
-			dirt_level = maxf(0.0, dirt_level - 1.5)
-			_show_feedback(player, "🧽 Limpou a grelha com a bucha! (Nível de sujeira: %.1f)" % dirt_level)
+		if is_dirty():
+			clean_progress(1.5, player)
 		else:
 			_show_feedback(player, "✨ A chapa da grelha já está limpa e brilhando!")
 		return
 
+func is_dirty() -> bool:
+	return dirt_level >= 1.0
+
+func add_dirt(amount: float = 0.25) -> void:
+	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)
+	_update_dirt_visuals()
+
+func _update_dirt_visuals() -> void:
+	var grill_dirt = get_node_or_null("Model/GrillPlate/GrillDirt")
+	if grill_dirt:
+		grill_dirt.visible = (dirt_level > 0.0)
+		grill_dirt.scale.y = clampf(dirt_level, 0.2, 1.0)
+
+func clean_progress(delta: float, player: Node3D = null) -> bool:
+	if dirt_level <= 0.0:
+		return true
+
+	dirt_level = maxf(0.0, dirt_level - (delta / 1.5))
+	_update_dirt_visuals()
+
+	if dirt_level <= 0.0:
+		if player:
+			_show_feedback(player, "✨ Grelha limpa e pronta para uso!")
+		return true
+	return false
+
 func place_item(item: Node3D) -> bool:
+	if is_dirty():
+		return false
+
 	if active_items.size() >= max_capacity:
 		return false
 
@@ -489,6 +537,9 @@ func _remove_item_from_grill(item: Node3D, player: Node3D) -> void:
 			if item.has_method("on_dropped"):
 				item.on_dropped()
 
+	# Uso da chapa acumula sujeira
+	add_dirt(0.25)
+
 func _find_free_slot_index() -> int:
 	var used_slots: Array[int] = []
 	for it in active_items:
@@ -511,8 +562,25 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if not player:
 		return ""
 
+	if is_dirty():
+		var tool_holder = player.get_node_or_null("Head/Camera3D/ToolHolder") if player else null
+		var sponge = tool_holder.get_node_or_null("Sponge") if tool_holder else null
+		if sponge:
+			if sponge.is_dirty:
+				return "⚠️ Bucha suja! Lave na pia antes de limpar a grelha"
+			else:
+				return "🖱️ [Segurar Clique Esquerdo] Limpar Grelha com a Bucha"
+		else:
+			return "Grelha suja (Equipe a Bucha [2] para limpar)"
+
 	var tool_slot = player.get("active_tool_slot") if player else 3
 	var held = player.get("held_item")
+
+	if tool_slot == 2:
+		if dirt_level > 0.0:
+			return "🖱️ [Segurar Clique Esquerdo] Limpar Grelha com a Bucha"
+		else:
+			return "Grelha Limpa"
 
 	# Se estiver com a espátula
 	if tool_slot == 1:

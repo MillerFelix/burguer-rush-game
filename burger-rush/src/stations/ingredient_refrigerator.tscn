@@ -20,7 +20,7 @@
 ; FORMAS DE COLISÃO
 ; ================================================================
 
-; Colisões periféricas do corpo da geladeira (paredes externas sem bloquear a porta)
+; Colisões periféricas do corpo da geladeira
 [sub_resource type="BoxShape3D" id="Shape_WallSide"]
 size = Vector3(0.06, 2.10, 0.70)
 
@@ -80,10 +80,6 @@ transparency = 1
 albedo_color = Color(0.88, 0.94, 0.98, 0.28)
 roughness = 0.08
 refraction_enabled = false
-
-[sub_resource type="StandardMaterial3D" id="Material_BadgePlate"]
-albedo_color = Color(0.96, 0.95, 0.92, 1)
-roughness = 0.35
 
 ; Materiais dos Ingredientes
 [sub_resource type="StandardMaterial3D" id="Material_FriesBag"]
@@ -192,7 +188,7 @@ size = Vector3(0.04, 0.08, 0.04)
 ; Meshes dos Ingredientes
 [sub_resource type="BoxMesh" id="BoxMesh_FriesBagModel"]
 material = SubResource("Material_FriesBag")
-size = Vector3(0.24, 0.34, 0.12)
+size = Vector3(0.22, 0.32, 0.12)
 
 [sub_resource type="BoxMesh" id="BoxMesh_LettuceLeaf"]
 material = SubResource("Material_VegLettuce")
@@ -226,6 +222,18 @@ bottom_radius = 0.0225
 height = 0.008
 radial_segments = 14
 
+[sub_resource type="StandardMaterial3D" id="Material_ColdMist"]
+transparency = 1
+albedo_color = Color(0.88, 0.94, 1.0, 0.22)
+roughness = 0.95
+
+[sub_resource type="SphereMesh" id="SphereMesh_MistParticle"]
+material = SubResource("Material_ColdMist")
+radius = 0.08
+height = 0.16
+radial_segments = 6
+rings = 4
+
 ; ================================================================
 ; HIERARQUIA DA CENA
 ; ================================================================
@@ -233,7 +241,25 @@ radial_segments = 14
 [node name="IngredientRefrigerator" type="Node3D"]
 script = ExtResource("1_root")
 
-; ─── CORPO PRINCIPAL DA GELADEIRA (StaticBody3D Periférico) ────
+; ─── EFEITO DE AR FRIO / NÉVOA DE RESFRIAMENTO ────────────────────
+[node name="ColdMistParticles" type="CPUParticles3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.30, 0.15)
+emitting = false
+amount = 12
+lifetime = 1.4
+mesh = SubResource("SphereMesh_MistParticle")
+emission_shape = 3
+emission_box_extents = Vector3(0.48, 0.60, 0.15)
+direction = Vector3(0, -0.6, 0.8)
+spread = 20.0
+gravity = Vector3(0, -0.45, 0)
+initial_velocity_min = 0.2
+initial_velocity_max = 0.45
+scale_amount_min = 0.6
+scale_amount_max = 1.3
+color = Color(0.9, 0.95, 1.0, 0.35)
+
+; ─── CORPO PRINCIPAL DA GELADEIRA ──────────────────────────────
 [node name="FridgeBody" type="StaticBody3D" parent="."]
 
 [node name="ColWallLeft" type="CollisionShape3D" parent="FridgeBody"]
@@ -277,7 +303,7 @@ mesh = SubResource("BoxMesh_OuterWallSide")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -0.337)
 mesh = SubResource("BoxMesh_OuterWallBack")
 
-; Cavidade e Prateleiras (4 Andares)
+; Cavidade e Prateleiras
 [node name="CavityFloor" type="MeshInstance3D" parent="FridgeBody"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
 mesh = SubResource("BoxMesh_CavityFloor")
@@ -302,215 +328,408 @@ mesh = SubResource("BoxMesh_DividerShelf")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.38, 0)
 mesh = SubResource("BoxMesh_WireShelf")
 
-; Labels das 4 Prateleiras
-[node name="Labels" type="Node3D" parent="FridgeBody"]
-
-[node name="LabelShelf1" type="Label3D" parent="FridgeBody/Labels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.54, 0.28)
-billboard = 0
-double_sided = false
-text = "🍟 SACOS DE BATATA CONGELADA (x25)"
-font_size = 13
-outline_size = 4
-modulate = Color(1.0, 0.92, 0.50, 1)
-horizontal_alignment = 1
-
-[node name="LabelShelf2" type="Label3D" parent="FridgeBody/Labels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.28)
-billboard = 0
-double_sided = false
-text = "🥬 ALFACE x15   │   🍅 TOMATE x15"
-font_size = 13
-outline_size = 4
-modulate = Color(0.65, 0.95, 0.70, 1)
-horizontal_alignment = 1
-
-[node name="LabelShelf3" type="Label3D" parent="FridgeBody/Labels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.34, 0.28)
-billboard = 0
-double_sided = false
-text = "🧅 CEBOLA ROXA x15   │   🧅 CEBOLA NORMAL x15"
-font_size = 13
-outline_size = 4
-modulate = Color(0.95, 0.80, 0.90, 1)
-horizontal_alignment = 1
-
-[node name="LabelShelf4" type="Label3D" parent="FridgeBody/Labels"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.74, 0.28)
-billboard = 0
-double_sided = false
-text = "🥒 PICLES EM FATIAS (x15)"
-font_size = 13
-outline_size = 4
-modulate = Color(0.70, 0.95, 0.65, 1)
-horizontal_alignment = 1
-
-; ─── PRODUTOS VISÍVEIS NOS 4 ANDARES ───────────────────────────
+; ─── PRODUTOS VISÍVEIS NOS 4 ANDARES (ESTOQUE DINÂMICO) ────────
 [node name="Products" type="Node3D" parent="FridgeBody"]
 
-; ─── ANDAR 1 (INFERIOR): SACOS GRANDES DE BATATA FRITA ──────────
+; ─── ANDAR 1 (INFERIOR): SACOS DE BATATA FRITA ─────────────────
 [node name="PotatoBagsGroup" type="Node3D" parent="FridgeBody/Products"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
 
-[node name="Bag1" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup"]
-transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.32, 0.17, 0.04)
+[node name="Full" type="Node3D" parent="FridgeBody/Products/PotatoBagsGroup"]
+
+[node name="Bag1" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Full"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.38, 0.17, 0.04)
 mesh = SubResource("BoxMesh_FriesBagModel")
 
-[node name="Bag2" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup"]
+[node name="Bag2" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Full"]
+transform = Transform3D(0.96, 0, -0.26, 0, 1, 0, 0.26, 0, 0.96, -0.19, 0.17, -0.02)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="Bag3" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Full"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.0, 0.17, 0.03)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="Bag4" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Full"]
+transform = Transform3D(0.97, 0, -0.22, 0, 1, 0, 0.22, 0, 0.97, 0.19, 0.17, -0.02)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="Bag5" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Full"]
+transform = Transform3D(0.98, 0, 0.16, 0, 1, 0, -0.16, 0, 0.98, 0.38, 0.17, 0.03)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="Medium" type="Node3D" parent="FridgeBody/Products/PotatoBagsGroup"]
+visible = false
+
+[node name="BagM1" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Medium"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.30, 0.17, 0.04)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="BagM2" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Medium"]
 transform = Transform3D(0.96, 0, -0.26, 0, 1, 0, 0.26, 0, 0.96, 0.0, 0.17, -0.02)
 mesh = SubResource("BoxMesh_FriesBagModel")
 
-[node name="Bag3" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup"]
-transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.32, 0.17, 0.03)
+[node name="BagM3" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Medium"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.30, 0.17, 0.03)
+mesh = SubResource("BoxMesh_FriesBagModel")
+
+[node name="Low" type="Node3D" parent="FridgeBody/Products/PotatoBagsGroup"]
+visible = false
+
+[node name="BagL1" type="MeshInstance3D" parent="FridgeBody/Products/PotatoBagsGroup/Low"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.0, 0.17, 0.02)
 mesh = SubResource("BoxMesh_FriesBagModel")
 
 ; ─── ANDAR 2: ALFACE (ESQ) E TOMATE (DIR) ──────────────────────
 [node name="LettuceGroup" type="Node3D" parent="FridgeBody/Products"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.60, 0)
 
-[node name="Leaf1" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+[node name="Full" type="Node3D" parent="FridgeBody/Products/LettuceGroup"]
+
+[node name="Leaf1" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
 transform = Transform3D(0.96, 0, 0.28, 0, 1, 0, -0.28, 0, 0.96, 0, 0.01, 0)
 mesh = SubResource("BoxMesh_LettuceLeaf")
 
-[node name="Leaf2" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+[node name="Leaf2" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
 transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, 0.02, 0.025, 0.01)
 mesh = SubResource("BoxMesh_LettuceLeaf")
 
-[node name="Leaf3" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+[node name="Leaf3" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
 transform = Transform3D(0.95, 0, 0.31, 0, 1, 0, -0.31, 0, 0.95, -0.01, 0.040, -0.02)
 mesh = SubResource("BoxMesh_LettuceLeaf")
 
-[node name="Leaf4" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+[node name="Leaf4" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
 transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.01, 0.055, 0.02)
 mesh = SubResource("BoxMesh_LettuceLeaf")
 
-[node name="Leaf5" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup"]
+[node name="Leaf5" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
 transform = Transform3D(0.97, 0, 0.24, 0, 1, 0, -0.24, 0, 0.97, -0.02, 0.070, 0)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Leaf6" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
+transform = Transform3D(0.96, 0, -0.26, 0, 1, 0, 0.26, 0, 0.96, 0.01, 0.085, -0.01)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Leaf7" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
+transform = Transform3D(0.98, 0, 0.20, 0, 1, 0, -0.20, 0, 0.98, -0.01, 0.100, 0.01)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Leaf8" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Full"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, 0.0, 0.115, 0)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Medium" type="Node3D" parent="FridgeBody/Products/LettuceGroup"]
+visible = false
+
+[node name="LeafM1" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Medium"]
+transform = Transform3D(0.96, 0, 0.28, 0, 1, 0, -0.28, 0, 0.96, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="LeafM2" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Medium"]
+transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, 0.02, 0.025, 0.01)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="LeafM3" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Medium"]
+transform = Transform3D(0.95, 0, 0.31, 0, 1, 0, -0.31, 0, 0.95, -0.01, 0.040, -0.02)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="LeafM4" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Medium"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.01, 0.055, 0.02)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="Low" type="Node3D" parent="FridgeBody/Products/LettuceGroup"]
+visible = false
+
+[node name="LeafL1" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Low"]
+transform = Transform3D(0.96, 0, 0.28, 0, 1, 0, -0.28, 0, 0.96, 0, 0.01, 0)
+mesh = SubResource("BoxMesh_LettuceLeaf")
+
+[node name="LeafL2" type="MeshInstance3D" parent="FridgeBody/Products/LettuceGroup/Low"]
+transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, 0.02, 0.025, 0.01)
 mesh = SubResource("BoxMesh_LettuceLeaf")
 
 [node name="TomatoGroup" type="Node3D" parent="FridgeBody/Products"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.60, 0)
 
-[node name="Tom1" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+[node name="Full" type="Node3D" parent="FridgeBody/Products/TomatoGroup"]
+
+[node name="Tom1" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
 transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.06, 0.01, 0)
 mesh = SubResource("CylinderMesh_TomatoSlice")
 
-[node name="Tom2" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+[node name="Tom2" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
 transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.06, 0.028, 0)
 mesh = SubResource("CylinderMesh_TomatoSlice")
 
-[node name="Tom3" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+[node name="Tom3" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
 transform = Transform3D(0.96, 0, 0.26, 0, 1, 0, -0.26, 0, 0.96, -0.06, 0.046, 0)
 mesh = SubResource("CylinderMesh_TomatoSlice")
 
-[node name="Tom4" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+[node name="Tom4" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
+transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, -0.06, 0.064, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Tom5" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
 transform = Transform3D(0.97, 0, -0.22, 0, 1, 0, 0.22, 0, 0.97, 0.06, 0.01, 0)
 mesh = SubResource("CylinderMesh_TomatoSlice")
 
-[node name="Tom5" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+[node name="Tom6" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
 transform = Transform3D(0.99, 0, 0.12, 0, 1, 0, -0.12, 0, 0.99, 0.06, 0.028, 0)
 mesh = SubResource("CylinderMesh_TomatoSlice")
 
-[node name="Tom6" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup"]
+[node name="Tom7" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
 transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.06, 0.046, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Tom8" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Full"]
+transform = Transform3D(0.98, 0, 0.16, 0, 1, 0, -0.16, 0, 0.98, 0.06, 0.064, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Medium" type="Node3D" parent="FridgeBody/Products/TomatoGroup"]
+visible = false
+
+[node name="TomM1" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Medium"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="TomM2" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Medium"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.06, 0.028, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="TomM3" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Medium"]
+transform = Transform3D(0.97, 0, -0.22, 0, 1, 0, 0.22, 0, 0.97, 0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="TomM4" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Medium"]
+transform = Transform3D(0.99, 0, 0.12, 0, 1, 0, -0.12, 0, 0.99, 0.06, 0.028, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="Low" type="Node3D" parent="FridgeBody/Products/TomatoGroup"]
+visible = false
+
+[node name="TomL1" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Low"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.0, 0.01, 0)
+mesh = SubResource("CylinderMesh_TomatoSlice")
+
+[node name="TomL2" type="MeshInstance3D" parent="FridgeBody/Products/TomatoGroup/Low"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, 0.0, 0.028, 0)
 mesh = SubResource("CylinderMesh_TomatoSlice")
 
 ; ─── ANDAR 3: CEBOLA ROXA (ESQ) E CEBOLA NORMAL (DIR) ──────────
 [node name="RedOnionGroup" type="Node3D" parent="FridgeBody/Products"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 1.00, 0)
 
-[node name="Red1" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+[node name="Full" type="Node3D" parent="FridgeBody/Products/RedOnionGroup"]
+
+[node name="Red1" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
 transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, -0.06, 0.01, 0)
 mesh = SubResource("CylinderMesh_RedOnionSlice")
 
-[node name="Red2" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+[node name="Red2" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
 transform = Transform3D(0.97, 0, 0.24, 0, 1, 0, -0.24, 0, 0.97, -0.06, 0.024, 0)
 mesh = SubResource("CylinderMesh_RedOnionSlice")
 
-[node name="Red3" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+[node name="Red3" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
 transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.06, 0.038, 0)
 mesh = SubResource("CylinderMesh_RedOnionSlice")
 
-[node name="Red4" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+[node name="Red4" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.06, 0.052, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Red5" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
 transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.06, 0.01, 0)
 mesh = SubResource("CylinderMesh_RedOnionSlice")
 
-[node name="Red5" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+[node name="Red6" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
 transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.06, 0.024, 0)
 mesh = SubResource("CylinderMesh_RedOnionSlice")
 
-[node name="Red6" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup"]
+[node name="Red7" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
 transform = Transform3D(0.97, 0, 0.22, 0, 1, 0, -0.22, 0, 0.97, 0.06, 0.038, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Red8" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Full"]
+transform = Transform3D(0.98, 0, -0.16, 0, 1, 0, 0.16, 0, 0.98, 0.06, 0.052, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Medium" type="Node3D" parent="FridgeBody/Products/RedOnionGroup"]
+visible = false
+
+[node name="RedM1" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Medium"]
+transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, -0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="RedM2" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Medium"]
+transform = Transform3D(0.97, 0, 0.24, 0, 1, 0, -0.24, 0, 0.97, -0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="RedM3" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Medium"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="RedM4" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Medium"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="Low" type="Node3D" parent="FridgeBody/Products/RedOnionGroup"]
+visible = false
+
+[node name="RedL1" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Low"]
+transform = Transform3D(0.98, 0, -0.18, 0, 1, 0, 0.18, 0, 0.98, 0.0, 0.01, 0)
+mesh = SubResource("CylinderMesh_RedOnionSlice")
+
+[node name="RedL2" type="MeshInstance3D" parent="FridgeBody/Products/RedOnionGroup/Low"]
+transform = Transform3D(0.97, 0, 0.24, 0, 1, 0, -0.24, 0, 0.97, 0.0, 0.024, 0)
 mesh = SubResource("CylinderMesh_RedOnionSlice")
 
 [node name="WhiteOnionGroup" type="Node3D" parent="FridgeBody/Products"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 1.00, 0)
 
-[node name="WOni1" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+[node name="Full" type="Node3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+
+[node name="WOni1" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
 transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.06, 0.01, 0)
 mesh = SubResource("CylinderMesh_WhiteOnionSlice")
 
-[node name="WOni2" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+[node name="WOni2" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
 transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, -0.06, 0.024, 0)
 mesh = SubResource("CylinderMesh_WhiteOnionSlice")
 
-[node name="WOni3" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+[node name="WOni3" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
 transform = Transform3D(0.96, 0, 0.26, 0, 1, 0, -0.26, 0, 0.96, -0.06, 0.038, 0)
 mesh = SubResource("CylinderMesh_WhiteOnionSlice")
 
-[node name="WOni4" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+[node name="WOni4" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
+transform = Transform3D(0.98, 0, -0.16, 0, 1, 0, 0.16, 0, 0.98, -0.06, 0.052, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOni5" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
 transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.06, 0.01, 0)
 mesh = SubResource("CylinderMesh_WhiteOnionSlice")
 
-[node name="WOni5" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+[node name="WOni6" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
 transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.06, 0.024, 0)
 mesh = SubResource("CylinderMesh_WhiteOnionSlice")
 
-[node name="WOni6" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+[node name="WOni7" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
 transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.06, 0.038, 0)
 mesh = SubResource("CylinderMesh_WhiteOnionSlice")
 
-; ─── ANDAR 4 (SUPERIOR): PICLES (FATIAS PEQUENAS) ──────────────
+[node name="WOni8" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Full"]
+transform = Transform3D(0.98, 0, 0.16, 0, 1, 0, -0.16, 0, 0.98, 0.06, 0.052, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="Medium" type="Node3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+visible = false
+
+[node name="WOniM1" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Medium"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOniM2" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Medium"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, -0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOniM3" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Medium"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.06, 0.01, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOniM4" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Medium"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.06, 0.024, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="Low" type="Node3D" parent="FridgeBody/Products/WhiteOnionGroup"]
+visible = false
+
+[node name="WOniL1" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Low"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.0, 0.01, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+[node name="WOniL2" type="MeshInstance3D" parent="FridgeBody/Products/WhiteOnionGroup/Low"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.0, 0.024, 0)
+mesh = SubResource("CylinderMesh_WhiteOnionSlice")
+
+; ─── ANDAR 4 (SUPERIOR): PICLES ────────────────────────────────
 [node name="PickleGroup" type="Node3D" parent="FridgeBody/Products"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.40, 0)
 
-[node name="Pic1" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
-transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.18, 0.01, 0)
+[node name="Full" type="Node3D" parent="FridgeBody/Products/PickleGroup"]
+
+[node name="Pic1" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.22, 0.01, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic2" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
-transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.18, 0.020, 0)
+[node name="Pic2" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.22, 0.020, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic3" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
-transform = Transform3D(0.96, 0, 0.26, 0, 1, 0, -0.26, 0, 0.96, -0.18, 0.030, 0)
+[node name="Pic3" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
+transform = Transform3D(0.96, 0, 0.26, 0, 1, 0, -0.26, 0, 0.96, -0.22, 0.030, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic4" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+[node name="Pic4" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
 transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.0, 0.01, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic5" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+[node name="Pic5" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
 transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.0, 0.020, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic6" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
+[node name="Pic6" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
 transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.0, 0.030, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic7" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
-transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.18, 0.01, 0)
+[node name="Pic7" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.0, 0.040, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic8" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
-transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.18, 0.020, 0)
+[node name="Pic8" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.22, 0.01, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-[node name="Pic9" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup"]
-transform = Transform3D(0.97, 0, 0.22, 0, 1, 0, -0.22, 0, 0.97, 0.18, 0.030, 0)
+[node name="Pic9" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
+transform = Transform3D(0.99, 0, -0.12, 0, 1, 0, 0.12, 0, 0.99, 0.22, 0.020, 0)
 mesh = SubResource("CylinderMesh_PickleSlice")
 
-; ─── SLOTS INTERATIVOS INDIVIDUAIS (CLIQUE DO MOUSE) ───────────
+[node name="Pic10" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Full"]
+transform = Transform3D(0.97, 0, 0.22, 0, 1, 0, -0.22, 0, 0.97, 0.22, 0.030, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Medium" type="Node3D" parent="FridgeBody/Products/PickleGroup"]
+visible = false
+
+[node name="PicM1" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Medium"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, -0.12, 0.01, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="PicM2" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Medium"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, -0.12, 0.020, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="PicM3" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Medium"]
+transform = Transform3D(0.97, 0, -0.24, 0, 1, 0, 0.24, 0, 0.97, 0.12, 0.01, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="PicM4" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Medium"]
+transform = Transform3D(0.99, 0, 0.14, 0, 1, 0, -0.14, 0, 0.99, 0.12, 0.020, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="PicM5" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Medium"]
+transform = Transform3D(0.96, 0, -0.28, 0, 1, 0, 0.28, 0, 0.96, 0.12, 0.030, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="Low" type="Node3D" parent="FridgeBody/Products/PickleGroup"]
+visible = false
+
+[node name="PicL1" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Low"]
+transform = Transform3D(0.98, 0, 0.18, 0, 1, 0, -0.18, 0, 0.98, 0.0, 0.01, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+[node name="PicL2" type="MeshInstance3D" parent="FridgeBody/Products/PickleGroup/Low"]
+transform = Transform3D(0.99, 0, -0.14, 0, 1, 0, 0.14, 0, 0.99, 0.0, 0.020, 0)
+mesh = SubResource("CylinderMesh_PickleSlice")
+
+; ─── SLOTS INTERATIVOS INDIVIDUAIS ─────────────────────────────
 [node name="PotatoSlot" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.36, 0.04)
 script = ExtResource("3_slot_pot")
@@ -553,7 +772,7 @@ script = ExtResource("8_slot_pic")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PickleSlot"]
 shape = SubResource("Shape_SlotPickle")
 
-; ─── PORTA COM PIVÔ DE DOBRADIÇA ESQUERDA (TECLA E) ────────────
+; ─── PORTA COM PIVÔ DE DOBRADIÇA ESQUERDA ─────────────────────
 [node name="DoorPivot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.58, 0, 0.365)
 
@@ -603,14 +822,3 @@ light_color = Color(0.90, 0.96, 1, 1)
 light_energy = 0.4
 omni_range = 2.8
 omni_attenuation = 0.90
-
-; ─── MONITOR DE STATUS SUPERIOR ────────────────────────────────
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.22, 0.40)
-billboard = 1
-double_sided = false
-text = "❄️ GELADEIRA DE HORTIFRÚTI & BATATAS"
-font_size = 18
-outline_size = 5
-modulate = Color(0.65, 0.95, 0.75, 1)
-horizontal_alignment = 1

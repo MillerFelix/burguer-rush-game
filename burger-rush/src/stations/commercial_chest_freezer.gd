@@ -3,18 +3,8 @@ extends Node3D
 
 # ================================================================
 # FREEZER HORIZONTAL DE CHÃO — ARMAZENAMENTO DOS QUEIJOS
-#
-# Arquitetura Física e Visual:
-#  Node3D "CommercialChestFreezer" (raiz)
-#  ├── FreezerBody       (StaticBody3D) — gabinete externo, revestimento interno,
-#  │                                      divisórias e fatias de queijo visíveis
-#  ├── MozzarellaSlot    (StaticBody3D) — slot interativo da Muçarela (Esq)
-#  ├── CheddarSlot       (StaticBody3D) — slot interativo do Cheddar (Centro)
-#  ├── PratoSlot         (StaticBody3D) — slot interativo do Queijo Prato (Dir)
-#  ├── LidPivot          (Node3D)       — pivô superior traseiro (tampa articulada)
-#  │   └── ChestLid      (StaticBody3D) — tampa superior articulada + puxador
-#  ├── InteriorLight     (OmniLight3D)  — iluminação interna LED
-#  └── StatusLabel       (Label3D)      — monitor de status e estoque
+# Estoque Visual Dinâmico de 3 Estágios: CHEIO | MÉDIO | BAIXO | ZERO
+# Sem textos ou labels flutuantes
 #
 # Sistema de Controle:
 #  - [E] — Interage com o equipamento (abre e fecha a tampa superior articulada)
@@ -29,6 +19,7 @@ enum State {
 }
 
 const LID_OPEN_ANGLE_DEG: float = -80.0
+const PowerManager = preload("res://src/core/power_manager.gd")
 const LID_CLOSE_ANGLE_DEG: float = 0.0
 const LID_ANIM_SECS: float = 0.40
 
@@ -36,14 +27,31 @@ const LID_ANIM_SECS: float = 0.40
 
 var current_state: State = State.CLOSED
 var is_animating: bool = false
+var _open_duration: float = 0.0
+var _puddle_instance: Node3D = null
+
+const SCENE_PUDDLE = preload("res://src/stations/floor_puddle.tscn")
 
 @onready var lid_pivot: Node3D = get_node_or_null("LidPivot")
-@onready var status_label: Label3D = get_node_or_null("StatusLabel")
+@onready var cold_mist: CPUParticles3D = get_node_or_null("ColdMistParticles")
 @onready var interior_light: OmniLight3D = get_node_or_null("InteriorLight")
 
 @onready var moz_slot_col: CollisionShape3D = get_node_or_null("MozzarellaSlot/CollisionShape3D")
 @onready var che_slot_col: CollisionShape3D = get_node_or_null("CheddarSlot/CollisionShape3D")
 @onready var pra_slot_col: CollisionShape3D = get_node_or_null("PratoSlot/CollisionShape3D")
+
+# Nós de estoque visual por compartimento (3 Estágios)
+@onready var moz_full: Node3D = get_node_or_null("FreezerBody/Products/Mozzarella/Full")
+@onready var moz_med: Node3D = get_node_or_null("FreezerBody/Products/Mozzarella/Medium")
+@onready var moz_low: Node3D = get_node_or_null("FreezerBody/Products/Mozzarella/Low")
+
+@onready var che_full: Node3D = get_node_or_null("FreezerBody/Products/Cheddar/Full")
+@onready var che_med: Node3D = get_node_or_null("FreezerBody/Products/Cheddar/Medium")
+@onready var che_low: Node3D = get_node_or_null("FreezerBody/Products/Cheddar/Low")
+
+@onready var pra_full: Node3D = get_node_or_null("FreezerBody/Products/Prato/Full")
+@onready var pra_med: Node3D = get_node_or_null("FreezerBody/Products/Prato/Medium")
+@onready var pra_low: Node3D = get_node_or_null("FreezerBody/Products/Prato/Low")
 
 var door_audio: AudioStreamPlayer3D = null
 var hum_audio: AudioStreamPlayer3D = null
@@ -57,10 +65,37 @@ func _ready() -> void:
 	current_state = initial_state
 	_apply_state_instant(current_state)
 
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.register_appliance(self, "chest_freezer", "Freezer de Queijos", 1.5, true)
+		if not pm.power_state_changed.is_connected(on_power_state_changed):
+			pm.power_state_changed.connect(on_power_state_changed)
+
 	var inv = InventoryManager.get_instance()
 	if inv and not inv.stock_changed.is_connected(_on_stock_changed):
 		inv.stock_changed.connect(_on_stock_changed)
-	_update_labels()
+	_update_all_visual_stocks()
+
+func _exit_tree() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.unregister_appliance(self)
+
+func on_power_state_changed(main_power_on: bool) -> void:
+	if not main_power_on:
+		if hum_audio and hum_audio.playing:
+			hum_audio.stop()
+		if interior_light:
+			interior_light.light_energy = 0.0
+		if cold_mist:
+			cold_mist.emitting = false
+	else:
+		if hum_audio and not hum_audio.playing:
+			hum_audio.play()
+		if interior_light:
+			interior_light.light_energy = 1.2 if current_state == State.OPEN else 0.4
+		if cold_mist and current_state == State.OPEN:
+			cold_mist.emitting = true
 
 func _setup_audio() -> void:
 	if not door_audio:
@@ -89,6 +124,27 @@ func _process(delta: float) -> void:
 		var w = 1.0 - exp(-6.0 * delta)
 		hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w)
 
+	# Efeito de perda de frio e formação de poça quando aberto por tempo suficiente
+	if current_state == State.OPEN:
+		_open_duration += delta
+		if _open_duration >= 6.0:
+			_process_condensation_puddle(delta)
+	else:
+		_open_duration = 0.0
+
+func _process_condensation_puddle(delta: float) -> void:
+	if _puddle_instance == null or not is_instance_valid(_puddle_instance):
+		var parent_node = get_parent() if get_parent() else self
+		_puddle_instance = SCENE_PUDDLE.instantiate()
+		parent_node.add_child(_puddle_instance)
+		var puddle_offset = transform.basis * Vector3(0.0, 0.005, 0.65)
+		_puddle_instance.global_position = global_position + puddle_offset
+		if _puddle_instance.has_method("set"):
+			_puddle_instance.set("puddle_size", 0.25)
+	else:
+		var curr_size = _puddle_instance.get("puddle_size") if _puddle_instance.get("puddle_size") != null else 0.5
+		_puddle_instance.set("puddle_size", minf(1.0, curr_size + delta * 0.08))
+
 func is_door_open() -> bool:
 	return current_state == State.OPEN
 
@@ -109,6 +165,9 @@ func open_freezer(player: Node3D = null) -> void:
 	_set_slots_enabled(false)
 	_target_hum_vol = -16.0
 
+	if cold_mist:
+		cold_mist.emitting = true
+
 	if door_audio:
 		door_audio.stream = SoundSynthesizer.get_stream("freezer_lid_open")
 		door_audio.pitch_scale = randf_range(0.98, 1.02)
@@ -128,10 +187,13 @@ func open_freezer(player: Node3D = null) -> void:
 	tween.finished.connect(func():
 		current_state = State.OPEN
 		is_animating = false
+		var pm = PowerManager.get_instance()
+		if pm:
+			pm.set_appliance_multiplier(self, 3.0)
 		_set_slots_enabled(true)
-		_update_labels()
+		_update_all_visual_stocks()
 		if player:
-			_show_feedback(player, "🟢 Freezer aberto — use o [Clique do Mouse] para pegar queijos!")
+			_show_feedback(player, "🟢 Freezer aberto")
 	)
 
 func close_freezer(player: Node3D = null) -> void:
@@ -141,6 +203,13 @@ func close_freezer(player: Node3D = null) -> void:
 	current_state = State.CLOSING
 	_set_slots_enabled(false)
 	_target_hum_vol = -28.0
+
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.set_appliance_multiplier(self, 1.0)
+
+	if cold_mist:
+		cold_mist.emitting = false
 
 	if door_audio:
 		door_audio.stream = SoundSynthesizer.get_stream("freezer_lid_close")
@@ -162,9 +231,8 @@ func close_freezer(player: Node3D = null) -> void:
 		current_state = State.CLOSED
 		is_animating = false
 		_set_slots_enabled(false)
-		_update_labels()
 		if player:
-			_show_feedback(player, "🔒 Freezer de queijos fechado.")
+			_show_feedback(player, "🔒 Freezer de queijos fechado")
 	)
 
 func _apply_state_instant(state: State) -> void:
@@ -220,14 +288,14 @@ func handle_slot_item_interaction(player: Node3D, cheese_type: Cheese.CheeseType
 		if held is Cheese and held.cheese_type == cheese_type:
 			player.take_held_item().queue_free()
 			inv.add_stock(item_id, 1)
-			_show_feedback(player, "%s Devolveu %s ao freezer (Estoque: %d)" % [icon, cheese_name, inv.get_stock(item_id)])
-			_update_labels()
+			_show_feedback(player, "%s Devolveu %s ao freezer" % [icon, cheese_name])
+			_update_all_visual_stocks()
 		elif str(held.get("item_type")) == "crate" or str(held.get("item_type")) == "storage_box":
 			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
 			player.take_held_item().queue_free()
 			inv.add_stock(item_id, qty)
 			_show_feedback(player, "📦 %s armazenado no freezer (+%d un.)!" % [cheese_name, qty])
-			_update_labels()
+			_update_all_visual_stocks()
 		else:
 			_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
 		return
@@ -249,8 +317,8 @@ func handle_slot_item_interaction(player: Node3D, cheese_type: Cheese.CheeseType
 
 	if player.has_method("pick_up"):
 		player.pick_up(cheese)
-	_show_feedback(player, "%s Pegou %s (Estoque: %d)" % [icon, cheese_name, inv.get_stock(item_id)])
-	_update_labels()
+	_show_feedback(player, "%s Pegou %s" % [icon, cheese_name])
+	_update_all_visual_stocks()
 
 # ─── Prompts e Atualizações ────────────────────────────────────
 func get_slot_prompt(player: Node, cheese_type: Cheese.CheeseType) -> String:
@@ -275,45 +343,58 @@ func get_slot_prompt(player: Node, cheese_type: Cheese.CheeseType) -> String:
 	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
 		if held is Cheese and held.cheese_type == cheese_type:
-			return "🖱️ Clique para Devolver %s" % cheese_name
+			return "%s 🖱️ Devolver %s" % [icon, cheese_name]
 		elif str(held.get("item_type")) == "crate" or str(held.get("item_type")) == "storage_box":
-			return "🖱️ Clique para Armazenar %s (+10 un.)" % cheese_name
+			return "📦 🖱️ Armazenar %s" % cheese_name
 		return ""
 
 	var inv = InventoryManager.get_instance()
 	var stock = inv.get_stock(item_id) if inv else 0
 	if stock <= 0:
-		return "🔴 %s Esgotado!" % cheese_name
+		return "🔴 %s Esgotado" % cheese_name
 
-	return "%s 🖱️ Clique para Pegar %s (%d em estoque)" % [icon, cheese_name, stock]
+	return "%s 🖱️ Pegar %s" % [icon, cheese_name]
 
 func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
-	_update_labels()
+	_update_all_visual_stocks()
 
-func _update_labels() -> void:
+func _update_all_visual_stocks() -> void:
 	var inv = InventoryManager.get_instance()
-	var moz_stock = inv.get_stock("cheese_mozzarella") if inv else 0
-	var che_stock = inv.get_stock("cheese_cheddar") if inv else 0
-	var pra_stock = inv.get_stock("cheese_prato") if inv else 0
+	var moz_stock = inv.get_stock("cheese_mozzarella") if inv else 15
+	var che_stock = inv.get_stock("cheese_cheddar")    if inv else 20
+	var pra_stock = inv.get_stock("cheese_prato")      if inv else 15
 
-	_update_compartment_label("FreezerBody/Plates/PlateMozzarella/Label", "🧀 MUÇARELA\nx%d" % moz_stock)
-	_update_compartment_label("FreezerBody/Plates/PlateCheddar/Label", "🧀 CHEDDAR\nx%d" % che_stock)
-	_update_compartment_label("FreezerBody/Plates/PlatePrato/Label", "🧀 PRATO\nx%d" % pra_stock)
+	_update_section_visual(moz_stock, moz_full, moz_med, moz_low, 15, 6)
+	_update_section_visual(che_stock, che_full, che_med, che_low, 15, 6)
+	_update_section_visual(pra_stock, pra_full, pra_med, pra_low, 15, 6)
 
-	if not status_label:
+func _update_section_visual(
+	stock_qty: int,
+	node_full: Node3D,
+	node_med: Node3D,
+	node_low: Node3D,
+	full_thresh: int = 15,
+	med_thresh: int = 6
+) -> void:
+	if not node_full and not node_med and not node_low:
 		return
 
-	if current_state == State.CLOSED:
-		status_label.text = "❄️ FREEZER DE QUEIJOS [FECHADO]\n[E] Abrir Tampa Superior"
-		status_label.modulate = Color(0.85, 0.95, 1.0, 1.0)
+	if stock_qty >= full_thresh:
+		if node_full: node_full.visible = true
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
+	elif stock_qty >= med_thresh:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = true
+		if node_low: node_low.visible = false
+	elif stock_qty > 0:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = true
 	else:
-		status_label.text = "❄️ FREEZER DE QUEIJOS [ABERTO]\nMuçarela: %d │ Cheddar: %d │ Prato: %d\n[E] Fechar Tampa  │  [🖱️ Clique] Pegar/Devolver" % [moz_stock, che_stock, pra_stock]
-		status_label.modulate = Color(1.0, 0.95, 0.80, 1.0)
-
-func _update_compartment_label(node_path: String, text: String) -> void:
-	var lbl = get_node_or_null(node_path)
-	if lbl and lbl is Label3D:
-		lbl.text = text
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")

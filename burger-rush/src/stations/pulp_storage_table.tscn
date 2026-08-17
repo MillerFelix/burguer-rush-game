@@ -145,12 +145,15 @@ mesh = SubResource("BoxMesh_CrateDivider")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0.262)
 mesh = SubResource("BoxMesh_CrateBadge")
 
-[node name="CrateLabel" type="Label3D" parent="Model/Crate/CrateBadge"]
+[node name="Label" type="Label3D" parent="Model/Crate/CrateBadge"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
-text = "POLPA DE FRUTAS"
+billboard = 0
+double_sided = true
+text = "POLPA DE FRUTA"
 font_size = 12
-modulate = Color(0.1, 0.1, 0.1, 1)
 outline_size = 0
+modulate = Color(0.18, 0.16, 0.14, 1)
+horizontal_alignment = 1
 
 ; ================================================================
 ; 10 PEDRAS FÍSICAS DE POLPA DE LARANJA (TOTAL: 10)

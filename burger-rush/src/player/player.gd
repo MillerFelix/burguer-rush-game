@@ -212,6 +212,9 @@ func _try_interact_equipment() -> void:
 						if tbl.table_state == RestaurantTable.TableState.DIRTY or (not tbl.seated_customers.is_empty() and tbl.seated_customers[0].state == Customer.State.WAITING_FOR_FOOD):
 							tbl.interact(self)
 							return
+						else:
+							drop_item()
+							return
 					elif collider is IngredientDispenser:
 						if held_item.get("ingredient_id") == collider.get("ingredient_id") or str(held_item.get("item_type")) == "crate":
 							collider.interact(self)
@@ -220,7 +223,14 @@ func _try_interact_equipment() -> void:
 						collider.interact_equipment(self)
 						return
 					elif collider.has_method("interact"):
+						# Se não for uma estação consumidora de itens, solta o item na superfície
+						if collider is StaticBody3D or collider is CSGShape3D:
+							drop_item()
+							return
 						collider.interact(self)
+						return
+					else:
+						drop_item()
 						return
 				else:
 					if collider.has_method("interact_equipment"):
@@ -323,6 +333,12 @@ func _physics_process(delta: float) -> void:
 			held_item.start_squeezing(raycast)
 		else:
 			held_item.stop_squeezing()
+
+	# Processamento de Limpeza Contínua com a Bucha (Slot 2)
+	if active_tool_slot == ToolSlot.SPONGE:
+		_process_sponge_cleaning(delta)
+	else:
+		_stop_scrubbing_audio()
 
 	if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and DisplayServer.get_name() != "headless":
 		velocity.x = 0.0
@@ -557,4 +573,89 @@ func drop_item() -> void:
 		item.collision_shape.disabled = false
 
 	_play_sound(item_audio, "item_drop", -8.0, 0.05)
+
+# ================================================================
+# PROCESSAMENTO DE LIMPEZA CONTÍNUA (BUCHA DE LIMPEZA)
+# ================================================================
+var _is_scrubbing_audio_playing: bool = false
+
+func _process_sponge_cleaning(delta: float) -> void:
+	if not Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		_stop_scrubbing_audio()
+		return
+
+	if not raycast or not raycast.is_colliding():
+		_stop_scrubbing_audio()
+		return
+
+	var raw_collider = raycast.get_collider()
+	var collider = _get_target_interactable(raw_collider) if raw_collider else null
+	if not collider:
+		_stop_scrubbing_audio()
+		return
+
+	var sponge: Sponge = null
+	if tool_holder and tool_holder.get_child_count() > 0:
+		sponge = tool_holder.get_child(0) as Sponge
+
+	# 1. Se estiver na Pia (CommercialSink): lava a bucha
+	if collider is CommercialSink or (collider.get_parent() and collider.get_parent() is CommercialSink):
+		var sink = collider if collider is CommercialSink else collider.get_parent()
+		sink.wash_or_sanitize(self)
+		_stop_scrubbing_audio()
+		return
+
+	# 2. Resolução de alvos limpáveis (Mesas, Grelha, Poças, Chão, Bancada, Fritadeira)
+	var cleanable_target = null
+	if collider and collider.has_method("clean_progress"):
+		cleanable_target = collider
+	elif raw_collider and raw_collider.has_method("clean_progress"):
+		cleanable_target = raw_collider
+	else:
+		var curr = raw_collider
+		while curr != null:
+			if curr is Node and curr.has_method("clean_progress"):
+				cleanable_target = curr
+				break
+			curr = curr.get_parent() if curr is Node else null
+
+	if cleanable_target and cleanable_target.has_method("is_dirty"):
+		if cleanable_target.is_dirty():
+			if sponge:
+				if sponge.is_dirty:
+					if hud and hud.has_method("show_temporary_feedback"):
+						hud.show_temporary_feedback("⚠️ Bucha suja! Lave-a na pia da cozinha antes de limpar.")
+					_stop_scrubbing_audio()
+					return
+
+				# Bucha limpa executando a limpeza
+				_play_scrubbing_audio()
+				sponge.play_scrub_animation()
+				var is_finished = cleanable_target.clean_progress(delta, self)
+				if is_finished:
+					sponge.set_dirty()
+					_stop_scrubbing_audio()
+					if hud and hud.has_method("show_temporary_feedback"):
+						hud.show_temporary_feedback("✨ Limpeza concluída! A bucha ficou suja.")
+			return
+		else:
+			_stop_scrubbing_audio()
+			return
+
+	_stop_scrubbing_audio()
+
+func _play_scrubbing_audio() -> void:
+	if not _is_scrubbing_audio_playing:
+		_is_scrubbing_audio_playing = true
+		if tool_audio:
+			tool_audio.stream = SoundSynthesizer.get_stream("sponge_scrub_loop")
+			tool_audio.volume_db = -6.0
+			tool_audio.play()
+
+func _stop_scrubbing_audio() -> void:
+	if _is_scrubbing_audio_playing:
+		_is_scrubbing_audio_playing = false
+		if tool_audio and tool_audio.playing:
+			tool_audio.stop()
+
 	_update_interaction_detection()

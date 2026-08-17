@@ -9,7 +9,6 @@ extends StaticBody3D
 # ================================================================
 
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
-@onready var status_label: Label3D = get_node_or_null("StatusLabel")
 
 const SURFACE_TOP_Y: float = 0.88
 const BOUNDS_X_MIN: float = -1.80
@@ -18,13 +17,53 @@ const BOUNDS_Z_MIN: float = -0.85
 const BOUNDS_Z_MAX: float = 0.85
 
 var placed_items: Array[Node3D] = []
+var dirt_level: float = 0.0
 
-func _ready() -> void:
-	_update_status()
+func is_dirty() -> bool:
+	return dirt_level >= 0.70
+
+func add_dirt(amount: float = 0.15) -> void:
+	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)
+	_update_dirt_visuals()
+
+func _update_dirt_visuals() -> void:
+	var dirt_mesh = get_node_or_null("Model/IslandDirt")
+	if dirt_mesh:
+		dirt_mesh.visible = (dirt_level > 0.0)
+		dirt_mesh.scale = Vector3.ONE * clampf(dirt_level, 0.2, 1.0)
+
+func clean_progress(delta: float, player: Node3D = null) -> bool:
+	if dirt_level <= 0.0:
+		return true
+
+	dirt_level = maxf(0.0, dirt_level - (delta / 1.0))
+	_update_dirt_visuals()
+
+	if dirt_level <= 0.0:
+		if player:
+			_show_feedback(player, "✨ Ilha de preparo limpa e higienizada!")
+		return true
+
+	return false
 
 func get_interaction_prompt(player: Node = null) -> String:
 	if not player:
 		return ""
+
+	if is_dirty():
+		var tool_holder = player.get_node_or_null("Head/Camera3D/ToolHolder") if player else null
+		var sponge = tool_holder.get_node_or_null("Sponge") if tool_holder else null
+		if sponge:
+			if sponge.is_dirty:
+				return "⚠️ Bucha suja! Lave na pia antes de limpar a bancada"
+			else:
+				return "🖱️ [Segurar Clique Esquerdo] Limpar Bancada com a Bucha"
+		else:
+			return "Bancada suja (Equipe a Bucha [2] para limpar)"
+
+	var tool_slot = player.get("active_tool_slot") if player else 3
+	if tool_slot == 2 and dirt_level > 0.0:
+		return "🖱️ [Segurar Clique Esquerdo] Limpar Bancada com a Bucha"
 
 	var held = player.get("held_item")
 	if held != null:
@@ -52,6 +91,7 @@ func interact_item(player: Node3D) -> void:
 	var nearby_bread = _find_nearby_bread(hit_pos, 0.22)
 	if nearby_bread:
 		nearby_bread.interact_item(player)
+		add_dirt(0.12)
 		return
 
 	# 2. Solta o item fisicamente no ponto exato clicado sobre a bancada
@@ -59,6 +99,7 @@ func interact_item(player: Node3D) -> void:
 		var item: Node3D = player.take_held_item()
 		if item:
 			_place_item_on_surface(item, hit_pos, player.rotation.y)
+			add_dirt(0.12)
 			var d_name = item.get_display_name() if item.has_method("get_display_name") else item.name
 			_show_feedback(player, "🥪 %s colocado na ilha de preparo" % d_name)
 
@@ -122,7 +163,6 @@ func _place_item_on_surface(item: Node3D, target_world_pos: Vector3, player_rot_
 
 	placed_items.append(item)
 	_cleanup_placed_items()
-	_update_status()
 
 func _process(_delta: float) -> void:
 	_cleanup_placed_items()
@@ -136,15 +176,6 @@ func _cleanup_placed_items() -> void:
 				if absf(local_p.x) <= 2.0 and absf(local_p.z) <= 1.05 and local_p.y >= 0.7 and local_p.y <= 1.3:
 					valid.append(it)
 	placed_items = valid
-
-func _update_status() -> void:
-	if not status_label:
-		return
-	if placed_items.is_empty():
-		status_label.text = ""
-	else:
-		status_label.text = "🥪 %d itens na bancada" % placed_items.size()
-		status_label.modulate = Color(0.95, 0.95, 0.95, 0.85)
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")

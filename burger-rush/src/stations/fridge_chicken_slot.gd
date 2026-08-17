@@ -11,14 +11,14 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
 		if held is Patty and held.meat_type == Patty.MeatType.CHICKEN and held.state == Patty.State.RAW:
-			return "🖱️ Clique para Devolver Frango"
+			return "🍗 🖱️ Devolver Frango"
 		return ""
 
 	var inv = InventoryManager.get_instance()
 	var stock = inv.get_stock("patty_chicken") if inv else 0
 	if stock <= 0:
-		return "🔴 Frango Esgotado! (Reabasteça no Computador)"
-	return "🍗 🖱️ Clique para Pegar Hambúrguer de Frango (%d em estoque)" % stock
+		return "🔴 Frango Esgotado"
+	return "🍗 🖱️ Pegar Hambúrguer de Frango"
 
 func interact_item(player: Node3D) -> void:
 	var fridge = _get_fridge()
@@ -35,8 +35,7 @@ func interact_item(player: Node3D) -> void:
 		if held is Patty and held.meat_type == Patty.MeatType.CHICKEN and held.state == Patty.State.RAW:
 			player.take_held_item().queue_free()
 			inv.add_stock("patty_chicken", 1)
-			fridge._show_feedback(player, "🍗 Devolveu Frango ao freezer (Estoque: %d)" % inv.get_stock("patty_chicken"))
-			fridge._update_label()
+			fridge._show_feedback(player, "🍗 Devolveu Frango ao freezer")
 			fridge._update_patty_visuals()
 		else:
 			fridge._show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")

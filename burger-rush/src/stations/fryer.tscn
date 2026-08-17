@@ -286,6 +286,15 @@ height = 0.010
 radial_segments = 4
 rings = 2
 
+[sub_resource type="StandardMaterial3D" id="Material_FryerOilStain"]
+transparency = 1
+albedo_color = Color(0.68, 0.46, 0.12, 0.85)
+roughness = 0.20
+
+[sub_resource type="BoxMesh" id="BoxMesh_FryerOilPatch"]
+material = SubResource("Material_FryerOilStain")
+size = Vector3(0.30, 0.004, 0.20)
+
 [node name="Fryer" type="StaticBody3D"]
 script = ExtResource("1_fryer")
 
@@ -294,6 +303,18 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("BoxShape3D_Main")
 
 [node name="Model" type="Node3D" parent="."]
+
+; Manchas de respingos de óleo na bancada da fritadeira
+[node name="FryerDirt" type="Node3D" parent="Model"]
+visible = false
+
+[node name="OilPatch1" type="MeshInstance3D" parent="Model/FryerDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.45, 0.91, 0.25)
+mesh = SubResource("BoxMesh_FryerOilPatch")
+
+[node name="OilPatch2" type="MeshInstance3D" parent="Model/FryerDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.45, 0.91, 0.25)
+mesh = SubResource("BoxMesh_FryerOilPatch")
 
 ; Base e pés niveladores
 [node name="ToeKick" type="MeshInstance3D" parent="Model"]

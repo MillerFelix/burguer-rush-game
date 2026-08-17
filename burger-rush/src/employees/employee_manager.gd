@@ -1,30 +1,64 @@
 class_name EmployeeManager
 extends Node
 
+# =============================================================================
+# BURGER RUSH - GERENCIADOR DE FUNCIONÁRIOS
+#
+# Controla os funcionários ativos no restaurante, instancia o funcionário operacional
+# inicial e prepara a infraestrutura para futura contratação e folha salarial via PC.
+# =============================================================================
+
 signal employee_hired(employee: Employee)
 signal employee_fired(employee_id: int)
-signal role_changed(employee: Employee, new_role: Employee.Role)
 
 static var instance: EmployeeManager = null
 
+const Employee = preload("res://src/employees/employee.gd")
 var employee_scene: PackedScene = preload("res://src/employees/employee.tscn")
 var employees: Array[Employee] = []
 var next_id: int = 1
 var hiring_cost: float = 100.0
 
-var names_pool: Array[String] = ["João", "Carlos", "Pedro", "Ana", "Mariana", "Lucas", "Beatriz", "Gabriel"]
+var names_pool: Array[String] = ["Carlos", "João", "Pedro", "Ana", "Mariana", "Lucas", "Beatriz", "Gabriel"]
 
 func _enter_tree() -> void:
 	instance = self
 
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
+
 static func get_instance() -> EmployeeManager:
 	return instance
+
+func _ready() -> void:
+	# Instancia o primeiro funcionário operacional geral na cozinha
+	call_deferred("_spawn_initial_employee")
+
+func _spawn_initial_employee() -> void:
+	if not employees.is_empty():
+		return
+
+	var emp = employee_scene.instantiate() as Employee
+	emp.employee_id = next_id
+	next_id += 1
+	emp.employee_name = "Carlos"
+	emp.weekly_salary = 250.0
+	emp.rest_position = Vector3(-4.5, 0.0, -3.5)
+
+	var parent_node: Node = get_parent() if get_parent() else (get_tree().current_scene if get_tree() else null)
+	if parent_node:
+		parent_node.add_child(emp)
+		emp.global_position = emp.rest_position
+
+	employees.append(emp)
+	employee_hired.emit(emp)
 
 func get_next_name() -> String:
 	var idx = (next_id - 1) % names_pool.size()
 	return names_pool[idx]
 
-func hire_employee(emp_name: String = "", initial_role: Employee.Role = Employee.Role.UNASSIGNED) -> Dictionary:
+func hire_employee(emp_name: String = "", initial_role: Employee.Role = Employee.Role.GENERAL) -> Dictionary:
 	var economy = EconomyManager.get_instance()
 	if not economy or economy.get_money() < hiring_cost:
 		return {"success": false, "message": "Saldo insuficiente para contratação ($%.2f necessário)." % hiring_cost}
@@ -39,18 +73,12 @@ func hire_employee(emp_name: String = "", initial_role: Employee.Role = Employee
 	emp.employee_name = name_str
 	emp.role = initial_role
 	emp.weekly_salary = 250.0
+	emp.rest_position = Vector3(-4.5 + (employees.size() * 0.9), 0.0, -3.5)
 
-	var parent_node: Node = null
-	if get_tree() and get_tree().current_scene:
-		parent_node = get_tree().current_scene
-	elif get_parent():
-		parent_node = get_parent()
-	elif get_tree() and get_tree().root.get_child_count() > 0:
-		parent_node = get_tree().root.get_child(0)
-
+	var parent_node: Node = get_parent() if get_parent() else (get_tree().current_scene if get_tree() else null)
 	if parent_node:
 		parent_node.add_child(emp)
-		emp.global_position = Vector3(-4.0 + (employees.size() * 1.0), 0.1, -1.0)
+		emp.global_position = emp.rest_position
 
 	employees.append(emp)
 	employee_hired.emit(emp)
@@ -64,14 +92,6 @@ func fire_employee(emp_id: int) -> bool:
 			employee_fired.emit(emp_id)
 			if is_instance_valid(emp):
 				emp.queue_free()
-			return true
-	return false
-
-func set_employee_role(emp_id: int, new_role: Employee.Role) -> bool:
-	for emp in employees:
-		if emp.employee_id == emp_id:
-			emp.set_role(new_role)
-			role_changed.emit(emp, new_role)
 			return true
 	return false
 
@@ -96,12 +116,9 @@ func process_weekly_payroll() -> Dictionary:
 		summaries.append({
 			"id": emp.employee_id,
 			"name": emp.employee_name,
-			"role": emp.get_role_name(),
 			"salary": emp.weekly_salary,
-			"tasks_completed": emp.tasks_completed_this_week
+			"tasks_completed": emp.tasks_completed
 		})
-		# Reseta estatísticas da semana
-		emp.tasks_completed_this_week = 0
 
 	return {
 		"total_salaries": total_salaries,

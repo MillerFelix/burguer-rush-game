@@ -49,6 +49,7 @@ const FILL_DURATION: float = 0.85 # tempo para encher um copo
 
 const JuicePulp = preload("res://src/items/juice_pulp.gd")
 const DrinkCup = preload("res://src/items/drink_cup.gd")
+const PowerManager = preload("res://src/core/power_manager.gd")
 
 # Estado Geral da Máquina
 @export var is_powered: bool = true
@@ -84,6 +85,22 @@ var _target_process_vol: float = -80.0
 
 func _ready() -> void:
 	_setup_audio()
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.register_appliance(self, "juice_machine", "Máquina de Sucos Naturais", 0.85, is_powered)
+		if not pm.power_state_changed.is_connected(on_power_state_changed):
+			pm.power_state_changed.connect(on_power_state_changed)
+	_update_all_visuals()
+
+func _exit_tree() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.unregister_appliance(self)
+
+func on_power_state_changed(main_power_on: bool) -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.set_appliance_state(self, is_powered and main_power_on)
 	_update_all_visuals()
 
 func _setup_audio() -> void:

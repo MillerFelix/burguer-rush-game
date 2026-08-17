@@ -2,43 +2,36 @@ class_name BaconEggStation
 extends StaticBody3D
 
 # ================================================================
-# BANCADA DE ARMAZENAMENTO DE BACON & OVO — ARMAZÉM
-#
-# Estrutura:
-#  StaticBody3D "BaconEggStation"
-#  ├── Model (Node3D)
-#  │   ├── Table (Tampo + 4 Pernas + Prateleira Inferior)
-#  │   ├── BaconArea (Lado Esquerdo: Pacotes Empilhados de Bacon)
-#  │   │   ├── Packs (Modelos 3D de pacotes de bacon)
-#  │   │   └── Label (Label3D com estoque)
-#  │   ├── EggArea (Lado Direito: Cesto com Ovos Individuais)
-#  │   │   ├── Basket (Cesto aberto 3D)
-#  │   │   ├── Eggs (Modelos 3D de ovos individuais no cesto)
-#  │   │   └── Label (Label3D com estoque)
-#  │   └── TableBadge (Placa frontal "🥓 BACON & OVOS 🥚")
-#  └── StatusLabel (Label3D)
+# BANCADA DE ARMAZENAMENTO DE BACON & OVO — ESTOQUE VISUAL DINÂMICO
+# Regra: CHEIO | MÉDIO | BAIXO | ZERO (Independente para Bacon e Ovos)
+# Sem textos ou labels 3D flutuantes
 #
 # REGRA DE CONTROLE:
 #  - E: Reabastecer com caixa de mercadoria / Equipamentos
 #  - CLIQUE ESQUERDO: Pegar / manipular bacon e ovos
 # ================================================================
 
-@onready var status_label: Label3D = get_node_or_null("StatusLabel")
+# Nós de Estoque Visual Dinâmico (3 Estágios)
+@onready var bacon_full: Node3D = get_node_or_null("Model/BaconArea/Packs/Full")
+@onready var bacon_med: Node3D = get_node_or_null("Model/BaconArea/Packs/Medium")
+@onready var bacon_low: Node3D = get_node_or_null("Model/BaconArea/Packs/Low")
+
+@onready var egg_full: Node3D = get_node_or_null("Model/EggArea/Eggs/Full")
+@onready var egg_med: Node3D = get_node_or_null("Model/EggArea/Eggs/Medium")
+@onready var egg_low: Node3D = get_node_or_null("Model/EggArea/Eggs/Low")
 
 var items_data: Array[Dictionary] = [
 	{
 		"id": "bacon",
 		"name": "Tirinha de Bacon",
 		"icon": "🥓",
-		"scene": preload("res://src/items/bacon.tscn"),
-		"label_node": "Model/BaconArea/Label"
+		"scene": preload("res://src/items/bacon.tscn")
 	},
 	{
 		"id": "egg",
 		"name": "Ovo",
 		"icon": "🥚",
-		"scene": preload("res://src/items/egg.tscn"),
-		"label_node": "Model/EggArea/Label"
+		"scene": preload("res://src/items/egg.tscn")
 	}
 ]
 
@@ -48,7 +41,7 @@ func _ready() -> void:
 	var inv = InventoryManager.get_instance()
 	if inv and not inv.stock_changed.is_connected(_on_stock_changed):
 		inv.stock_changed.connect(_on_stock_changed)
-	_update_label()
+	_update_all_visual_stocks()
 
 func get_aimed_item_index(player: Node = null) -> int:
 	if not player:
@@ -80,29 +73,25 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 		# Devolução de item cru individual
 		if held is Bacon and held.state == Bacon.State.RAW:
-			return "🖱️ Clique para Devolver Tirinha de Bacon ao Estoque"
+			return "🥓 🖱️ Devolver Tirinha de Bacon ao Estoque"
 		elif held is Egg and held.state == Egg.State.RAW:
-			return "🖱️ Clique para Devolver Ovo ao Cesto"
+			return "🥚 🖱️ Devolver Ovo ao Cesto"
 		elif held_id == item_id and held.get("state") == 0:
-			return "🖱️ Clique para Devolver %s ao Estoque" % itm["name"]
+			return "%s 🖱️ Devolver %s ao Estoque" % [itm["icon"], itm["name"]]
 
 		# Reabastecimento com caixa/entrega
 		if held.get("ingredient_id") == item_id or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			return "E / 🖱️ Armazenar %s (+%d unidades)" % [itm["name"], qty]
+			return "📦 🖱️ Armazenar %s (+%d un.)" % [itm["name"], qty]
 
 		return ""
 
 	# 2. Jogador de mãos vazias -> pegar ingrediente (EXCLUSIVAMENTE clique esquerdo)
 	var stock = inv.get_stock(item_id)
-	var max_cap = inv.get_max_capacity(item_id)
-	if max_cap == 0:
-		max_cap = 50
-
 	if stock <= 0:
-		return "🔴 %s Esgotado! Compre no Computador" % itm["name"]
+		return "🔴 %s Esgotado" % itm["name"]
 
-	return "🖱️ Pegar %s %s (%d/%d)" % [itm["icon"], itm["name"], stock, max_cap]
+	return "%s 🖱️ Pegar %s" % [itm["icon"], itm["name"]]
 
 # [Clique Esquerdo do Mouse] — Manipulação de Itens (Pegar / Devolver)
 func interact_item(player: Node3D) -> void:
@@ -124,9 +113,9 @@ func interact_item(player: Node3D) -> void:
 			if player.has_method("take_held_item"):
 				var returned_item = player.take_held_item()
 				inv.add_stock(item_id, 1)
-				_show_feedback(player, "%s %s devolvido ao armazém (Estoque: %d)" % [itm["icon"], itm["name"], inv.get_stock(item_id)])
+				_show_feedback(player, "%s %s devolvido à bancada" % [itm["icon"], itm["name"]])
 				returned_item.queue_free()
-				_update_label()
+				_update_all_visual_stocks()
 				return
 
 		# Reabastecimento com Caixa de Entrega
@@ -137,7 +126,7 @@ func interact_item(player: Node3D) -> void:
 				inv.add_stock(item_id, qty)
 				_show_feedback(player, "📦 %s armazenado na bancada (+%d un.)!" % [itm["name"], qty])
 				crate.queue_free()
-				_update_label()
+				_update_all_visual_stocks()
 				return
 
 		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
@@ -161,8 +150,8 @@ func interact_item(player: Node3D) -> void:
 				add_child(item)
 			if player.has_method("pick_up"):
 				player.pick_up(item)
-			_show_feedback(player, "%s Pegou %s (Estoque: %d)" % [itm["icon"], itm["name"], inv.get_stock(item_id)])
-			_update_label()
+			_show_feedback(player, "%s Pegou %s" % [itm["icon"], itm["name"]])
+			_update_all_visual_stocks()
 
 # [E] — Interação com Equipamento (NÃO pega ingrediente; apenas reabastecimento com caixa)
 func interact(player: Node3D) -> void:
@@ -183,43 +172,50 @@ func interact(player: Node3D) -> void:
 			inv.add_stock(item_id, qty)
 			_show_feedback(player, "📦 %s armazenado na bancada (+%d un.)!" % [itm["name"], qty])
 			crate.queue_free()
-			_update_label()
+			_update_all_visual_stocks()
 			return
 
-	# Se tentar apertar E com as mãos vazias, orienta que a tecla correta para ingredientes é o Clique Esquerdo
 	if held == null:
 		_show_feedback(player, "ℹ️ Use o Clique Esquerdo do mouse para pegar ingredientes.")
 
 func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
-	_update_label()
+	_update_all_visual_stocks()
 
-func _update_label() -> void:
+func _update_all_visual_stocks() -> void:
 	var inv = InventoryManager.get_instance()
-	var b_stock = inv.get_stock("bacon") if inv else 0
-	var e_stock = inv.get_stock("egg") if inv else 0
+	var b_stock = inv.get_stock("bacon") if inv else 15
+	var e_stock = inv.get_stock("egg") if inv else 15
 
-	_update_slot_label("Model/BaconArea/Label", "🥓 BACON\nx%d" % b_stock)
-	_update_slot_label("Model/EggArea/Label", "🥚 OVOS\nx%d" % e_stock)
+	_update_section_visual(b_stock, bacon_full, bacon_med, bacon_low, 15, 6)
+	_update_section_visual(e_stock, egg_full, egg_med, egg_low, 15, 6)
 
-	# Atualiza visibilidade dos modelos conforme estoque
-	var bacon_packs = get_node_or_null("Model/BaconArea/Packs")
-	if bacon_packs:
-		bacon_packs.visible = (b_stock > 0)
-
-	var egg_items = get_node_or_null("Model/EggArea/Eggs")
-	if egg_items:
-		egg_items.visible = (e_stock > 0)
-
-	if not status_label:
+func _update_section_visual(
+	stock_qty: int,
+	node_full: Node3D,
+	node_med: Node3D,
+	node_low: Node3D,
+	full_thresh: int = 15,
+	med_thresh: int = 6
+) -> void:
+	if not node_full and not node_med and not node_low:
 		return
 
-	status_label.text = "🥓 BANCADA DE BACON & OVOS 🥚\n🥓 Bacon: %d un.  │  🥚 Ovos: %d un.\n[Clique Esquerdo] Pegar item apontado" % [b_stock, e_stock]
-	status_label.modulate = Color(0.98, 0.92, 0.82, 1.0)
-
-func _update_slot_label(node_path: String, text: String) -> void:
-	var lbl = get_node_or_null(node_path)
-	if lbl and lbl is Label3D:
-		lbl.text = text
+	if stock_qty >= full_thresh:
+		if node_full: node_full.visible = true
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
+	elif stock_qty >= med_thresh:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = true
+		if node_low: node_low.visible = false
+	elif stock_qty > 0:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = true
+	else:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")

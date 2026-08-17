@@ -2,144 +2,224 @@
 
 [ext_resource type="Script" path="res://src/stations/commercial_sink.gd" id="1_sink"]
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.2, 1.05, 0.8)
+; ================================================================
+; COLISÃO DA PIA INDUSTRIAL
+; ================================================================
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Sink"]
+size = Vector3(1.25, 1.05, 0.85)
+
+; ================================================================
+; MATERIAIS REALISTAS DE COZINHA PROFISSIONAL
+; ================================================================
 
 [sub_resource type="StandardMaterial3D" id="Material_StainlessSteel"]
-albedo_color = Color(0.76, 0.78, 0.8, 1)
-metallic = 0.82
-roughness = 0.28
-
-[sub_resource type="StandardMaterial3D" id="Material_BasinInterior"]
-albedo_color = Color(0.68, 0.7, 0.72, 1)
-metallic = 0.85
+albedo_color = Color(0.78, 0.80, 0.82, 1)
+metallic = 0.90
 roughness = 0.22
 
-[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
-albedo_color = Color(0.9, 0.92, 0.94, 1)
+[sub_resource type="StandardMaterial3D" id="Material_BasinInterior"]
+albedo_color = Color(0.65, 0.67, 0.70, 1)
 metallic = 0.92
-roughness = 0.15
+roughness = 0.20
 
-[sub_resource type="StandardMaterial3D" id="Material_Water"]
+[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
+albedo_color = Color(0.92, 0.94, 0.96, 1)
+metallic = 0.98
+roughness = 0.08
+
+[sub_resource type="StandardMaterial3D" id="Material_DrainGrate"]
+albedo_color = Color(0.25, 0.26, 0.28, 1)
+metallic = 0.85
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_WaterStream"]
 transparency = 1
-albedo_color = Color(0.2, 0.6, 0.85, 0.6)
-roughness = 0.1
+albedo_color = Color(0.65, 0.88, 1.0, 0.75)
+roughness = 0.05
+refraction_enabled = true
+refraction_scale = 0.05
 
-[sub_resource type="StandardMaterial3D" id="Material_ToeKick"]
-albedo_color = Color(0.15, 0.15, 0.18, 1)
-roughness = 0.6
+[sub_resource type="StandardMaterial3D" id="Material_WaterPool"]
+transparency = 1
+albedo_color = Color(0.35, 0.75, 0.95, 0.55)
+roughness = 0.08
 
-[sub_resource type="BoxMesh" id="BoxMesh_ToeKick"]
-material = SubResource("Material_ToeKick")
-size = Vector3(1.18, 0.1, 0.76)
+; ================================================================
+; MESHES DA ESTRUTURA
+; ================================================================
 
-[sub_resource type="BoxMesh" id="BoxMesh_Cabinet"]
+; Gabinete inferior fechado
+[sub_resource type="BoxMesh" id="BoxMesh_CabinetBase"]
 material = SubResource("Material_StainlessSteel")
-size = Vector3(1.2, 0.78, 0.8)
+size = Vector3(1.20, 0.68, 0.80)
 
-[sub_resource type="BoxMesh" id="BoxMesh_CounterTop"]
+; Tampo superior de inox com borda anti-respingo
+[sub_resource type="BoxMesh" id="BoxMesh_RimBack"]
 material = SubResource("Material_StainlessSteel")
-size = Vector3(1.2, 0.08, 0.8)
+size = Vector3(1.22, 0.22, 0.05)
 
-[sub_resource type="BoxMesh" id="BoxMesh_SplashGuard"]
+[sub_resource type="BoxMesh" id="BoxMesh_CounterTopFront"]
 material = SubResource("Material_StainlessSteel")
-size = Vector3(1.2, 0.25, 0.04)
+size = Vector3(1.22, 0.06, 0.12)
 
-[sub_resource type="BoxMesh" id="BoxMesh_BasinLeft"]
+[sub_resource type="BoxMesh" id="BoxMesh_CounterTopSides"]
+material = SubResource("Material_StainlessSteel")
+size = Vector3(0.12, 0.06, 0.68)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CounterTopDivider"]
+material = SubResource("Material_StainlessSteel")
+size = Vector3(0.08, 0.06, 0.68)
+
+; Paredes e fundo das duas cubas profundas (esquerda e direita)
+[sub_resource type="BoxMesh" id="BoxMesh_BasinFloor"]
 material = SubResource("Material_BasinInterior")
 size = Vector3(0.42, 0.02, 0.54)
 
-[sub_resource type="BoxMesh" id="BoxMesh_WaterLeft"]
-material = SubResource("Material_Water")
-size = Vector3(0.40, 0.01, 0.52)
-
-[sub_resource type="BoxMesh" id="BoxMesh_BasinRight"]
+[sub_resource type="BoxMesh" id="BoxMesh_BasinWallSide"]
 material = SubResource("Material_BasinInterior")
-size = Vector3(0.42, 0.02, 0.54)
+size = Vector3(0.02, 0.24, 0.54)
 
-[sub_resource type="BoxMesh" id="BoxMesh_WaterRight"]
-material = SubResource("Material_Water")
-size = Vector3(0.40, 0.01, 0.52)
+[sub_resource type="BoxMesh" id="BoxMesh_BasinWallFront"]
+material = SubResource("Material_BasinInterior")
+size = Vector3(0.42, 0.24, 0.02)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_FaucetBase"]
+; Ralo metálico no fundo da cuba
+[sub_resource type="CylinderMesh" id="CylinderMesh_Drain"]
+material = SubResource("Material_DrainGrate")
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.005
+
+; Torneira de bica alta giratória
+[sub_resource type="CylinderMesh" id="CylinderMesh_FaucetPillar"]
 material = SubResource("Material_Chrome")
-top_radius = 0.025
-bottom_radius = 0.03
-height = 0.28
-radial_segments = 12
+top_radius = 0.022
+bottom_radius = 0.025
+height = 0.32
+radial_segments = 16
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_FaucetSpout"]
 material = SubResource("Material_Chrome")
-top_radius = 0.018
+top_radius = 0.016
 bottom_radius = 0.018
-height = 0.16
+height = 0.20
+radial_segments = 16
+
+[sub_resource type="BoxMesh" id="BoxMesh_FaucetLever"]
+material = SubResource("Material_Chrome")
+size = Vector3(0.08, 0.025, 0.03)
+
+; Jato d'água corrente transparente da torneira
+[sub_resource type="CylinderMesh" id="CylinderMesh_WaterStream"]
+material = SubResource("Material_WaterStream")
+top_radius = 0.012
+bottom_radius = 0.020
+height = 0.32
 radial_segments = 12
 
-[sub_resource type="BoxMesh" id="BoxMesh_KnobHot"]
-material = SubResource("Material_Chrome")
-size = Vector3(0.06, 0.03, 0.03)
+; Poça d'água no fundo da cuba
+[sub_resource type="BoxMesh" id="BoxMesh_WaterPool"]
+material = SubResource("Material_WaterPool")
+size = Vector3(0.40, 0.015, 0.52)
+
+; ================================================================
+; HIERARQUIA DA CENA
+; ================================================================
 
 [node name="CommercialSink" type="StaticBody3D"]
 script = ExtResource("1_sink")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-shape = SubResource("BoxShape3D_1")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.525, 0)
+shape = SubResource("BoxShape3D_Sink")
 
 [node name="Model" type="Node3D" parent="."]
 
-[node name="ToeKick" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
-mesh = SubResource("BoxMesh_ToeKick")
-
+; Gabinete de suporte
 [node name="Cabinet" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.49, 0)
-mesh = SubResource("BoxMesh_Cabinet")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.34, 0)
+mesh = SubResource("BoxMesh_CabinetBase")
 
-[node name="CounterTop" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
-mesh = SubResource("BoxMesh_CounterTop")
-
+; Espelho / protetor anti-respingo traseiro
 [node name="SplashGuard" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.02, -0.38)
-mesh = SubResource("BoxMesh_SplashGuard")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.99, -0.375)
+mesh = SubResource("BoxMesh_RimBack")
 
-[node name="BasinLeft" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.90, 0.02)
-mesh = SubResource("BoxMesh_BasinLeft")
+; Borda frontal e divisórias do tampo
+[node name="RimFront" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0.34)
+mesh = SubResource("BoxMesh_CounterTopFront")
 
-[node name="WaterLeft" type="MeshInstance3D" parent="Model/BasinLeft"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
-mesh = SubResource("BoxMesh_WaterLeft")
+[node name="RimLeft" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.55, 0.85, -0.06)
+mesh = SubResource("BoxMesh_CounterTopSides")
 
-[node name="BasinRight" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.90, 0.02)
-mesh = SubResource("BoxMesh_BasinRight")
+[node name="RimRight" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0.85, -0.06)
+mesh = SubResource("BoxMesh_CounterTopSides")
 
-[node name="WaterRight" type="MeshInstance3D" parent="Model/BasinRight"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
-mesh = SubResource("BoxMesh_WaterRight")
+[node name="RimCenter" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.85, -0.06)
+mesh = SubResource("BoxMesh_CounterTopDivider")
 
-[node name="FaucetBase" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.04, -0.26)
-mesh = SubResource("CylinderMesh_FaucetBase")
+; --- CUBA ESQUERDA (PROFUNDA) ---
+[node name="BasinLeftFloor" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.64, -0.06)
+mesh = SubResource("BoxMesh_BasinFloor")
 
-[node name="FaucetSpout" type="MeshInstance3D" parent="Model/FaucetBase"]
-transform = Transform3D(1, 0, 0, 0, 0.5, 0.866025, 0, -0.866025, 0.5, 0, 0.16, 0.08)
+[node name="BasinLeftDrain" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.655, -0.06)
+mesh = SubResource("CylinderMesh_Drain")
+
+[node name="BasinLeftWaterPool" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.28, 0.66, -0.06)
+visible = false
+mesh = SubResource("BoxMesh_WaterPool")
+
+; --- CUBA DIREITA (PROFUNDA) ---
+[node name="BasinRightFloor" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.64, -0.06)
+mesh = SubResource("BoxMesh_BasinFloor")
+
+[node name="BasinRightDrain" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.655, -0.06)
+mesh = SubResource("CylinderMesh_Drain")
+
+[node name="BasinRightWaterPool" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.28, 0.66, -0.06)
+visible = false
+mesh = SubResource("BoxMesh_WaterPool")
+
+; --- TORNEIRA ALTA ARTICULADA ---
+[node name="Faucet" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.88, -0.32)
+
+[node name="Pillar" type="MeshInstance3D" parent="Model/Faucet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
+mesh = SubResource("CylinderMesh_FaucetPillar")
+
+[node name="Spout" type="MeshInstance3D" parent="Model/Faucet"]
+transform = Transform3D(1, 0, 0, 0, 0.642788, 0.766044, 0, -0.766044, 0.642788, 0, 0.32, 0.08)
 mesh = SubResource("CylinderMesh_FaucetSpout")
 
-[node name="KnobHot" type="MeshInstance3D" parent="Model/FaucetBase"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, -0.06, 0)
-mesh = SubResource("BoxMesh_KnobHot")
+[node name="LeverLeft" type="MeshInstance3D" parent="Model/Faucet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 0.08, 0.02)
+mesh = SubResource("BoxMesh_FaucetLever")
 
-[node name="KnobCold" type="MeshInstance3D" parent="Model/FaucetBase"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, -0.06, 0)
-mesh = SubResource("BoxMesh_KnobHot")
+[node name="LeverRight" type="MeshInstance3D" parent="Model/Faucet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07, 0.08, 0.02)
+mesh = SubResource("BoxMesh_FaucetLever")
 
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
-billboard = 1
-double_sided = false
-text = "🚰 PIA DE HIGIENIZAÇÃO"
-font_size = 20
-outline_size = 6
+; Jato d'água corrente
+[node name="WaterStream" type="MeshInstance3D" parent="Model/Faucet"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0.16)
+visible = false
+mesh = SubResource("CylinderMesh_WaterStream")
+
+; Player de Áudio 3D Posicional da Pia
+[node name="WaterAudioPlayer" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.1)
+unit_size = 2.5
+max_distance = 12.0
+volume_db = -8.0

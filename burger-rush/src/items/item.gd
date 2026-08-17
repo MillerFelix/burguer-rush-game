@@ -41,6 +41,8 @@ func get_quality_name() -> String:
 			return "Artesanal"
 	return "Padrão"
 
+@export var bottom_offset: float = 0.002
+
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 
 func _physics_process(delta: float) -> void:
@@ -58,17 +60,17 @@ func _physics_process(delta: float) -> void:
 
 		var result = space_state.intersect_ray(query)
 		if result:
-			var target_y = result.position.y + 0.02
-			if global_position.y > target_y + 0.04:
+			var target_y = result.position.y + bottom_offset
+			if global_position.y > target_y + 0.03:
 				global_position.y = move_toward(global_position.y, target_y, 9.8 * delta)
 			else:
 				global_position.y = target_y
 				_is_falling = false
 		else:
-			if global_position.y > 0.02:
-				global_position.y = move_toward(global_position.y, 0.02, 9.8 * delta)
+			if global_position.y > bottom_offset:
+				global_position.y = move_toward(global_position.y, bottom_offset, 9.8 * delta)
 			else:
-				global_position.y = 0.02
+				global_position.y = bottom_offset
 				_is_falling = false
 
 func get_interaction_prompt(player: Node = null) -> String:

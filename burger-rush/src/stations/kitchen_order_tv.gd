@@ -1,15 +1,68 @@
 class_name KitchenOrderTV
-extends Node3D
+extends StaticBody3D
+
+const PowerManager = preload("res://src/core/power_manager.gd")
 
 @onready var screen_label: Label3D = $Model/ScreenLabel
 @onready var header_label: Label3D = $Model/HeaderLabel
 @onready var power_led: MeshInstance3D = $Model/PowerLED
 
 var poll_timer: float = 0.0
+var is_turned_on: bool = true
+const BASE_KW: float = 0.25
 
 func _ready() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.register_appliance(self, "kitchen_tv", "Monitor de Pedidos da Cozinha", BASE_KW, is_turned_on)
+		if not pm.power_state_changed.is_connected(on_power_state_changed):
+			pm.power_state_changed.connect(on_power_state_changed)
 	_connect_order_signals()
 	_update_display()
+
+func _exit_tree() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.unregister_appliance(self)
+
+func on_power_state_changed(main_power_on: bool) -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.set_appliance_state(self, is_turned_on and main_power_on)
+	_update_display()
+
+func get_interaction_prompt(player: Node = null) -> String:
+	var pm = PowerManager.get_instance()
+	var has_power = pm.is_main_power_on if pm else false
+	if is_turned_on and has_power:
+		return "📺 [E] Desligar TV de Pedidos"
+	else:
+		return "📺 [E] Ligar TV de Pedidos"
+
+func interact_equipment(player: Node3D) -> void:
+	toggle_tv(player)
+
+func interact(player: Node3D) -> void:
+	toggle_tv(player)
+
+func toggle_tv(player: Node3D = null) -> void:
+	is_turned_on = not is_turned_on
+	var pm = PowerManager.get_instance()
+	var has_power = pm.is_main_power_on if pm else false
+	if pm:
+		pm.set_appliance_state(self, is_turned_on and has_power)
+
+	_update_display()
+
+	if player:
+		var hud = player.get_node_or_null("HUD")
+		if hud and hud.has_method("show_temporary_feedback"):
+			if is_turned_on and has_power:
+				hud.show_temporary_feedback("📺 TV de Pedidos Ligada")
+			elif is_turned_on:
+				hud.show_temporary_feedback("⚠️ TV Ligada (Aguardando energia no quadro geral)")
+			else:
+				hud.show_temporary_feedback("⚪ TV de Pedidos Desligada")
 
 func _process(delta: float) -> void:
 	poll_timer += delta
@@ -48,14 +101,46 @@ func _on_order_changed(_order = null) -> void:
 func _update_display() -> void:
 	if not screen_label:
 		screen_label = get_node_or_null("Model/ScreenLabel") as Label3D
-	if not screen_label:
+	if not header_label:
+		header_label = get_node_or_null("Model/HeaderLabel") as Label3D
+	if not power_led:
+		power_led = get_node_or_null("Model/PowerLED") as MeshInstance3D
+
+	var pm = PowerManager.get_instance()
+	var has_power = pm.is_main_power_on if pm else false
+	var is_active = is_turned_on and has_power
+
+	if power_led:
+		var mat = power_led.get_surface_override_material(0)
+		if not mat:
+			mat = StandardMaterial3D.new()
+			power_led.set_surface_override_material(0, mat)
+		if mat is StandardMaterial3D:
+			if is_active:
+				mat.albedo_color = Color(0.15, 0.95, 0.25, 1.0)
+				mat.emission = Color(0.15, 0.95, 0.25, 1.0)
+				mat.emission_enabled = true
+			else:
+				mat.albedo_color = Color(0.95, 0.15, 0.15, 1.0)
+				mat.emission = Color(0.95, 0.15, 0.15, 1.0)
+				mat.emission_enabled = true
+
+	if not is_active:
+		if screen_label:
+			screen_label.text = ""
+		if header_label:
+			header_label.text = ""
 		return
+
+	if header_label:
+		header_label.text = "📋 PEDIDOS EM ANDAMENTO"
 
 	_connect_order_signals()
 	var order_mgr = _get_order_manager()
 	if not order_mgr:
-		screen_label.text = "✓ COZINHA LIVRE\nNenhum pedido pendente no momento."
-		screen_label.modulate = Color(0.4, 1.0, 0.6, 0.9)
+		if screen_label:
+			screen_label.text = "✓ COZINHA LIVRE\nNenhum pedido pendente no momento."
+			screen_label.modulate = Color(0.4, 1.0, 0.6, 0.9)
 		return
 
 	var active_orders = order_mgr.get_active_orders()

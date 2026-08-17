@@ -127,3 +127,7 @@ func get_unlocked_recipes() -> Array[String]:
 		if is_unlocked(r.id):
 			list.append(r.id)
 	return list
+
+## Alias compatível — registra XP de uma ação (reservado para sistema futuro de progressão)
+func register_xp(_amount: int) -> void:
+	pass

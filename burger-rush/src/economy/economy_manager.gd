@@ -38,6 +38,10 @@ func add_money(amount: float, description: String = "Venda") -> void:
 	transaction_recorded.emit(t)
 	money_changed.emit(current_money, amount)
 
+## Alias compatível com cash_register.gd — registra uma venda financeira
+func register_sale(amount: float) -> void:
+	add_money(amount, "Venda no Caixa")
+
 func spend_money(amount: float, description: String = "Compra") -> bool:
 	if amount <= 0 or current_money < amount:
 		return false

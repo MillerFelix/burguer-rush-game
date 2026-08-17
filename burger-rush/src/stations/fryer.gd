@@ -58,6 +58,7 @@ const POWER_BUTTON_Y_MIN = 0.70
 @onready var basket_audio: AudioStreamPlayer3D = get_node_or_null("Audio/BasketAudioPlayer")
 
 const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+const PowerManager = preload("res://src/core/power_manager.gd")
 
 var _has_played_ready_chime: bool = false
 var _target_hum_vol: float = -80.0
@@ -74,7 +75,22 @@ var active_potatoes: Array[Dictionary]:
 
 func _ready() -> void:
 	_setup_audio()
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.register_appliance(self, "fryer", "Fritadeira Industrial Dupla", 3.5, is_on)
+		if not pm.power_state_changed.is_connected(on_power_state_changed):
+			pm.power_state_changed.connect(on_power_state_changed)
 	_update_all_visuals_instant()
+
+func _exit_tree() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.unregister_appliance(self)
+
+func on_power_state_changed(main_power_on: bool) -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.set_appliance_state(self, is_on and main_power_on)
 
 func _setup_audio() -> void:
 	if not hum_audio:
@@ -155,8 +171,12 @@ func get_cooking_speed_factor() -> float:
 		return 1.0
 
 func _process(delta: float) -> void:
+	var pm = PowerManager.get_instance()
+	var has_power = pm.is_main_power_on if pm else false
+	var is_actively_heating = is_on and has_power
+
 	# 1. Simulação física contínua da temperatura
-	if is_on:
+	if is_actively_heating:
 		current_temperature = move_toward(current_temperature, target_temperature, heating_rate * delta)
 	else:
 		current_temperature = move_toward(current_temperature, ambient_temperature, cooling_rate * delta)
@@ -165,7 +185,7 @@ func _process(delta: float) -> void:
 	_update_thermometer(delta)
 
 	# 3. Disparo único do Feedback Sonoro (Chime de Prontidão) ao atingir 150°C
-	if is_on and is_ideal_temp():
+	if is_actively_heating and is_ideal_temp():
 		if not _has_played_ready_chime:
 			_has_played_ready_chime = true
 			_play_oneshot("fryer_ready_chime", -7.0)
@@ -625,14 +645,55 @@ func get_interaction_prompt(player: Node = null) -> String:
 		else:
 			return "⬇️ [E] Abaixar Cesto %d no Óleo" % num
 
+	if is_dirty():
+		var tool_holder = player.get_node_or_null("Head/Camera3D/ToolHolder") if player else null
+		var sponge = tool_holder.get_node_or_null("Sponge") if tool_holder else null
+		if sponge:
+			if sponge.is_dirty:
+				return "⚠️ Bucha suja! Lave na pia antes de limpar a fritadeira"
+			else:
+				return "🖱️ [Segurar Clique Esquerdo] Limpar Fritadeira com a Bucha"
+		else:
+			return "Fritadeira suja de óleo (Equipe a Bucha [2] para limpar)"
+
 	# Prompt geral da máquina
 	if not is_on:
 		return "♨️ [E] Ligar Fritadeira Industrial"
 	else:
 		return "⚪ [E] Desligar Fritadeira Industrial"
 
+var dirt_level: float = 0.0
+
+func is_dirty() -> bool:
+	return dirt_level >= 0.70
+
+func add_dirt(amount: float = 0.20) -> void:
+	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)
+	_update_dirt_visuals()
+
+func _update_dirt_visuals() -> void:
+	var dirt_mesh = get_node_or_null("Model/FryerDirt")
+	if dirt_mesh:
+		dirt_mesh.visible = (dirt_level > 0.0)
+		dirt_mesh.scale = Vector3.ONE * clampf(dirt_level, 0.2, 1.0)
+
+func clean_progress(delta: float, player: Node3D = null) -> bool:
+	if dirt_level <= 0.0:
+		return true
+
+	dirt_level = maxf(0.0, dirt_level - (delta / 1.2))
+	_update_dirt_visuals()
+
+	if dirt_level <= 0.0:
+		if player:
+			_show_feedback(player, "✨ Fritadeira limpa e higienizada!")
+		return true
+
+	return false
+
 func _show_feedback(player: Node3D, message: String) -> void:
 	if player and player.has_node("HUD"):
 		var hud = player.get_node("HUD")
 		if hud and hud.has_method("show_temporary_feedback"):
 			hud.show_temporary_feedback(message)
+

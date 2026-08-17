@@ -18,14 +18,26 @@ extends CanvasLayer
 @onready var report_balance: Label = $DayReportModal/VBox/BalanceLabel
 @onready var next_day_button: Button = $DayReportModal/VBox/NextDayButton
 
+@onready var daily_notice_modal: PanelContainer = get_node_or_null("DailyNoticeModal")
+@onready var notice_title_label: Label = get_node_or_null("DailyNoticeModal/VBox/NoticeTitle")
+@onready var notice_headline_label: Label = get_node_or_null("DailyNoticeModal/VBox/NoticeHeadline")
+@onready var notice_body_label: Label = get_node_or_null("DailyNoticeModal/VBox/NoticeBody")
+@onready var date_tag_label: Label = get_node_or_null("DailyNoticeModal/VBox/DateTagLabel")
+@onready var dismiss_notice_button: Button = get_node_or_null("DailyNoticeModal/VBox/DismissNoticeButton")
+
+const CalendarManager = preload("res://src/core/calendar_manager.gd")
+const DailyEventManager = preload("res://src/core/daily_event_manager.gd")
+
 func _ready() -> void:
 	hide_prompt()
 	if report_modal:
 		report_modal.visible = false
+	if daily_notice_modal:
+		daily_notice_modal.visible = false
 
 	_update_money_display(100.0)
 	_update_orders_display()
-	_update_day_time_display(1, 8, 0, GameClock.State.PREPARATION)
+	_update_day_time_display(1, 9, 0, GameClock.State.PREPARATION)
 
 	var economy = EconomyManager.get_instance()
 	if economy:
@@ -47,13 +59,26 @@ func _ready() -> void:
 		clock.day_ended.connect(_on_day_ended)
 		_update_day_time_display(clock.day_number, clock.current_hour, clock.current_minute, clock.state)
 
+	var dem = DailyEventManager.get_instance()
+	if dem:
+		dem.event_started.connect(_on_daily_event_started)
+
 	if next_day_button:
 		next_day_button.pressed.connect(_on_next_day_button_pressed)
+	if dismiss_notice_button:
+		dismiss_notice_button.pressed.connect(_on_dismiss_notice_button_pressed)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if daily_notice_modal and daily_notice_modal.visible:
+		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
+			_on_dismiss_notice_button_pressed()
+			get_viewport().set_input_as_handled()
+			return
+
 	if report_modal and report_modal.visible:
 		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 			_on_next_day_button_pressed()
+			get_viewport().set_input_as_handled()
 
 func show_prompt(text: String) -> void:
 	if interaction_label:
@@ -98,17 +123,16 @@ func show_temporary_feedback(message: String, duration: float = 3.0) -> void:
 
 func _on_feedback_timer_timeout() -> void:
 	if feedback_label:
-		feedback_label.text = ""
 		feedback_label.visible = false
 
-func _on_money_changed(new_amount: float, _delta: float) -> void:
+func _on_money_changed(new_amount: float, _delta: float = 0.0) -> void:
 	_update_money_display(new_amount)
 
 func _update_money_display(amount: float) -> void:
 	if money_label:
 		money_label.text = "💰 Caixa: $%.2f" % amount
 
-func _on_order_event(_order: Order) -> void:
+func _on_order_event(_order: Order = null) -> void:
 	_update_orders_display()
 
 func _update_orders_display() -> void:
@@ -120,13 +144,13 @@ func _update_orders_display() -> void:
 		orders_label.text = "📋 PEDIDOS ATIVOS (0)\nNenhum pedido no momento."
 		return
 
-	var active = order_mgr.get_active_orders()
-	if active.is_empty():
+	var active_orders = order_mgr.get_active_orders()
+	if active_orders.is_empty():
 		orders_label.text = "📋 PEDIDOS ATIVOS (0)\nNenhum pedido no momento."
 		return
 
-	var text = "📋 PEDIDOS ATIVOS (%d):\n" % active.size()
-	for o in active:
+	var text = "📋 PEDIDOS ATIVOS (%d):\n" % active_orders.size()
+	for o in active_orders:
 		var prod_info = ""
 		var item_list: Array[String] = []
 		for item in o.items:
@@ -148,7 +172,7 @@ func _on_time_tick(hours: int, minutes: int) -> void:
 func _on_clock_state_changed(new_state: GameClock.State) -> void:
 	var clock = GameClock.get_instance()
 	var day = clock.day_number if clock else 1
-	var h = clock.current_hour if clock else 8
+	var h = clock.current_hour if clock else 9
 	var m = clock.current_minute if clock else 0
 	_update_day_time_display(day, h, m, new_state)
 
@@ -173,8 +197,38 @@ func _update_day_time_display(day: int, hours: int, minutes: int, st: GameClock.
 			state_str = "FECHADO"
 			state_color = Color(1.0, 0.3, 0.3, 1)
 
-	day_time_label.text = "DIA %d  |  %02d:%02d  |  %s" % [day, hours, minutes, state_str]
+	var cal = CalendarManager.get_instance()
+	var date_str = cal.get_formatted_date() if cal else "01/01/2026"
+	var weekday_short = cal.get_weekday_name().substr(0, 3) if cal else "Qui"
+
+	day_time_label.text = "DIA %d (%s, %s)  |  %02d:%02d  |  %s" % [day, weekday_short, date_str, hours, minutes, state_str]
 	day_time_label.add_theme_color_override("font_color", state_color)
+
+func _on_daily_event_started(_event_type: int, event_data: Dictionary) -> void:
+	if not daily_notice_modal:
+		return
+
+	if not event_data.get("has_event", false):
+		daily_notice_modal.visible = false
+		return
+
+	if notice_title_label:
+		notice_title_label.text = event_data.get("title", "AVISO DO DIA")
+	if notice_headline_label:
+		notice_headline_label.text = event_data.get("headline", "")
+	if notice_body_label:
+		notice_body_label.text = event_data.get("body", "")
+	if date_tag_label:
+		var cal = CalendarManager.get_instance()
+		date_tag_label.text = "📰 NOTÍCIAS — %s" % (cal.get_full_date_string() if cal else "")
+
+	daily_notice_modal.visible = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _on_dismiss_notice_button_pressed() -> void:
+	if daily_notice_modal:
+		daily_notice_modal.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _on_day_ended(summary: DaySummary) -> void:
 	if not report_modal:

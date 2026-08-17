@@ -92,7 +92,14 @@ size = Vector3(0.60, 0.09, 0.008)
 
 ; ================================================================
 ; CENA PRINCIPAL DA ILHA (6 BANCADAS CONECTADAS)
-; ================================================================
+[sub_resource type="StandardMaterial3D" id="Material_IslandDirt"]
+transparency = 1
+albedo_color = Color(0.32, 0.22, 0.14, 0.85)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_IslandDirtPatch"]
+material = SubResource("Material_IslandDirt")
+size = Vector3(0.35, 0.004, 0.35)
 
 [node name="PrepIsland" type="StaticBody3D"]
 script = ExtResource("1_prep_island_script")
@@ -102,6 +109,22 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.44, 0)
 shape = SubResource("BoxShape3D_Island")
 
 [node name="Model" type="Node3D" parent="."]
+
+; Manchas e Sujeira da Bancada
+[node name="IslandDirt" type="Node3D" parent="Model"]
+visible = false
+
+[node name="DirtPatch1" type="MeshInstance3D" parent="Model/IslandDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.895, 0.45)
+mesh = SubResource("BoxMesh_IslandDirtPatch")
+
+[node name="DirtPatch2" type="MeshInstance3D" parent="Model/IslandDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.20, 0.895, 0.45)
+mesh = SubResource("BoxMesh_IslandDirtPatch")
+
+[node name="DirtPatch3" type="MeshInstance3D" parent="Model/IslandDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.20, 0.895, -0.45)
+mesh = SubResource("BoxMesh_IslandDirtPatch")
 
 ; Tampo Duplo Gigante de Aço Inox (3.80m x 1.90m)
 [node name="TableTop" type="MeshInstance3D" parent="Model"]
@@ -332,38 +355,3 @@ mesh = SubResource("CylinderMesh_Leg")
 [node name="LowerShelf" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
 mesh = SubResource("BoxMesh_LowerShelf")
-
-; Placa de Identificação Frontal (Sul)
-[node name="FrontBadge" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.81, 0.952)
-mesh = SubResource("BoxMesh_FrontBadge")
-
-[node name="FrontBadgeLabel" type="Label3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.81, 0.958)
-double_sided = false
-text = "🍽️ ILHA DE MONTAGEM & PREPARO 🍽️"
-font_size = 18
-modulate = Color(0.18, 0.20, 0.22, 1.0)
-
-; Placa de Identificação Traseira (Norte - voltada para as chapas)
-[node name="RearBadge" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.81, -0.952)
-mesh = SubResource("BoxMesh_FrontBadge")
-
-[node name="RearBadgeLabel" type="Label3D" parent="Model"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.81, -0.958)
-double_sided = false
-text = "🍽️ ILHA DE MONTAGEM & PREPARO 🍽️"
-font_size = 18
-modulate = Color(0.18, 0.20, 0.22, 1.0)
-
-; Status Flutuante
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, 0)
-billboard = 1
-double_sided = false
-text = ""
-font_size = 18
-outline_size = 5
-modulate = Color(0.95, 0.95, 0.95, 0.85)
-outline_modulate = Color(0.15, 0.15, 0.15, 1.0)

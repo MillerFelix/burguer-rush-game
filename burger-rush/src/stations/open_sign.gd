@@ -1,6 +1,8 @@
 class_name OpenSign
 extends StaticBody3D
 
+const GameClock = preload("res://src/time/game_clock.gd")
+
 @onready var label_3d: Label3D = $Label3D
 
 func _ready() -> void:

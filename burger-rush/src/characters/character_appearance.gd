@@ -119,9 +119,10 @@ static func apply_employee_appearance(character: Node3D, employee_name: String =
 
 	var skin_color = SKIN_PALETTES[randi() % SKIN_PALETTES.size()]
 	var hair_color = HAIR_PALETTES[randi() % HAIR_PALETTES.size()]
-	var uniform_red = Color(0.85, 0.16, 0.16, 1.0)
-	var apron_dark = Color(0.18, 0.18, 0.22, 1.0)
-	var pants_dark = Color(0.18, 0.18, 0.22, 1.0)
+	var uniform_yellow = Color(0.96, 0.78, 0.12, 1.0) # Roupa predominantemente amarela
+	var uniform_red_details = Color(0.85, 0.16, 0.16, 1.0) # Detalhes vermelhos
+	var apron_color = Color(0.85, 0.16, 0.16, 1.0) # Avental com detalhes vermelhos
+	var pants_dark = Color(0.18, 0.20, 0.24, 1.0)
 	var shoes_dark = Color(0.12, 0.12, 0.14, 1.0)
 
 	_set_mat(model, "Head", skin_color, 0.85)
@@ -133,13 +134,13 @@ static func apply_employee_appearance(character: Node3D, employee_name: String =
 	_set_mat(model, "Head/EyebrowLeft", hair_color, 0.85)
 	_set_mat(model, "Head/EyebrowRight", hair_color, 0.85)
 
-	_set_mat(model, "Torso", uniform_red, 0.85)
-	_set_mat(model, "ArmLeft", uniform_red, 0.85)
-	_set_mat(model, "ArmRight", uniform_red, 0.85)
-	_set_mat(model, "Head/Hat", uniform_red, 0.85)
-	_set_mat(model, "Head/Hat/VisorBrim", uniform_red, 0.85)
+	_set_mat(model, "Torso", uniform_yellow, 0.85)
+	_set_mat(model, "ArmLeft", uniform_yellow, 0.85)
+	_set_mat(model, "ArmRight", uniform_yellow, 0.85)
+	_set_mat(model, "Head/Hat", uniform_yellow, 0.85) # Boné amarelo
+	_set_mat(model, "Head/Hat/VisorBrim", uniform_red_details, 0.85) # Aba do boné com detalhe vermelho
 
-	_set_mat(model, "Apron", apron_dark, 0.85)
+	_set_mat(model, "Apron", apron_color, 0.85)
 	_set_mat(model, "Torso/Hips", pants_dark, 0.85)
 	_set_mat(model, "LegLeft", pants_dark, 0.85)
 	_set_mat(model, "LegRight", pants_dark, 0.85)

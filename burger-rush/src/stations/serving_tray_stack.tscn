@@ -1,0 +1,281 @@
+[gd_scene format=3 uid="uid://serving_tray_stack_scene_uid"]
+
+[ext_resource type="Script" path="res://src/stations/serving_tray_stack.gd" id="1_stack_script"]
+
+; ================================================================
+; COLISÃO DA PILHA DE BANDEJAS
+; ================================================================
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Stack"]
+size = Vector3(0.64, 0.20, 0.46)
+
+; ================================================================
+; MATERIAIS
+; ================================================================
+
+[sub_resource type="StandardMaterial3D" id="Material_TrayYellow"]
+albedo_color = Color(0.96, 0.78, 0.12, 1)
+roughness = 0.32
+rim_enabled = true
+rim = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_TrayRedTrim"]
+albedo_color = Color(0.85, 0.15, 0.15, 1)
+roughness = 0.36
+rim_enabled = true
+rim = 0.20
+
+[sub_resource type="StandardMaterial3D" id="Material_StackMatBlack"]
+albedo_color = Color(0.18, 0.18, 0.20, 1)
+roughness = 0.70
+
+[sub_resource type="StandardMaterial3D" id="Material_BadgeWhite"]
+albedo_color = Color(0.96, 0.96, 0.94, 1)
+roughness = 0.50
+
+; ================================================================
+; MESHES DA PILHA
+; ================================================================
+
+[sub_resource type="BoxMesh" id="BoxMesh_MatBase"]
+material = SubResource("Material_StackMatBlack")
+size = Vector3(0.64, 0.006, 0.46)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CounterBadge"]
+material = SubResource("Material_BadgeWhite")
+size = Vector3(0.36, 0.024, 0.004)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TrayCenter"]
+material = SubResource("Material_TrayYellow")
+size = Vector3(0.58, 0.012, 0.40)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BorderZ"]
+material = SubResource("Material_TrayRedTrim")
+size = Vector3(0.62, 0.024, 0.020)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BorderX"]
+material = SubResource("Material_TrayRedTrim")
+size = Vector3(0.020, 0.024, 0.400)
+
+; ================================================================
+; HIERARQUIA
+; ================================================================
+
+[node name="ServingTrayStack" type="StaticBody3D"]
+script = ExtResource("1_stack_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
+shape = SubResource("BoxShape3D_Stack")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="MatBase" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.003, 0)
+mesh = SubResource("BoxMesh_MatBase")
+
+[node name="CounterFrontBadge" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, -0.03, -0.342)
+mesh = SubResource("BoxMesh_CounterBadge")
+
+[node name="Label" type="Label3D" parent="Model/CounterFrontBadge"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.003)
+double_sided = false
+text = "BANDEJAS PARA ENTREGA"
+font_size = 14
+modulate = Color(0.12, 0.12, 0.12, 1)
+outline_size = 0
+
+[node name="Trays" type="Node3D" parent="Model"]
+
+; ─── BANDEJA 1 (Base da pilha) ─────────────────────────────────
+[node name="Tray1" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.008, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+; ─── BANDEJA 2 ────────────────────────────────────────────────
+[node name="Tray2" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.022, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+; ─── BANDEJA 3 ────────────────────────────────────────────────
+[node name="Tray3" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.036, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+; ─── BANDEJA 4 ────────────────────────────────────────────────
+[node name="Tray4" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.050, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+; ─── BANDEJA 5 ────────────────────────────────────────────────
+[node name="Tray5" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.064, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+; ─── BANDEJA 6 ────────────────────────────────────────────────
+[node name="Tray6" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.078, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+; ─── BANDEJA 7 ────────────────────────────────────────────────
+[node name="Tray7" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.092, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray7"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+; ─── BANDEJA 8 (Topo da pilha) ─────────────────────────────────
+[node name="Tray8" type="Node3D" parent="Model/Trays"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.106, 0)
+
+[node name="Bottom" type="MeshInstance3D" parent="Model/Trays/Tray8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_TrayCenter")
+
+[node name="BorderFront" type="MeshInstance3D" parent="Model/Trays/Tray8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, 0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderBack" type="MeshInstance3D" parent="Model/Trays/Tray8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.012, -0.210)
+mesh = SubResource("BoxMesh_BorderZ")
+
+[node name="BorderLeft" type="MeshInstance3D" parent="Model/Trays/Tray8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")
+
+[node name="BorderRight" type="MeshInstance3D" parent="Model/Trays/Tray8"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.300, 0.012, 0)
+mesh = SubResource("BoxMesh_BorderX")

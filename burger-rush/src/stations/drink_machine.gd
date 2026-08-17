@@ -52,6 +52,8 @@ const FLAVORS = [
 	}
 ]
 
+const PowerManager = preload("res://src/core/power_manager.gd")
+
 # Compatibilidade para código legado
 var available_flavors: Array[String] = [
 	"soda_cola",
@@ -139,6 +141,22 @@ var fill_progress: float:
 func _ready() -> void:
 	_setup_audio()
 	_init_canisters()
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.register_appliance(self, "drink_machine", "Máquina de Refrigerantes", 0.85, is_powered)
+		if not pm.power_state_changed.is_connected(on_power_state_changed):
+			pm.power_state_changed.connect(on_power_state_changed)
+	_update_all_visuals()
+
+func _exit_tree() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.unregister_appliance(self)
+
+func on_power_state_changed(main_power_on: bool) -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.set_appliance_state(self, is_powered and main_power_on)
 	_update_all_visuals()
 
 func _setup_audio() -> void:

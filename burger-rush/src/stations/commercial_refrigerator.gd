@@ -2,19 +2,9 @@ class_name MeatRefrigerator
 extends Node3D
 
 # ================================================================
-# GELADEIRA COMERCIAL DE CARNES — RECONSTRUÇÃO COMPLETA
-#
-# Arquitetura Física e Visual:
-#  Node3D "CommercialRefrigerator" (raiz)
-#  ├── FridgeBody       (StaticBody3D) — paredes externas (colisão periférica),
-#  │                                    cavidade interna profunda, prateleiras,
-#  │                                    cestos vazados e modelos de alimentos
-#  ├── BeefSlot         (StaticBody3D) — slot interativo cesto esquerdo (Carne Bovina)
-#  ├── ChickenSlot      (StaticBody3D) — slot interativo cesto direito (Frango)
-#  ├── DoorPivot        (Node3D)       — pivô na dobradiça esquerda
-#  │   └── FridgeDoor   (StaticBody3D) — moldura + vidro translúcido + puxador
-#  ├── InteriorLight    (OmniLight3D)  — iluminação interna suave e convidativa
-#  └── StatusLabel      (Label3D)      — monitor de status e estoque
+# GELADEIRA COMERCIAL DE CARNES COM ESTOQUE VISUAL DINÂMICO
+# Regra dos 3 Estágios: CHEIO | MÉDIO | BAIXO | ZERO
+# Sem textos ou labels 3D flutuantes
 #
 # Sistema de Controle:
 #  - [E] — Interage com o equipamento (abre e fecha a porta de vidro)
@@ -27,16 +17,26 @@ const DOOR_ANIM_SECS: float = 0.45
 
 var is_open: bool = false
 var is_animating: bool = false
+var _open_duration: float = 0.0
+var _puddle_instance: Node3D = null
+
+const SCENE_PUDDLE = preload("res://src/stations/floor_puddle.tscn")
+const PowerManager = preload("res://src/core/power_manager.gd")
 
 @onready var door_pivot: Node3D = get_node_or_null("DoorPivot")
-@onready var status_label: Label3D = get_node_or_null("StatusLabel")
+@onready var cold_mist: CPUParticles3D = get_node_or_null("ColdMistParticles")
 @onready var beef_slot_col: CollisionShape3D = get_node_or_null("BeefSlot/CollisionShape3D")
 @onready var chicken_slot_col: CollisionShape3D = get_node_or_null("ChickenSlot/CollisionShape3D")
 @onready var interior_light: OmniLight3D = get_node_or_null("InteriorLight")
 
-# Grupos de alimentos visuais
-@onready var beef_food_group: Node3D = get_node_or_null("FridgeBody/BeefFoodGroup")
-@onready var chicken_food_group: Node3D = get_node_or_null("FridgeBody/ChickenFoodGroup")
+# Grupos de alimentos visuais (3 Estágios)
+@onready var beef_full: Node3D = get_node_or_null("FridgeBody/BeefFoodGroup/Full")
+@onready var beef_med: Node3D = get_node_or_null("FridgeBody/BeefFoodGroup/Medium")
+@onready var beef_low: Node3D = get_node_or_null("FridgeBody/BeefFoodGroup/Low")
+
+@onready var chicken_full: Node3D = get_node_or_null("FridgeBody/ChickenFoodGroup/Full")
+@onready var chicken_med: Node3D = get_node_or_null("FridgeBody/ChickenFoodGroup/Medium")
+@onready var chicken_low: Node3D = get_node_or_null("FridgeBody/ChickenFoodGroup/Low")
 
 var door_audio: AudioStreamPlayer3D = null
 var hum_audio: AudioStreamPlayer3D = null
@@ -52,12 +52,38 @@ func _ready() -> void:
 	if interior_light:
 		interior_light.light_energy = 0.4
 
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.register_appliance(self, "meat_refrigerator", "Geladeira de Carnes", 1.0, true)
+		if not pm.power_state_changed.is_connected(on_power_state_changed):
+			pm.power_state_changed.connect(on_power_state_changed)
+
 	var inv = InventoryManager.get_instance()
 	if inv and not inv.stock_changed.is_connected(_on_stock_changed):
 		inv.stock_changed.connect(_on_stock_changed)
 
-	_update_label()
 	_update_patty_visuals()
+
+func _exit_tree() -> void:
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.unregister_appliance(self)
+
+func on_power_state_changed(main_power_on: bool) -> void:
+	if not main_power_on:
+		if hum_audio and hum_audio.playing:
+			hum_audio.stop()
+		if interior_light:
+			interior_light.light_energy = 0.0
+		if cold_mist:
+			cold_mist.emitting = false
+	else:
+		if hum_audio and not hum_audio.playing:
+			hum_audio.play()
+		if interior_light:
+			interior_light.light_energy = 1.0 if is_open else 0.4
+		if cold_mist and is_open:
+			cold_mist.emitting = true
 
 func _setup_audio() -> void:
 	if not door_audio:
@@ -86,6 +112,27 @@ func _process(delta: float) -> void:
 		var w = 1.0 - exp(-6.0 * delta)
 		hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w)
 
+	# Efeito de perda de frio e formação de poça quando aberta por tempo suficiente
+	if is_open:
+		_open_duration += delta
+		if _open_duration >= 6.0:
+			_process_condensation_puddle(delta)
+	else:
+		_open_duration = 0.0
+
+func _process_condensation_puddle(delta: float) -> void:
+	if _puddle_instance == null or not is_instance_valid(_puddle_instance):
+		var parent_node = get_parent() if get_parent() else self
+		_puddle_instance = SCENE_PUDDLE.instantiate()
+		parent_node.add_child(_puddle_instance)
+		var puddle_offset = transform.basis * Vector3(0.0, 0.005, 0.70)
+		_puddle_instance.global_position = global_position + puddle_offset
+		if _puddle_instance.has_method("set"):
+			_puddle_instance.set("puddle_size", 0.25)
+	else:
+		var curr_size = _puddle_instance.get("puddle_size") if _puddle_instance.get("puddle_size") != null else 0.5
+		_puddle_instance.set("puddle_size", minf(1.0, curr_size + delta * 0.08))
+
 ## Retorna se a geladeira está com a porta aberta
 func is_door_open() -> bool:
 	return is_open
@@ -112,6 +159,9 @@ func open_door(player: Node3D = null) -> void:
 	_set_slots_enabled(false)
 	_target_hum_vol = -16.0
 
+	if cold_mist:
+		cold_mist.emitting = true
+
 	if door_audio:
 		door_audio.stream = SoundSynthesizer.get_stream("fridge_door_open")
 		door_audio.pitch_scale = randf_range(0.98, 1.02)
@@ -131,10 +181,12 @@ func open_door(player: Node3D = null) -> void:
 	tween.finished.connect(func():
 		is_open = true
 		is_animating = false
+		var pm = PowerManager.get_instance()
+		if pm:
+			pm.set_appliance_multiplier(self, 3.0)
 		_set_slots_enabled(true)
-		_update_label()
 		if player:
-			_show_feedback(player, "🟢 Geladeira aberta — use o [Clique do Mouse] para pegar hambúrgueres!")
+			_show_feedback(player, "🟢 Geladeira aberta")
 	)
 
 func close_door(player: Node3D = null) -> void:
@@ -143,6 +195,13 @@ func close_door(player: Node3D = null) -> void:
 	is_animating = true
 	_set_slots_enabled(false)
 	_target_hum_vol = -28.0
+
+	var pm = PowerManager.get_instance()
+	if pm:
+		pm.set_appliance_multiplier(self, 1.0)
+
+	if cold_mist:
+		cold_mist.emitting = false
 
 	if door_audio:
 		door_audio.stream = SoundSynthesizer.get_stream("fridge_door_close")
@@ -164,9 +223,8 @@ func close_door(player: Node3D = null) -> void:
 		is_open = false
 		is_animating = false
 		_set_slots_enabled(false)
-		_update_label()
 		if player:
-			_show_feedback(player, "🔒 Geladeira fechada.")
+			_show_feedback(player, "🔒 Geladeira fechada")
 	)
 
 func _apply_state_instant(open_state: bool) -> void:
@@ -216,8 +274,7 @@ func pick_meat(player: Node3D, meat_id: String) -> void:
 
 	var icon = "🥩" if meat_id == "patty_beef" else "🍗"
 	var nm2 = "Carne Bovina" if meat_id == "patty_beef" else "Hambúrguer de Frango"
-	_show_feedback(player, "%s Pegou %s (Restam: %d)" % [icon, nm2, inv.get_stock(meat_id)])
-	_update_label()
+	_show_feedback(player, "%s Pegou %s" % [icon, nm2])
 	_update_patty_visuals()
 
 # ─── Helpers e Atualizações ────────────────────────────────────
@@ -228,28 +285,43 @@ func _set_slots_enabled(enabled: bool) -> void:
 		chicken_slot_col.disabled = not enabled
 
 func _on_stock_changed(_id: String, _qty: int) -> void:
-	_update_label()
 	_update_patty_visuals()
 
 func _update_patty_visuals() -> void:
 	var inv = InventoryManager.get_instance()
-	var beef_stock  = inv.get_stock("patty_beef")    if inv else 10
-	var chick_stock = inv.get_stock("patty_chicken") if inv else 10
+	var beef_stock  = inv.get_stock("patty_beef")    if inv else 20
+	var chick_stock = inv.get_stock("patty_chicken") if inv else 15
 
-	if beef_food_group:
-		beef_food_group.visible = (beef_stock > 0)
-	if chicken_food_group:
-		chicken_food_group.visible = (chick_stock > 0)
+	_update_section_visual(beef_stock, beef_full, beef_med, beef_low, 15, 6)
+	_update_section_visual(chick_stock, chicken_full, chicken_med, chicken_low, 15, 6)
 
-func _update_label() -> void:
-	if not status_label:
+func _update_section_visual(
+	stock_qty: int,
+	node_full: Node3D,
+	node_med: Node3D,
+	node_low: Node3D,
+	full_thresh: int = 15,
+	med_thresh: int = 6
+) -> void:
+	if not node_full and not node_med and not node_low:
 		return
-	var inv = InventoryManager.get_instance()
-	var beef  = inv.get_stock("patty_beef")    if inv else 0
-	var chick = inv.get_stock("patty_chicken") if inv else 0
-	var door_str = "🟢 ABERTA" if is_open else "🔒 FECHADA"
-	status_label.text = "❄️ GELADEIRA — %s\n🥩 Bovina: %d  │  🍗 Frango: %d\n[E] Porta  │  [🖱️ Clique] Pegar/Devolver" % [door_str, beef, chick]
-	status_label.modulate = Color(0.5, 1.0, 0.7, 1.0) if is_open else Color(0.4, 0.85, 1.0, 1.0)
+
+	if stock_qty >= full_thresh:
+		if node_full: node_full.visible = true
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
+	elif stock_qty >= med_thresh:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = true
+		if node_low: node_low.visible = false
+	elif stock_qty > 0:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = true
+	else:
+		if node_full: node_full.visible = false
+		if node_med: node_med.visible = false
+		if node_low: node_low.visible = false
 
 func _show_feedback(player: Node3D, msg: String) -> void:
 	var hud = player.get_node_or_null("HUD")

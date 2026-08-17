@@ -1,6 +1,9 @@
 class_name GameClock
 extends Node
 
+const CalendarManager = preload("res://src/core/calendar_manager.gd")
+const DailyEventManager = preload("res://src/core/daily_event_manager.gd")
+
 enum State {
 	PREPARATION,
 	OPEN,
@@ -32,7 +35,7 @@ static var instance: GameClock = null
 @export var is_paused: bool = false
 
 var day_number: int = 1
-var day_of_week: int = 1 # 1 = Segunda, ..., 7 = Domingo
+var day_of_week: int = 4 # 1 = Segunda, ..., 4 = Quinta (01/01/2026), 7 = Domingo
 var week_number: int = 1
 var state: State = State.PREPARATION
 var current_hour: int = 9
@@ -60,6 +63,14 @@ func _ready() -> void:
 	current_minute = start_minute
 	state = State.PREPARATION
 
+	var cal = CalendarManager.get_instance()
+	if cal:
+		day_number = cal.day_number
+		day_of_week = cal.day_of_week
+	else:
+		day_number = 1
+		day_of_week = 4
+
 	var economy = EconomyManager.get_instance()
 	if economy:
 		starting_day_money = economy.get_money()
@@ -68,6 +79,9 @@ static func get_instance() -> GameClock:
 	return instance
 
 func get_weekday_name() -> String:
+	var cal = CalendarManager.get_instance()
+	if cal:
+		return cal.get_weekday_name()
 	var idx = (day_of_week - 1) % 7
 	return weekdays[idx]
 
@@ -216,16 +230,25 @@ func close_day() -> DaySummary:
 	return summary
 
 func start_next_day() -> void:
-	day_number += 1
-	if day_of_week == 7:
-		week_number += 1
-		day_of_week = 1
+	var cal = CalendarManager.get_instance()
+	if cal:
+		cal.advance_day()
+		day_number = cal.day_number
+		day_of_week = cal.day_of_week
 	else:
-		day_of_week += 1
+		day_number += 1
+		day_of_week = ((day_of_week % 7) + 1)
+
+	if day_of_week == 1:
+		week_number += 1
 
 	current_hour = start_hour
 	current_minute = start_minute
 	accumulated_seconds = 0.0
+
+	var dem = DailyEventManager.get_instance()
+	if dem:
+		dem.roll_daily_event()
 
 	var economy = EconomyManager.get_instance()
 	if economy:
