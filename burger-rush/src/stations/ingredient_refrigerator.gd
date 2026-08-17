@@ -312,12 +312,22 @@ func handle_ingredient_interaction(player: Node3D, ing_id: String) -> void:
 			inv.add_stock(ing_id, 1)
 			_show_feedback(player, "%s Devolveu %s à geladeira" % [icon, ing_name])
 			_update_all_visual_stocks()
-		elif str(held.get("item_type")) == "crate" or str(held.get("item_type")) == "storage_box":
-			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			player.take_held_item().queue_free()
-			inv.add_stock(ing_id, qty)
-			_show_feedback(player, "📦 %s armazenado (+%d un.)!" % [ing_name, qty])
-			_update_all_visual_stocks()
+		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			var box_item_id = str(held.get("contained_item_id"))
+			var valid_fridge_items = ["lettuce", "tomato", "onion", "red_onion", "pickle", "potato_raw"]
+			if box_item_id == ing_id or (box_item_id == "" and ing_id in valid_fridge_items):
+				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+				player.take_held_item().queue_free()
+				inv.add_stock(ing_id, qty)
+				if door_audio:
+					door_audio.stream = SoundSynthesizer.get_stream("box_place")
+					door_audio.play()
+				_show_feedback(player, "📦 %s armazenado (+%d un.)!" % [ing_name, qty])
+				_update_all_visual_stocks()
+			elif box_item_id in valid_fridge_items:
+				_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+			else:
+				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
 		else:
 			_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
 		return

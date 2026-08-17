@@ -150,6 +150,10 @@ static func get_stream(sound_id: String) -> AudioStreamWAV:
 			stream = _generate_car_engine(2)
 		"car_horn_beep":
 			stream = _generate_car_horn()
+		"truck_horn":
+			stream = _generate_truck_horn()
+		"box_place", "box_store":
+			stream = _generate_cardboard_place()
 		# --- CLIENTES ---
 		"customer_arrive":
 			stream = _generate_customer_arrive()
@@ -173,6 +177,8 @@ static func get_stream(sound_id: String) -> AudioStreamWAV:
 			stream = _generate_customer_attend()
 		"customer_thank":
 			stream = _generate_customer_thank()
+		"customer_wrong_order", "customer_disappointed":
+			stream = _generate_customer_disappointed()
 		"customer_leave":
 			stream = _generate_customer_leave()
 		# --- QUADRO GERAL & AR-CONDICIONADO ---
@@ -1560,23 +1566,23 @@ static func _generate_trash_dispose() -> AudioStreamWAV:
 # 38. Som suave e agradável de bucha esfregando / limpando superfície
 static func _generate_sponge_scrub() -> AudioStreamWAV:
 	var sample_rate = 22050
-	var duration = 0.45
+	var duration = 0.50
 	var num_samples = int(sample_rate * duration)
 	var pcm = PackedByteArray()
 	pcm.resize(num_samples * 2)
 
 	for i in range(num_samples):
 		var t = float(i) / float(sample_rate)
-		# Dois ciclos de esfregar (ida e volta)
-		var cycle = sin(2.0 * PI * 4.4 * t)
+		# Dois ciclos suaves de esfregação (ida e volta)
+		var cycle = sin(2.0 * PI * 3.8 * t)
 		var cycle_amp = absf(cycle)
 
-		# Ruído filtrado e aveludado de esponja macia
+		# Ruído de fricção aveludado de espuma com gordura/sabão em superfície lisa
 		var base_noise = (randf() * 2.0 - 1.0)
-		var low_foam = sin(2.0 * PI * 340.0 * t + base_noise * 0.3)
-		var friction = (base_noise * 0.45 + low_foam * 0.55) * cycle_amp
+		var foam_texture = sin(2.0 * PI * 280.0 * t + base_noise * 0.4)
+		var friction = (base_noise * 0.40 + foam_texture * 0.60) * (0.35 + 0.65 * cycle_amp)
 
-		var sample = clampf(friction * 0.55, -1.0, 1.0)
+		var sample = clampf(friction * 0.50, -1.0, 1.0)
 		var s16 = int(sample * 32767.0)
 		pcm.encode_s16(i * 2, s16)
 
@@ -1584,8 +1590,8 @@ static func _generate_sponge_scrub() -> AudioStreamWAV:
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = sample_rate
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_begin = int(sample_rate * 0.05)
-	stream.loop_end = int(sample_rate * 0.42)
+	stream.loop_begin = int(sample_rate * 0.04)
+	stream.loop_end = int(sample_rate * 0.46)
 	stream.stereo = false
 	stream.data = pcm
 	return stream
@@ -1615,7 +1621,7 @@ static func _generate_sink_water() -> AudioStreamWAV:
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = sample_rate
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_begin = int(sample_rate * 0.10)
+	stream.loop_begin = int(sample_rate * 0.05)
 	stream.loop_end = int(sample_rate * 0.75)
 	stream.stereo = false
 	stream.data = pcm
@@ -1645,8 +1651,8 @@ static func _generate_faucet_turn() -> AudioStreamWAV:
 	stream.data = pcm
 	return stream
 
-# 41. Chave geral do quadro elétrico (LIGAR)
-static func _generate_breaker_switch(turn_on: bool) -> AudioStreamWAV:
+# 41. Chave geral do quadro elétrico
+static func _generate_breaker_switch(turn_on: bool = true) -> AudioStreamWAV:
 	var sample_rate = 22050
 	var duration = 0.22
 	var num_samples = int(sample_rate * duration)
@@ -1657,12 +1663,9 @@ static func _generate_breaker_switch(turn_on: bool) -> AudioStreamWAV:
 		var t = float(i) / float(sample_rate)
 		var progress = float(i) / float(num_samples)
 		var env = exp(-progress * 18.0)
-
-		# Impacto mecânico pesado da alavanca
 		var mech_thud = sin(2.0 * PI * 140.0 * t) * exp(-progress * 25.0) * 0.70
 		var latch_snap = (randf() * 2.0 - 1.0) * exp(-progress * 40.0) * 0.50
 		var contact_hum = sin(2.0 * PI * (60.0 if turn_on else 120.0) * t) * env * (0.35 if turn_on else 0.10)
-
 		var sample = clampf((mech_thud + latch_snap + contact_hum) * 0.75, -1.0, 1.0)
 		var s16 = int(sample * 32767.0)
 		pcm.encode_s16(i * 2, s16)
@@ -1674,7 +1677,7 @@ static func _generate_breaker_switch(turn_on: bool) -> AudioStreamWAV:
 	stream.data = pcm
 	return stream
 
-# 42. Fluxo contínuo de ventilação do ar-condicionado (Suave e Discreto)
+# 42. Fluxo contínuo de ventilação do ar-condicionado
 static func _generate_air_conditioner_loop() -> AudioStreamWAV:
 	var sample_rate = 22050
 	var duration = 1.0
@@ -1684,11 +1687,8 @@ static func _generate_air_conditioner_loop() -> AudioStreamWAV:
 
 	for i in range(num_samples):
 		var t = float(i) / float(sample_rate)
-		# Ruído rosa/suave de brisa leve
 		var air_flow = (randf() * 2.0 - 1.0) * 0.06
-		# Zumbido acústico muito discreto e relaxante
 		var low_hum = sin(2.0 * PI * 85.0 * t) * 0.025 + sin(2.0 * PI * 170.0 * t) * 0.012
-
 		var sample = clampf(air_flow + low_hum, -1.0, 1.0)
 		var s16 = int(sample * 32767.0)
 		pcm.encode_s16(i * 2, s16)
@@ -1699,6 +1699,147 @@ static func _generate_air_conditioner_loop() -> AudioStreamWAV:
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	stream.loop_begin = int(sample_rate * 0.10)
 	stream.loop_end = int(sample_rate * 0.90)
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 43. Som de esfregação contínua na louça / pia
+static func _generate_scrubbing_dish() -> AudioStreamWAV:
+	return _generate_sponge_scrub()
+
+# 42. Som vocal de desaprovação / insatisfação de cliente ("Ah...", "Ei...")
+static func _generate_customer_wrong_order() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.55
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		var env = 0.0
+		if t < 0.08:
+			env = t / 0.08
+		elif t < 0.35:
+			env = 1.0 - (t - 0.08) * 0.3
+		else:
+			env = 0.72 * (1.0 - (t - 0.35) / 0.20)
+		env = maxf(0.0, env)
+
+		var f_vocal = 175.0 - (t * 45.0)
+		var vocal = sin(2.0 * PI * f_vocal * t) * 0.55
+		vocal += sin(2.0 * PI * (f_vocal * 2.0) * t) * 0.30
+		vocal += sin(2.0 * PI * (f_vocal * 3.0) * t) * 0.15
+		vocal += sin(2.0 * PI * (f_vocal * 4.0) * t) * 0.05
+		var formant = sin(2.0 * PI * 680.0 * t) * 0.20
+		var breath = (randf() * 2.0 - 1.0) * 0.08
+
+		var sample = clampf((vocal + formant + breath) * env * 0.75, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 43. Buzina encorpada e realista de caminhão de entrega (Grave, pneumática e chamativa)
+static func _generate_truck_horn() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.85
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		# Envoltória acústica pneumática de buzina de ar de caminhão
+		var env = 0.0
+		if t < 0.04:
+			env = t / 0.04 # Ataque rápido pneumático
+		elif t < 0.65:
+			env = 1.0 - (t - 0.04) * 0.08 # Corpo estável e potente
+		else:
+			env = 0.95 * (1.0 - (t - 0.65) / 0.20) # Decaimento suave de despressurização
+		env = maxf(0.0, env)
+
+		# Intervalo consonante de buzina de ar de caminhão de entrega (F3: ~174.6 Hz + A3: ~220.0 Hz)
+		var f1 = 174.61
+		var f2 = 220.00
+		var f3 = 349.23 # Oitava do F
+		var f4 = 440.00 # Oitava do A
+
+		# Síntese com leve modulação de ar e harmônicos encorpados
+		var tone1 = sin(2.0 * PI * f1 * t + sin(2.0 * PI * 6.0 * t) * 0.05)
+		var tone2 = sin(2.0 * PI * f2 * t)
+		var tone3 = sin(2.0 * PI * f3 * t) * 0.35
+		var tone4 = sin(2.0 * PI * f4 * t) * 0.25
+		var air_rush = (randf() * 2.0 - 1.0) * 0.06 # Sopro de ar comprimido da buzina
+
+		var mixed = (tone1 * 0.45 + tone2 * 0.40 + tone3 + tone4 + air_rush)
+		var sample = clampf(mixed * env * 0.82, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 44. Som acústico suave e orgânico de caixa de papelão sendo colocada / armazenada
+static func _generate_cardboard_place() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.35
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		var env = exp(-18.0 * t)
+		# Impacto oco de papelão (~120 Hz) + atrito e estalo de fita adesiva
+		var thud = sin(2.0 * PI * 120.0 * t) * 0.50 + sin(2.0 * PI * 75.0 * t) * 0.35
+		var rustle = (randf() * 2.0 - 1.0) * exp(-28.0 * t) * 0.25
+
+		var sample = clampf((thud + rustle) * env * 0.75, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 45. Som vocal curto e expressivo de insatisfação/desaprovação por pedido incorreto ("Ah...", "Ei...")
+static func _generate_customer_disappointed() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.55
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		# Envoltória suave descendente
+		var env = sin(t / duration * PI)
+		# Tom vocal que desce de frequência (desapontamento: 220 Hz -> 145 Hz)
+		var freq = lerpf(220.0, 145.0, t / duration)
+		var vocal = sin(2.0 * PI * freq * t) * 0.50 + sin(2.0 * PI * (freq * 1.8) * t) * 0.25
+		vocal += (randf() * 2.0 - 1.0) * 0.05 # Suspiro/exalação
+
+		var sample = clampf(vocal * env * 0.70, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
 	stream.stereo = false
 	stream.data = pcm
 	return stream

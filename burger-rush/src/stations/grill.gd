@@ -68,6 +68,7 @@ const SLOT_OFFSETS = [
 ]
 
 func _ready() -> void:
+	add_to_group("cleanable_stations")
 	_setup_audio()
 	var pm = PowerManager.get_instance()
 	if pm:
@@ -177,6 +178,17 @@ func _process(delta: float) -> void:
 									patty.set_burnt()
 									any_burning = true
 								elif timer > (patty_side_cook_time * 2.0 + patty_burn_time * 0.7):
+									any_burning = true
+					"cheese":
+						var cheese = node as Cheese
+						if cheese:
+							var progress_delta = (100.0 / 6.0) * delta * speed
+							cheese.advance_cooking(progress_delta)
+							if cheese.is_melted():
+								if timer > (6.0 + 7.0):
+									cheese.set_burnt()
+									any_burning = true
+								elif timer > (6.0 + 7.0 * 0.7):
 									any_burning = true
 					"bacon":
 						var bacon = node as Bacon
@@ -346,6 +358,17 @@ func interact(player: Node3D) -> void:
 			return
 	toggle_power(player)
 
+func can_cook_item(item: Node) -> bool:
+	if not item:
+		return false
+	if item is Patty or item is Cheese or item is Bacon or item is Egg:
+		return true
+	if item.has_method("is_cookable_on_grill"):
+		return item.is_cookable_on_grill()
+	if item.get("is_grillable") == true:
+		return true
+	return false
+
 # Interação com Clique Esquerdo — Manipulação de Alimentos com Ferramentas ou Mãos
 func interact_item(player: Node3D) -> void:
 	if not player:
@@ -354,28 +377,29 @@ func interact_item(player: Node3D) -> void:
 	var tool_slot = player.get("active_tool_slot") if player else 3
 	var held = player.get("held_item")
 
-	# CASO 1: Jogador com MÃO LIVRE (Slot 3)
-	if tool_slot == 3:
-		# Se está segurando ingrediente cru, coloca na grelha
-		if held != null and (held is Patty or held is Bacon or held is Egg or str(held.get("item_type")) == "ingredient"):
+	# CASO 1: Jogador segurando um item (Tentando colocar na chapa)
+	if held != null:
+		if can_cook_item(held):
 			if active_items.size() >= max_capacity:
 				_show_feedback(player, "⚠️ A grelha está cheia (%d/%d itens)!" % [active_items.size(), max_capacity])
 				return
 			var item = player.take_held_item()
 			if item:
 				place_item(item)
-				_show_feedback(player, "🥩 %s colocado na chapa" % item.get_display_name())
+				_show_feedback(player, "♨️ %s colocado na chapa" % item.get_display_name())
+			return
+		else:
+			# ITEM INVÁLIDO: chapa bloqueia e o item é solto para cair no chão naturalmente
+			_play_reject_sound()
+			if player.has_method("drop_item"):
+				player.drop_item()
 			return
 
-		# Se tentar pegar com a mão alimento quente na chapa
-		if not active_items.is_empty():
-			_show_feedback(player, "⚠️ Chapa quente! Equipe a Espátula [1] para virar ou retirar.")
-		return
-
-	# CASO 2: Jogador com ESPÁTULA (Slot 1)
-	if tool_slot == 1:
+	# CASO 2: Jogador com ESPÁTULA (Slot 1) ou MÃO LIVRE (Slot 3)
+	if tool_slot in [1, 3]:
 		if active_items.is_empty():
-			_show_feedback(player, "🍳 Espátula pronta. Nenhum alimento na chapa.")
+			if tool_slot == 1:
+				_show_feedback(player, "🍳 Espátula pronta. Nenhum alimento na chapa.")
 			return
 
 		var target_item_data = _get_aimed_item(player)
@@ -393,10 +417,10 @@ func interact_item(player: Node3D) -> void:
 				if spatula and spatula.has_method("play_action_animation"):
 					spatula.play_action_animation()
 
-		# Interação com Hambúrguer
+		# Interação com Hambúrguer (Virar com espátula se precisar, ou retirar)
 		if node is Patty:
 			var patty = node as Patty
-			if patty.state == Patty.State.READY_SIDE_1 or (patty.state == Patty.State.COOKING_SIDE_1 and not patty.is_flipped):
+			if tool_slot == 1 and (patty.state == Patty.State.READY_SIDE_1 or (patty.state == Patty.State.COOKING_SIDE_1 and not patty.is_flipped)):
 				patty.flip()
 				_play_spatula_sound(true)
 				_show_feedback(player, "🔄 Hambúrguer virado! Grelhando Lado 2.")
@@ -408,12 +432,11 @@ func interact_item(player: Node3D) -> void:
 				_show_feedback(player, "🍳 Retirou %s da grelha (%s)" % [patty.get_display_name(), state_txt])
 				return
 
-		# Interação com Bacon / Ovo
-		if node is Bacon or node is Egg:
-			_play_spatula_sound(false)
-			_remove_item_from_grill(node, player)
-			_show_feedback(player, "🍳 Retirou %s da grelha" % node.get_display_name())
-			return
+		# Interação com Queijo, Bacon, Ovo ou qualquer outro ingrediente da chapa
+		_play_spatula_sound(false)
+		_remove_item_from_grill(node, player)
+		_show_feedback(player, "✋ Retirou %s da chapa" % node.get_display_name())
+		return
 
 	# CASO 3: Jogador com BUCHA DE LIMPEZA (Slot 2)
 	if tool_slot == 2:
@@ -433,8 +456,15 @@ func add_dirt(amount: float = 0.25) -> void:
 func _update_dirt_visuals() -> void:
 	var grill_dirt = get_node_or_null("Model/GrillPlate/GrillDirt")
 	if grill_dirt:
-		grill_dirt.visible = (dirt_level > 0.0)
-		grill_dirt.scale.y = clampf(dirt_level, 0.2, 1.0)
+		grill_dirt.visible = (dirt_level > 0.001)
+		grill_dirt.scale.y = clampf(dirt_level, 0.02, 1.0)
+		grill_dirt.scale.x = lerpf(0.80, 1.0, dirt_level)
+		grill_dirt.scale.z = lerpf(0.80, 1.0, dirt_level)
+		if grill_dirt is MeshInstance3D and grill_dirt.material_override:
+			var mat = grill_dirt.material_override as StandardMaterial3D
+			if mat:
+				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				mat.albedo_color.a = clampf(dirt_level, 0.0, 1.0)
 
 func clean_progress(delta: float, player: Node3D = null) -> bool:
 	if dirt_level <= 0.0:
@@ -450,6 +480,9 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 	return false
 
 func place_item(item: Node3D) -> bool:
+	if not can_cook_item(item):
+		return false
+
 	if is_dirty():
 		return false
 
@@ -469,7 +502,9 @@ func place_item(item: Node3D) -> bool:
 	item.rotation = Vector3.ZERO
 
 	var itm_type = "patty"
-	if item is Bacon:
+	if item is Cheese:
+		itm_type = "cheese"
+	elif item is Bacon:
 		itm_type = "bacon"
 		if item.has_method("set_state"):
 			item.set_state(Bacon.State.COOKING)
@@ -477,6 +512,10 @@ func place_item(item: Node3D) -> bool:
 		itm_type = "egg"
 		if item.has_method("set_state"):
 			item.set_state(Egg.State.CRACKED)
+	elif item is Patty:
+		itm_type = "patty"
+	else:
+		itm_type = "patty"
 
 	active_items.append({
 		"item": item,
@@ -501,18 +540,27 @@ func _play_contact_sound(itm_type: String) -> void:
 		sound_key = "grill_place_bacon"
 	elif itm_type == "egg":
 		sound_key = "grill_place_egg"
+	elif itm_type == "cheese":
+		sound_key = "grill_place_patty"
 
 	oneshot_audio.stream = SoundSynthesizer.get_stream(sound_key)
 	oneshot_audio.volume_db = -6.0
+	_safe_play(oneshot_audio)
+
+func _play_reject_sound() -> void:
+	if not oneshot_audio:
+		_setup_audio()
+	oneshot_audio.stream = SoundSynthesizer.get_stream("box_place")
+	oneshot_audio.volume_db = -8.0
 	_safe_play(oneshot_audio)
 
 func _play_spatula_sound(is_flip: bool) -> void:
 	if not spatula_audio:
 		_setup_audio()
 
-	var sound_key = "grill_flip_spatula" if is_flip else "grill_remove_item"
-	spatula_audio.stream = SoundSynthesizer.get_stream(sound_key)
-	spatula_audio.volume_db = -5.0
+	var stream = SoundSynthesizer.get_stream("spatula_flip" if is_flip else "spatula_scrape")
+	spatula_audio.stream = stream
+	spatula_audio.volume_db = -4.0 if is_flip else -6.0
 	_safe_play(spatula_audio)
 
 func _remove_item_from_grill(item: Node3D, player: Node3D) -> void:
@@ -597,13 +645,19 @@ func get_interaction_prompt(player: Node = null) -> String:
 					return "🍳 [Clique] RETIRAR Hambúrguer Pronto!"
 				else:
 					return "🍳 [Clique] Virar/Retirar %s" % p.get_display_name()
+			elif node is Cheese:
+				var c = node as Cheese
+				if c.is_ready():
+					return "🍳 [Clique] RETIRAR Queijo Derretido!"
+				else:
+					return "🍳 [Clique] Retirar %s" % c.get_display_name()
 			elif node is Bacon or node is Egg:
 				return "🍳 [Clique] Retirar %s" % node.get_display_name()
 		return "🍳 Espátula — Nenhum alimento na chapa"
 
-	# Se estiver com a mão livre e segurando carne/bacon/ovo
+	# Se estiver com a mão livre e segurando alimento fritável
 	if tool_slot == 3 and held != null:
-		if held is Patty or held is Bacon or held is Egg or str(held.get("item_type")) == "ingredient":
+		if can_cook_item(held):
 			return "✋ [Clique] Colocar %s na Chapa" % held.get_display_name()
 
 	# Interação com botão de ligar/desligar

@@ -29,7 +29,8 @@ enum EventType {
 	RAINY_DAY,               # Dia de chuva (menos clientes presenciais, mais drive-thru)
 	STORM_DAY,               # Tempestade intensa (vento/chuva forte, possível queda de luz)
 	EXTREME_HEAT,            # Onda de calor extremo (alta demanda por bebidas)
-	GAME_DAY                 # Dia de jogo no estádio (pico de clientes à noite)
+	GAME_DAY,                # Dia de jogo no estádio (pico de clientes à noite)
+	TRANSPORT_DISRUPTION     # Problemas nas estradas / paralisações (+25% no tempo de entrega)
 }
 
 ## Evento ativo no dia
@@ -47,6 +48,7 @@ var dine_in_multiplier: float = 1.0
 var drive_thru_multiplier: float = 1.0
 var beverage_demand_multiplier: float = 1.0
 var electricity_cost_multiplier: float = 1.0
+var delivery_time_multiplier: float = 1.0
 
 ## Controle de Água
 var is_water_supply_active: bool = true
@@ -119,7 +121,8 @@ func roll_daily_event(forced_event: EventType = EventType.NONE, force_roll: bool
 				EventType.RAINY_DAY,
 				EventType.STORM_DAY,
 				EventType.EXTREME_HEAT,
-				EventType.GAME_DAY
+				EventType.GAME_DAY,
+				EventType.TRANSPORT_DISRUPTION
 			]
 			current_event = event_pool[randi() % event_pool.size()]
 
@@ -135,6 +138,7 @@ func _reset_modifiers() -> void:
 	drive_thru_multiplier = 1.0
 	beverage_demand_multiplier = 1.0
 	electricity_cost_multiplier = 1.0
+	delivery_time_multiplier = 1.0
 	is_water_supply_active = true
 	power_cuts_triggered = [false, false]
 	event_title = ""
@@ -196,6 +200,12 @@ func _apply_event_rules() -> void:
 			event_body = "O estádio da região sediará uma importante partida de futebol hoje. Um pico expressivo de torcedores e clientes é esperado no restaurante a partir das 18h30."
 			game_peak_start_hour = 18.5
 			game_peak_end_hour = 21.0
+
+		EventType.TRANSPORT_DISRUPTION:
+			event_title = "PROBLEMAS NO TRANSPORTE"
+			event_headline = "Atrasos nas Entregas e Paralisações nas Estradas"
+			event_body = "Devido a problemas nas rodovias e paralisações no setor de transportes, as entregas de insumos poderão sofrer atrasos hoje (+25%)."
+			delivery_time_multiplier = 1.25
 
 	event_started.emit(current_event, get_current_event_data())
 
@@ -301,6 +311,10 @@ func get_electricity_cost_multiplier() -> float:
 ## Retorna se o fornecimento de água está disponível no momento
 func is_water_available() -> bool:
 	return is_water_supply_active
+
+## Multiplicador de prazo de entrega de suprimentos (ex: 1.25 em greves/bloqueios)
+func get_delivery_time_multiplier() -> float:
+	return delivery_time_multiplier
 
 ## Retorna dados completos do evento atual para exibição no HUD e futuro PC
 func get_current_event_data() -> Dictionary:

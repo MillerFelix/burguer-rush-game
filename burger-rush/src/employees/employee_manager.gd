@@ -31,9 +31,13 @@ func _exit_tree() -> void:
 static func get_instance() -> EmployeeManager:
 	return instance
 
+@export var auto_spawn_initial_employee: bool = false
+
 func _ready() -> void:
-	# Instancia o primeiro funcionário operacional geral na cozinha
-	call_deferred("_spawn_initial_employee")
+	# O funcionário está temporariamente desativado no início da partida.
+	# A contratação será feita pelo PC no futuro.
+	if auto_spawn_initial_employee:
+		call_deferred("_spawn_initial_employee")
 
 func _spawn_initial_employee() -> void:
 	if not employees.is_empty():
@@ -44,7 +48,7 @@ func _spawn_initial_employee() -> void:
 	next_id += 1
 	emp.employee_name = "Carlos"
 	emp.weekly_salary = 250.0
-	emp.rest_position = Vector3(-4.5, 0.0, -3.5)
+	emp.rest_position = Vector3(2.4, 0.0, 7.5)
 
 	var parent_node: Node = get_parent() if get_parent() else (get_tree().current_scene if get_tree() else null)
 	if parent_node:
@@ -73,7 +77,7 @@ func hire_employee(emp_name: String = "", initial_role: Employee.Role = Employee
 	emp.employee_name = name_str
 	emp.role = initial_role
 	emp.weekly_salary = 250.0
-	emp.rest_position = Vector3(-4.5 + (employees.size() * 0.9), 0.0, -3.5)
+	emp.rest_position = Vector3(2.4 - (employees.size() * 0.8), 0.0, 7.5)
 
 	var parent_node: Node = get_parent() if get_parent() else (get_tree().current_scene if get_tree() else null)
 	if parent_node:

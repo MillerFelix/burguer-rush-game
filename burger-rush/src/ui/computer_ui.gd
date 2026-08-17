@@ -1,61 +1,199 @@
 class_name ComputerUI
 extends CanvasLayer
 
+# =============================================================================
+# BURGER RUSH - SISTEMA ADMINISTRATIVO DO RESTAURANTE (PC v2.0)
+#
+# Interface institucional moderna e fluida:
+# - Header: Identidade Burger Rush, Relógio/Data real, Caixa em tempo real, Botão Fechar.
+# - Sidebar: Menu lateral estruturado para todas as abas do sistema.
+# - Aba 1: ESTOQUE GERAL (Conexão real com InventoryManager, filtros, busca, cards dinâmicos)
+# - Aba 2: CENTRAL DE COMPRAS (Catálogo, mercado volátil, carrinho, fornecedores, entregas)
+# =============================================================================
+
 signal closed()
 
-@onready var tab_container: TabContainer = $PanelContainer/VBox/TabContainer
+# Elementos do Header
+@onready var header_date_label: Label = $MainPanel/OuterWindow/VBox/Header/HBox/DateLabel
+@onready var header_time_label: Label = $MainPanel/OuterWindow/VBox/Header/HBox/TimeLabel
+@onready var header_money_label: Label = $MainPanel/OuterWindow/VBox/Header/HBox/MoneyBadge/MoneyLabel
+@onready var close_btn: Button = $MainPanel/OuterWindow/VBox/Header/HBox/CloseButton
 
-# Visão Geral Labels
-@onready var ov_day_time: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/DayTimeLabel"
-@onready var ov_money: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/MoneyLabel"
-@onready var ov_revenue: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid/RevenueLabel"
-@onready var ov_purchases: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid/PurchasesLabel"
-@onready var ov_waste: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid/WasteLabel"
-@onready var ov_profit: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid/ProfitLabel"
-@onready var ov_orders: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid/OrdersLabel"
-@onready var ov_rating: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid/RatingLabel"
-@onready var ov_alerts: Label = $"PanelContainer/VBox/TabContainer/Visão Geral/VBox/AlertsLabel"
+# Sidebar / Abas
+@onready var nav_buttons_container: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/Sidebar/VBox/NavScroll/NavButtons
 
-# Estoque Container
-@onready var stock_vbox: VBoxContainer = $PanelContainer/VBox/TabContainer/Estoque/Scroll/StockVBox
+# Área de Conteúdo
+@onready var inventory_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab
+@onready var purchases_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab
+@onready var placeholder_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab
+@onready var placeholder_title: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab/TitleLabel
+@onready var placeholder_desc: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab/DescLabel
 
-# Compras Container
-@onready var purchase_scroll_vbox: VBoxContainer = $PanelContainer/VBox/TabContainer/Compras/VBox/Scroll/PurchasesVBox
-@onready var purchase_feedback: Label = $PanelContainer/VBox/TabContainer/Compras/VBox/FeedbackLabel
+# Elementos da Aba Estoque
+@onready var stock_search_input: LineEdit = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar/HBox/SearchInput
+@onready var stock_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar/HBox/SummaryLabel
+@onready var filter_all_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar/BtnAll
+@onready var filter_ingredients_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar/BtnIngredients
+@onready var filter_drinks_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar/BtnDrinks
+@onready var filter_supplies_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar/BtnSupplies
+@onready var filter_others_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar/BtnOthers
+@onready var stock_cards_grid: GridContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/Scroll/GridMargin/Grid
 
-# Cardápio Container
-@onready var menu_scroll_vbox: VBoxContainer = $PanelContainer/VBox/TabContainer/Cardápio/VBox/Scroll/MenuVBox
-@onready var menu_feedback: Label = $PanelContainer/VBox/TabContainer/Cardápio/VBox/FeedbackLabel
+# Elementos da Aba Compras
+@onready var purchases_search_input: LineEdit = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/TopBar/HBox/PurchasesSearchInput
+@onready var market_status_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/TopBar/HBox/MarketStatusLabel
+@onready var btn_buy_all: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar/BtnBuyAll
+@onready var btn_buy_ingredients: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar/BtnBuyIngredients
+@onready var btn_buy_fries: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar/BtnBuyFries
+@onready var btn_buy_drinks: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar/BtnBuyDrinks
+@onready var btn_buy_supplies: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar/BtnBuySupplies
+@onready var purchases_catalog_grid: GridContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/Scroll/GridMargin/CatalogGrid
 
-# Equipamentos Container
-@onready var equipment_scroll_vbox: VBoxContainer = $PanelContainer/VBox/TabContainer/Equipamentos/VBox/Scroll/EquipmentVBox
-@onready var equipment_feedback: Label = $PanelContainer/VBox/TabContainer/Equipamentos/VBox/FeedbackLabel
+@onready var clear_cart_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/CartHeader/ClearCartBtn
+@onready var cart_items_list: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/CartScroll/CartItemsList
+@onready var supplier_option: OptionButton = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/SupplierOption
+@onready var supplier_info_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/SupplierInfoLabel
+@onready var cart_subtotal_val: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/SubtotalHBox/CartSubtotalVal
+@onready var cart_fee_val: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/FeeHBox/CartFeeVal
+@onready var cart_total_val: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/TotalHBox/CartTotalVal
+@onready var cart_feedback_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/FeedbackLabel
+@onready var confirm_order_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/ConfirmOrderBtn
+@onready var deliveries_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/DeliveriesBar/DeliveriesPanel/DeliveriesLabel
 
-# Funcionários Container
-@onready var emp_scroll_vbox: VBoxContainer = $PanelContainer/VBox/TabContainer/Funcionários/VBox/Scroll/EmployeesVBox
-@onready var emp_feedback_label: Label = $PanelContainer/VBox/TabContainer/Funcionários/VBox/TopHBox/EmpFeedbackLabel
+enum TabID {
+	INVENTORY,
+	PURCHASES,
+	EMPLOYEES,
+	ORDERS,
+	MENU,
+	FINANCES,
+	ENERGY,
+	NEWS,
+	EQUIPMENT,
+	RECIPES,
+	SETTINGS
+}
 
-# Relatório Semanal Container
-@onready var weekly_header_label: Label = $"PanelContainer/VBox/TabContainer/Relatório Semanal/VBox/WeeklyHeaderLabel"
-@onready var weekly_content_label: Label = $"PanelContainer/VBox/TabContainer/Relatório Semanal/VBox/Scroll/WeeklyContentLabel"
+var current_tab: TabID = TabID.INVENTORY
+var current_filter: String = "ALL"
+var current_search: String = ""
 
-# Avaliações Container
-@onready var rep_header_label: Label = $PanelContainer/VBox/TabContainer/Avaliações/VBox/ReputationHeaderLabel
-@onready var reviews_scroll_vbox: VBoxContainer = $PanelContainer/VBox/TabContainer/Avaliações/VBox/Scroll/ReviewsVBox
+var current_buy_filter: String = "ALL"
+var current_buy_search: String = ""
 
-# Finanças UI
-@onready var fin_summary_label: Label = $PanelContainer/VBox/TabContainer/Finanças/VBox/SummaryLabel
-@onready var fin_transactions_label: Label = $PanelContainer/VBox/TabContainer/Finanças/VBox/Scroll/TransactionsLabel
+# Quantidades temporárias selecionadas nos cards antes de adicionar ao carrinho
+var card_selected_quantities: Dictionary = {}
 
-var buy_quantities: Dictionary = {}
+var nav_buttons_map: Dictionary = {}
 
 func _ready() -> void:
 	visible = false
+	_setup_signals()
+	_setup_navigation_sidebar()
+	_setup_purchases_tab()
+
+func _setup_signals() -> void:
+	if close_btn:
+		close_btn.pressed.connect(close)
+
+	if stock_search_input:
+		stock_search_input.text_changed.connect(_on_search_text_changed)
+
+	if filter_all_btn: filter_all_btn.pressed.connect(func(): _set_category_filter("ALL"))
+	if filter_ingredients_btn: filter_ingredients_btn.pressed.connect(func(): _set_category_filter("INGREDIENTS"))
+	if filter_drinks_btn: filter_drinks_btn.pressed.connect(func(): _set_category_filter("DRINKS"))
+	if filter_supplies_btn: filter_supplies_btn.pressed.connect(func(): _set_category_filter("SUPPLIES"))
+	if filter_others_btn: filter_others_btn.pressed.connect(func(): _set_category_filter("OTHERS"))
+
+	# Conecta ao InventoryManager
+	var inv = InventoryManager.get_instance()
+	if inv and not inv.stock_changed.is_connected(_on_stock_changed):
+		inv.stock_changed.connect(_on_stock_changed)
+
+	# Conecta ao PurchaseManager
+	var pm = PurchaseManager.get_instance()
+	if pm:
+		if not pm.cart_updated.is_connected(_on_cart_updated):
+			pm.cart_updated.connect(_on_cart_updated)
+		if not pm.market_updated.is_connected(_on_market_updated):
+			pm.market_updated.connect(_on_market_updated)
+		if not pm.delivery_progress_updated.is_connected(_on_delivery_progress_updated):
+			pm.delivery_progress_updated.connect(_on_delivery_progress_updated)
+		if not pm.delivery_arrived.is_connected(_on_delivery_arrived):
+			pm.delivery_arrived.connect(_on_delivery_arrived)
+
+func _setup_purchases_tab() -> void:
+	if purchases_search_input:
+		purchases_search_input.text_changed.connect(_on_buy_search_text_changed)
+
+	if btn_buy_all: btn_buy_all.pressed.connect(func(): _set_buy_category_filter("ALL"))
+	if btn_buy_ingredients: btn_buy_ingredients.pressed.connect(func(): _set_buy_category_filter("INGREDIENTS"))
+	if btn_buy_fries: btn_buy_fries.pressed.connect(func(): _set_buy_category_filter("FRIES"))
+	if btn_buy_drinks: btn_buy_drinks.pressed.connect(func(): _set_buy_category_filter("DRINKS"))
+	if btn_buy_supplies: btn_buy_supplies.pressed.connect(func(): _set_buy_category_filter("SUPPLIES"))
+
+	if clear_cart_btn:
+		clear_cart_btn.pressed.connect(_on_clear_cart_pressed)
+
+	if confirm_order_btn:
+		confirm_order_btn.pressed.connect(_on_confirm_order_pressed)
+
+	if supplier_option:
+		supplier_option.clear()
+		supplier_option.add_item("🚚 Fornecedor Normal (Padrão)", 0)
+		supplier_option.add_item("⚡ Fornecedor Rápido (Expresso)", 1)
+		supplier_option.add_item("📦 Fornecedor Atacado (Econômico)", 2)
+		supplier_option.item_selected.connect(_on_supplier_selected)
+
+func _setup_navigation_sidebar() -> void:
+	if not nav_buttons_container:
+		return
+
+	for child in nav_buttons_container.get_children():
+		child.queue_free()
+	nav_buttons_map.clear()
+
+	var tabs_def = [
+		{"id": TabID.INVENTORY, "icon": "📦", "title": "Estoque Geral", "active": true, "badge": ""},
+		{"id": TabID.PURCHASES, "icon": "🛒", "title": "Central de Compras", "active": true, "badge": "NOVO"},
+		{"id": TabID.EMPLOYEES, "icon": "👥", "title": "Funcionários", "active": false, "badge": "Em breve"},
+		{"id": TabID.ORDERS, "icon": "📋", "title": "Histórico de Pedidos", "active": false, "badge": "Em breve"},
+		{"id": TabID.MENU, "icon": "🍔", "title": "Cardápio & Preços", "active": false, "badge": "Em breve"},
+		{"id": TabID.FINANCES, "icon": "💵", "title": "Fluxo Financeiro", "active": false, "badge": "Em breve"},
+		{"id": TabID.ENERGY, "icon": "⚡", "title": "Rede Elétrica", "active": false, "badge": "Em breve"},
+		{"id": TabID.NEWS, "icon": "📰", "title": "Jornal da Cidade", "active": false, "badge": "Em breve"},
+		{"id": TabID.EQUIPMENT, "icon": "⚙️", "title": "Equipamentos", "active": false, "badge": "Em breve"},
+		{"id": TabID.RECIPES, "icon": "📖", "title": "Livro de Receitas", "active": false, "badge": "Em breve"},
+		{"id": TabID.SETTINGS, "icon": "🛠️", "title": "Configurações", "active": false, "badge": "Em breve"}
+	]
+
+	for t in tabs_def:
+		var btn = Button.new()
+		btn.custom_minimum_size = Vector2(0, 42)
+		btn.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		btn.focus_mode = Control.FOCUS_NONE
+
+		var text = "%s  %s" % [t["icon"], t["title"]]
+		if t["badge"] != "":
+			text += "  [%s]" % t["badge"]
+		btn.text = text
+
+		var tab_id_val: TabID = t["id"]
+		btn.pressed.connect(func(): _switch_tab(tab_id_val, t["title"]))
+		nav_buttons_container.add_child(btn)
+		nav_buttons_map[t["id"]] = btn
+
+	_update_nav_button_styles()
 
 func open() -> void:
 	visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	refresh_all_tabs()
+	_switch_tab(current_tab, "Estoque Geral" if current_tab == TabID.INVENTORY else "Central de Compras")
+	_refresh_header_data()
+	if current_tab == TabID.INVENTORY:
+		_refresh_inventory_tab()
+	elif current_tab == TabID.PURCHASES:
+		_refresh_purchases_tab()
 
 func close() -> void:
 	visible = false
@@ -66,831 +204,813 @@ func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
 		close()
 
-func refresh_all_tabs() -> void:
-	_refresh_overview()
-	_refresh_inventory()
-	_refresh_purchases()
-	_refresh_menu()
-	_refresh_equipment()
-	_refresh_employees()
-	_refresh_weekly_report()
-	_refresh_reviews()
-	_refresh_finances()
+func _process(_delta: float) -> void:
+	if visible:
+		_refresh_header_data()
 
-# ==============================================================================
-# 1. 🏠 VISÃO GERAL
-# ==============================================================================
-func _refresh_overview() -> void:
+func _refresh_header_data() -> void:
 	var clock = GameClock.get_instance()
-	var economy = EconomyManager.get_instance()
-	var order_mgr = OrderManager.get_instance()
-	var inv = InventoryManager.get_instance()
-	var waste_mgr = WasteManager.get_instance()
-	var rep_mgr = ReputationManager.get_instance()
-	var emp_mgr = EmployeeManager.get_instance()
+	if clock:
+		if header_date_label:
+			header_date_label.text = "📅 DIA %d (%s)" % [clock.day_number, clock.get_weekday_name().to_upper()]
+		if header_time_label:
+			header_time_label.text = "⏰ %s • %s" % [clock.get_formatted_time(), clock.get_state_string()]
 
-	if clock and ov_day_time:
-		ov_day_time.text = "📅 DIA %d (%s)  |  ⏰ %s  |  Status: %s" % [clock.day_number, clock.get_weekday_name(), clock.get_formatted_time(), clock.get_state_string()]
+	var econ = EconomyManager.get_instance()
+	if econ and header_money_label:
+		header_money_label.text = "$ %.2f" % econ.get_money()
 
-	var rev = economy.get_daily_sales() if economy else 0.0
-	var pur = economy.get_daily_purchases() if economy else 0.0
-	var wst = waste_mgr.get_daily_waste_cost() if waste_mgr else 0.0
-	var net = rev - pur - wst
+func _switch_tab(tab_id: TabID, tab_title: String = "") -> void:
+	current_tab = tab_id
+	_update_nav_button_styles()
 
-	if economy and ov_money:
-		ov_money.text = "💰 Caixa Disponível: $%.2f" % economy.get_money()
-	if ov_revenue:
-		ov_revenue.text = "💵 Vendas do Dia: $%.2f" % rev
-	if ov_purchases:
-		ov_purchases.text = "🛒 Gastos em Compras Hoje: $%.2f" % pur
-	if ov_waste:
-		ov_waste.text = "🗑️ Desperdício / Perdas Hoje: -$%.2f" % wst
-		ov_waste.modulate = Color(1.0, 0.4, 0.4, 1) if wst > 0 else Color(0.8, 0.8, 0.8, 1)
-	if ov_profit:
-		ov_profit.text = "📈 Lucro do Dia: $%.2f" % net
-		ov_profit.modulate = Color(0.3, 1.0, 0.4, 1) if net >= 0 else Color(1.0, 0.3, 0.3, 1)
-	if order_mgr and ov_orders:
-		ov_orders.text = "📋 Pedidos Concluídos: %d (Ativos: %d)" % [order_mgr.daily_completed_orders, order_mgr.get_active_orders().size()]
-	if rep_mgr and ov_rating:
-		ov_rating.text = "⭐ Avaliação Média: %s %.1f / 5.0" % [rep_mgr.get_stars_string(), rep_mgr.get_average_rating()]
+	if inventory_tab: inventory_tab.visible = (tab_id == TabID.INVENTORY)
+	if purchases_tab: purchases_tab.visible = (tab_id == TabID.PURCHASES)
+	if placeholder_tab: placeholder_tab.visible = (tab_id != TabID.INVENTORY and tab_id != TabID.PURCHASES)
 
-	# Alertas Operacionais Inteligentes
-	var alerts: Array[String] = []
-	if inv:
-		var low_stocks = inv.get_low_stock_alerts()
-		for a in low_stocks:
-			alerts.append("Estoque de %s" % a)
+	if tab_id == TabID.INVENTORY:
+		_refresh_inventory_tab()
+	elif tab_id == TabID.PURCHASES:
+		_refresh_purchases_tab()
+	else:
+		if placeholder_tab:
+			if placeholder_title:
+				placeholder_title.text = "Módulo: %s" % tab_title
+			if placeholder_desc:
+				placeholder_desc.text = "Este módulo será integrado nas próximas etapas do Burger Rush OS.\nTodos os dados e sistemas de gameplay continuam funcionando normalmente."
 
-	var main_scene = get_tree().current_scene if get_tree() else null
-	if main_scene:
-		var grill = main_scene.get_node_or_null("Grill") as Grill
-		if grill and grill.is_dirty():
-			alerts.append("Chapa com excesso de gordura (limpeza necessária)")
+func _update_nav_button_styles() -> void:
+	for t_id in nav_buttons_map.keys():
+		var btn: Button = nav_buttons_map[t_id]
+		if not is_instance_valid(btn):
+			continue
 
-		var fryer = main_scene.get_node_or_null("Fryer") as Fryer
-		if fryer and fryer.is_oil_bad():
-			alerts.append("Fritadeira precisa de troca de óleo urgente")
+		var is_active = (t_id == current_tab)
+		var style = StyleBoxFlat.new()
+		style.corner_radius_top_left = 6
+		style.corner_radius_top_right = 6
+		style.corner_radius_bottom_right = 6
+		style.corner_radius_bottom_left = 6
 
-		var drink = main_scene.get_node_or_null("DrinkMachine") as DrinkMachine
-		if drink and drink.syrup_current == 0:
-			alerts.append("Máquina de refrigerante sem xarope")
-
-	if emp_mgr and emp_mgr.get_employees().size() > 0:
-		alerts.append("%d funcionário(s) contratado(s) em serviço" % emp_mgr.get_employees().size())
-
-	if ov_alerts:
-		if alerts.is_empty():
-			ov_alerts.text = "🟢 Alertas Operacionais: Tudo funcionando normalmente."
-			ov_alerts.modulate = Color(0.4, 1.0, 0.4, 1)
+		if is_active:
+			style.bg_color = Color(0.18, 0.24, 0.35, 1.0)
+			style.border_width_left = 4
+			style.border_color = Color(1.0, 0.75, 0.1, 1.0)
+			btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 		else:
-			ov_alerts.text = "⚠️ Alertas Importantes:\n• " + "\n• ".join(alerts)
-			ov_alerts.modulate = Color(1.0, 0.85, 0.2, 1)
+			style.bg_color = Color(0.1, 0.12, 0.17, 0.0)
+			btn.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1))
 
-# ==============================================================================
-# 2. 📦 ESTOQUE
-# ==============================================================================
-func _refresh_inventory() -> void:
-	if not stock_vbox:
-		return
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
 
-	for child in stock_vbox.get_children():
-		child.queue_free()
+# =============================================================================
+# ABA 1: ESTOQUE GERAL
+# =============================================================================
 
-	var inv = InventoryManager.get_instance()
-	if not inv:
-		return
+func _on_search_text_changed(new_text: String) -> void:
+	current_search = new_text.strip_edges().to_lower()
+	_refresh_inventory_tab()
 
-	for item in inv.get_all_items().values():
-		var card = PanelContainer.new()
-		var card_style = StyleBoxFlat.new()
-		card_style.bg_color = Color(0.15, 0.18, 0.23, 0.8)
-		card_style.set_corner_radius_all(6)
-		card.add_theme_stylebox_override("panel", card_style)
+func _set_category_filter(filter_name: String) -> void:
+	current_filter = filter_name
+	_update_filter_button_styles()
+	_refresh_inventory_tab()
 
-		var margin = MarginContainer.new()
-		margin.add_theme_constant_override("margin_left", 12)
-		margin.add_theme_constant_override("margin_top", 8)
-		margin.add_theme_constant_override("margin_right", 12)
-		margin.add_theme_constant_override("margin_bottom", 8)
-		card.add_child(margin)
-
-		var hbox = HBoxContainer.new()
-		hbox.add_theme_constant_override("separation", 15)
-		margin.add_child(hbox)
-
-		var item_id_str: String = item.get("id", "")
-		var icon = _get_item_icon(item_id_str)
-		var name_lbl = Label.new()
-		name_lbl.custom_minimum_size = Vector2(220, 0)
-		name_lbl.add_theme_font_size_override("font_size", 15)
-		name_lbl.text = "%s %s" % [icon, item.get("display_name", item_id_str)]
-		hbox.add_child(name_lbl)
-
-		var qty: int = item.get("quantity", 0)
-		var max_cap: int = item.get("max_capacity", 0)
-		var reorder: int = item.get("reorder_level", 5)
-		var qty_lbl = Label.new()
-		qty_lbl.custom_minimum_size = Vector2(160, 0)
-		qty_lbl.text = "Estoque: %d / %d un" % [qty, max_cap]
-		hbox.add_child(qty_lbl)
-
-		var cost_lbl = Label.new()
-		cost_lbl.custom_minimum_size = Vector2(140, 0)
-		cost_lbl.text = "Custo: $%.2f / un" % item.get("unit_cost", 0.0)
-		hbox.add_child(cost_lbl)
-
-		var status_lbl = Label.new()
-		status_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if qty <= 0:
-			status_lbl.text = "🔴 ESGOTADO"
-			status_lbl.modulate = Color(1.0, 0.3, 0.3, 1)
-		elif qty <= reorder:
-			status_lbl.text = "🟡 ESTOQUE BAIXO"
-			status_lbl.modulate = Color(1.0, 0.8, 0.2, 1)
-		else:
-			status_lbl.text = "🟢 DISPONÍVEL"
-			status_lbl.modulate = Color(0.3, 1.0, 0.4, 1)
-		hbox.add_child(status_lbl)
-
-		stock_vbox.add_child(card)
-
-# ==============================================================================
-# 3. 🛒 COMPRAS
-# ==============================================================================
-func _refresh_purchases() -> void:
-	if not purchase_scroll_vbox:
-		return
-
-	for child in purchase_scroll_vbox.get_children():
-		child.queue_free()
-
-	var inv = InventoryManager.get_instance()
-	var prog = ProgressionManager.get_instance()
-	if not inv:
-		return
-
-	var categories = {
-		"🍞 PADARIA": ["bread", "bread_bottom", "bread_top"],
-		"🥩 CARNES": ["patty_beef", "patty_chicken"],
-		"🧀 QUEIJOS": ["cheese_mozzarella", "cheese_cheddar", "cheese_prato"],
-		"🥗 VEGETAIS": ["lettuce", "tomato", "onion", "red_onion", "pickle"],
-		"🥓 EXTRAS": ["bacon", "egg"],
-		"🥫 MOLHOS": ["sauce_ketchup", "sauce_mustard", "sauce_mayo", "sauce_special"],
-		"🍟 BATATAS": ["potato_raw", "potato_box"],
-		"🥤 BEBIDAS": ["syrup_soda", "cup_empty", "cup_lid"],
-		"🛢️ MANUTENÇÃO": ["cooking_oil"]
+func _update_filter_button_styles() -> void:
+	var filter_btns = {
+		"ALL": filter_all_btn,
+		"INGREDIENTS": filter_ingredients_btn,
+		"DRINKS": filter_drinks_btn,
+		"SUPPLIES": filter_supplies_btn,
+		"OTHERS": filter_others_btn
 	}
 
-	for cat_title in categories.keys():
-		var header = Label.new()
-		header.add_theme_font_size_override("font_size", 16)
-		header.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1))
-		header.text = cat_title
-		purchase_scroll_vbox.add_child(header)
+	for k in filter_btns.keys():
+		var btn: Button = filter_btns[k]
+		if not is_instance_valid(btn):
+			continue
+		var is_active = (k == current_filter)
+		var style = StyleBoxFlat.new()
+		style.corner_radius_top_left = 5
+		style.corner_radius_top_right = 5
+		style.corner_radius_bottom_right = 5
+		style.corner_radius_bottom_left = 5
 
-		for item_id in categories[cat_title]:
-			var item = inv.get_item(item_id)
-			if not item:
-				continue
-
-			if not buy_quantities.has(item.id):
-				buy_quantities[item.id] = 5
-
-			var is_unlocked = prog.is_unlocked(item.id) if prog else true
-			var row = HBoxContainer.new()
-			row.add_theme_constant_override("separation", 8)
-
-			var name_lbl = Label.new()
-			name_lbl.custom_minimum_size = Vector2(180, 0)
-			name_lbl.text = "%s %s" % [_get_item_icon(item.id), item.display_name]
-			row.add_child(name_lbl)
-
-			if not is_unlocked:
-				var lock_lbl = Label.new()
-				var cost = prog.get_unlock_cost(item.id) if prog else 0.0
-				lock_lbl.text = "🔒 Bloqueado (Desbloqueie no Cardápio por $%.2f)" % cost
-				lock_lbl.modulate = Color(0.7, 0.7, 0.7, 1)
-				row.add_child(lock_lbl)
-				purchase_scroll_vbox.add_child(row)
-				continue
-
-			var btn_m5 = Button.new()
-			btn_m5.text = "-5"
-			btn_m5.custom_minimum_size = Vector2(36, 0)
-			btn_m5.pressed.connect(func(): _adjust_buy_qty(item.id, -5))
-			row.add_child(btn_m5)
-
-			var btn_m1 = Button.new()
-			btn_m1.text = "-1"
-			btn_m1.custom_minimum_size = Vector2(36, 0)
-			btn_m1.pressed.connect(func(): _adjust_buy_qty(item.id, -1))
-			row.add_child(btn_m1)
-
-			var qty_lbl = Label.new()
-			qty_lbl.custom_minimum_size = Vector2(65, 0)
-			qty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-			qty_lbl.text = "Qtd: %d" % buy_quantities[item.id]
-			row.add_child(qty_lbl)
-
-			var btn_p1 = Button.new()
-			btn_p1.text = "+1"
-			btn_p1.custom_minimum_size = Vector2(36, 0)
-			btn_p1.pressed.connect(func(): _adjust_buy_qty(item.id, 1))
-			row.add_child(btn_p1)
-
-			var btn_p5 = Button.new()
-			btn_p5.text = "+5"
-			btn_p5.custom_minimum_size = Vector2(36, 0)
-			btn_p5.pressed.connect(func(): _adjust_buy_qty(item.id, 5))
-			row.add_child(btn_p5)
-
-			var cost_lbl = Label.new()
-			cost_lbl.custom_minimum_size = Vector2(170, 0)
-			cost_lbl.text = "Total: $%.2f ($%.2f/un)" % [buy_quantities[item.id] * item.unit_cost, item.unit_cost]
-			row.add_child(cost_lbl)
-
-			var btn_buy = Button.new()
-			btn_buy.text = "Comprar %s" % item.display_name
-			btn_buy.custom_minimum_size = Vector2(160, 0)
-			var id_to_buy = item.id
-			btn_buy.pressed.connect(func(): _execute_purchase(id_to_buy))
-			row.add_child(btn_buy)
-
-			purchase_scroll_vbox.add_child(row)
-
-		var sep = HSeparator.new()
-		purchase_scroll_vbox.add_child(sep)
-
-func _adjust_buy_qty(id: String, delta: int) -> void:
-	buy_quantities[id] = maxi(1, buy_quantities.get(id, 5) + delta)
-	_refresh_purchases()
-
-func _execute_purchase(id: String) -> void:
-	var purchase_mgr = PurchaseManager.get_instance()
-	if not purchase_mgr:
-		return
-
-	var qty = buy_quantities.get(id, 5)
-	var res = purchase_mgr.buy_ingredient(id, qty)
-
-	if purchase_feedback:
-		purchase_feedback.text = res.get("message", "")
-		if res.get("success", false):
-			purchase_feedback.modulate = Color(0.4, 1.0, 0.4, 1)
+		if is_active:
+			style.bg_color = Color(0.2, 0.3, 0.45, 1.0)
+			style.border_width_bottom = 2
+			style.border_color = Color(1.0, 0.75, 0.1, 1.0)
+			btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 		else:
-			purchase_feedback.modulate = Color(1.0, 0.3, 0.3, 1)
+			style.bg_color = Color(0.12, 0.15, 0.2, 0.8)
+			btn.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8, 1))
 
-	refresh_all_tabs()
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
 
-# ==============================================================================
-# 4. 🍔 CARDÁPIO
-# ==============================================================================
-func _refresh_menu() -> void:
-	if not menu_scroll_vbox:
+func _on_stock_changed(_item_id: String, _new_quantity: int) -> void:
+	if visible and current_tab == TabID.INVENTORY:
+		_refresh_inventory_tab()
+	elif visible and current_tab == TabID.PURCHASES:
+		_refresh_purchases_tab()
+
+func _refresh_inventory_tab() -> void:
+	if not stock_cards_grid:
 		return
 
-	for child in menu_scroll_vbox.get_children():
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		if stock_summary_label:
+			stock_summary_label.text = "⚠️ Sistema de estoque indisponível."
+		return
+
+	var all_items = inv.get_all_items()
+	var total_items_count = 0
+	var low_stock_count = 0
+
+	for child in stock_cards_grid.get_children():
+		stock_cards_grid.remove_child(child)
 		child.queue_free()
 
-	var prog = ProgressionManager.get_instance()
-	var recipes = RecipeDatabase.get_all_recipes()
+	for item_id in all_items.keys():
+		var it = all_items[item_id]
+		var d_name: String = it.get("display_name", item_id)
+		var cat: String = it.get("category", "other")
+		var qty: int = it.get("quantity", 0)
+		var max_cap: int = it.get("max_capacity", 50)
 
-	var available_recipes: Array[Recipe] = []
-	var locked_recipes: Array[Recipe] = []
-
-	for rec in recipes:
-		if rec.id.ends_with("_upgrade"):
+		if not _is_item_in_filter(cat, current_filter):
 			continue
-		if prog and not prog.is_unlocked(rec.id):
-			locked_recipes.append(rec)
+
+		if current_search != "":
+			var match_name = d_name.to_lower().contains(current_search)
+			var match_id = item_id.to_lower().contains(current_search)
+			if not (match_name or match_id):
+				continue
+
+		total_items_count += 1
+		if max_cap > 1 and qty <= (max_cap * 0.25):
+			low_stock_count += 1
+		elif max_cap == 1 and qty == 0:
+			low_stock_count += 1
+
+		var card = _create_stock_card(item_id, d_name, cat, qty, max_cap)
+		stock_cards_grid.add_child(card)
+
+	if stock_summary_label:
+		if low_stock_count > 0:
+			stock_summary_label.text = "Exibindo %d itens  |  ⚠️ %d item(ns) com estoque baixo!" % [total_items_count, low_stock_count]
+			stock_summary_label.add_theme_color_override("font_color", Color(1.0, 0.65, 0.2, 1.0))
 		else:
-			available_recipes.append(rec)
+			stock_summary_label.text = "Exibindo %d itens cadastrados no restaurante" % total_items_count
+			stock_summary_label.add_theme_color_override("font_color", Color(0.6, 0.75, 0.9, 1.0))
 
-	# 1. Receitas Disponíveis
-	var avail_title = Label.new()
-	avail_title.add_theme_font_size_override("font_size", 16)
-	avail_title.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5, 1))
-	avail_title.text = "✅ RECEITAS DISPONÍVEIS NO CARDÁPIO:"
-	menu_scroll_vbox.add_child(avail_title)
+func _is_item_in_filter(item_cat: String, filter_type: String) -> bool:
+	match filter_type:
+		"ALL":
+			return true
+		"INGREDIENTS":
+			return item_cat in ["bakery", "meats", "cheeses", "vegetables", "extras", "sauces"]
+		"DRINKS":
+			return item_cat in ["beverages", "drinks", "pulps"]
+		"SUPPLIES":
+			return item_cat in ["supplies", "packaging"]
+		"OTHERS":
+			return not (item_cat in ["bakery", "meats", "cheeses", "vegetables", "extras", "sauces", "beverages", "drinks", "pulps", "supplies", "packaging"])
+		_:
+			return true
 
-	for rec in available_recipes:
-		var card = _create_recipe_card(rec, true)
-		menu_scroll_vbox.add_child(card)
-
-	var sep = HSeparator.new()
-	menu_scroll_vbox.add_child(sep)
-
-	# 2. Receitas Bloqueadas
-	if not locked_recipes.is_empty():
-		var lock_title = Label.new()
-		lock_title.add_theme_font_size_override("font_size", 16)
-		lock_title.add_theme_color_override("font_color", Color(1.0, 0.7, 0.2, 1))
-		lock_title.text = "🔒 RECEITAS DISPONÍVEIS PARA DESBLOQUEIO:"
-		menu_scroll_vbox.add_child(lock_title)
-
-		for rec in locked_recipes:
-			var card = _create_recipe_card(rec, false)
-			menu_scroll_vbox.add_child(card)
-
-func _create_recipe_card(rec: Recipe, is_unlocked: bool) -> PanelContainer:
+func _create_stock_card(id: String, item_name: String, _cat: String, qty: int, max_cap: int) -> Control:
 	var card = PanelContainer.new()
-	var card_style = StyleBoxFlat.new()
-	card_style.bg_color = Color(0.15, 0.18, 0.23, 0.8)
-	card_style.set_corner_radius_all(6)
-	card.add_theme_stylebox_override("panel", card_style)
+	card.custom_minimum_size = Vector2(0, 110)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style = StyleBoxFlat.new()
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_right = 8
+	style.corner_radius_bottom_left = 8
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+
+	var pct = float(qty) / float(max_cap) if max_cap > 0 else 0.0
+	var badge_text = ""
+	var badge_color = Color(1, 1, 1, 1)
+
+	if max_cap == 1:
+		if qty >= 1:
+			badge_text = "🟢 ESTOQUE MÁXIMO"
+			badge_color = Color(0.3, 0.9, 0.4, 1.0)
+			style.bg_color = Color(0.10, 0.14, 0.12, 1.0)
+			style.border_color = Color(0.18, 0.4, 0.25, 1.0)
+		else:
+			badge_text = "🔴 SEM RESERVA"
+			badge_color = Color(1.0, 0.35, 0.35, 1.0)
+			style.bg_color = Color(0.15, 0.08, 0.08, 1.0)
+			style.border_color = Color(0.6, 0.2, 0.2, 1.0)
+	else:
+		if pct <= 0.0:
+			badge_text = "🔴 ESGOTADO"
+			badge_color = Color(1.0, 0.3, 0.3, 1.0)
+			style.bg_color = Color(0.15, 0.08, 0.08, 1.0)
+			style.border_color = Color(0.6, 0.2, 0.2, 1.0)
+		elif pct <= 0.25:
+			badge_text = "⚠️ ESTOQUE BAIXO"
+			badge_color = Color(1.0, 0.65, 0.15, 1.0)
+			style.bg_color = Color(0.15, 0.12, 0.08, 1.0)
+			style.border_color = Color(0.55, 0.35, 0.15, 1.0)
+		elif pct <= 0.65:
+			badge_text = "🟡 ESTOQUE MÉDIO"
+			badge_color = Color(0.9, 0.85, 0.3, 1.0)
+			style.bg_color = Color(0.11, 0.13, 0.16, 1.0)
+			style.border_color = Color(0.25, 0.3, 0.4, 1.0)
+		else:
+			badge_text = "🟢 ESTOQUE ALTO"
+			badge_color = Color(0.3, 0.9, 0.4, 1.0)
+			style.bg_color = Color(0.10, 0.14, 0.12, 1.0)
+			style.border_color = Color(0.18, 0.4, 0.25, 1.0)
+
+	card.add_theme_stylebox_override("panel", style)
 
 	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 12)
-	margin.add_theme_constant_override("margin_top", 8)
-	margin.add_theme_constant_override("margin_right", 12)
-	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.add_theme_constant_override("margin_left", 14)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_right", 14)
+	margin.add_theme_constant_override("margin_bottom", 12)
 	card.add_child(margin)
 
 	var vbox = VBoxContainer.new()
 	vbox.add_theme_constant_override("separation", 6)
 	margin.add_child(vbox)
 
-	var cat_icon = "🍔"
-	match rec.category:
-		"burger":
-			cat_icon = "🍔"
-		"fries":
-			cat_icon = "🍟"
-		"drink":
-			cat_icon = "🥤"
-		"combo":
-			cat_icon = "🍔🍟🥤"
+	var top_row = HBoxContainer.new()
+	vbox.add_child(top_row)
 
-	var title = Label.new()
-	title.add_theme_font_size_override("font_size", 15)
-	title.text = "%s %s  |  Ingredientes: %s" % [cat_icon, rec.display_name, " + ".join(rec.required_ingredients)]
-	vbox.add_child(title)
+	var icon_label = Label.new()
+	icon_label.text = _get_item_icon(id) + "  " + item_name
+	icon_label.add_theme_font_size_override("font_size", 14)
+	icon_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	top_row.add_child(icon_label)
 
-	var hbox = HBoxContainer.new()
-	hbox.add_theme_constant_override("separation", 12)
-	vbox.add_child(hbox)
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_row.add_child(spacer)
 
-	if is_unlocked:
-		var price_lbl = Label.new()
-		price_lbl.custom_minimum_size = Vector2(180, 0)
-		price_lbl.add_theme_color_override("font_color", Color(0.4, 1.0, 0.5, 1))
-		price_lbl.text = "Preço de Venda: $%.2f" % rec.base_price
-		hbox.add_child(price_lbl)
+	var badge_label = Label.new()
+	badge_label.text = badge_text
+	badge_label.add_theme_font_size_override("font_size", 11)
+	badge_label.add_theme_color_override("font_color", badge_color)
+	top_row.add_child(badge_label)
 
-		var btn_m1 = Button.new()
-		btn_m1.text = "- $1"
-		btn_m1.custom_minimum_size = Vector2(40, 0)
-		var r_id = rec.id
-		btn_m1.pressed.connect(func(): _adjust_recipe_price(r_id, -1.0))
-		hbox.add_child(btn_m1)
+	var mid_row = HBoxContainer.new()
+	vbox.add_child(mid_row)
 
-		var btn_p1 = Button.new()
-		btn_p1.text = "+ $1"
-		btn_p1.custom_minimum_size = Vector2(40, 0)
-		btn_p1.pressed.connect(func(): _adjust_recipe_price(r_id, 1.0))
-		hbox.add_child(btn_p1)
+	var qty_label = Label.new()
+	qty_label.text = "%d / %d un" % [qty, max_cap]
+	qty_label.add_theme_font_size_override("font_size", 15)
+	qty_label.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0, 1.0))
+	mid_row.add_child(qty_label)
 
-		var cost_lbl = Label.new()
-		cost_lbl.custom_minimum_size = Vector2(150, 0)
-		cost_lbl.text = "Custo: $%.2f" % rec.calculate_cost()
-		hbox.add_child(cost_lbl)
+	var spacer2 = Control.new()
+	spacer2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	mid_row.add_child(spacer2)
 
-		var profit_lbl = Label.new()
-		profit_lbl.add_theme_color_override("font_color", Color(0.9, 0.85, 0.2, 1))
-		profit_lbl.text = "Margem: $%.2f" % rec.get_estimated_profit()
-		hbox.add_child(profit_lbl)
+	var pct_label = Label.new()
+	pct_label.text = "%d%%" % int(pct * 100.0)
+	pct_label.add_theme_font_size_override("font_size", 12)
+	pct_label.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1.0))
+	mid_row.add_child(pct_label)
+
+	var pbar = ProgressBar.new()
+	pbar.custom_minimum_size = Vector2(0, 8)
+	pbar.show_percentage = false
+	pbar.max_value = 1.0
+	pbar.value = pct
+
+	var pb_style = StyleBoxFlat.new()
+	pb_style.corner_radius_top_left = 4
+	pb_style.corner_radius_top_right = 4
+	pb_style.corner_radius_bottom_right = 4
+	pb_style.corner_radius_bottom_left = 4
+	pb_style.bg_color = badge_color
+	pbar.add_theme_stylebox_override("fill", pb_style)
+
+	var pb_bg = StyleBoxFlat.new()
+	pb_bg.corner_radius_top_left = 4
+	pb_bg.corner_radius_top_right = 4
+	pb_bg.corner_radius_bottom_right = 4
+	pb_bg.corner_radius_bottom_left = 4
+	pb_bg.bg_color = Color(0.06, 0.08, 0.12, 1.0)
+	pbar.add_theme_stylebox_override("background", pb_bg)
+
+	vbox.add_child(pbar)
+	return card
+
+# =============================================================================
+# ABA 2: CENTRAL DE COMPRAS & MERCADO
+# =============================================================================
+
+func _on_buy_search_text_changed(new_text: String) -> void:
+	current_buy_search = new_text.strip_edges().to_lower()
+	_refresh_purchases_catalog()
+
+func _set_buy_category_filter(filter_name: String) -> void:
+	current_buy_filter = filter_name
+	_update_buy_filter_button_styles()
+	_refresh_purchases_catalog()
+
+func _update_buy_filter_button_styles() -> void:
+	var filter_btns = {
+		"ALL": btn_buy_all,
+		"INGREDIENTS": btn_buy_ingredients,
+		"FRIES": btn_buy_fries,
+		"DRINKS": btn_buy_drinks,
+		"SUPPLIES": btn_buy_supplies
+	}
+
+	for k in filter_btns.keys():
+		var btn: Button = filter_btns[k]
+		if not is_instance_valid(btn):
+			continue
+		var is_active = (k == current_buy_filter)
+		var style = StyleBoxFlat.new()
+		style.corner_radius_top_left = 5
+		style.corner_radius_top_right = 5
+		style.corner_radius_bottom_right = 5
+		style.corner_radius_bottom_left = 5
+
+		if is_active:
+			style.bg_color = Color(0.2, 0.35, 0.5, 1.0)
+			style.border_width_bottom = 2
+			style.border_color = Color(1.0, 0.8, 0.15, 1.0)
+			btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		else:
+			style.bg_color = Color(0.12, 0.15, 0.2, 0.8)
+			btn.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8, 1))
+
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
+
+func _on_cart_updated() -> void:
+	if visible and current_tab == TabID.PURCHASES:
+		_refresh_cart_view()
+		_refresh_purchases_catalog()
+
+func _on_market_updated() -> void:
+	if visible and current_tab == TabID.PURCHASES:
+		_refresh_purchases_catalog()
+
+func _on_delivery_progress_updated(active_deliveries: Array[Dictionary]) -> void:
+	if not deliveries_label:
+		return
+	if active_deliveries.is_empty():
+		deliveries_label.text = "🚚 Nenhuma entrega a caminho no momento."
+		deliveries_label.add_theme_color_override("font_color", Color(0.5, 0.65, 0.8, 1.0))
 	else:
-		var prog = ProgressionManager.get_instance()
-		var cost = prog.get_unlock_cost(rec.id) if prog else 0.0
+		var txt = ""
+		for d in active_deliveries:
+			var rem = maxf(0.0, d.get("time_remaining_sec", 0.0))
+			var m = int(rem / 60.0)
+			var s = int(rem) % 60
+			txt += "🚚 Pedido #%d (%s) • Chegada em %02dm %02ds   " % [d["order_id"], d["supplier_name"], m, s]
+		deliveries_label.text = txt
+		deliveries_label.add_theme_color_override("font_color", Color(0.3, 0.9, 1.0, 1.0))
 
-		var btn_unlock = Button.new()
-		btn_unlock.text = "🔓 Desbloquear Receita ($%.2f)" % cost
-		btn_unlock.custom_minimum_size = Vector2(240, 0)
-		var r_id = rec.id
-		btn_unlock.pressed.connect(func(): _execute_unlock_recipe(r_id))
-		hbox.add_child(btn_unlock)
+func _on_delivery_arrived(_order: Dictionary) -> void:
+	if visible and current_tab == TabID.PURCHASES:
+		_refresh_purchases_tab()
+	elif visible and current_tab == TabID.INVENTORY:
+		_refresh_inventory_tab()
+
+func _on_supplier_selected(index: int) -> void:
+	var pm = PurchaseManager.get_instance()
+	if not pm:
+		return
+	match index:
+		0: pm.set_selected_supplier("NORMAL")
+		1: pm.set_selected_supplier("FAST")
+		2: pm.set_selected_supplier("WHOLESALE")
+	_refresh_cart_view()
+
+func _on_clear_cart_pressed() -> void:
+	var pm = PurchaseManager.get_instance()
+	if pm:
+		pm.clear_cart()
+		if cart_feedback_label:
+			cart_feedback_label.text = "Carrinho limpo."
+			cart_feedback_label.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+
+func _on_confirm_order_pressed() -> void:
+	var pm = PurchaseManager.get_instance()
+	if not pm:
+		return
+
+	var res = pm.confirm_order()
+	if cart_feedback_label:
+		cart_feedback_label.text = res["message"]
+		if res["success"]:
+			cart_feedback_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5, 1.0))
+		else:
+			cart_feedback_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4, 1.0))
+
+	_refresh_header_data()
+	_refresh_purchases_tab()
+
+func _refresh_purchases_tab() -> void:
+	_update_buy_filter_button_styles()
+	_refresh_purchases_catalog()
+	_refresh_cart_view()
+	var pm = PurchaseManager.get_instance()
+	if pm:
+		_on_delivery_progress_updated(pm.get_active_deliveries())
+
+func _refresh_purchases_catalog() -> void:
+	if not purchases_catalog_grid:
+		return
+
+	var pm = PurchaseManager.get_instance()
+	var inv = InventoryManager.get_instance()
+	if not pm or not inv:
+		return
+
+	for child in purchases_catalog_grid.get_children():
+		purchases_catalog_grid.remove_child(child)
+		child.queue_free()
+
+	var catalog = pm.get_catalog_items()
+
+	for item_id in catalog.keys():
+		var it = catalog[item_id]
+		var cat = it["category"]
+		var d_name = it["display_name"]
+
+		if not _is_buy_item_in_filter(cat, current_buy_filter):
+			continue
+
+		if current_buy_search != "":
+			var match_name = d_name.to_lower().contains(current_buy_search)
+			var match_id = item_id.to_lower().contains(current_buy_search)
+			if not (match_name or match_id):
+				continue
+
+		var card = _create_purchase_catalog_card(it)
+		purchases_catalog_grid.add_child(card)
+
+func _is_buy_item_in_filter(cat: String, filter_type: String) -> bool:
+	match filter_type:
+		"ALL": return true
+		"INGREDIENTS": return cat == "ingredients"
+		"FRIES": return cat == "fries"
+		"DRINKS": return cat in ["beverages", "drinks"]
+		"SUPPLIES": return cat in ["supplies", "packaging"]
+		_: return true
+
+func _create_purchase_catalog_card(item_data: Dictionary) -> Control:
+	var id = item_data["id"]
+	var d_name = item_data["display_name"]
+	var base_price = item_data["base_price"] as float
+	var market_price = item_data["market_price"] as float
+	var var_pct = item_data["market_variation_pct"] as float
+	var market_avail = item_data["market_available_qty"] as int
+	var news = item_data.get("market_news", "")
+
+	var inv = InventoryManager.get_instance()
+	var pm = PurchaseManager.get_instance()
+	var cur_stock = inv.get_stock(id) if inv else 0
+	var max_cap = inv.get_max_capacity(id) if inv else 50
+	var can_buy = pm.get_available_to_buy(id) if pm else 0
+
+	var card = PanelContainer.new()
+	card.custom_minimum_size = Vector2(0, 130)
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style = StyleBoxFlat.new()
+	style.corner_radius_top_left = 8
+	style.corner_radius_top_right = 8
+	style.corner_radius_bottom_right = 8
+	style.corner_radius_bottom_left = 8
+	style.bg_color = Color(0.11, 0.13, 0.18, 1.0)
+	style.border_width_left = 1
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.2, 0.25, 0.35, 1.0)
+	card.add_theme_stylebox_override("panel", style)
+
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 12)
+	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_right", 12)
+	margin.add_theme_constant_override("margin_bottom", 10)
+	card.add_child(margin)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+	margin.add_child(vbox)
+
+	# Linha 1: Ícone + Nome + Variação de Preço
+	var row1 = HBoxContainer.new()
+	vbox.add_child(row1)
+
+	var title_lbl = Label.new()
+	title_lbl.text = "%s  %s" % [_get_item_icon(id), d_name]
+	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	row1.add_child(title_lbl)
+
+	var sp1 = Control.new()
+	sp1.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row1.add_child(sp1)
+
+	var var_lbl = Label.new()
+	var var_str = "%+d%%" % int(var_pct * 100.0)
+	if var_pct > 0.01:
+		var_lbl.text = "🔺 " + var_str
+		var_lbl.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45, 1.0))
+	elif var_pct < -0.01:
+		var_lbl.text = "🔻 " + var_str
+		var_lbl.add_theme_color_override("font_color", Color(0.35, 1.0, 0.5, 1.0))
+	else:
+		var_lbl.text = "➖ 0%"
+		var_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	var_lbl.add_theme_font_size_override("font_size", 11)
+	row1.add_child(var_lbl)
+
+	# Linha 2: Preço de Mercado vs Base + Estoque Atual
+	var row2 = HBoxContainer.new()
+	vbox.add_child(row2)
+
+	var price_lbl = Label.new()
+	price_lbl.text = "$ %.2f / un  " % market_price
+	price_lbl.add_theme_font_size_override("font_size", 14)
+	price_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.25, 1.0))
+	row2.add_child(price_lbl)
+
+	var base_lbl = Label.new()
+	base_lbl.text = "(Base: $%.2f)" % base_price
+	base_lbl.add_theme_font_size_override("font_size", 11)
+	base_lbl.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7, 1.0))
+	row2.add_child(base_lbl)
+
+	var sp2 = Control.new()
+	sp2.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row2.add_child(sp2)
+
+	var stock_info_lbl = Label.new()
+	stock_info_lbl.text = "Estoque: %d/%d (Disp: %d)" % [cur_stock, max_cap, can_buy]
+	stock_info_lbl.add_theme_font_size_override("font_size", 11)
+	stock_info_lbl.add_theme_color_override("font_color", Color(0.65, 0.75, 0.85, 1.0))
+	row2.add_child(stock_info_lbl)
+
+	# Linha 3: Notícia de Mercado (se houver)
+	if news != "":
+		var news_lbl = Label.new()
+		news_lbl.text = "📰 %s" % news
+		news_lbl.add_theme_font_size_override("font_size", 10)
+		news_lbl.add_theme_color_override("font_color", Color(0.7, 0.8, 0.95, 0.85))
+		news_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(news_lbl)
+
+	# Linha 4: Controles de Quantidade e Adição ao Carrinho
+	var row4 = HBoxContainer.new()
+	row4.add_theme_constant_override("separation", 8)
+	vbox.add_child(row4)
+
+	var default_buy_qty = 10 if max_cap > 1 else 1
+	var cur_sel_qty = card_selected_quantities.get(id, mini(default_buy_qty, maxi(1, can_buy)))
+	cur_sel_qty = mini(cur_sel_qty, maxi(1, can_buy))
+	card_selected_quantities[id] = cur_sel_qty
+
+	var minus_btn = Button.new()
+	minus_btn.text = " − "
+	minus_btn.custom_minimum_size = Vector2(30, 28)
+	minus_btn.focus_mode = Control.FOCUS_NONE
+	row4.add_child(minus_btn)
+
+	var qty_input = SpinBox.new()
+	qty_input.custom_minimum_size = Vector2(70, 28)
+	qty_input.min_value = 1
+	qty_input.max_value = maxi(1, can_buy)
+	qty_input.value = cur_sel_qty
+	qty_input.editable = can_buy > 0
+	row4.add_child(qty_input)
+
+	var plus_btn = Button.new()
+	plus_btn.text = " + "
+	plus_btn.custom_minimum_size = Vector2(30, 28)
+	plus_btn.focus_mode = Control.FOCUS_NONE
+	row4.add_child(plus_btn)
+
+	minus_btn.pressed.connect(func():
+		var v = int(qty_input.value) - (5 if max_cap > 1 else 1)
+		qty_input.value = maxi(1, v)
+		card_selected_quantities[id] = int(qty_input.value)
+	)
+	plus_btn.pressed.connect(func():
+		var v = int(qty_input.value) + (5 if max_cap > 1 else 1)
+		qty_input.value = mini(can_buy, v)
+		card_selected_quantities[id] = int(qty_input.value)
+	)
+	qty_input.value_changed.connect(func(val):
+		card_selected_quantities[id] = int(val)
+	)
+
+	var sp4 = Control.new()
+	sp4.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row4.add_child(sp4)
+
+	var add_btn = Button.new()
+	add_btn.custom_minimum_size = Vector2(120, 28)
+	add_btn.focus_mode = Control.FOCUS_NONE
+	if can_buy <= 0:
+		add_btn.text = "Estoque Cheio"
+		add_btn.disabled = true
+	else:
+		add_btn.text = "🛒 Adicionar"
+		add_btn.disabled = false
+		add_btn.pressed.connect(func():
+			var q = int(qty_input.value)
+			var res = pm.add_to_cart(id, q)
+			if cart_feedback_label:
+				cart_feedback_label.text = res["message"]
+				cart_feedback_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5, 1.0) if res["success"] else Color(1.0, 0.4, 0.4, 1.0))
+		)
+	row4.add_child(add_btn)
 
 	return card
 
-func _execute_unlock_recipe(recipe_id: String) -> void:
-	var prog = ProgressionManager.get_instance()
-	if not prog:
+func _refresh_cart_view() -> void:
+	if not cart_items_list:
 		return
 
-	var res = prog.unlock_with_money(recipe_id)
-	if menu_feedback:
-		menu_feedback.text = res.get("message", "")
-		if res.get("success", false):
-			menu_feedback.modulate = Color(0.4, 1.0, 0.4, 1)
-		else:
-			menu_feedback.modulate = Color(1.0, 0.3, 0.3, 1)
-
-	refresh_all_tabs()
-
-func _adjust_recipe_price(id: String, delta: float) -> void:
-	var rec = RecipeDatabase.get_recipe_by_id(id)
-	if rec:
-		var new_price = maxf(1.0, rec.base_price + delta)
-		RecipeDatabase.update_recipe_price(id, new_price)
-		_refresh_menu()
-
-# ==============================================================================
-# 5. ⚙️ EQUIPAMENTOS
-# ==============================================================================
-func _refresh_equipment() -> void:
-	if not equipment_scroll_vbox:
+	var pm = PurchaseManager.get_instance()
+	if not pm:
 		return
 
-	for child in equipment_scroll_vbox.get_children():
+	for child in cart_items_list.get_children():
+		cart_items_list.remove_child(child)
 		child.queue_free()
 
-	# 1. Diagnóstico Operacional
-	var diag_title = Label.new()
-	diag_title.add_theme_font_size_override("font_size", 16)
-	diag_title.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1))
-	diag_title.text = "📊 DIAGNÓSTICO DOS EQUIPAMENTOS ATIVOS:"
-	equipment_scroll_vbox.add_child(diag_title)
+	var cart = pm.get_cart()
 
-	var main_scene = get_tree().current_scene if get_tree() else null
-	if main_scene:
-		var grill = main_scene.get_node_or_null("Grill") as Grill
-		if grill:
-			var g_lbl = Label.new()
-			var pct = int((grill.dirt_level / 5.0) * 100.0)
-			var status_str = "🔴 Precisa Limpeza" if grill.is_dirty() else ("🟡 Gordura: %d%%" % pct if grill.dirt_level > 0 else "🟢 Limpa")
-			g_lbl.text = "🍳 Chapa Principal: %s (Gordura acumulada: %d%%)" % [status_str, pct]
-			equipment_scroll_vbox.add_child(g_lbl)
-
-		var fryer = main_scene.get_node_or_null("Fryer") as Fryer
-		if fryer:
-			var f_lbl = Label.new()
-			var q_name = fryer.get_oil_quality_name()
-			f_lbl.text = "🍟 Fritadeira: Óleo %s (%d usos realizados)" % [q_name, fryer.oil_uses]
-			equipment_scroll_vbox.add_child(f_lbl)
-
-		var drink = main_scene.get_node_or_null("DrinkMachine") as DrinkMachine
-		if drink:
-			var d_lbl = Label.new()
-			var pct = int((float(drink.syrup_current) / float(drink.syrup_capacity)) * 100.0)
-			d_lbl.text = "🥤 Máquina de Bebidas: Xarope %d/%d doses (%d%%)" % [drink.syrup_current, drink.syrup_capacity, pct]
-			equipment_scroll_vbox.add_child(d_lbl)
-
-	var sep = HSeparator.new()
-	equipment_scroll_vbox.add_child(sep)
-
-	# 2. Catálogo de Expansão
-	var cat_title = Label.new()
-	cat_title.add_theme_font_size_override("font_size", 16)
-	cat_title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.2, 1))
-	cat_title.text = "🛒 EXPANSÃO FÍSICA E NOVOS EQUIPAMENTOS:"
-	equipment_scroll_vbox.add_child(cat_title)
-
-	var equip_mgr = EquipmentManager.get_instance()
-	if not equip_mgr:
-		return
-
-	for equip in equip_mgr.get_all_equipment():
-		var row = HBoxContainer.new()
-		row.add_theme_constant_override("separation", 12)
-
-		var name_lbl = Label.new()
-		name_lbl.custom_minimum_size = Vector2(250, 0)
-		name_lbl.text = "🔧 %s" % equip.get("name", "Equipamento")
-		row.add_child(name_lbl)
-
-		if equip.get("installed", false):
-			var inst_lbl = Label.new()
-			inst_lbl.text = "🟢 INSTALADO E ATIVO"
-			inst_lbl.modulate = Color(0.3, 1.0, 0.4, 1)
-			row.add_child(inst_lbl)
-		else:
-			var cost_lbl = Label.new()
-			cost_lbl.custom_minimum_size = Vector2(100, 0)
-			cost_lbl.text = "$%.2f" % equip.get("cost", 100.0)
-			row.add_child(cost_lbl)
-
-			var btn_buy = Button.new()
-			btn_buy.text = "Comprar e Instalar"
-			btn_buy.custom_minimum_size = Vector2(160, 0)
-			var equip_id = equip.get("id", "")
-			btn_buy.pressed.connect(func(): _execute_buy_equipment(equip_id))
-			row.add_child(btn_buy)
-
-		equipment_scroll_vbox.add_child(row)
-
-func _execute_buy_equipment(equipment_id: String) -> void:
-	var equip_mgr = EquipmentManager.get_instance()
-	if not equip_mgr:
-		return
-
-	var res = equip_mgr.purchase_equipment(equipment_id)
-	if equipment_feedback:
-		equipment_feedback.text = res.get("message", "")
-		if res.get("success", false):
-			equipment_feedback.modulate = Color(0.4, 1.0, 0.4, 1)
-		else:
-			equipment_feedback.modulate = Color(1.0, 0.3, 0.3, 1)
-
-	refresh_all_tabs()
-
-# ==============================================================================
-# 6. 👥 FUNCIONÁRIOS
-# ==============================================================================
-func _refresh_employees() -> void:
-	if not emp_scroll_vbox:
-		return
-
-	for child in emp_scroll_vbox.get_children():
-		child.queue_free()
-
-	var emp_mgr = EmployeeManager.get_instance()
-	if not emp_mgr:
-		return
-
-	var list = emp_mgr.get_employees()
-	if list.is_empty():
+	if cart.is_empty():
 		var empty_lbl = Label.new()
-		empty_lbl.text = "Nenhum funcionário contratado no momento. Contrate para automatizar a cozinha e o salão!"
-		empty_lbl.modulate = Color(0.7, 0.7, 0.7, 1)
-		emp_scroll_vbox.add_child(empty_lbl)
-		return
+		empty_lbl.text = "Nenhum produto no carrinho.\nAdicione itens do catálogo ao lado."
+		empty_lbl.add_theme_font_size_override("font_size", 12)
+		empty_lbl.add_theme_color_override("font_color", Color(0.5, 0.55, 0.65, 1.0))
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cart_items_list.add_child(empty_lbl)
+	else:
+		for item_id in cart.keys():
+			var item = cart[item_id]
+			var row = _create_cart_item_row(item)
+			cart_items_list.add_child(row)
 
-	for emp in list:
-		var card = PanelContainer.new()
-		var card_style = StyleBoxFlat.new()
-		card_style.bg_color = Color(0.15, 0.18, 0.23, 0.8)
-		card_style.set_corner_radius_all(6)
-		card.add_theme_stylebox_override("panel", card_style)
+	# Atualiza informações de fornecedor e totais
+	var sup = pm.get_selected_supplier()
+	var eta_sec = pm.get_cart_delivery_time_sec()
+	var mins = int(eta_sec / 60.0)
+	var secs = int(eta_sec) % 60
 
-		var margin = MarginContainer.new()
-		margin.add_theme_constant_override("margin_left", 12)
-		margin.add_theme_constant_override("margin_top", 8)
-		margin.add_theme_constant_override("margin_right", 12)
-		margin.add_theme_constant_override("margin_bottom", 8)
-		card.add_child(margin)
+	if supplier_info_label:
+		var mult = sup.get("price_multiplier", 1.0) as float
+		var adj_str = "Preço Padrão"
+		if mult > 1.0:
+			adj_str = "+%d%% Taxa Expresso" % int((mult - 1.0) * 100.0)
+		elif mult < 1.0:
+			adj_str = "%d%% Desconto Atacado" % int((mult - 1.0) * 100.0)
+		supplier_info_label.text = "%s %s\nPrazo: %dm %02ds • %s" % [sup["icon"], sup["name"], mins, secs, adj_str]
 
-		var hbox = HBoxContainer.new()
-		hbox.add_theme_constant_override("separation", 10)
-		margin.add_child(hbox)
+	var subtotal = pm.get_cart_subtotal()
+	var total = pm.get_cart_total()
+	var fee = total - subtotal
 
-		var info_lbl = Label.new()
-		info_lbl.custom_minimum_size = Vector2(240, 0)
-		info_lbl.text = "👤 %s\nSalário: $%.2f/sem | Tarefas: %d" % [emp.employee_name, emp.weekly_salary, emp.tasks_completed_this_week]
-		hbox.add_child(info_lbl)
-
-		var role_lbl = Label.new()
-		role_lbl.custom_minimum_size = Vector2(130, 0)
-		role_lbl.text = "Função: %s" % emp.get_role_name()
-		hbox.add_child(role_lbl)
-
-		var btn_grill = Button.new()
-		btn_grill.text = "🍳 Chapa"
-		var emp_id = emp.employee_id
-		btn_grill.pressed.connect(func(): _change_emp_role(emp_id, Employee.Role.GRILL))
-		hbox.add_child(btn_grill)
-
-		var btn_att = Button.new()
-		btn_att.text = "📝 Atendimento"
-		btn_att.pressed.connect(func(): _change_emp_role(emp_id, Employee.Role.ATTENDANT))
-		hbox.add_child(btn_att)
-
-		var btn_clean = Button.new()
-		btn_clean.text = "🧹 Limpeza"
-		btn_clean.pressed.connect(func(): _change_emp_role(emp_id, Employee.Role.CLEANER))
-		hbox.add_child(btn_clean)
-
-		var btn_fire = Button.new()
-		btn_fire.text = "❌ Demitir"
-		btn_fire.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1))
-		btn_fire.pressed.connect(func(): _fire_emp(emp_id))
-		hbox.add_child(btn_fire)
-
-		emp_scroll_vbox.add_child(card)
-
-func _on_hire_button_pressed() -> void:
-	var emp_mgr = EmployeeManager.get_instance()
-	if not emp_mgr:
-		return
-
-	var res = emp_mgr.hire_employee("", Employee.Role.GRILL)
-	if emp_feedback_label:
-		emp_feedback_label.text = res.get("message", "")
-		if res.get("success", false):
-			emp_feedback_label.modulate = Color(0.4, 1.0, 0.4, 1)
+	if cart_subtotal_val: cart_subtotal_val.text = "$ %.2f" % subtotal
+	if cart_fee_val:
+		if fee > 0.0:
+			cart_fee_val.text = "+$ %.2f" % fee
+			cart_fee_val.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45, 1.0))
+		elif fee < 0.0:
+			cart_fee_val.text = "-$ %.2f" % absf(fee)
+			cart_fee_val.add_theme_color_override("font_color", Color(0.35, 1.0, 0.5, 1.0))
 		else:
-			emp_feedback_label.modulate = Color(1.0, 0.3, 0.3, 1)
+			cart_fee_val.text = "$ 0.00"
+			cart_fee_val.add_theme_color_override("font_color", Color(0.9, 0.9, 0.95, 1.0))
+	if cart_total_val: cart_total_val.text = "$ %.2f" % total
 
-	refresh_all_tabs()
+	if confirm_order_btn:
+		confirm_order_btn.disabled = cart.is_empty()
 
-func _change_emp_role(emp_id: int, new_role: Employee.Role) -> void:
-	var emp_mgr = EmployeeManager.get_instance()
-	if emp_mgr:
-		emp_mgr.set_employee_role(emp_id, new_role)
-		refresh_all_tabs()
+func _create_cart_item_row(item: Dictionary) -> Control:
+	var id = item["item_id"]
+	var d_name = item["display_name"]
+	var qty = item["quantity"] as int
+	var unit_p = item["unit_price"] as float
+	var total_p = qty * unit_p
 
-func _fire_emp(emp_id: int) -> void:
-	var emp_mgr = EmployeeManager.get_instance()
-	if emp_mgr:
-		emp_mgr.fire_employee(emp_id)
-		refresh_all_tabs()
+	var container = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_right = 6
+	style.corner_radius_bottom_left = 6
+	style.bg_color = Color(0.12, 0.15, 0.2, 0.9)
+	container.add_theme_stylebox_override("panel", style)
 
-# ==============================================================================
-# 7. ⭐ AVALIAÇÕES
-# ==============================================================================
-func _refresh_reviews() -> void:
-	if not reviews_scroll_vbox:
-		return
+	var margin = MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 8)
+	margin.add_theme_constant_override("margin_top", 6)
+	margin.add_theme_constant_override("margin_right", 8)
+	margin.add_theme_constant_override("margin_bottom", 6)
+	container.add_child(margin)
 
-	for child in reviews_scroll_vbox.get_children():
-		child.queue_free()
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	margin.add_child(hbox)
 
-	var rep_mgr = ReputationManager.get_instance()
-	if not rep_mgr:
-		return
+	var name_lbl = Label.new()
+	name_lbl.text = "%s %s" % [_get_item_icon(id), d_name]
+	name_lbl.add_theme_font_size_override("font_size", 12)
+	name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	name_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_lbl.clip_text = true
+	hbox.add_child(name_lbl)
 
-	var avg = rep_mgr.get_average_rating()
-	var rev_list = rep_mgr.get_reviews()
+	var qty_lbl = Label.new()
+	qty_lbl.text = "×%d" % qty
+	qty_lbl.add_theme_font_size_override("font_size", 12)
+	qty_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+	hbox.add_child(qty_lbl)
 
-	if rep_header_label:
-		rep_header_label.text = "⭐ SATISFAÇÃO GERAL: %s %.1f / 5.0 (%d avaliações)" % [rep_mgr.get_stars_string(), avg, rev_list.size()]
+	var price_lbl = Label.new()
+	price_lbl.text = "$ %.2f" % total_p
+	price_lbl.add_theme_font_size_override("font_size", 12)
+	price_lbl.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5, 1.0))
+	hbox.add_child(price_lbl)
 
-	if rev_list.is_empty():
-		var empty_lbl = Label.new()
-		empty_lbl.text = "Nenhuma avaliação recebida ainda. Atenda os clientes no salão para gerar avaliações!"
-		empty_lbl.modulate = Color(0.7, 0.7, 0.7, 1)
-		reviews_scroll_vbox.add_child(empty_lbl)
-		return
+	var del_btn = Button.new()
+	del_btn.text = "✖"
+	del_btn.custom_minimum_size = Vector2(22, 22)
+	del_btn.focus_mode = Control.FOCUS_NONE
+	del_btn.pressed.connect(func():
+		var pm = PurchaseManager.get_instance()
+		if pm: pm.remove_from_cart(id)
+	)
+	hbox.add_child(del_btn)
 
-	var start_idx = maxi(0, rev_list.size() - 10)
-	for i in range(rev_list.size() - 1, start_idx - 1, -1):
-		var rev: CustomerReview = rev_list[i]
-		var card = PanelContainer.new()
-		var card_style = StyleBoxFlat.new()
-		card_style.bg_color = Color(0.15, 0.18, 0.23, 0.8)
-		card_style.set_corner_radius_all(6)
-		card.add_theme_stylebox_override("panel", card_style)
+	return container
 
-		var margin = MarginContainer.new()
-		margin.add_theme_constant_override("margin_left", 12)
-		margin.add_theme_constant_override("margin_top", 6)
-		margin.add_theme_constant_override("margin_right", 12)
-		margin.add_theme_constant_override("margin_bottom", 6)
-		card.add_child(margin)
-
-		var vbox = VBoxContainer.new()
-		vbox.add_theme_constant_override("separation", 2)
-		margin.add_child(vbox)
-
-		var title = Label.new()
-		title.text = "[Dia %d %s] Cliente #%03d — %s (%.1f/5.0)" % [rev.day, rev.time_string, rev.customer_id, rev.get_formatted_stars(), rev.stars]
-		title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1))
-		vbox.add_child(title)
-
-		var comment_lbl = Label.new()
-		comment_lbl.text = "💬 \"%s\"" % rev.comment
-		vbox.add_child(comment_lbl)
-
-		if rev.order_summary != "":
-			var order_lbl = Label.new()
-			order_lbl.text = "🍔 Consumiu: %s" % rev.order_summary
-			order_lbl.modulate = Color(0.6, 0.8, 1.0, 1)
-			vbox.add_child(order_lbl)
-
-		reviews_scroll_vbox.add_child(card)
-
-# ==============================================================================
-# 8. 💰 RELATÓRIO SEMANAL
-# ==============================================================================
-func _refresh_weekly_report() -> void:
-	var weekly_mgr = WeeklyReportManager.get_instance()
-	if not weekly_mgr or not weekly_content_label:
-		return
-
-	var rep = weekly_mgr.get_latest_report()
-	if not rep:
-		weekly_content_label.text = "Nenhum fechamento semanal ocorrido ainda.\nO fechamento semanal ocorre automaticamente todo Domingo às 18:00."
-		return
-
-	if weekly_header_label:
-		weekly_header_label.text = "📊 RELATÓRIO DE FECHAMENTO — SEMANA #%d" % rep.week_number
-
-	var text = "================================================================================\n"
-	text += "📅 FECHAMENTO DA SEMANA #%d (Segunda-feira → Domingo)\n" % rep.week_number
-	text += "================================================================================\n\n"
-	text += "💰 RESUMO FINANCEIRO:\n"
-	text += "  • Saldo Inicial da Semana:    $%.2f\n" % rep.starting_balance
-	text += "  • Saldo Final da Semana:      $%.2f\n" % rep.ending_balance
-	text += "  • Receita Bruta de Vendas:   +$%.2f\n" % rep.total_sales
-	text += "  • Gastos em Compras:         -$%.2f\n" % rep.total_purchases
-	text += "  • Perdas por Desperdício:    -$%.2f\n" % rep.total_waste
-	text += "  • Folha Salarial Paga:       -$%.2f\n" % rep.total_salaries
-	text += "  ------------------------------------------------------------------------------\n"
-	text += "  📈 LUCRO LÍQUIDO SEMANAL:     $%.2f\n\n" % rep.net_profit
-
-	text += "📋 RESUMO OPERACIONAL:\n"
-	text += "  • Pedidos Concluídos:         %d\n" % rep.orders_completed
-	text += "  • Clientes Atendidos:         %d\n" % rep.customers_served
-	text += "  • Satisfação Média:           %.1f / 5.0 ⭐\n\n" % rep.avg_satisfaction
-
-	if not rep.employees_summary.is_empty():
-		text += "👥 DESEMPENHO DOS FUNCIONÁRIOS:\n"
-		for emp in rep.employees_summary:
-			text += "  • %-12s | %-16s | Salário Pago: $%.2f | Tarefas: %d\n" % [emp.get("name", ""), emp.get("role", ""), emp.get("salary", 0.0), emp.get("tasks_completed", 0)]
-
-	weekly_content_label.text = text
-
-# ==============================================================================
-# 9. 📊 FINANÇAS
-# ==============================================================================
-func _refresh_finances() -> void:
-	var economy = EconomyManager.get_instance()
-	var waste_mgr = WasteManager.get_instance()
-	if not economy:
-		return
-
-	var w_loss = waste_mgr.get_daily_waste_cost() if waste_mgr else 0.0
-
-	if fin_summary_label:
-		fin_summary_label.text = "💰 Saldo Atual: $%.2f  |  💵 Vendas Hoje: $%.2f  |  🛒 Compras: $%.2f  |  🗑️ Desperdício: -$%.2f  |  📈 Lucro: $%.2f" % [
-			economy.get_money(),
-			economy.get_daily_sales(),
-			economy.get_daily_purchases(),
-			w_loss,
-			economy.get_daily_net() - w_loss
-		]
-
-	if fin_transactions_label:
-		var txs = economy.get_transactions()
-		if txs.is_empty():
-			fin_transactions_label.text = "Nenhuma transação registrada nesta sessão."
-		else:
-			var text = "EXTRATO RECENTE DE TRANSAÇÕES:\n"
-			var start_idx = maxi(0, txs.size() - 15)
-			for i in range(txs.size() - 1, start_idx - 1, -1):
-				var t: Transaction = txs[i]
-				var sign_str = "+" if t.type == Transaction.Type.SALE else "-"
-				text += "[Dia %d %s] %-8s | %-36s | %s$%.2f\n" % [t.day, t.time_string, t.get_type_string(), t.description, sign_str, t.amount]
-			fin_transactions_label.text = text
-
-func _get_item_icon(item_id: String) -> String:
-	match item_id:
-		# Padaria
-		"bread", "bread_bottom", "bread_top":
+func _get_item_icon(id: String) -> String:
+	match id:
+		"bread_bottom", "bread_top":
 			return "🍞"
-		# Carnes
 		"patty_beef", "patty":
 			return "🥩"
 		"patty_chicken":
 			return "🍗"
-		# Queijos
-		"cheese_cheddar", "cheese":
+		"cheese_mozzarella", "cheese_cheddar", "cheese_prato", "cheese":
 			return "🧀"
-		"cheese_mozzarella":
-			return "🧀"
-		"cheese_prato":
-			return "🧀"
-		# Vegetais
 		"lettuce":
 			return "🥬"
 		"tomato":
 			return "🍅"
-		"onion":
-			return "🧅"
-		"red_onion":
+		"onion", "red_onion":
 			return "🧅"
 		"pickle":
 			return "🥒"
-		# Extras
 		"bacon":
 			return "🥓"
 		"egg":
-			return "🥚"
-		# Molhos
-		"sauce_ketchup", "sauce":
+			return "🍳"
+		"sauce_ketchup", "ketchup", "sauce":
 			return "🥫"
-		"sauce_mustard":
-			return "🥫"
-		"sauce_mayo":
-			return "🥫"
-		"sauce_special":
-			return "⭐"
-		# Suprimentos
-		"potato_raw":
-			return "🥔"
-		"potato_box":
+		"sauce_mustard", "mustard":
+			return "🟡"
+		"sauce_mayo", "mayo":
+			return "⚪"
+		"sauce_special", "special_sauce":
+			return "🟠"
+		"potato_raw", "potato_box", "french_fries_box", "fries_box":
 			return "🍟"
+		"cup_empty", "cup", "drink_cup":
+			return "🥤"
+		"cylinder_cola", "cylinder_cola_zero", "cylinder_soda", "cylinder_citrus", "syrup_soda":
+			return "🍾"
 		"burger_box":
 			return "📦"
-		"cup_empty":
-			return "🥤"
-		"cup_lid":
-			return "🫙"
-		"syrup_soda":
-			return "🥤"
-		"cooking_oil":
-			return "🛢️"
+		"delivery_bag", "bag":
+			return "🛍️"
+		"pulp_orange":
+			return "🍊"
+		"pulp_grape":
+			return "🍇"
+		"pulp_strawberry":
+			return "🍓"
 		_:
 			return "📦"
-
-func _on_close_button_pressed() -> void:
-	close()

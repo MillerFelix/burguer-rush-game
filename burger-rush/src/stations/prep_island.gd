@@ -19,8 +19,18 @@ const BOUNDS_Z_MAX: float = 0.85
 var placed_items: Array[Node3D] = []
 var dirt_level: float = 0.0
 
+func _ready() -> void:
+	add_to_group("cleanable_stations")
+	_update_dirt_visuals()
+
 func is_dirty() -> bool:
 	return dirt_level >= 0.70
+
+func clean_station(player: Node3D = null) -> void:
+	dirt_level = 0.0
+	_update_dirt_visuals()
+	if player:
+		_show_feedback(player, "✨ Ilha de preparo limpa e higienizada!")
 
 func add_dirt(amount: float = 0.15) -> void:
 	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)

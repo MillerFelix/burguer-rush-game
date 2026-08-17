@@ -23,11 +23,15 @@ enum QualityLevel {
 @export var item_type: String = "ingredient" # ingredient, processed, final_product, packaging, tool, storage_box
 @export var prompt_text: String = ""
 @export var is_packaged: bool = false
+@export var is_grillable: bool = false
 @export var quality: QualityLevel = QualityLevel.GOOD
 
 var location: ItemLocation = ItemLocation.WORLD
 var is_held: bool = false
 var _is_falling: bool = false
+
+func is_cookable_on_grill() -> bool:
+	return is_grillable
 
 func get_quality_name() -> String:
 	match quality:

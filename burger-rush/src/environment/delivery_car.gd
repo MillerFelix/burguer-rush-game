@@ -39,7 +39,6 @@ var _horn_cooldown: float = 18.0
 var current_state: CarState = CarState.SPAWNING
 var target_position: Vector3 = Vector3.ZERO
 var target_queue_index: int = -1
-var current_order: Order = null
 var spot_light: SpotLight3D = null
 
 # Sistema de Humor e Experiência do Drive-Thru
@@ -47,9 +46,51 @@ var mood = null
 var experience = null
 var has_submitted_review: bool = false
 
-var tolerance_order_wait: float = 65.0
-var tolerance_food_wait: float = 110.0
-var tolerance_in_line_wait: float = 100.0
+var tolerance_order_wait: float = 85.0
+var tolerance_food_wait: float = 135.0
+var tolerance_in_line_wait: float = 140.0
+
+var current_order: Order = null:
+	set(val):
+		current_order = val
+		if current_order != null:
+			tolerance_food_wait = _calculate_dynamic_food_tolerance(current_order)
+
+func _calculate_dynamic_food_tolerance(order: Order) -> float:
+	var base_time = 130.0 # Base generosa e confortável para 1 item no Drive-Thru
+	if not order:
+		return base_time
+
+	var total_items_count = 0
+	var burger_count = 0
+	var side_count = 0
+	var drink_count = 0
+
+	for it in order.items:
+		var qty = it.get("quantity", 1)
+		var p_id = str(it.get("product_id", "")).to_lower()
+		total_items_count += qty
+
+		if p_id.contains("burger") or p_id.contains("sandwich") or p_id.contains("patty") or p_id == "cheeseburger" or p_id == "x_bacon" or p_id == "x_salada":
+			burger_count += qty
+		elif p_id.contains("fries") or p_id.contains("batata") or p_id.contains("onion"):
+			side_count += qty
+		elif p_id.contains("soda") or p_id.contains("juice") or p_id.contains("drink") or p_id.contains("cola") or p_id.contains("orange") or p_id.contains("grape"):
+			drink_count += qty
+
+	# Tolerância proporcional ao tamanho e complexidade do pedido:
+	# - 1 item: 130s
+	# - 2 a 3 itens: 165s a 200s
+	# - 4+ itens: 220s a 290s
+	var extra_time = 0.0
+	if total_items_count <= 1:
+		extra_time = 0.0
+	elif total_items_count <= 3:
+		extra_time = (burger_count * 35.0) + (side_count * 20.0) + (drink_count * 15.0)
+	else:
+		extra_time = (burger_count * 40.0) + (side_count * 25.0) + (drink_count * 18.0) + 25.0
+
+	return clampf(base_time + extra_time, 125.0, 320.0)
 
 static var last_used_color_idx: int = -1
 
@@ -348,6 +389,44 @@ func finish_and_leave() -> void:
 
 	if current_order:
 		order_completed.emit(current_order)
+
+func on_order_wrong(reason: String = "Pedido incorreto no Drive-Thru!") -> void:
+	if current_state == CarState.LEAVING:
+		return
+
+	if mood:
+		mood.current_mood = 0.0
+
+	if experience:
+		experience.order_correct = false
+		experience.abandoned = true
+		experience.abandon_reason = reason
+		experience.food_quality = 0.0
+
+	if not horn_audio:
+		_setup_audio()
+	if horn_audio:
+		horn_audio.stream = SoundSynthesizer.get_stream("customer_wrong_order")
+		if horn_audio.stream:
+			horn_audio.play()
+
+	# Cancela o pedido no OrderManager se existir (sem pagamento)
+	if current_order and current_order.state != Order.State.COMPLETED:
+		current_order.state = Order.State.CANCELLED
+		var order_mgr = OrderManager.instance
+		if not order_mgr and is_inside_tree() and get_tree() and get_tree().root:
+			order_mgr = get_tree().root.find_child("OrderManager", true, false)
+		if order_mgr:
+			order_mgr.active_orders.erase(current_order)
+			if order_mgr.has_signal("order_cancelled"):
+				order_mgr.order_cancelled.emit(current_order)
+
+	_submit_review()
+
+	current_state = CarState.LEAVING
+	_play_engine("car_engine_leave", -11.0)
+	target_position = Vector3(-42.0, position.y, position.z)
+	_update_status_label()
 
 func abandon_drive_thru(reason: String) -> void:
 	if current_state == CarState.LEAVING:

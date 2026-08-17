@@ -27,14 +27,13 @@ func _initialize_default_inventory() -> void:
 	# =========================================================================
 	# 1. PADARIA (BAKERY)
 	# =========================================================================
-	_register_item("bread", "Pão de Hambúrguer", "bakery", 20, 60, 2.0, 5, load("res://src/items/bread.tscn"))
 	_register_item("bread_bottom", "Base do Pão", "bakery", 20, 60, 1.0, 5, load("res://src/items/bread_bottom.tscn"))
 	_register_item("bread_top", "Tampa do Pão", "bakery", 20, 60, 1.0, 5, load("res://src/items/bread_top.tscn"))
 
 	# =========================================================================
 	# 2. CARNES (MEATS)
 	# =========================================================================
-	_register_item("patty_beef", "Carne Bovina", "meats", 20, 60, 5.0, 5, load("res://src/items/patty.tscn"))
+	_register_item("patty_beef", "Hambúrguer de Carne", "meats", 20, 60, 5.0, 5, load("res://src/items/patty.tscn"))
 	_register_item("patty_chicken", "Hambúrguer de Frango", "meats", 15, 50, 4.5, 5, load("res://src/items/patty.tscn"))
 
 	# =========================================================================
@@ -50,7 +49,7 @@ func _initialize_default_inventory() -> void:
 	_register_item("lettuce", "Alface", "vegetables", 15, 50, 1.5, 5, load("res://src/items/lettuce.tscn"))
 	_register_item("tomato", "Tomate", "vegetables", 15, 50, 1.5, 5, load("res://src/items/tomato.tscn"))
 	_register_item("red_onion", "Cebola Roxa", "vegetables", 15, 50, 1.2, 5, load("res://src/items/onion.tscn"))
-	_register_item("onion", "Cebola Normal", "vegetables", 15, 50, 1.0, 5, load("res://src/items/onion.tscn"))
+	_register_item("onion", "Cebola Comum", "vegetables", 15, 50, 1.0, 5, load("res://src/items/onion.tscn"))
 	_register_item("pickle", "Picles", "vegetables", 15, 50, 1.5, 5, load("res://src/items/pickle.tscn"))
 
 	# =========================================================================
@@ -60,32 +59,28 @@ func _initialize_default_inventory() -> void:
 	_register_item("egg", "Ovo", "extras", 15, 50, 1.5, 5, load("res://src/items/egg.tscn"))
 
 	# =========================================================================
-	# 6. MOLHOS (SAUCES) - PRESERVANDO SISTEMA NA BANCADA
+	# 6. EMBALAGENS E ACOMPANHAMENTOS (SUPPLIES)
 	# =========================================================================
-	_register_item("sauce_ketchup", "Molho Ketchup", "sauces", 50, 200, 1.0, 10, load("res://src/items/sauce.tscn"))
-	_register_item("sauce_mustard", "Molho Mostarda", "sauces", 50, 200, 1.0, 10, load("res://src/items/sauce.tscn"))
-	_register_item("sauce_mayo", "Molho Maionese", "sauces", 50, 200, 1.0, 10, load("res://src/items/sauce.tscn"))
-	_register_item("sauce_special", "Molho Especial", "sauces", 50, 200, 1.5, 10, load("res://src/items/sauce.tscn"))
-
-	# =========================================================================
-	# 7. ACOMPANHAMENTOS, BEBIDAS E EMBALAGENS (SUPPLIES)
-	# =========================================================================
-	_register_item("burger_box", "Caixa de Hambúrguer", "supplies", 50, 50, 0.5, 10, load("res://src/items/burger_box.tscn"))
+	_register_item("burger_box", "Caixa de Lanche", "supplies", 50, 50, 0.5, 10, load("res://src/items/burger_box.tscn"))
 	_register_item("potato_box", "Embalagem de Batata", "supplies", 50, 50, 0.3, 10, load("res://src/items/potato_box.tscn"))
-	_register_item("cup_empty", "Copo Descartável", "supplies", 50, 50, 0.2, 10, load("res://src/items/drink_cup.tscn"))
+	_register_item("cup_empty", "Copo", "supplies", 50, 50, 0.2, 10, load("res://src/items/drink_cup.tscn"))
 	_register_item("delivery_bag", "Saco de Delivery", "supplies", 50, 50, 0.4, 10, load("res://src/items/delivery_bag.tscn"))
-	_register_item("packaged_burger", "Burger Embalado", "supplies", 0, 50, 0.0, 0, load("res://src/items/packaged_burger.tscn"))
-	_register_item("potato_raw", "Batata Crua", "supplies", 25, 80, 1.0, 5, load("res://src/items/potato.tscn"))
-	_register_item("cup_lid", "Tampa de Copo", "supplies", 50, 50, 0.1, 5, null)
-	_register_item("syrup_soda", "Xarope de Refrigerante", "supplies", 30, 100, 0.5, 5, load("res://src/items/soda_syrup_bottle.tscn"))
-	_register_item("cooking_oil", "Galão de Óleo", "supplies", 5, 20, 4.0, 2, load("res://src/items/cooking_oil.tscn"))
+	_register_item("potato_raw", "Saco de Batata", "supplies", 25, 80, 1.0, 5, load("res://src/items/potato.tscn"))
 
 	# =========================================================================
-	# 8. POLPAS DE FRUTA CONGELADA (FROZEN PULP) - 5 DOSES CADA
+	# 8. BEBIDAS: CILINDROS RESERVA DE REFRIGERANTE (MÁXIMO 1 UNIDADE RESERVA CADA)
 	# =========================================================================
-	_register_item("pulp_orange", "Polpa de Laranja", "pulps", 10, 50, 2.5, 5, load("res://src/items/juice_pulp.tscn"))
-	_register_item("pulp_grape", "Polpa de Uva", "pulps", 10, 50, 2.5, 5, load("res://src/items/juice_pulp.tscn"))
-	_register_item("pulp_strawberry", "Polpa de Morango", "pulps", 10, 50, 2.8, 5, load("res://src/items/juice_pulp.tscn"))
+	_register_item("cylinder_cola", "Cilindro Cola", "beverages", 1, 1, 15.0, 0, null)
+	_register_item("cylinder_cola_zero", "Cilindro Cola Zero", "beverages", 1, 1, 15.0, 0, null)
+	_register_item("cylinder_soda", "Cilindro Soda", "beverages", 1, 1, 15.0, 0, null)
+	_register_item("cylinder_citrus", "Cilindro Citrus", "beverages", 1, 1, 15.0, 0, null)
+
+	# =========================================================================
+	# 9. BEBIDAS: POLPAS DE FRUTA CONGELADA (FROZEN PULP)
+	# =========================================================================
+	_register_item("pulp_orange", "Polpa de Laranja", "beverages", 10, 10, 2.5, 3, load("res://src/items/juice_pulp.tscn"))
+	_register_item("pulp_grape", "Polpa de Uva", "beverages", 10, 10, 2.5, 3, load("res://src/items/juice_pulp.tscn"))
+	_register_item("pulp_strawberry", "Polpa de Morango", "beverages", 10, 10, 2.8, 3, load("res://src/items/juice_pulp.tscn"))
 
 func _register_item(
 	id: String,
@@ -110,7 +105,9 @@ func _register_item(
 
 func _resolve_item_id(item_id: String) -> String:
 	match item_id:
-		"patty":
+		"bread":
+			return "bread_bottom"
+		"patty", "meat", "beef":
 			return "patty_beef"
 		"cheese":
 			return "cheese_cheddar"
@@ -122,14 +119,22 @@ func _resolve_item_id(item_id: String) -> String:
 			return "sauce_mayo"
 		"special_sauce":
 			return "sauce_special"
-		"drink_cup":
-			return "cup_empty"
-		"cup":
+		"drink_cup", "cup":
 			return "cup_empty"
 		"french_fries_box", "fries_box":
 			return "potato_box"
+		"french_fries_bag", "fries_bag", "potato_bag", "potato":
+			return "potato_raw"
 		"bag":
 			return "delivery_bag"
+		"syrup_cola", "cola_syrup", "cola_cylinder", "cylinder_cola", "cola":
+			return "cylinder_cola"
+		"syrup_cola_zero", "cola_zero_syrup", "cola_zero_cylinder", "cylinder_cola_zero", "cola_zero":
+			return "cylinder_cola_zero"
+		"syrup_lemon", "syrup_soda", "soda_syrup", "soda_cylinder", "cylinder_soda", "soda":
+			return "cylinder_soda"
+		"syrup_orange", "citrus_syrup", "citrus_cylinder", "cylinder_citrus", "citrus":
+			return "cylinder_citrus"
 		_:
 			return item_id
 

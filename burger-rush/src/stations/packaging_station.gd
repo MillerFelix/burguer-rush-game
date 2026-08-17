@@ -153,10 +153,13 @@ func get_interaction_prompt(player: Node = null) -> String:
 func interact_item(player: Node3D) -> void:
 	_handle_left_click(player)
 
-# [E] — Interação com Equipamentos (Não pega itens)
+# [E] — Interação com Equipamentos e Armazenamento com [E]
 func interact(player: Node3D) -> void:
 	var held = player.get("held_item")
-	# Permite apenas selar copos ou embalar lanche na bancada com [E]
+	if held != null and str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+		_handle_left_click(player)
+		return
+	# Permite selar copos ou embalar lanche na bancada com [E]
 	if held != null and (held.has_method("has_lid") or held.has_method("can_be_packaged") or str(held.get("item_type")) in ["final_product", "food", "burger", "fries"]):
 		_handle_packaging_action(player)
 
@@ -174,7 +177,7 @@ func _handle_left_click(player: Node3D) -> void:
 		_show_feedback(player, "📦 Pegou %s embalado!" % (item.get_display_name() if item.has_method("get_display_name") else item.name))
 		return
 
-	# 2. Devolução de embalagem vazia ao estoque
+	# 2. Devolução de embalagem vazia ou Armazenamento de Caixa de Entrega
 	if held != null:
 		var return_id = _get_matching_stock_id_from_item(held)
 		if return_id != "":
@@ -192,6 +195,21 @@ func _handle_left_click(player: Node3D) -> void:
 				return
 			else:
 				_show_feedback(player, "⚠️ Estoque de %s já está no limite máximo (%d/%d)!" % [items_config[return_id]["name"], MAX_STOCK_PER_ITEM, MAX_STOCK_PER_ITEM])
+				return
+
+		if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			var box_item_id = str(held.get("contained_item_id"))
+			if items_config.has(box_item_id):
+				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+				var inv = InventoryManager.get_instance()
+				if inv:
+					inv.add_stock(box_item_id, qty)
+				player.take_held_item().queue_free()
+				_update_all_visual_stocks()
+				_show_feedback(player, "📦 %s armazenado no estoque (+%d un.)!" % [items_config[box_item_id]["name"], qty])
+				return
+			else:
+				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
 				return
 
 	# 3. Selar Copo ou Embalar Comida

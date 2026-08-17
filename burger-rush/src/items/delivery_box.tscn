@@ -1,31 +1,63 @@
 [gd_scene format=3 uid="uid://delivery_box_item_scene_uid"]
 
 [ext_resource type="Script" path="res://src/items/delivery_box.gd" id="1_delivery_box"]
-[ext_resource type="PackedScene" path="res://assets/models/food/carton.glb" id="2_carton_glb"]
+[ext_resource type="Texture2D" path="res://assets/textures/cardboard_box_kraft.png" id="2_kraft_tex"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(0.35, 0.28, 0.35)
+size = Vector3(0.44, 0.32, 0.36)
+
+[sub_resource type="StandardMaterial3D" id="Material_Cardboard"]
+albedo_texture = ExtResource("2_kraft_tex")
+roughness = 0.85
+metallic = 0.05
+
+[sub_resource type="BoxMesh" id="BoxMesh_CardboardBody"]
+material = SubResource("Material_Cardboard")
+size = Vector3(0.44, 0.32, 0.36)
+
+[sub_resource type="StandardMaterial3D" id="Material_PackingTape"]
+transparency = 1
+albedo_color = Color(0.68, 0.48, 0.22, 0.75)
+roughness = 0.30
+metallic = 0.10
+
+[sub_resource type="BoxMesh" id="BoxMesh_TopTape"]
+material = SubResource("Material_PackingTape")
+size = Vector3(0.442, 0.003, 0.08)
 
 [node name="DeliveryBox" type="StaticBody3D"]
 script = ExtResource("1_delivery_box")
 item_id = "delivery_box"
-display_name = "Caixa de Delivery Burger Rush"
+display_name = "Caixa de Mercadoria"
 item_type = "delivery_box"
-prompt_text = "E — Pegar Caixa Delivery"
+prompt_text = "E — Pegar Caixa de Mercadoria"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
 shape = SubResource("BoxShape3D_1")
 
-[node name="MeshInstance3D" type="Node3D" parent="."]
+[node name="BoxBody" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0)
+mesh = SubResource("BoxMesh_CardboardBody")
 
-[node name="carton" parent="MeshInstance3D" instance=ExtResource("2_carton_glb")]
-transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
+[node name="TopTape" type="MeshInstance3D" parent="BoxBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.161, 0)
+mesh = SubResource("BoxMesh_TopTape")
 
-[node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
-billboard = 1
+; Rótulo impresso diretamente no papelão (frente da caixa)
+[node name="FrontStamp" type="Label3D" parent="BoxBody"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0.181)
 double_sided = false
-text = "📦 Carga"
-font_size = 14
-outline_size = 4
+modulate = Color(0.14, 0.10, 0.06, 0.92)
+text = "📦\nPRODUTO"
+font_size = 11
+outline_size = 0
+
+; Rótulo impresso no verso da caixa
+[node name="BackStamp" type="Label3D" parent="BoxBody"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.01, -0.181)
+double_sided = false
+modulate = Color(0.14, 0.10, 0.06, 0.92)
+text = "📦\nPRODUTO"
+font_size = 11
+outline_size = 0

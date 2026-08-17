@@ -73,6 +73,7 @@
 [ext_resource type="Script" uid="uid://3hxnq2l2ljb7" path="res://src/core/calendar_manager.gd" id="84_calendar_mgr"]
 [ext_resource type="Script" uid="uid://dajmnvtn4dwdd" path="res://src/core/daily_event_manager.gd" id="85_event_mgr"]
 [ext_resource type="Script" uid="uid://ci5qiy2ckv4c1" path="res://src/employees/employee_task_manager.gd" id="86_task_mgr"]
+[ext_resource type="Script" path="res://src/utils/screen_manager.gd" id="87_screen_mgr"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.35, 0.62, 0.9, 1)
@@ -1465,9 +1466,6 @@ script = ExtResource("85_event_mgr")
 [node name="EmployeeTaskManager" type="Node" parent="." unique_id=987123462]
 script = ExtResource("86_task_mgr")
 
-[node name="EmployeeManager2" type="Node" parent="." unique_id=987123463]
-script = ExtResource("31_emp_mgr")
-
 [node name="MainPowerPanel" parent="." unique_id=987123457 instance=ExtResource("82_main_power_panel")]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -9.36, 1.55, -5.35)
 
@@ -1476,3 +1474,6 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 2.8
 
 [node name="KitchenOrderTV" parent="." unique_id=987123459 instance=ExtResource("70_order_tv")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, -8.82)
+
+[node name="ScreenManager" type="Node" parent="." unique_id=987123463]
+script = ExtResource("87_screen_mgr")

@@ -61,6 +61,9 @@ func _run_tests() -> void:
 	assert_test(cashier != null, "Caixa Registradora encontrada")
 
 	var employees = emp_mgr.get_employees()
+	if employees.is_empty():
+		emp_mgr._spawn_initial_employee()
+		employees = emp_mgr.get_employees()
 	assert_test(employees.size() > 0, "Funcionário inicial instanciado no restaurante")
 
 	var emp: Employee = employees[0] as Employee

@@ -131,7 +131,7 @@ func interact_item(player: Node3D) -> void:
 
 	var held = player.get("held_item")
 
-	# 1. Jogador segurando um barril de refil: tenta guardar no suporte
+	# 1. Jogador segurando um barril de refil ou caixa de entrega: tenta guardar no suporte
 	if held is SyrupCanister:
 		var slot_idx = get_slot_for_canister(held)
 		if slot_idx == -1:
@@ -148,6 +148,33 @@ func interact_item(player: Node3D) -> void:
 			place_canister(slot_idx, taken)
 			_show_feedback(player, "📦 Refil de %s armazenado no suporte." % SLOTS_CONFIG[slot_idx].name)
 		return
+
+	if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+		var box_item_id = str(held.get("contained_item_id"))
+		var slot_idx = -1
+		match box_item_id:
+			"cylinder_cola", "syrup_cola": slot_idx = 0
+			"cylinder_cola_zero", "syrup_cola_zero": slot_idx = 1
+			"cylinder_soda", "syrup_lemon", "syrup_soda": slot_idx = 2
+			"cylinder_citrus", "syrup_orange", "syrup_citrus": slot_idx = 3
+
+		if slot_idx != -1:
+			if has_reserve(slot_idx):
+				_show_feedback(player, "⚠️ Já existe 1 refil de %s na reserva! (Limite máximo atingido)" % SLOTS_CONFIG[slot_idx].name)
+				return
+			player.take_held_item().queue_free()
+			var new_can: SyrupCanister = SYRUP_CANISTER_SCENE.instantiate() as SyrupCanister
+			new_can.flavor_type = SLOTS_CONFIG[slot_idx].flavor_type
+			new_can.current_amount = 25.0
+			place_canister(slot_idx, new_can)
+			var inv = InventoryManager.get_instance()
+			if inv:
+				inv.add_stock(box_item_id, 1)
+			_show_feedback(player, "📦 Refil de %s armazenado no suporte (+1 un.)!" % SLOTS_CONFIG[slot_idx].name)
+			return
+		else:
+			_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+			return
 
 	# 2. Jogador de mãos livres: pega o refil do slot apontado
 	if held == null:

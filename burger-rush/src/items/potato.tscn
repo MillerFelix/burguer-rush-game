@@ -26,7 +26,7 @@ size = Vector3(0.14, 0.12, 0.14)
 [node name="Potato" type="StaticBody3D"]
 script = ExtResource("1_potato")
 item_id = "potato_raw"
-display_name = "Saco de Batata Frita Congelada"
+display_name = "Saco de Batata"
 item_type = "ingredient"
 prompt_text = "E — Pegar Saco de Batata"
 

@@ -74,6 +74,7 @@ var active_potatoes: Array[Dictionary]:
 		return list
 
 func _ready() -> void:
+	add_to_group("cleanable_stations")
 	_setup_audio()
 	var pm = PowerManager.get_instance()
 	if pm:

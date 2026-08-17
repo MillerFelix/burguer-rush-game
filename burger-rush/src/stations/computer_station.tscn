@@ -125,11 +125,3 @@ mesh = SubResource("BoxMesh_Keyboard")
 [node name="MouseMesh" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36, 0.835, 0.15)
 mesh = SubResource("BoxMesh_Mouse")
-
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
-billboard = 1
-double_sided = false
-text = "🖥️ TERMINAL ADMINISTRATIVO"
-font_size = 20
-outline_size = 6

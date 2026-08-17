@@ -319,9 +319,9 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 	if state == State.CLOSED:
 		var b_name = matched_recipe.display_name if matched_recipe else "Burger"
-		return "🍔 %s (Fechado) — [Clique] Pegar Lanche" % b_name
+		return "🍔 %s — [Clique] Pegar Lanche" % b_name
 	elif state == State.ASSEMBLING:
-		return "🥪 Lanche em Montagem (%d ing.) — [Clique] Pegar Lanche" % ingredients.size()
+		return "🥪 [Clique] Pegar Lanche"
 
 	return "🖱️ Pegar Base do Pão"
 
@@ -422,33 +422,9 @@ func _check_recipe_match() -> void:
 func _update_status() -> void:
 	if not status_label:
 		status_label = get_node_or_null("StatusLabel")
-	if not status_label:
-		return
-
-	match state:
-		State.EMPTY:
-			status_label.text = ""
-		State.ASSEMBLING:
-			var txt = "🍔 Montando (" + str(ingredients.size()) + " ing.)"
-			if not applied_sauces.is_empty():
-				txt += "\n"
-				var sauce_txts: Array[String] = []
-				for s_type in applied_sauces.keys():
-					sauce_txts.append("🥫 %s" % s_type.capitalize())
-				txt += " │ ".join(sauce_txts)
-			if matched_recipe:
-				txt += "\n✓ " + matched_recipe.display_name
-			status_label.text = txt
-			status_label.modulate = Color(1.0, 0.9, 0.4, 0.9)
-		State.CLOSED:
-			if matched_recipe:
-				status_label.text = "✓ %s\n📦 Pegue uma caixa para embalar" % matched_recipe.display_name
-				status_label.modulate = Color(0.3, 1.0, 0.4, 1.0)
-			else:
-				status_label.text = "🍔 Burger Personalizado\n📦 Pegue uma caixa para embalar"
-				status_label.modulate = Color(1.0, 0.7, 0.2, 1.0)
-		State.PACKAGED:
-			status_label.text = ""
+	if status_label:
+		status_label.text = ""
+		status_label.visible = false
 
 func _show_player_feedback(player: Node3D, message: String) -> void:
 	var hud = player.get_node_or_null("HUD")

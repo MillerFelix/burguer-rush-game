@@ -162,18 +162,25 @@ func interact_item(player: Node3D) -> void:
 				returned_pulp.queue_free()
 				_update_all_visuals()
 				return
-		elif held.get("ingredient_id") == f_info.item_id or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-			if player.has_method("take_held_item"):
-				var crate = player.take_held_item()
-				var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
-				var inv = InventoryManager.get_instance()
-				if inv:
-					inv.add_stock(f_info.item_id, qty)
-				else:
-					set_stock(idx, get_stock(idx) + qty)
-				_show_feedback(player, "📦 Polpa de %s armazenada (+%d un.)!" % [f_info.name, qty])
-				crate.queue_free()
-				_update_all_visuals()
+		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			var box_id = str(held.get("contained_item_id"))
+			var target_flavor_id = f_info.item_id
+			var valid_pulps = ["pulp_orange", "pulp_grape", "pulp_strawberry"]
+			if box_id in valid_pulps:
+				target_flavor_id = box_id
+			if box_id in valid_pulps or box_id == "":
+				if player.has_method("take_held_item"):
+					var crate = player.take_held_item()
+					var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
+					var inv = InventoryManager.get_instance()
+					if inv:
+						inv.add_stock(target_flavor_id, qty)
+					_show_feedback(player, "📦 Polpa de %s armazenada (+%d un.)!" % [str(held.get("contained_item_name")), qty])
+					crate.queue_free()
+					_update_all_visuals()
+					return
+			else:
+				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
 				return
 
 		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")

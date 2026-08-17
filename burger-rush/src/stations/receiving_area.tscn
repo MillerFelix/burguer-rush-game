@@ -86,11 +86,3 @@ mesh = SubResource("BoxMesh_HazardLine")
 
 [node name="CrateSpawnSlot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
-
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
-billboard = 1
-double_sided = false
-text = "📦 ÁREA DE RECEBIMENTO"
-font_size = 20
-outline_size = 6

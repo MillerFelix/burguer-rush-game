@@ -17,6 +17,7 @@ extends StaticBody3D
 @onready var model: Node3D = get_node_or_null("Model")
 
 func _ready() -> void:
+	add_to_group("floor_dirt_spots")
 	_update_visuals()
 
 func _update_visuals() -> void:

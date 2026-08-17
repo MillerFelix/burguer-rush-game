@@ -132,7 +132,7 @@ func _get_ingredient_display_name() -> String:
 		"onion": return "Cebola"
 		"bacon": return "Bacon"
 		"sauce": return "Molho"
-		"potato_raw": return "Batata Crua"
+		"potato_raw": return "Saco de Batata"
 		_: return ingredient_id.capitalize()
 
 func _show_feedback(player: Node3D, message: String) -> void:

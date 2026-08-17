@@ -23,6 +23,7 @@ extends StaticBody3D
 @onready var main_puddle: MeshInstance3D = get_node_or_null("Model/MainPuddle")
 
 func _ready() -> void:
+	add_to_group("floor_puddles")
 	_update_visuals()
 
 func _update_visuals() -> void:

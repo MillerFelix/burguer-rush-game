@@ -1,333 +1,642 @@
-[gd_scene format=3 uid="uid://computer_ui_scene_uid"]
+[gd_scene format=3 uid="uid://computer_ui_v2_uid"]
 
 [ext_resource type="Script" path="res://src/ui/computer_ui.gd" id="1_comp_ui"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Panel"]
-bg_color = Color(0.1, 0.12, 0.16, 0.98)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Backdrop"]
+bg_color = Color(0.04, 0.05, 0.08, 0.75)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_OuterWindow"]
+bg_color = Color(0.08, 0.1, 0.14, 0.98)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.22, 0.35, 0.52, 1)
+border_color = Color(0.2, 0.25, 0.35, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 24
+shadow_offset = Vector2(0, 8)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Header"]
+bg_color = Color(0.12, 0.15, 0.21, 1)
+border_width_bottom = 2
+border_color = Color(0.18, 0.22, 0.3, 1)
 corner_radius_top_left = 10
 corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_MoneyBadge"]
+bg_color = Color(0.06, 0.2, 0.14, 0.9)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.7, 0.45, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_CloseBtn"]
+bg_color = Color(0.7, 0.15, 0.15, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Sidebar"]
+bg_color = Color(0.1, 0.12, 0.17, 1)
+border_width_right = 1
+border_color = Color(0.16, 0.2, 0.28, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Content"]
+bg_color = Color(0.07, 0.08, 0.11, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_Search"]
+bg_color = Color(0.12, 0.15, 0.2, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.22, 0.28, 0.38, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_CartPanel"]
+bg_color = Color(0.09, 0.11, 0.15, 1)
+border_width_left = 2
+border_color = Color(0.18, 0.22, 0.3, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ConfirmBtn"]
+bg_color = Color(0.12, 0.55, 0.3, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.8, 0.45, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="ComputerUI" type="CanvasLayer"]
-process_mode = 3
+layer = 15
 script = ExtResource("1_comp_ui")
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="MainPanel" type="Panel" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_Backdrop")
+
+[node name="OuterWindow" type="PanelContainer" parent="MainPanel"]
+layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -520.0
-offset_top = -340.0
-offset_right = 520.0
-offset_bottom = 340.0
+offset_left = -780.0
+offset_top = -450.0
+offset_right = 780.0
+offset_bottom = 450.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_Panel")
+theme_override_styles/panel = SubResource("StyleBoxFlat_OuterWindow")
 
-[node name="VBox" type="VBoxContainer" parent="PanelContainer"]
+[node name="VBox" type="VBoxContainer" parent="MainPanel/OuterWindow"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="PanelContainer" parent="MainPanel/OuterWindow/VBox"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_Header")
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Header"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BrandMargin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+
+[node name="BrandLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Header/HBox/BrandMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.1, 1)
+theme_override_font_sizes/font_size = 18
+text = "🍔 BURGER RUSH"
+
+[node name="SubBrand" type="Label" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 13
+text = "|  Sistema Administrativo Integrado v2.0"
+
+[node name="SpacerLeft" type="Control" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DateLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.88, 0.95, 1)
+theme_override_font_sizes/font_size = 14
+text = "📅 DIA 1 (SEGUNDA-FEIRA)"
+
+[node name="TimeLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "⏰ 10:00 • Aberto"
+
+[node name="MoneyBadge" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_MoneyBadge")
+
+[node name="MoneyLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Header/HBox/MoneyBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 15
+text = "$ 500.00"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+custom_minimum_size = Vector2(90, 34)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_CloseBtn")
+text = "✖ Fechar"
+
+[node name="CloseMargin" type="Control" parent="MainPanel/OuterWindow/VBox/Header/HBox"]
+custom_minimum_size = Vector2(8, 0)
+layout_mode = 2
+
+[node name="Body" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 0
+
+[node name="Sidebar" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body"]
+custom_minimum_size = Vector2(240, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_Sidebar")
+
+[node name="VBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/Sidebar"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="SidebarMargin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/Sidebar/VBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 12
+
+[node name="SidebarTitle" type="Label" parent="MainPanel/OuterWindow/VBox/Body/Sidebar/VBox/SidebarMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.45, 0.5, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+text = "PAINEL DE NAVEGAÇÃO"
+
+[node name="NavScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/Sidebar/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="NavButtons" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/Sidebar/VBox/NavScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="FooterMargin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/Sidebar/VBox"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="FooterLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/Sidebar/VBox/FooterMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.35, 0.4, 0.5, 1)
+theme_override_font_sizes/font_size = 10
+text = "BurgerRush OS • Terminal #01"
+
+[node name="ContentArea" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_Content")
+
+; ─── ABA 1: ESTOQUE GERAL ─────────────────────────────────────────
+[node name="InventoryTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TabTitle" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "📦 Estoque Geral de Insumos"
+
+[node name="SummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.68, 0.78, 1)
+theme_override_font_sizes/font_size = 13
+text = "Carregando estoque..."
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SearchInput" type="LineEdit" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar/HBox"]
+custom_minimum_size = Vector2(280, 36)
+layout_mode = 2
+focus_mode = 1
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_Search")
+placeholder_text = "🔍 Pesquisar insumo..."
+clear_button_enabled = true
+
+[node name="FilterBar" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FilterMarginLeft" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar"]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+
+[node name="BtnAll" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar"]
+custom_minimum_size = Vector2(90, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "TODOS"
+
+[node name="BtnIngredients" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar"]
+custom_minimum_size = Vector2(150, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "🍔 INGREDIENTES"
+
+[node name="BtnDrinks" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "🥤 BEBIDAS"
+
+[node name="BtnSupplies" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar"]
+custom_minimum_size = Vector2(140, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "📦 EMBALAGENS"
+
+[node name="BtnOthers" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/FilterBar"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 13
+text = "🛢️ OUTROS"
+
+[node name="Scroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="GridMargin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 18
+
+[node name="Grid" type="GridContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/Scroll/GridMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 14
+theme_override_constants/v_separation = 14
+columns = 3
+
+; ─── ABA 2: CENTRAL DE COMPRAS ────────────────────────────────────
+[node name="PurchasesTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Header" type="HBoxContainer" parent="PanelContainer/VBox"]
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab"]
 layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
 
-[node name="TitleLabel" type="Label" parent="PanelContainer/VBox/Header"]
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TabTitle" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "🛒 Central de Compras & Mercado"
+
+[node name="MarketStatusLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.75, 0.9, 1)
+theme_override_font_sizes/font_size = 13
+text = "Preços do Mercado Atualizados Hoje"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/TopBar/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
-text = "  🖥️ BURGER RUSH OS — CENTRAL ADMINISTRATIVA"
 
-[node name="CloseButton" type="Button" parent="PanelContainer/VBox/Header"]
-custom_minimum_size = Vector2(36, 36)
+[node name="PurchasesSearchInput" type="LineEdit" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/TopBar/HBox"]
+custom_minimum_size = Vector2(240, 34)
 layout_mode = 2
-text = "✕"
+focus_mode = 1
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_Search")
+placeholder_text = "🔍 Buscar produto..."
+clear_button_enabled = true
 
-[node name="TabContainer" type="TabContainer" parent="PanelContainer/VBox"]
+[node name="MainLayout" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab"]
 layout_mode = 2
 size_flags_vertical = 3
-current_tab = 0
+theme_override_constants/separation = 10
 
-[node name="Visão Geral" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+; ── Coluna Esquerda: Catálogo e Filtros
+[node name="CatalogColumn" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout"]
 layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
 
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Visão Geral"]
+[node name="FilterBar" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 6
 
-[node name="DayTimeLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "📅 DIA 1 (Segunda-feira)  |  ⏰ 08:00  |  Status: PREPARAÇÃO"
-
-[node name="MoneyLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "💰 Caixa Disponível: $100.00"
-
-[node name="HSeparator1" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+[node name="FilterMarginLeft" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar"]
+custom_minimum_size = Vector2(10, 0)
 layout_mode = 2
 
-[node name="StatsGrid" type="GridContainer" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+[node name="BtnBuyAll" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar"]
+custom_minimum_size = Vector2(80, 30)
 layout_mode = 2
-columns = 2
-theme_override_constants/h_separation = 30
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "TODOS"
+
+[node name="BtnBuyIngredients" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar"]
+custom_minimum_size = Vector2(130, 30)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🍔 INGREDIENTES"
+
+[node name="BtnBuyFries" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar"]
+custom_minimum_size = Vector2(105, 30)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🍟 BATATAS"
+
+[node name="BtnBuyDrinks" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar"]
+custom_minimum_size = Vector2(105, 30)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🥤 BEBIDAS"
+
+[node name="BtnBuySupplies" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/FilterBar"]
+custom_minimum_size = Vector2(125, 30)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "📦 EMBALAGENS"
+
+[node name="Scroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="GridMargin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="CatalogGrid" type="GridContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CatalogColumn/Scroll/GridMargin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
+columns = 2
 
-[node name="RevenueLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+; ── Coluna Direita: Carrinho & Checkout
+[node name="CartColumn" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout"]
+custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
-text = "💵 Vendas do Dia: $0.00"
+theme_override_styles/panel = SubResource("StyleBoxFlat_CartPanel")
 
-[node name="PurchasesLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+[node name="CartMargin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn"]
 layout_mode = 2
-text = "🛒 Gastos em Compras Hoje: $0.00"
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 12
 
-[node name="WasteLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
+[node name="CartVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin"]
 layout_mode = 2
-text = "🗑️ Desperdício / Perdas: -$0.00"
+theme_override_constants/separation = 8
 
-[node name="ProfitLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
-layout_mode = 2
-text = "📈 Lucro do Dia: $0.00"
-
-[node name="OrdersLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
-layout_mode = 2
-text = "📋 Pedidos Concluídos: 0"
-
-[node name="RatingLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox/StatsGrid"]
-layout_mode = 2
-text = "⭐ Avaliação Média: ★★★★★ 5.0 / 5.0"
-
-[node name="HSeparator2" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+[node name="CartHeader" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
 layout_mode = 2
 
-[node name="AlertsLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Visão Geral/VBox"]
+[node name="CartTitle" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/CartHeader"]
 layout_mode = 2
-text = "🟢 Alertas Operacionais: Tudo funcionando normalmente."
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 15
+text = "🛒 MEU CARRINHO"
 
-[node name="Estoque" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Estoque"]
-layout_mode = 2
-
-[node name="StockVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Estoque/Scroll"]
+[node name="CartSpacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/CartHeader"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
 
-[node name="Compras" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
-visible = false
+[node name="ClearCartBtn" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/CartHeader"]
+custom_minimum_size = Vector2(60, 24)
 layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
+focus_mode = 0
+theme_override_font_sizes/font_size = 11
+text = "Limpar"
 
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Compras"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Compras/VBox"]
+[node name="CartScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
 layout_mode = 2
 size_flags_vertical = 3
+horizontal_scroll_mode = 0
 
-[node name="PurchasesVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Compras/VBox/Scroll"]
+[node name="CartItemsList" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/CartScroll"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_constants/separation = 6
 
-[node name="FeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Compras/VBox"]
+[node name="Divider1" type="HSeparator" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
 layout_mode = 2
-text = ""
 
-[node name="Cardápio" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
+[node name="SupplierLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 12
+text = "SELECIONAR FORNECEDOR:"
+
+[node name="SupplierOption" type="OptionButton" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+
+[node name="SupplierInfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 11
+text = "🚚 Normal • Prazo: 6m • Preço Padrão"
+autowrap_mode = 2
+
+[node name="Divider2" type="HSeparator" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
+layout_mode = 2
+
+[node name="TotalsBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="SubtotalHBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/SubtotalHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "Subtotal:"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/SubtotalHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CartSubtotalVal" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/SubtotalHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 12
+text = "$ 0.00"
+
+[node name="FeeHBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox"]
+layout_mode = 2
+
+[node name="FeeLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/FeeHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "Ajuste Fornecedor:"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/FeeHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CartFeeVal" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/FeeHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 12
+text = "$ 0.00"
+
+[node name="TotalHBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/TotalHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "TOTAL:"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/TotalHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CartTotalVal" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/TotalsBox/TotalHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 17
+text = "$ 0.00"
+
+[node name="FeedbackLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 11
+autowrap_mode = 2
+
+[node name="ConfirmOrderBtn" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+focus_mode = 0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_ConfirmBtn")
+text = "🛒 CONFIRMAR PEDIDO"
+
+; ── Barra Inferior: Entregas em Andamento
+[node name="DeliveriesBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="DeliveriesPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/DeliveriesBar"]
+layout_mode = 2
+
+[node name="DeliveriesLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/DeliveriesBar/DeliveriesPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "🚚 Nenhuma entrega a caminho no momento."
+
+; ─── ABA 3: PLACEHOLDER ───────────────────────────────────────────
+[node name="PlaceholderTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
 visible = false
 layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Cardápio"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Cardápio/VBox"]
-layout_mode = 2
 size_flags_vertical = 3
+alignment = 1
 
-[node name="MenuVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Cardápio/VBox/Scroll"]
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab"]
 layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 22
+text = "Módulo em Desenvolvimento"
+horizontal_alignment = 1
 
-[node name="FeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Cardápio/VBox"]
+[node name="DescLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab"]
 layout_mode = 2
-text = ""
-
-[node name="Equipamentos" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Equipamentos"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Equipamentos/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="EquipmentVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Equipamentos/VBox/Scroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="FeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Equipamentos/VBox"]
-layout_mode = 2
-text = ""
-
-[node name="Funcionários" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Funcionários"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="TopHBox" type="HBoxContainer" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox"]
-layout_mode = 2
-
-[node name="HireButton" type="Button" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox/TopHBox"]
-layout_mode = 2
-text = "➕ Contratar Novo Funcionário ($100.00)"
-
-[node name="EmpFeedbackLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox/TopHBox"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = ""
-
-[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox"]
-layout_mode = 2
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="EmployeesVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Funcionários/VBox/Scroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="Relatório Semanal" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Relatório Semanal"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="WeeklyHeaderLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "📊 RELATÓRIO DE FECHAMENTO SEMANAL"
-
-[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox"]
-layout_mode = 2
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="WeeklyContentLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Relatório Semanal/VBox/Scroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Nenhum fechamento semanal ocorrido ainda."
-
-[node name="Avaliações" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Avaliações"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="ReputationHeaderLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "⭐ SATISFAÇÃO GERAL: ★★★★★ 5.0 / 5.0 (0 avaliações)"
-
-[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox"]
-layout_mode = 2
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="ReviewsVBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Avaliações/VBox/Scroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 8
-
-[node name="Finanças" type="MarginContainer" parent="PanelContainer/VBox/TabContainer"]
-visible = false
-layout_mode = 2
-theme_override_constants/margin_left = 15
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 15
-theme_override_constants/margin_bottom = 15
-
-[node name="VBox" type="VBoxContainer" parent="PanelContainer/VBox/TabContainer/Finanças"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="SummaryLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Finanças/VBox"]
-layout_mode = 2
-text = "💰 Saldo: $100.00"
-
-[node name="HSeparator" type="HSeparator" parent="PanelContainer/VBox/TabContainer/Finanças/VBox"]
-layout_mode = 2
-
-[node name="Scroll" type="ScrollContainer" parent="PanelContainer/VBox/TabContainer/Finanças/VBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="TransactionsLabel" type="Label" parent="PanelContainer/VBox/TabContainer/Finanças/VBox/Scroll"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "Nenhuma transação registrada nesta sessão."
-
-[connection signal="pressed" from="PanelContainer/VBox/Header/CloseButton" to="." method="_on_close_button_pressed"]
-[connection signal="pressed" from="PanelContainer/VBox/TabContainer/Funcionários/VBox/TopHBox/HireButton" to="." method="_on_hire_button_pressed"]
+theme_override_colors/font_color = Color(0.6, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+text = "Este módulo será adicionado nas próximas etapas do Burger Rush OS."
+horizontal_alignment = 1

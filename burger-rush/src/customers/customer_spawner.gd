@@ -104,16 +104,16 @@ func _update_day_intensity() -> void:
 			current_day_intensity = DayIntensity.VERY_BUSY
 
 func _get_max_concurrent_customers(time_h: float) -> int:
-	# Limite de clientes simultâneos atendidos no salão (evita inundação)
+	# Limite equilibrado de clientes simultâneos no salão (evita sobrecarga no ritmo normal)
 	if time_h < 11.5:
-		return 3 # Abertura: Máximo 3 clientes ativos simultaneamente
+		return 2 # Abertura: Máximo 2 pessoas
 	elif time_h < 14.5:
-		return 8 # Almoço: Até 8 pessoas
+		return 4 # Almoço: 4 pessoas simultâneas no salão
 	elif time_h < 17.5:
-		return 5 # Tarde: Até 5 pessoas
+		return 3 # Tarde: 3 pessoas
 	elif time_h <= 21.0:
-		return 8 # Jantar: Até 8 pessoas (compartilhado com Delivery)
-	return 3 # Encerramento
+		return 5 # Jantar: 5 pessoas
+	return 2 # Encerramento
 
 func _count_dining_customers() -> int:
 	var count = 0
@@ -132,36 +132,32 @@ func _count_dining_customers() -> int:
 	return count
 
 func _calculate_interval_for_time(time_h: float) -> float:
-	# CURVA DINÂMICA SUAVE E BALANCEADA (10:00 — 22:00):
-	# 10:00 - 11:30 (Abertura / Manhã): 30s a 50s (Começo tranquilo, 1 cliente/casal por vez)
-	# 11:30 - 14:30 (Pico Almoço):      16s a 26s (Fluxo moderado e administrável)
-	# 14:30 - 17:30 (Tarde Tranquila):  28s a 45s (Período de recuperação)
-	# 17:30 - 21:00 (Pico Noite):       18s a 28s (Jantar físico + Delivery)
-	# 21:00 - 22:00 (Fechamento):       40s a 65s (Últimos clientes)
-	var base_interval = 35.0
+	# CURVA DINÂMICA MODERADA E EQUILIBRADA (10:00 — 22:00):
+	# Dá tempo suficiente para cozinhar, montar lanches, atender mesas/drive-thru, limpar e repor estoque
+	var base_interval = 40.0
 
 	if time_h < 11.5:
-		base_interval = randf_range(30.0, 50.0)
+		base_interval = randf_range(42.0, 65.0) # Abertura tranquila
 	elif time_h < 14.5:
-		base_interval = randf_range(16.0, 26.0)
+		base_interval = randf_range(32.0, 48.0) # Almoço moderado
 	elif time_h < 17.5:
-		base_interval = randf_range(28.0, 45.0)
+		base_interval = randf_range(40.0, 60.0) # Tarde espaçada
 	elif time_h <= 21.0:
-		base_interval = randf_range(18.0, 28.0)
+		base_interval = randf_range(34.0, 50.0) # Jantar moderado
 	else:
-		base_interval = randf_range(40.0, 65.0)
+		base_interval = randf_range(55.0, 80.0) # Fechamento lento
 
 	# Aplicação do multiplicador da Intensidade do Dia
 	var intensity_multiplier = 1.0
 	match current_day_intensity:
 		DayIntensity.CALM:
-			intensity_multiplier = 1.35
+			intensity_multiplier = 1.30
 		DayIntensity.NORMAL:
 			intensity_multiplier = 1.0
 		DayIntensity.BUSY:
-			intensity_multiplier = 0.82
+			intensity_multiplier = 0.80
 		DayIntensity.VERY_BUSY:
-			intensity_multiplier = 0.68
+			intensity_multiplier = 0.65
 
 	# Modificadores de Eventos Diários e Finais de Semana (DailyEventManager)
 	var event_demand_mult = 1.0

@@ -34,6 +34,7 @@ var seated_customer: Customer:
 var dirt_amount: float = 0.0
 
 func _ready() -> void:
+	add_to_group("tables")
 	var mgr = TableManager.get_instance()
 	if mgr:
 		mgr.register_table(self)
@@ -54,6 +55,18 @@ func get_available_seats() -> int:
 	if table_state != TableState.AVAILABLE:
 		return 0
 	return max(0, seat_count - seated_customers.size())
+
+## Retorna um ponto de interação limpo e acessível no corredor para funcionários NPC
+func get_employee_interaction_position() -> Vector3:
+	var base = global_position if is_inside_tree() else position
+	if base.x < -3.0:
+		return base + Vector3(1.15, 0.0, 0.0)
+	elif base.x > 3.0:
+		return base + Vector3(-1.15, 0.0, 0.0)
+	elif base.x < 0.0:
+		return base + Vector3(0.85, 0.0, 0.6)
+	else:
+		return base + Vector3(0.0, 0.0, -1.1)
 
 func get_seat_position(seat_idx: int) -> Vector3:
 	var seat_node_name = "Seat%d" % seat_idx
@@ -169,32 +182,23 @@ func clean_table(player: Node3D) -> void:
 	if table_state != TableState.DIRTY:
 		return
 
-	if has_tray_on_table():
-		# Recolhe a bandeja se houver
-		for item in served_items:
-			if is_instance_valid(item) and (item is ServingTray or item is OrderTray or item.name.contains("Tray")):
-				if item.get_parent():
-					item.get_parent().remove_child(item)
-				served_items.erase(item)
-				if player and player.get("held_item") == null and player.has_method("pick_up"):
-					player.pick_up(item)
-					_show_player_feedback(player, "🍽️ Bandeja usada recolhida da Mesa #%d" % table_id)
-				else:
-					item.queue_free()
-				return
+	# Recolhe e descarta quaisquer bandejas usadas sobre a mesa
+	for item in served_items:
+		if is_instance_valid(item):
+			if item.get_parent():
+				item.get_parent().remove_child(item)
+			item.queue_free()
+	served_items.clear()
 
-		var plate_slot = get_node_or_null("PlateSlot")
-		if plate_slot:
-			for c in plate_slot.get_children():
-				if c is ServingTray or c is OrderTray or c.name.contains("Tray"):
-					plate_slot.remove_child(c)
-					if player and player.get("held_item") == null and player.has_method("pick_up"):
-						player.pick_up(c)
-						_show_player_feedback(player, "🍽️ Bandeja usada recolhida da Mesa #%d" % table_id)
-					else:
-						c.queue_free()
-					return
-		return
+	var plate_slot = get_node_or_null("PlateSlot")
+	if plate_slot:
+		for c in plate_slot.get_children():
+			if is_instance_valid(c):
+				c.queue_free()
+
+	if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
+		dirty_dish_instance.queue_free()
+		dirty_dish_instance = null
 
 	dirt_amount = 0.0
 	table_state = TableState.AVAILABLE
@@ -248,24 +252,26 @@ func interact(player: Node3D) -> void:
 	if seated_customers.is_empty():
 		return
 
-	var primary_cust = seated_customers[0]
-	if not is_instance_valid(primary_cust):
-		return
-
-	match primary_cust.state:
-		Customer.State.SEATED_WAITING_TO_ORDER:
-			primary_cust.place_order(player)
+	# 1. Se houver algum cliente esperando fazer pedido, anota
+	for cust in seated_customers:
+		if is_instance_valid(cust) and cust.state == Customer.State.SEATED_WAITING_TO_ORDER:
+			cust.place_order(player)
 			_show_player_feedback(player, "📝 Pedido recebido da Mesa #%d!" % table_id)
 			_update_visual_status()
+			return
 
-		Customer.State.WAITING_FOR_FOOD:
-			var held = player.get("held_item")
+	# 2. Se estiver aguardando comida e o jogador/funcionário trouxe itens
+	for cust in seated_customers:
+		if is_instance_valid(cust) and cust.state == Customer.State.WAITING_FOR_FOOD:
+			var held = player.get("held_item") if player else null
 			if held is ServingTray or held is OrderTray:
 				_serve_tray(player, held)
 			elif held != null and (held.has_method("get_product_id") or held.get("item_id") != null):
 				_serve_single_item(player, held)
 			else:
-				_show_player_feedback(player, "Traga a bandeja com o pedido para servir a Mesa #%d." % table_id)
+				if player:
+					_show_player_feedback(player, "Traga a bandeja com o pedido para servir a Mesa #%d." % table_id)
+			return
 
 func _resolve_product_ids(item: Node3D) -> Array[String]:
 	var ids: Array[String] = []
@@ -286,6 +292,19 @@ func _serve_single_item(player: Node3D, item: Node3D) -> void:
 	if not order:
 		return
 
+	# Transfere fisicamente o item da mão do jogador para a mesa
+	if player.has_method("take_held_item"):
+		player.take_held_item()
+	else:
+		player.set("held_item", null)
+
+	plate_slot.add_child(item)
+	item.position = Vector3.ZERO
+	if item is Item:
+		item.is_held = false
+		item.location = Item.ItemLocation.TABLE
+	served_items.append(item)
+
 	var pids = _resolve_product_ids(item)
 	var matched_id = ""
 	for pid in pids:
@@ -295,18 +314,6 @@ func _serve_single_item(player: Node3D, item: Node3D) -> void:
 
 	if matched_id != "":
 		order.mark_product_delivered(matched_id)
-		if player.has_method("take_held_item"):
-			player.take_held_item()
-		else:
-			player.set("held_item", null)
-
-		plate_slot.add_child(item)
-		item.position = Vector3.ZERO
-		if item is Item:
-			item.is_held = false
-			item.location = Item.ItemLocation.TABLE
-		served_items.append(item)
-
 		_show_player_feedback(player, "🍔 Item servido na Mesa #%d!" % table_id)
 
 		if order.is_fully_delivered():
@@ -314,6 +321,12 @@ func _serve_single_item(player: Node3D, item: Node3D) -> void:
 				if is_instance_valid(c):
 					c.receive_food()
 			_show_player_feedback(player, "🎉 Pedido da Mesa #%d completo!" % table_id)
+	else:
+		# Pedido Errado! Clientes reagem negativamente e vão embora sem pagar
+		for c in seated_customers:
+			if is_instance_valid(c):
+				c.on_order_wrong("Item incorreto servido na mesa!")
+		_show_player_feedback(player, "❌ Pedido incorreto! O cliente não aceitou e foi embora sem pagar.")
 
 	_update_visual_status()
 
@@ -323,9 +336,26 @@ func _serve_tray(player: Node3D, tray: Node3D) -> void:
 	if not order:
 		return
 
+	# Transfere a bandeja da mão do jogador para a mesa
+	if player.has_method("take_held_item"):
+		player.take_held_item()
+	else:
+		player.set("held_item", null)
+
+	plate_slot.add_child(tray)
+	tray.position = Vector3.ZERO
+	tray.rotation = Vector3.ZERO
+	if tray is Item:
+		tray.is_held = false
+		tray.location = Item.ItemLocation.TABLE
+		tray.collision_layer = 1
+		tray.collision_mask = 1
+	served_items.append(tray)
+
 	var products = tray.get_products() if tray.has_method("get_products") else []
 	var delivered_count = 0
 
+	# Validação da bandeja
 	for p in products:
 		var pids = _resolve_product_ids(p)
 		for pid in pids:
@@ -334,30 +364,17 @@ func _serve_tray(player: Node3D, tray: Node3D) -> void:
 				delivered_count += 1
 				break
 
-	if delivered_count > 0 or products.is_empty():
-		# Transfere a bandeja da mão do jogador para a mesa
-		if player.has_method("take_held_item"):
-			player.take_held_item()
-		else:
-			player.set("held_item", null)
-
-		plate_slot.add_child(tray)
-		tray.position = Vector3.ZERO
-		tray.rotation = Vector3.ZERO
-		if tray is Item:
-			tray.is_held = false
-			tray.location = Item.ItemLocation.TABLE
-			tray.collision_layer = 1
-			tray.collision_mask = 1
-		served_items.append(tray)
-
-		_show_player_feedback(player, "🍽️ Bandeja de serviço entregue na Mesa #%d!" % table_id)
-
-		if order.is_fully_delivered():
-			for c in seated_customers:
-				if is_instance_valid(c):
-					c.receive_food()
-			_show_player_feedback(player, "🎉 Pedido da Mesa #%d entregue!" % table_id)
+	if order.is_fully_delivered():
+		for c in seated_customers:
+			if is_instance_valid(c):
+				c.receive_food()
+		_show_player_feedback(player, "🎉 Pedido da Mesa #%d entregue com sucesso!" % table_id)
+	else:
+		# Pedido na bandeja incompleto ou incorreto
+		for c in seated_customers:
+			if is_instance_valid(c):
+				c.on_order_wrong("Pedido incorreto na bandeja!")
+		_show_player_feedback(player, "❌ Pedido incorreto na bandeja! Os clientes foram embora sem pagar.")
 
 	_update_visual_status()
 

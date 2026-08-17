@@ -658,4 +658,10 @@ func _stop_scrubbing_audio() -> void:
 		if tool_audio and tool_audio.playing:
 			tool_audio.stop()
 
+	var tool_holder = get_node_or_null("Head/Camera3D/ToolHolder")
+	if tool_holder and tool_holder.get_child_count() > 0:
+		var sp = tool_holder.get_child(0)
+		if sp and sp.has_method("stop_scrub_continuous"):
+			sp.stop_scrub_continuous()
+
 	_update_interaction_detection()

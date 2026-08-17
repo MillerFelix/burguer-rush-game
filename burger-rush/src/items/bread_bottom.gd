@@ -41,9 +41,9 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if assembly:
 		if assembly.state == BurgerAssembly.State.CLOSED:
 			var b_name = assembly.matched_recipe.display_name if assembly.matched_recipe else "Burger"
-			return "🍔 %s (Fechado) — [Clique] Pegar Lanche" % b_name
+			return "🍔 %s — [Clique] Pegar Lanche" % b_name
 		elif assembly.state == BurgerAssembly.State.ASSEMBLING:
-			return "🥪 Lanche em Montagem (%d ing.) — [Clique] Pegar Lanche" % assembly.ingredients.size()
+			return "🥪 [Clique] Pegar Lanche"
 
 	return "🖱️ Pegar Base do Pão"
 

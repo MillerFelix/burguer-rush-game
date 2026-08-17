@@ -1,32 +1,38 @@
 class_name WeatherManager
 extends Node3D
 
-# Gerenciador de Clima Dinâmico e Atmosférico para Burger Rush
-# Controla tipos de clima (Ensolarado, Nublado, Chuvoso), transições contínuas e graduais,
-# partículas de chuva externa, superfícies molhadas (asfalto/calçada), áudio ambiente e
-# integração com a iluminação do DayNightCycle.
+# =============================================================================
+# GERENCIADOR DE CLIMA ATMOSFÉRICO E IMERSÃO DE CHUVA (BURGER RUSH)
+#
+# Recursos:
+# 1. Partículas de chuva densas e dinâmicas que acompanham a posição do jogador.
+# 2. Respingos e micro-gotículas atingindo o chão e superfícies externas.
+# 3. Asfalto, calçadas e pallets molhados com reflexos suaves.
+# 4. Janelas do salão com vidro úmido/gotejante e vista clara da chuva lá fora.
+# 5. Áudio da chuva com abafamento espacial (abafado no interior, vívido perto de
+#    portas/janelas e imersivo no exterior).
+# =============================================================================
 
 signal weather_changed(new_weather: WeatherType)
 signal rain_intensity_changed(intensity: float)
 
 enum WeatherType {
 	SUNNY,   # Ensolarado / Céu aberto normal
-	CLOUDY,  # Nublado / Céu encoberto, sol mais fraco, iluminação difusa
-	RAINY    # Chuvoso / Céu escuro, partículas de chuva, som, chão molhado, luzes acesas
+	CLOUDY,  # Nublado / Céu encoberto
+	RAINY    # Chuvoso / Chuva externa visível, som espacial, chão molhado
 }
 
 static var instance: WeatherManager = null
 
 @export var auto_weather_cycle: bool = true
-@export var transition_speed: float = 0.25 # Taxa de transição por segundo
+@export var transition_speed: float = 0.35 # Taxa de transição por segundo
 
 var current_weather: WeatherType = WeatherType.SUNNY
 var target_weather: WeatherType = WeatherType.SUNNY
 
-# Valores contínuos interpolados (0.0 a 1.0)
-var cloudiness: float = 0.0       # 0.0 = céu limpo, 1.0 = 100% encoberto
-var rain_intensity: float = 0.0   # 0.0 = sem chuva, 1.0 = chuva máxima
-var wetness: float = 0.0          # 0.0 = seco, 1.0 = totalmente molhado
+var cloudiness: float = 0.0       # 0.0 a 1.0
+var rain_intensity: float = 0.0   # 0.0 a 1.0
+var wetness: float = 0.0          # 0.0 a 1.0
 
 var target_cloudiness: float = 0.0
 var target_rain_intensity: float = 0.0
@@ -36,19 +42,12 @@ var current_duration: float = 60.0
 
 # Componentes Visuais e Sonoros
 var rain_particles: CPUParticles3D = null
-var rain_audio: AudioStreamPlayer = null
+var rain_splashes: CPUParticles3D = null
+var rain_audio_ext: AudioStreamPlayer = null
+var rain_audio_int: AudioStreamPlayer = null
+
 var wet_materials: Array[StandardMaterial3D] = []
-
-# Paletas de cores para o céu durante climas modificados
-const SKY_TOP_CLOUDY = Color(0.42, 0.48, 0.55, 1.0)
-const SKY_HORIZON_CLOUDY = Color(0.65, 0.68, 0.72, 1.0)
-const GROUND_BOTTOM_CLOUDY = Color(0.18, 0.20, 0.22, 1.0)
-const GROUND_HORIZON_CLOUDY = Color(0.55, 0.58, 0.62, 1.0)
-
-const SKY_TOP_RAINY = Color(0.16, 0.20, 0.26, 1.0)
-const SKY_HORIZON_RAINY = Color(0.32, 0.36, 0.42, 1.0)
-const GROUND_BOTTOM_RAINY = Color(0.08, 0.10, 0.12, 1.0)
-const GROUND_HORIZON_RAINY = Color(0.24, 0.28, 0.32, 1.0)
+var window_materials: Array[StandardMaterial3D] = []
 
 func _enter_tree() -> void:
 	instance = self
@@ -57,15 +56,9 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	instance = self
 	_ensure_components()
-	_setup_wet_materials()
-
-	# Sorteia clima inicial com duração balanceada
-	current_duration = randf_range(45.0, 90.0)
+	_setup_materials()
+	current_duration = randf_range(50.0, 90.0)
 	weather_timer = 0.0
-
-func _ensure_components() -> void:
-	_setup_rain_particles()
-	_setup_rain_audio()
 
 func static_get() -> WeatherManager:
 	return instance
@@ -73,7 +66,12 @@ func static_get() -> WeatherManager:
 static func get_instance() -> WeatherManager:
 	return instance
 
-func _setup_rain_particles() -> void:
+func _ensure_components() -> void:
+	_setup_rain_visuals()
+	_setup_rain_audio()
+
+func _setup_rain_visuals() -> void:
+	# 1. Partículas de chuva caindo
 	if not rain_particles:
 		rain_particles = get_node_or_null("RainParticles") as CPUParticles3D
 		if not rain_particles:
@@ -81,104 +79,148 @@ func _setup_rain_particles() -> void:
 			rain_particles.name = "RainParticles"
 			add_child(rain_particles)
 
-		# Configura partículas de chuva estilizadas e eficientes
-		rain_particles.amount = 350
-		rain_particles.lifetime = 1.2
+		rain_particles.amount = 600
+		rain_particles.lifetime = 0.95
 		rain_particles.preprocess = 0.5
 		rain_particles.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-		# Cobre toda a extensão externa ao redor do restaurante
-		rain_particles.emission_box_extents = Vector3(26.0, 0.5, 24.0)
-		rain_particles.position = Vector3(0.0, 14.0, 0.0)
-		rain_particles.direction = Vector3(-0.15, -1.0, 0.05).normalized()
-		rain_particles.spread = 4.0
-		rain_particles.initial_velocity_min = 22.0
-		rain_particles.initial_velocity_max = 28.0
-		rain_particles.gravity = Vector3(0, -9.8, 0)
-		rain_particles.scale_amount_min = 0.04
-		rain_particles.scale_amount_max = 0.08
+		rain_particles.emission_box_extents = Vector3(22.0, 0.4, 22.0)
+		rain_particles.position = Vector3(0.0, 11.0, 0.0)
+		rain_particles.direction = Vector3(-0.12, -1.0, 0.04).normalized()
+		rain_particles.spread = 3.0
+		rain_particles.initial_velocity_min = 24.0
+		rain_particles.initial_velocity_max = 30.0
+		rain_particles.gravity = Vector3(0, -12.0, 0)
 
-		# Mesh de gota de chuva (cilindro fino e alongado estilizado)
+		# Streak fino e alongado estilizado
 		var drop_mesh = CylinderMesh.new()
-		drop_mesh.top_radius = 0.015
-		drop_mesh.bottom_radius = 0.015
-		drop_mesh.height = 0.45
+		drop_mesh.top_radius = 0.012
+		drop_mesh.bottom_radius = 0.012
+		drop_mesh.height = 0.60
 
 		var drop_mat = StandardMaterial3D.new()
 		drop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		drop_mat.albedo_color = Color(0.75, 0.85, 0.95, 0.45)
+		drop_mat.albedo_color = Color(0.82, 0.90, 0.98, 0.65)
 		drop_mat.roughness = 0.1
-		drop_mat.metallic = 0.2
+		drop_mat.metallic = 0.1
 		drop_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		drop_mesh.material = drop_mat
 
 		rain_particles.mesh = drop_mesh
 		rain_particles.emitting = false
 
+	# 2. Respingos no chão externo
+	if not rain_splashes:
+		rain_splashes = get_node_or_null("RainSplashes") as CPUParticles3D
+		if not rain_splashes:
+			rain_splashes = CPUParticles3D.new()
+			rain_splashes.name = "RainSplashes"
+			add_child(rain_splashes)
+
+		rain_splashes.amount = 180
+		rain_splashes.lifetime = 0.35
+		rain_splashes.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+		rain_splashes.emission_box_extents = Vector3(20.0, 0.05, 20.0)
+		rain_splashes.position = Vector3(0.0, 0.02, 0.0)
+		rain_splashes.direction = Vector3(0, 1, 0)
+		rain_splashes.spread = 70.0
+		rain_splashes.initial_velocity_min = 1.2
+		rain_splashes.initial_velocity_max = 2.4
+		rain_splashes.gravity = Vector3(0, -9.8, 0)
+		rain_splashes.scale_amount_min = 0.02
+		rain_splashes.scale_amount_max = 0.05
+
+		var splash_mesh = SphereMesh.new()
+		splash_mesh.radius = 0.03
+		splash_mesh.height = 0.06
+		var splash_mat = StandardMaterial3D.new()
+		splash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		splash_mat.albedo_color = Color(0.85, 0.92, 1.0, 0.55)
+		splash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		splash_mesh.material = splash_mat
+		rain_splashes.mesh = splash_mesh
+		rain_splashes.emitting = false
+
 func _setup_rain_audio() -> void:
-	if not rain_audio:
-		rain_audio = get_node_or_null("RainAudio") as AudioStreamPlayer
-		if not rain_audio:
-			rain_audio = AudioStreamPlayer.new()
-			rain_audio.name = "RainAudio"
-			add_child(rain_audio)
+	# Camada Exterior (Som aberto e vívido de chuva)
+	if not rain_audio_ext:
+		rain_audio_ext = get_node_or_null("RainAudioExt") as AudioStreamPlayer
+		if not rain_audio_ext:
+			rain_audio_ext = AudioStreamPlayer.new()
+			rain_audio_ext.name = "RainAudioExt"
+			add_child(rain_audio_ext)
+		rain_audio_ext.stream = _synthesize_rain_stream(false)
+		rain_audio_ext.volume_db = -80.0
 
-		# Gerador de ruído sonoro suave de chuva sintética caso não haja wav estático
-		var sample_rate = 22050
-		var duration = 2.0
-		var num_samples = int(sample_rate * duration)
-		var pcm = PackedByteArray()
-		pcm.resize(num_samples * 2)
+	# Camada Interior (Som abafado e aconchegante no telhado)
+	if not rain_audio_int:
+		rain_audio_int = get_node_or_null("RainAudioInt") as AudioStreamPlayer
+		if not rain_audio_int:
+			rain_audio_int = AudioStreamPlayer.new()
+			rain_audio_int.name = "RainAudioInt"
+			add_child(rain_audio_int)
+		rain_audio_int.stream = _synthesize_rain_stream(true)
+		rain_audio_int.volume_db = -80.0
 
-		var last_val = 0.0
-		for i in range(num_samples):
-			var white = randf_range(-1.0, 1.0)
-			# Filtro passa-baixa leve para simular som suave de chuva
-			last_val = (last_val * 0.92) + (white * 0.08)
-			var s16 = int(clampf(last_val * 0.35, -1.0, 1.0) * 32767.0)
-			pcm.encode_s16(i * 2, s16)
+func _synthesize_rain_stream(is_interior_muffled: bool) -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 2.0
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
 
-		var stream = AudioStreamWAV.new()
-		stream.format = AudioStreamWAV.FORMAT_16_BITS
-		stream.mix_rate = sample_rate
-		stream.stereo = false
-		stream.data = pcm
-		stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-		stream.loop_begin = 0
-		stream.loop_end = num_samples
+	var last_val = 0.0
+	var filter_coeff = 0.97 if is_interior_muffled else 0.88
 
-		rain_audio.stream = stream
-		rain_audio.volume_db = -80.0
-		rain_audio.autoplay = false
+	for i in range(num_samples):
+		var white = randf_range(-1.0, 1.0)
+		last_val = (last_val * filter_coeff) + (white * (1.0 - filter_coeff))
+		var sample = clampf(last_val * (0.45 if not is_interior_muffled else 0.60), -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
 
-func _setup_wet_materials() -> void:
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	stream.loop_begin = 0
+	stream.loop_end = num_samples
+	return stream
+
+func _setup_materials() -> void:
 	wet_materials.clear()
+	window_materials.clear()
 	var root_node = get_tree().current_scene if (is_inside_tree() and get_tree() and get_tree().current_scene) else get_parent()
 	if not root_node:
 		return
 
-	# Coleta malhas do asfalto, calçada, estacionamento e rua
-	var mesh_names = ["Street", "Sidewalk", "ParkingLot", "Asphalt", "Terrain", "YardGround", "FloorDining", "FloorKitchen"]
 	var meshes = root_node.find_children("*", "MeshInstance3D", true, false)
 	for m in meshes:
 		var parent_name = m.get_parent().name if m.get_parent() else ""
 		var is_outdoor = false
-		for pattern in ["Street", "Road", "Parking", "Sidewalk", "Terrain", "Yard", "Alley", "TruckRoad"]:
+		for pattern in ["Street", "Road", "Parking", "Sidewalk", "Terrain", "Yard", "Alley", "TruckRoad", "Pallet", "Receiving"]:
 			if pattern in m.name or pattern in parent_name:
 				is_outdoor = true
 				break
 
+		# Coleta superfícies externas para molhar
 		if is_outdoor and m.material_override is StandardMaterial3D:
-			if not wet_materials.has(m.material_override):
-				var mat = m.material_override as StandardMaterial3D
-				# Guarda valores originais
+			var mat = m.material_override as StandardMaterial3D
+			if not wet_materials.has(mat):
 				if not mat.has_meta("orig_roughness"):
 					mat.set_meta("orig_roughness", mat.roughness)
 					mat.set_meta("orig_albedo", mat.albedo_color)
 				wet_materials.append(mat)
 
-func ensure_setup() -> void:
-	_ensure_components()
-	_setup_wet_materials()
+		# Coleta janelas de vidro
+		if ("Glass" in m.name or "Window" in parent_name) and (m.material_override is StandardMaterial3D or (m.mesh and m.mesh.surface_get_material(0) is StandardMaterial3D)):
+			var wmat = m.material_override as StandardMaterial3D if m.material_override else m.mesh.surface_get_material(0) as StandardMaterial3D
+			if wmat and not window_materials.has(wmat):
+				if not wmat.has_meta("orig_roughness"):
+					wmat.set_meta("orig_roughness", wmat.roughness)
+					wmat.set_meta("orig_albedo", wmat.albedo_color)
+				window_materials.append(wmat)
 
 func set_weather(weather: WeatherType, immediate: bool = false) -> void:
 	_ensure_components()
@@ -198,16 +240,12 @@ func set_weather(weather: WeatherType, immediate: bool = false) -> void:
 		current_weather = target_weather
 		cloudiness = target_cloudiness
 		rain_intensity = target_rain_intensity
-		if target_weather == WeatherType.RAINY:
-			wetness = 1.0
-		elif target_weather == WeatherType.SUNNY:
-			wetness = 0.0
+		wetness = 1.0 if target_weather == WeatherType.RAINY else 0.0
 		_apply_weather_state(0.0)
 
 	weather_changed.emit(target_weather)
 
 func _process(delta: float) -> void:
-	# 1. Ciclo Aleatório Controlado de Clima
 	if auto_weather_cycle:
 		weather_timer += delta
 		if weather_timer >= current_duration:
@@ -215,18 +253,15 @@ func _process(delta: float) -> void:
 			current_duration = randf_range(50.0, 110.0)
 			_pick_next_weather_randomly()
 
-	# 2. Interpolação Contínua e Suave dos Parâmetros Climáticos
 	var step = transition_speed * delta
 	cloudiness = move_toward(cloudiness, target_cloudiness, step)
 	rain_intensity = move_toward(rain_intensity, target_rain_intensity, step)
 
-	# Dinâmica de Umidade (Chão molha rápido com chuva e seca gradualmente)
 	if rain_intensity > 0.05:
-		wetness = minf(1.0, wetness + (delta * 0.25 * rain_intensity))
+		wetness = minf(1.0, wetness + (delta * 0.35 * rain_intensity))
 	else:
-		wetness = maxf(0.0, wetness - (delta * 0.04)) # Seca em ~25s
+		wetness = maxf(0.0, wetness - (delta * 0.03))
 
-	# Atualiza o estado atual quando a transição conclui
 	if cloudiness == target_cloudiness and rain_intensity == target_rain_intensity:
 		current_weather = target_weather
 
@@ -236,79 +271,114 @@ func _pick_next_weather_randomly() -> void:
 	var roll = randf()
 	match current_weather:
 		WeatherType.SUNNY:
-			# Ensolarado pode permanecer ensolarado (50%) ou fechar para nublado (50%)
-			if roll < 0.50:
-				set_weather(WeatherType.SUNNY)
-			else:
-				set_weather(WeatherType.CLOUDY)
-
+			set_weather(WeatherType.SUNNY if roll < 0.50 else WeatherType.CLOUDY)
 		WeatherType.CLOUDY:
-			# Nublado pode abrir para ensolarado (45%), continuar nublado (25%) ou começar a chover (30%)
 			if roll < 0.45:
 				set_weather(WeatherType.SUNNY)
 			elif roll < 0.70:
 				set_weather(WeatherType.CLOUDY)
 			else:
 				set_weather(WeatherType.RAINY)
-
 		WeatherType.RAINY:
-			# Chuvoso geralmente diminui para nublado antes de abrir
-			if roll < 0.75:
-				set_weather(WeatherType.CLOUDY)
-			else:
-				set_weather(WeatherType.RAINY)
+			set_weather(WeatherType.CLOUDY if roll < 0.75 else WeatherType.RAINY)
 
 func _apply_weather_state(_delta: float) -> void:
 	_ensure_components()
-	# A) Partículas de Chuva
+
+	# 1. Posicionamento das partículas de chuva acompanhando o jogador
+	var player = _get_player_node()
+	var p_pos = player.global_position if player else Vector3.ZERO
+
 	if rain_particles:
 		if rain_intensity > 0.05:
+			rain_particles.global_position = Vector3(p_pos.x, 11.0, p_pos.z)
 			rain_particles.emitting = true
-			rain_particles.amount = int(lerpf(60.0, 400.0, rain_intensity))
+			rain_particles.amount = int(lerpf(120.0, 650.0, rain_intensity))
 		else:
 			rain_particles.emitting = false
 
-	# B) Áudio Ambiente da Chuva
-	if rain_audio:
-		if rain_intensity > 0.02:
-			if not rain_audio.playing and is_inside_tree() and rain_audio.is_inside_tree():
-				rain_audio.play()
-			var target_vol = lerpf(-40.0, -12.0, rain_intensity)
-			rain_audio.volume_db = target_vol
+	if rain_splashes:
+		if rain_intensity > 0.15:
+			rain_splashes.global_position = Vector3(p_pos.x, 0.02, p_pos.z)
+			rain_splashes.emitting = true
+			rain_splashes.amount = int(lerpf(40.0, 200.0, rain_intensity))
 		else:
-			if rain_audio.playing:
-				rain_audio.stop()
+			rain_splashes.emitting = false
 
-	# C) Aspecto de Superfícies Molhadas
-	if not wet_materials.is_empty():
-		for mat in wet_materials:
-			if is_instance_valid(mat) and mat.has_meta("orig_roughness"):
-				var orig_r = mat.get_meta("orig_roughness", 0.8)
-				var orig_alb = mat.get_meta("orig_albedo", Color.WHITE) as Color
+	# 2. Áudio Espacial da Chuva com Abafamento Interno
+	_process_spatial_audio(p_pos)
 
-				# Superfície molhada fica mais escura e reflexiva (roughness menor)
-				mat.roughness = lerpf(orig_r, 0.20, wetness)
-				var darkened_alb = orig_alb.darkened(0.20 * wetness)
-				mat.albedo_color = orig_alb.lerp(darkened_alb, wetness)
+	# 3. Superfícies Molhadas (Asfalto, Calçada, Deck, Pallet)
+	for mat in wet_materials:
+		if is_instance_valid(mat) and mat.has_meta("orig_roughness"):
+			var orig_r = mat.get_meta("orig_roughness", 0.8)
+			var orig_alb = mat.get_meta("orig_albedo", Color.WHITE) as Color
+			mat.roughness = lerpf(orig_r, 0.16, wetness)
+			mat.albedo_color = orig_alb.lerp(orig_alb.darkened(0.25 * wetness), wetness)
+
+	# 4. Janelas Úmidas com Gotículas
+	for wmat in window_materials:
+		if is_instance_valid(wmat) and wmat.has_meta("orig_roughness"):
+			var orig_r = wmat.get_meta("orig_roughness", 0.05)
+			var orig_alb = wmat.get_meta("orig_albedo", Color(0.85, 0.93, 0.98, 0.25)) as Color
+			wmat.roughness = lerpf(orig_r, 0.02, wetness)
+			var wet_window_col = Color(0.78, 0.88, 0.96, 0.35)
+			wmat.albedo_color = orig_alb.lerp(wet_window_col, wetness)
 
 	rain_intensity_changed.emit(rain_intensity)
 
+func _process_spatial_audio(p_pos: Vector3) -> void:
+	if rain_intensity <= 0.02:
+		if rain_audio_ext and rain_audio_ext.playing: rain_audio_ext.stop()
+		if rain_audio_int and rain_audio_int.playing: rain_audio_int.stop()
+		return
+
+	if rain_audio_ext and not rain_audio_ext.playing and rain_audio_ext.is_inside_tree():
+		rain_audio_ext.play()
+	if rain_audio_int and not rain_audio_int.playing and rain_audio_int.is_inside_tree():
+		rain_audio_int.play()
+
+	# Coordenadas do interior do restaurante: X em [-6.0, 6.0], Z em [-5.0, 11.0]
+	var is_indoor = (abs(p_pos.x) < 6.0 and p_pos.z > -5.0 and p_pos.z < 11.0)
+	var dist_to_openings = 10.0
+
+	if is_indoor:
+		# Distância da porta da frente (Z = -5.0), janelas laterais (|X| = 6.0) ou porta de serviço (Z = 11.0)
+		var dist_front = abs(p_pos.z - (-5.0))
+		var dist_sides = 6.0 - abs(p_pos.x)
+		var dist_back = abs(11.0 - p_pos.z)
+		dist_to_openings = minf(dist_front, minf(dist_sides, dist_back))
+
+	if not is_indoor:
+		# Totalmente no exterior (rua, doca, pallet de entrega)
+		if rain_audio_ext: rain_audio_ext.volume_db = lerpf(-40.0, -9.0, rain_intensity)
+		if rain_audio_int: rain_audio_int.volume_db = -80.0
+	else:
+		# No interior do restaurante
+		var openness_factor = clampf(1.0 - (dist_to_openings / 4.0), 0.0, 1.0)
+		var ext_vol = lerpf(-26.0, -14.0, openness_factor) * rain_intensity
+		var int_vol = lerpf(-15.0, -18.0, openness_factor) * rain_intensity
+
+		if rain_audio_ext: rain_audio_ext.volume_db = ext_vol
+		if rain_audio_int: rain_audio_int.volume_db = int_vol
+
+func _get_player_node() -> Node3D:
+	if is_inside_tree() and get_tree():
+		var p = get_tree().get_first_node_in_group("player")
+		if p:
+			return p as Node3D
+	return null
+
 func get_weather_name() -> String:
 	match current_weather:
-		WeatherType.SUNNY:
-			return "Ensolarado"
-		WeatherType.CLOUDY:
-			return "Nublado"
-		WeatherType.RAINY:
-			return "Chuvoso"
+		WeatherType.SUNNY: return "Ensolarado"
+		WeatherType.CLOUDY: return "Nublado"
+		WeatherType.RAINY: return "Chuvoso"
 	return "Normal"
 
 func get_weather_icon() -> String:
 	match current_weather:
-		WeatherType.SUNNY:
-			return "☀️"
-		WeatherType.CLOUDY:
-			return "☁️"
-		WeatherType.RAINY:
-			return "🌧️"
+		WeatherType.SUNNY: return "☀️"
+		WeatherType.CLOUDY: return "☁️"
+		WeatherType.RAINY: return "🌧️"
 	return "☀️"

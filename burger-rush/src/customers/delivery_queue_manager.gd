@@ -148,6 +148,13 @@ func get_car_at_window() -> Node3D:
 			return first
 	return null
 
+func has_waiting_car_for_order() -> bool:
+	var car = get_car_at_window()
+	if car and is_instance_valid(car):
+		# CarState.AT_WINDOW_WAITING_ORDER == 3
+		return car.get("current_state") == 3 or (car.get("current_order") == null and car.position.distance_to(QUEUE_POSITIONS[0]) <= 0.5)
+	return false
+
 func get_queue_count() -> int:
 	return car_queue.size()
 

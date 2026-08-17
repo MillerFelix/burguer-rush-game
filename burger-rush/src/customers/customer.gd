@@ -617,6 +617,27 @@ func on_payment_completed() -> void:
 				companion._build_exit_path()
 				companion._update_visual_status()
 
+func on_order_wrong(reason: String = "Pedido incorreto entregue!") -> void:
+	if mood:
+		mood.current_mood = 0.0
+	if experience:
+		experience.order_correct = false
+		experience.abandoned = true
+		experience.abandon_reason = reason
+		experience.food_quality = 0.0
+
+	_play_customer_sound("customer_wrong_order", -4.0, 0.04)
+
+	# Cancela o pedido no OrderManager se existir para não cobrar no caixa
+	var order_mgr = _get_order_manager()
+	if order_mgr and current_order:
+		order_mgr.active_orders.erase(current_order)
+		if order_mgr.has_signal("order_cancelled"):
+			order_mgr.order_cancelled.emit(current_order)
+	current_order = null
+
+	abandon_restaurant(reason)
+
 func abandon_restaurant(reason: String) -> void:
 	if state == State.LEAVING or state == State.FINISHED:
 		return
@@ -626,21 +647,21 @@ func abandon_restaurant(reason: String) -> void:
 		experience.abandon_reason = reason
 		experience.final_mood = mood.current_mood if mood else 0.0
 
+	# Cancela o pedido no OrderManager se existir
+	var order_mgr = _get_order_manager()
+	if order_mgr and current_order and current_order.state != Order.State.COMPLETED:
+		current_order.state = Order.State.CANCELLED
+		if order_mgr:
+			order_mgr.active_orders.erase(current_order)
+			if order_mgr.has_signal("order_cancelled"):
+				order_mgr.order_cancelled.emit(current_order)
+
 	_play_customer_sound("customer_leave", -12.0, 0.06)
 
 	# Libera a mesa imediatamente sem sujar (cliente não comeu)
 	if assigned_table and is_instance_valid(assigned_table):
 		assigned_table.release(false)
 		assigned_table = null
-
-	# Cancela o pedido no OrderManager se ainda não consumido
-	if current_order and current_order.state != Order.State.COMPLETED:
-		current_order.state = Order.State.CANCELLED
-		var order_mgr = _get_order_manager()
-		if order_mgr:
-			order_mgr.active_orders.erase(current_order)
-			if order_mgr.has_signal("order_cancelled"):
-				order_mgr.order_cancelled.emit(current_order)
 
 	_submit_review()
 

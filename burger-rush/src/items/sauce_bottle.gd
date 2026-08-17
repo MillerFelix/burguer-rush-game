@@ -42,11 +42,45 @@ var tilt_progress: float = 0.0 # 0.0 (vertical) a 1.0 (tombada ~85°)
 var sauce_color: Color = Color(0.88, 0.08, 0.08, 1.0)
 var immediate_mesh: ImmediateMesh = null
 
+var home_parent: Node = null
+var home_transform: Transform3D
+
 func _ready() -> void:
 	item_id = sauce_type
 	item_type = "sauce_bottle"
+	current_amount = 100.0
+	home_parent = get_parent()
+	home_transform = transform
 	_setup_sauce_properties()
 	_update_visuals()
+
+	# Conecta ao relógio para retornar automaticamente ao suporte no fim do dia
+	var clock = _get_game_clock()
+	if clock and not clock.day_ended.is_connected(_on_day_ended):
+		clock.day_ended.connect(_on_day_ended)
+
+func _get_game_clock() -> Node:
+	if is_inside_tree() and get_tree() and get_tree().root:
+		return get_tree().root.find_child("GameClock", true, false)
+	return null
+
+func _on_day_ended(_summary = null) -> void:
+	reset_to_home_position()
+
+func reset_to_home_position() -> void:
+	stop_squeezing()
+	var player = _get_player_node()
+	if player and player.get("held_item") == self:
+		player.take_held_item()
+
+	if home_parent and is_instance_valid(home_parent):
+		if get_parent() != home_parent:
+			if get_parent():
+				get_parent().remove_child(self)
+			home_parent.add_child(self)
+		transform = home_transform
+		location = ItemLocation.WORLD
+		visible = true
 
 func setup_bottle(type: String, col: Color = Color(0, 0, 0, 0), d_name: String = "") -> void:
 	sauce_type = type
@@ -252,7 +286,7 @@ func _process_continuous_flow(delta: float) -> void:
 	if hit_assembly and hit_assembly.state != BurgerAssembly.State.PACKAGED:
 		hit_assembly.apply_sauce(sauce_type, sauce_color, target_pt, delta)
 
-	current_amount = maxf(0.0, current_amount - consumption_rate * delta)
+	current_amount = 100.0
 	_update_sauce_level_visual()
 
 func get_stream_mesh() -> MeshInstance3D:

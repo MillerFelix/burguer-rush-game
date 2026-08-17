@@ -45,6 +45,7 @@ const TEX_NORMAL_RAW = preload("res://assets/textures/meat_patty_normal.png")
 const TEX_NORMAL_COOKED = preload("res://assets/textures/meat_patty_cooked_normal.png")
 
 func _ready() -> void:
+	is_grillable = true
 	if meat_type == MeatType.CHICKEN:
 		item_id = "patty_chicken"
 	else:

@@ -242,14 +242,49 @@ func pick_meat(player: Node3D, meat_id: String) -> void:
 		_show_feedback(player, "Abra a porta da geladeira primeiro com [E]!")
 		return
 
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		return
+
+	var d_name = "Hambúrguer de Carne" if meat_id == "patty_beef" else "Hambúrguer de Frango"
+	var icon = "🥩" if meat_id == "patty_beef" else "🍗"
+
+	# Caso 1: Jogador segurando um item -> Devolução ou Caixa de Entrega
 	if player.get("held_item") != null:
+		var held = player.get("held_item")
+		if held is Patty:
+			var matches = (meat_id == "patty_chicken" and held.meat_type == Patty.MeatType.CHICKEN) or (meat_id == "patty_beef" and held.meat_type == Patty.MeatType.BEEF)
+			if matches:
+				player.take_held_item().queue_free()
+				inv.add_stock(meat_id, 1)
+				_show_feedback(player, "%s Devolveu %s à geladeira" % [icon, d_name])
+				_update_patty_visuals()
+				return
+		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			var box_item_id = str(held.get("contained_item_id"))
+			var valid_meats = ["patty_beef", "patty_chicken"]
+			if box_item_id == meat_id or (box_item_id == "" and meat_id in valid_meats):
+				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+				player.take_held_item().queue_free()
+				inv.add_stock(meat_id, qty)
+				if door_audio:
+					door_audio.stream = SoundSynthesizer.get_stream("box_place")
+					door_audio.play()
+				_show_feedback(player, "📦 %s armazenado na geladeira (+%d un.)!" % [d_name, qty])
+				_update_patty_visuals()
+				return
+			elif box_item_id in valid_meats:
+				_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+				return
+			else:
+				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+				return
 		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
 		return
 
-	var inv = InventoryManager.get_instance()
-	if not inv or not inv.has_stock(meat_id, 1):
-		var nm = "Carne Bovina" if meat_id == "patty_beef" else "Hambúrguer de Frango"
-		_show_feedback(player, "❌ Sem %s! Reabasteça no Computador." % nm)
+	# Caso 2: Jogador com as mãos livres -> Pegar carne
+	if not inv.has_stock(meat_id, 1):
+		_show_feedback(player, "❌ Sem %s! Compre no Computador." % d_name)
 		return
 
 	inv.consume_stock(meat_id, 1)
@@ -272,9 +307,7 @@ func pick_meat(player: Node3D, meat_id: String) -> void:
 	patty._ready()
 	player.pick_up(patty)
 
-	var icon = "🥩" if meat_id == "patty_beef" else "🍗"
-	var nm2 = "Carne Bovina" if meat_id == "patty_beef" else "Hambúrguer de Frango"
-	_show_feedback(player, "%s Pegou %s" % [icon, nm2])
+	_show_feedback(player, "%s Pegou %s" % [icon, d_name])
 	_update_patty_visuals()
 
 # ─── Helpers e Atualizações ────────────────────────────────────
