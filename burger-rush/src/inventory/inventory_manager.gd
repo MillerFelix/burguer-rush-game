@@ -70,12 +70,13 @@ func _initialize_default_inventory() -> void:
 	# =========================================================================
 	# 7. ACOMPANHAMENTOS, BEBIDAS E EMBALAGENS (SUPPLIES)
 	# =========================================================================
-	_register_item("burger_box", "Caixa de Hambúrguer", "supplies", 25, 100, 0.5, 5, load("res://src/items/burger_box.tscn"))
+	_register_item("burger_box", "Caixa de Hambúrguer", "supplies", 50, 50, 0.5, 10, load("res://src/items/burger_box.tscn"))
+	_register_item("potato_box", "Embalagem de Batata", "supplies", 50, 50, 0.3, 10, load("res://src/items/potato_box.tscn"))
+	_register_item("cup_empty", "Copo Descartável", "supplies", 50, 50, 0.2, 10, load("res://src/items/drink_cup.tscn"))
+	_register_item("delivery_bag", "Saco de Delivery", "supplies", 50, 50, 0.4, 10, load("res://src/items/delivery_bag.tscn"))
 	_register_item("packaged_burger", "Burger Embalado", "supplies", 0, 50, 0.0, 0, load("res://src/items/packaged_burger.tscn"))
 	_register_item("potato_raw", "Batata Crua", "supplies", 25, 80, 1.0, 5, load("res://src/items/potato.tscn"))
-	_register_item("potato_box", "Recipiente de Batata", "supplies", 25, 80, 0.3, 5, load("res://src/items/potato_box_item.tscn"))
-	_register_item("cup_empty", "Copo Descartável", "supplies", 30, 100, 0.2, 5, load("res://src/items/drink_cup.tscn"))
-	_register_item("cup_lid", "Tampa de Copo", "supplies", 30, 100, 0.1, 5, null)
+	_register_item("cup_lid", "Tampa de Copo", "supplies", 50, 50, 0.1, 5, null)
 	_register_item("syrup_soda", "Xarope de Refrigerante", "supplies", 30, 100, 0.5, 5, load("res://src/items/soda_syrup_bottle.tscn"))
 	_register_item("cooking_oil", "Galão de Óleo", "supplies", 5, 20, 4.0, 2, load("res://src/items/cooking_oil.tscn"))
 
@@ -121,6 +122,14 @@ func _resolve_item_id(item_id: String) -> String:
 			return "sauce_mayo"
 		"special_sauce":
 			return "sauce_special"
+		"drink_cup":
+			return "cup_empty"
+		"cup":
+			return "cup_empty"
+		"french_fries_box", "fries_box":
+			return "potato_box"
+		"bag":
+			return "delivery_bag"
 		_:
 			return item_id
 

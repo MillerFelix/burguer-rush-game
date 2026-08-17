@@ -1,25 +1,11 @@
 Godot Engine v4.7.1.stable.official.a13da4feb - https://godotengine.org
 
 ============================================================
-BURGER RUSH - TESTE: LÍQUIDO DOS SUCOS NO RESERVATÓRIO
+BURGER RUSH - TESTE DA ESTAÇÃO COMPLETA DE BEBIDAS E EMBALAGENS
 ============================================================
 
---- 1. Verificação de Reservatórios Vazios ---
-  [PASS] Reservatórios iniciam vazios e sem líquido visível.
+--- Teste 1: Área de Embalagem e Dispensador de Copos ---
+  [PASS] Elementos visuais de embalagem (Caixas, Batatas, Copos, Sacos de Delivery) validados
+  [PASS] Copo vazio retirado do suporte de embalagens com sucesso
 
---- 2. Teste: 1ª Polpa de Laranja (0 -> 5 doses) ---
-  [PASS] 1ª Polpa de Laranja: Moagem -> Líquido 3D surge e atinge 5 doses.
-
---- 3. Teste: 2ª Polpa no Mesmo Sabor (5 -> 10 doses sem apagar) ---
-  [PASS] 2ª Polpa: Nível continuou subindo até 10 doses sem apagar o líquido existente.
-
---- 4. Teste: Polpas de Uva e Morango ---
-  [PASS] Uva e Morango abastecidos com líquido 3D correspondente.
-
---- 5. Teste: Redução de Nível ao Servir Copo ---
-  [PASS] Redução de nível visual e lógico 100% sincronizada ao servir.
-
-============================================================
-TODOS OS TESTES DE LÍQUIDO NO RESERVATÓRIO FORAM APROVADOS!
-============================================================
-
+--- Teste 2: Máquina de Suco (Laranja, Uva, Morango com Alavancas Animadas) ---

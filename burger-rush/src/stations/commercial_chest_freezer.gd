@@ -45,7 +45,15 @@ var is_animating: bool = false
 @onready var che_slot_col: CollisionShape3D = get_node_or_null("CheddarSlot/CollisionShape3D")
 @onready var pra_slot_col: CollisionShape3D = get_node_or_null("PratoSlot/CollisionShape3D")
 
+var door_audio: AudioStreamPlayer3D = null
+var hum_audio: AudioStreamPlayer3D = null
+var _target_hum_vol: float = -28.0
+
+func _enter_tree() -> void:
+	_setup_audio()
+
 func _ready() -> void:
+	_setup_audio()
 	current_state = initial_state
 	_apply_state_instant(current_state)
 
@@ -53,6 +61,33 @@ func _ready() -> void:
 	if inv and not inv.stock_changed.is_connected(_on_stock_changed):
 		inv.stock_changed.connect(_on_stock_changed)
 	_update_labels()
+
+func _setup_audio() -> void:
+	if not door_audio:
+		door_audio = AudioStreamPlayer3D.new()
+		door_audio.name = "DoorAudioPlayer"
+		door_audio.unit_size = 2.5
+		door_audio.max_distance = 15.0
+		door_audio.volume_db = -4.0
+		add_child(door_audio)
+
+	if not hum_audio:
+		hum_audio = AudioStreamPlayer3D.new()
+		hum_audio.name = "HumAudioPlayer"
+		hum_audio.unit_size = 2.5
+		hum_audio.max_distance = 15.0
+		hum_audio.volume_db = -28.0
+		hum_audio.stream = SoundSynthesizer.get_stream("freezer_hum_loop")
+		add_child(hum_audio)
+	if hum_audio.is_inside_tree() and not hum_audio.playing:
+		hum_audio.play()
+
+func _process(delta: float) -> void:
+	if hum_audio:
+		if is_inside_tree() and not hum_audio.playing:
+			hum_audio.play()
+		var w = 1.0 - exp(-6.0 * delta)
+		hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w)
 
 func is_door_open() -> bool:
 	return current_state == State.OPEN
@@ -72,6 +107,13 @@ func open_freezer(player: Node3D = null) -> void:
 	is_animating = true
 	current_state = State.OPENING
 	_set_slots_enabled(false)
+	_target_hum_vol = -16.0
+
+	if door_audio:
+		door_audio.stream = SoundSynthesizer.get_stream("freezer_lid_open")
+		door_audio.pitch_scale = randf_range(0.98, 1.02)
+		if door_audio.is_inside_tree():
+			door_audio.play()
 
 	var tween = create_tween()
 	tween.set_parallel(true)
@@ -98,6 +140,13 @@ func close_freezer(player: Node3D = null) -> void:
 	is_animating = true
 	current_state = State.CLOSING
 	_set_slots_enabled(false)
+	_target_hum_vol = -28.0
+
+	if door_audio:
+		door_audio.stream = SoundSynthesizer.get_stream("freezer_lid_close")
+		door_audio.pitch_scale = randf_range(0.98, 1.02)
+		if door_audio.is_inside_tree():
+			door_audio.play()
 
 	var tween = create_tween()
 	tween.set_parallel(true)

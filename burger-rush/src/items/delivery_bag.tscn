@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://delivery_bag_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/delivery_bag.gd" id="1_bag"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.28, 0.36, 0.18)
+
+[sub_resource type="StandardMaterial3D" id="Material_KraftPaper"]
+albedo_color = Color(0.76, 0.58, 0.38, 1)
+roughness = 0.88
+
+[sub_resource type="StandardMaterial3D" id="Material_DarkKraftFold"]
+albedo_color = Color(0.68, 0.50, 0.32, 1)
+roughness = 0.90
+
+[sub_resource type="StandardMaterial3D" id="Material_RedStamp"]
+albedo_color = Color(0.82, 0.18, 0.14, 1)
+roughness = 0.65
+
+[sub_resource type="BoxMesh" id="BoxMesh_BagBody"]
+material = SubResource("Material_KraftPaper")
+size = Vector3(0.26, 0.30, 0.16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BagFoldTop"]
+material = SubResource("Material_DarkKraftFold")
+size = Vector3(0.262, 0.04, 0.13)
+
+[sub_resource type="BoxMesh" id="BoxMesh_BagSeal"]
+material = SubResource("Material_RedStamp")
+size = Vector3(0.08, 0.03, 0.135)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FrontLogo"]
+material = SubResource("Material_RedStamp")
+size = Vector3(0.12, 0.08, 0.002)
+
+[node name="DeliveryBag" type="StaticBody3D"]
+script = ExtResource("1_bag")
+item_id = "delivery_bag"
+display_name = "Saco de Delivery"
+item_type = "packaging"
+prompt_text = "🖱️ Pegar Saco de Delivery"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="Body" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+mesh = SubResource("BoxMesh_BagBody")
+
+[node name="FoldTop" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.31, 0)
+mesh = SubResource("BoxMesh_BagFoldTop")
+
+[node name="Seal" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.32, 0)
+mesh = SubResource("BoxMesh_BagSeal")
+
+[node name="FrontLogo" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.16, 0.081)
+mesh = SubResource("BoxMesh_FrontLogo")

@@ -30,6 +30,12 @@ enum CarState {
 @onready var taillight_r: MeshInstance3D = $Model/TaillightR
 @onready var status_label: Label3D = $StatusLabel
 
+# Áudio 3D Posicional do Veículo
+var engine_audio: AudioStreamPlayer3D = null
+var horn_audio: AudioStreamPlayer3D = null
+const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+var _horn_cooldown: float = 18.0
+
 var current_state: CarState = CarState.SPAWNING
 var target_position: Vector3 = Vector3.ZERO
 var target_queue_index: int = -1
@@ -79,9 +85,47 @@ func _ready() -> void:
 		experience.customer_id = car_id
 		experience.customer_type = "Drive-Thru"
 
+	_setup_audio()
 	_ensure_spotlight()
 	_randomize_appearance()
 	_update_status_label()
+
+func _setup_audio() -> void:
+	if not engine_audio:
+		engine_audio = AudioStreamPlayer3D.new()
+		engine_audio.name = "EngineAudioPlayer"
+		engine_audio.unit_size = 6.0
+		engine_audio.max_distance = 45.0
+		engine_audio.volume_db = -6.0
+		add_child(engine_audio)
+
+	if not horn_audio:
+		horn_audio = AudioStreamPlayer3D.new()
+		horn_audio.name = "HornAudioPlayer"
+		horn_audio.unit_size = 12.0
+		horn_audio.max_distance = 80.0
+		horn_audio.volume_db = 1.0
+		add_child(horn_audio)
+
+func _play_engine(sound_id: String, vol_db: float = -6.0) -> void:
+	if not engine_audio:
+		return
+	var stream = SoundSynthesizer.get_stream(sound_id)
+	if engine_audio.stream == stream and engine_audio.playing:
+		return
+	engine_audio.stream = stream
+	engine_audio.volume_db = vol_db
+	if engine_audio.is_inside_tree():
+		engine_audio.play()
+
+func _play_horn() -> void:
+	if not horn_audio:
+		return
+	horn_audio.stream = SoundSynthesizer.get_stream("car_horn_beep")
+	horn_audio.volume_db = 1.0
+	horn_audio.pitch_scale = randf_range(0.99, 1.01)
+	if horn_audio.is_inside_tree():
+		horn_audio.play()
 
 func _ensure_spotlight() -> SpotLight3D:
 	if not spot_light:
@@ -155,6 +199,7 @@ func _physics_process(delta: float) -> void:
 
 	match current_state:
 		CarState.MOVING_TO_QUEUE:
+			_play_engine("car_engine_approach", -6.0)
 			var target_h = Vector3(target_position.x, position.y, target_position.z)
 			position = position.move_toward(target_h, move_speed * delta)
 			if position.distance_to(target_h) <= 0.1:
@@ -162,6 +207,7 @@ func _physics_process(delta: float) -> void:
 				if target_queue_index == 0:
 					if current_order == null:
 						current_state = CarState.AT_WINDOW_WAITING_ORDER
+						_play_horn() # Buzina curta e clara avisando chegada ao ponto de atendimento
 					else:
 						current_state = CarState.AT_WINDOW_WAITING_FOOD
 				else:
@@ -169,6 +215,12 @@ func _physics_process(delta: float) -> void:
 				_update_status_label()
 
 		CarState.WAITING_IN_LINE:
+			_play_engine("car_engine_idle", -8.0)
+			_horn_cooldown -= delta
+			if _horn_cooldown <= 0.0:
+				_horn_cooldown = randf_range(30.0, 55.0)
+				if randf() < 0.35:
+					_play_horn()
 			if experience:
 				experience.wait_time_in_line += delta
 			if mood:
@@ -176,6 +228,7 @@ func _physics_process(delta: float) -> void:
 			_update_status_label()
 
 		CarState.AT_WINDOW_WAITING_ORDER:
+			_play_engine("car_engine_idle", -8.0)
 			if experience:
 				experience.wait_time_to_order += delta
 			if mood:
@@ -186,6 +239,7 @@ func _physics_process(delta: float) -> void:
 			_update_status_label()
 
 		CarState.AT_WINDOW_WAITING_FOOD:
+			_play_engine("car_engine_idle", -8.0)
 			if experience:
 				experience.wait_time_for_food += delta
 			if mood:
@@ -196,6 +250,7 @@ func _physics_process(delta: float) -> void:
 			_update_status_label()
 
 		CarState.LEAVING:
+			_play_engine("car_engine_leave", -6.0)
 			var target_h = Vector3(target_position.x, position.y, target_position.z)
 			position = position.move_toward(target_h, (move_speed * 1.3) * delta)
 			if position.distance_to(target_h) <= 0.5:
@@ -287,6 +342,7 @@ func finish_and_leave() -> void:
 	_submit_review()
 
 	current_state = CarState.LEAVING
+	_play_engine("car_engine_leave", -11.0)
 	target_position = Vector3(-42.0, position.y, position.z) # Rumo à saída oeste
 	_update_status_label()
 

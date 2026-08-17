@@ -259,3 +259,11 @@ double_sided = false
 text = "😊 Cliente"
 font_size = 20
 outline_size = 6
+
+[node name="CustomerAudioPlayer" type="AudioStreamPlayer3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+unit_size = 5.0
+max_distance = 45.0
+volume_db = 0.0
+bus = &"Master"
+

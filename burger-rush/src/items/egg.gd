@@ -125,8 +125,8 @@ func _update_visuals() -> void:
 			if yolk_mat:
 				yolk_mat.albedo_color = Color(0.98, 0.68, 0.08, 1.0)
 				yolk_mat.roughness = 0.2
-			if edge_mat:
-				edge_mat.visible = false if egg_crisp_edge else false
+			if egg_crisp_edge:
+				egg_crisp_edge.visible = false
 		State.COOKING:
 			# Clara começando a opacificar, gema cozinhando
 			if white_mat:

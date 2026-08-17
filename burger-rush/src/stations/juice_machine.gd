@@ -70,8 +70,79 @@ var fill_progresses: Array[float] = [0.0, 0.0, 0.0]
 # Nós de Referência
 @onready var power_led: MeshInstance3D = get_node_or_null("Model/PowerSwitch/StatusLED")
 
+# Nós de Áudio 3D Posicional
+@onready var hum_audio: AudioStreamPlayer3D = get_node_or_null("Audio/HumAudioPlayer")
+@onready var dispense_audio: AudioStreamPlayer3D = get_node_or_null("Audio/DispenseAudioPlayer")
+@onready var process_audio: AudioStreamPlayer3D = get_node_or_null("Audio/ProcessAudioPlayer")
+@onready var oneshot_audio: AudioStreamPlayer3D = get_node_or_null("Audio/OneShotAudioPlayer")
+
+const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+
+var _target_hum_vol: float = -80.0
+var _target_dispense_vol: float = -80.0
+var _target_process_vol: float = -80.0
+
 func _ready() -> void:
+	_setup_audio()
 	_update_all_visuals()
+
+func _setup_audio() -> void:
+	if not hum_audio:
+		hum_audio = get_node_or_null("Audio/HumAudioPlayer")
+	if not dispense_audio:
+		dispense_audio = get_node_or_null("Audio/DispenseAudioPlayer")
+	if not process_audio:
+		process_audio = get_node_or_null("Audio/ProcessAudioPlayer")
+	if not oneshot_audio:
+		oneshot_audio = get_node_or_null("Audio/OneShotAudioPlayer")
+
+	if not hum_audio:
+		var audio_root = get_node_or_null("Audio")
+		if not audio_root:
+			audio_root = Node3D.new()
+			audio_root.name = "Audio"
+			audio_root.position = Vector3(0, 1.10, 0.1)
+			add_child(audio_root)
+
+		hum_audio = AudioStreamPlayer3D.new()
+		hum_audio.name = "HumAudioPlayer"
+		hum_audio.unit_size = 2.8
+		hum_audio.max_distance = 18.0
+		audio_root.add_child(hum_audio)
+
+		dispense_audio = AudioStreamPlayer3D.new()
+		dispense_audio.name = "DispenseAudioPlayer"
+		dispense_audio.unit_size = 2.8
+		dispense_audio.max_distance = 18.0
+		audio_root.add_child(dispense_audio)
+
+		process_audio = AudioStreamPlayer3D.new()
+		process_audio.name = "ProcessAudioPlayer"
+		process_audio.unit_size = 2.8
+		process_audio.max_distance = 18.0
+		audio_root.add_child(process_audio)
+
+		oneshot_audio = AudioStreamPlayer3D.new()
+		oneshot_audio.name = "OneShotAudioPlayer"
+		oneshot_audio.unit_size = 2.8
+		oneshot_audio.max_distance = 18.0
+		audio_root.add_child(oneshot_audio)
+
+	hum_audio.volume_db = -80.0
+	dispense_audio.volume_db = -80.0
+	process_audio.volume_db = -80.0
+
+func _safe_play(player: AudioStreamPlayer3D) -> void:
+	if player and player.is_inside_tree():
+		player.play()
+
+func _play_oneshot(sound_id: String, vol_db: float = -6.0) -> void:
+	if not oneshot_audio:
+		_setup_audio()
+	if oneshot_audio:
+		oneshot_audio.stream = SoundSynthesizer.get_stream(sound_id)
+		oneshot_audio.volume_db = vol_db
+		_safe_play(oneshot_audio)
 
 func _process(delta: float) -> void:
 	# 1. Animação de deslizamento suave das gavetas
@@ -83,12 +154,14 @@ func _process(delta: float) -> void:
 			d_node.position.z = drawer_positions[i]
 
 	# 2. Processamento e Moagem da Polpa
+	var prev_any_filling = false
 	for i in range(3):
 		if is_processing[i] and is_powered:
 			process_timers[i] -= delta
 			if process_timers[i] <= 0.0:
 				is_processing[i] = false
 				target_juice_doses[i] = minf(MAX_JUICE_DOSES, target_juice_doses[i] + DOSES_PER_PULP)
+				_play_oneshot("juice_fill_reservoir", -7.0)
 
 		# Subida gradual e suave do nível de suco no reservatório correspondente (de baixo para cima)
 		if juice_doses[i] < target_juice_doses[i]:
@@ -101,6 +174,68 @@ func _process(delta: float) -> void:
 	# 3. Fluxo das Torneiras para os Copos
 	for i in range(3):
 		_process_dispensing(i, delta)
+
+	_process_audio(delta)
+
+func _process_audio(delta: float) -> void:
+	if not hum_audio or not dispense_audio or not process_audio:
+		_setup_audio()
+
+	# 1. Zumbido contínuo e discreto de funcionamento
+	if is_powered:
+		if not hum_audio.playing:
+			hum_audio.stream = SoundSynthesizer.get_stream("juice_hum_loop")
+			_safe_play(hum_audio)
+		_target_hum_vol = -28.0
+	else:
+		_target_hum_vol = -80.0
+
+	var w_hum = 1.0 - exp(-6.0 * delta)
+	hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w_hum)
+	if not is_powered and hum_audio.volume_db <= -60.0 and hum_audio.playing:
+		hum_audio.stop()
+
+	# 2. Motor de processamento da polpa
+	var any_processing = false
+	if is_powered:
+		for proc in is_processing:
+			if proc:
+				any_processing = true
+				break
+
+	if any_processing:
+		if not process_audio.playing:
+			process_audio.stream = SoundSynthesizer.get_stream("juice_process_loop")
+			_safe_play(process_audio)
+		_target_process_vol = -16.0
+	else:
+		_target_process_vol = -80.0
+
+	var w_proc = 1.0 - exp(-8.0 * delta)
+	process_audio.volume_db = lerpf(process_audio.volume_db, _target_process_vol, w_proc)
+	if not any_processing and process_audio.volume_db <= -60.0 and process_audio.playing:
+		process_audio.stop()
+
+	# 3. Fluxo de suco saindo da torneira
+	var any_dispensing = false
+	if is_powered:
+		for i in range(3):
+			if is_lever_down[i] and juice_doses[i] > 0.0:
+				any_dispensing = true
+				break
+
+	if any_dispensing:
+		if not dispense_audio.playing:
+			dispense_audio.stream = SoundSynthesizer.get_stream("juice_dispense_loop")
+			_safe_play(dispense_audio)
+		_target_dispense_vol = -15.0
+	else:
+		_target_dispense_vol = -80.0
+
+	var w_disp = 1.0 - exp(-10.0 * delta)
+	dispense_audio.volume_db = lerpf(dispense_audio.volume_db, _target_dispense_vol, w_disp)
+	if not any_dispensing and dispense_audio.volume_db <= -60.0 and dispense_audio.playing:
+		dispense_audio.stop()
 
 func _process_dispensing(idx: int, delta: float) -> void:
 	var lever_mesh = get_node_or_null("Model/LeverPivot_%d/LeverArm_%d" % [idx, idx])
@@ -148,8 +283,12 @@ func _process_dispensing(idx: int, delta: float) -> void:
 func toggle_power(worker: Node3D = null) -> void:
 	is_powered = !is_powered
 	if not is_powered:
+		_play_oneshot("juice_switch_off", -6.0)
 		for i in range(3):
 			stop_pouring(i)
+	else:
+		_play_oneshot("juice_switch_on", -6.0)
+
 	if worker:
 		var msg = "⚡ Máquina de Sucos LIGADA" if is_powered else "⚡ Máquina de Sucos DESLIGADA"
 		_show_feedback(worker, msg)
@@ -174,6 +313,8 @@ func toggle_drawer(idx: int, worker: Node3D = null) -> void:
 		return
 
 	is_drawer_open[idx] = !is_drawer_open[idx]
+	_play_oneshot("juice_drawer_open" if is_drawer_open[idx] else "juice_drawer_close", -5.0)
+
 	if not is_drawer_open[idx]:
 		# Ao fechar a gaveta: se tiver uma polpa colocada, consome e inicia o processamento
 		if placed_pulps[idx] != null and is_instance_valid(placed_pulps[idx]):
@@ -204,6 +345,7 @@ func insert_pulp_in_drawer(idx: int, pulp: JuicePulp, worker: Node3D = null) -> 
 
 	# Validação estrita do tipo do item
 	if not is_pulp_compatible(idx, pulp):
+		_play_oneshot("juice_pulp_reject", -5.0)
 		if worker:
 			_show_feedback(worker, "❌ Esta gaveta é de %s! Não aceita polpa de outro sabor." % FLAVORS[idx].name)
 		return false
@@ -237,6 +379,8 @@ func insert_pulp_in_drawer(idx: int, pulp: JuicePulp, worker: Node3D = null) -> 
 	pulp.rotation = Vector3.ZERO
 	pulp.visible = true
 	placed_pulps[idx] = pulp
+
+	_play_oneshot("juice_pulp_place", -5.0)
 
 	if worker:
 		_show_feedback(worker, "🧊 Polpa de %s colocada na gaveta! Feche com [E] para moer." % FLAVORS[idx].name)
@@ -284,6 +428,7 @@ func start_pouring(idx: int) -> void:
 	if idx < 0 or idx >= 3:
 		return
 	is_lever_down[idx] = true
+	_play_oneshot("soda_lever_pull", -6.0)
 	var cup = current_cups[idx]
 	if cup and is_instance_valid(cup):
 		cup.set_flavor(FLAVORS[idx].id)
@@ -294,6 +439,8 @@ func start_pouring(idx: int) -> void:
 func stop_pouring(idx: int) -> void:
 	if idx < 0 or idx >= 3:
 		return
+	if is_lever_down[idx]:
+		_play_oneshot("soda_lever_release", -6.0)
 	is_lever_down[idx] = false
 	var stream_mesh = get_node_or_null("Model/Stream_%d" % idx)
 	if stream_mesh:
@@ -325,6 +472,8 @@ func place_cup_in_slot(idx: int, cup: DrinkCup, worker: Node3D = null) -> bool:
 	if cup.has_method("on_placed_in_station"):
 		cup.on_placed_in_station()
 
+	_play_oneshot("soda_cup_place", -6.0)
+
 	if worker:
 		_show_feedback(worker, "🥤 Copo apoiado na base de Suco de %s" % FLAVORS[idx].name)
 	return true
@@ -348,6 +497,8 @@ func take_cup_from_slot(idx: int, player: Node3D) -> DrinkCup:
 
 	if player and player.has_method("pick_up"):
 		player.pick_up(cup)
+
+	_play_oneshot("soda_cup_remove", -6.0)
 
 	_show_feedback(player, "🥤 %s retirado!" % cup.get_flavor_display_name())
 	return cup

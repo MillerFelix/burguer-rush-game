@@ -869,3 +869,30 @@ initial_velocity_max = 1.0
 
 [node name="FryerSlot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, -0.05)
+
+[node name="Audio" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0)
+
+[node name="HumAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"
+
+[node name="SizzleAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"
+
+[node name="OneShotAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"
+
+[node name="BasketAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"

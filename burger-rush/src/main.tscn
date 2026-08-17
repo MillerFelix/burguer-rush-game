@@ -65,6 +65,7 @@
 [ext_resource type="PackedScene" path="res://src/stations/bacon_egg_station.tscn" id="75_bacon_egg_station"]
 [ext_resource type="PackedScene" path="res://src/stations/prep_island.tscn" id="76_prep_island"]
 [ext_resource type="PackedScene" path="res://src/stations/pulp_storage_table.tscn" id="77_pulp_table"]
+[ext_resource type="Script" path="res://src/audio/ambient_audio_manager.gd" id="78_ambient_audio"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.35, 0.62, 0.9, 1)
@@ -1435,3 +1436,7 @@ script = ExtResource("72_reputation")
 
 [node name="WeatherManager" type="Node3D" parent="." unique_id=144845756]
 script = ExtResource("73_weather")
+
+[node name="AmbientAudioManager" type="Node3D" parent="." unique_id=144845758]
+script = ExtResource("78_ambient_audio")
+

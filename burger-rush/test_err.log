@@ -1,4 +1,12 @@
 ERROR: Condition "!is_inside_tree()" is true. Returning: Transform3D()
    at: get_global_transform (scene/3d/node_3d.cpp:649)
    GDScript backtrace (most recent call first):
-       [0] _init (res://test_juice_reservoir_liquid_scaling.gd:27)
+       [0] _init (res://test_complete_beverage_and_packaging_station.gd:52)
+ERROR: Condition "!is_inside_tree()" is true. Returning: Transform3D()
+   at: get_global_transform (scene/3d/node_3d.cpp:649)
+   GDScript backtrace (most recent call first):
+       [0] _init (res://test_complete_beverage_and_packaging_station.gd:52)
+SCRIPT ERROR: Invalid call. Nonexistent function 'select_flavor_by_index' in base 'StaticBody3D (JuiceMachine)'.
+   at: _init (res://test_complete_beverage_and_packaging_station.gd:79)
+   GDScript backtrace (most recent call first):
+       [0] _init (res://test_complete_beverage_and_packaging_station.gd:79)

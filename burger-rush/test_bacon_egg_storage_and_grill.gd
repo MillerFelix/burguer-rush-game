@@ -15,8 +15,10 @@ func _init() -> void:
 	inv.items["cheese_cheddar"]["quantity"] = 20
 	inv.items["cheese_prato"]["quantity"] = 20
 	inv.items["lettuce"]["quantity"] = 20
-	inv.items["tomato"]["quantity"] = 20
-	inv.items["mayo"]["quantity"] = 20
+	if inv.items.has("mayo"):
+		inv.items["mayo"]["quantity"] = 20
+	elif inv.items.has("sauce_mayo"):
+		inv.items["sauce_mayo"]["quantity"] = 20
 
 	var prog = ProgressionManager.new()
 	root.add_child(prog)
@@ -140,6 +142,12 @@ func _init() -> void:
 	assert(grill_scene != null, "Cena grill.tscn deve existir")
 	var grill = grill_scene.instantiate() as Grill
 	root.add_child(grill)
+	grill.is_on = true
+	grill.current_temperature = 200.0
+	grill.bacon_cook_time = 2.0
+	grill.bacon_burn_time = 3.0
+	grill.egg_cook_time = 2.0
+	grill.egg_dry_time = 2.0
 	grill._ready()
 
 	# Pega um bacon cru
@@ -169,8 +177,9 @@ func _init() -> void:
 	assert(bacon_item.get_ingredient_key() == "bacon:burnt", "Bacon queimado deve fornecer chave 'bacon:burnt'")
 	print("  [PASS] Bacon queima se passar do tempo (Estado 4: BURNT).")
 
-	# Retira o bacon queimado da chapa
-	grill.interact(player)
+	# Retira o bacon queimado da chapa com espátula
+	player.active_tool_slot = 1
+	grill.interact_item(player)
 	assert(player.held_item == bacon_item and bacon_item.state == Bacon.State.BURNT, "Bacon queimado retirado")
 	player.take_held_item().queue_free()
 
@@ -178,7 +187,8 @@ func _init() -> void:
 	# TESTE 7: PREPARO E CICLO DE ESTADOS DO OVO NA GRELHA
 	# =========================================================================
 	print("\n--- Teste 7: Preparo e Ciclo de Estados do Ovo na Grelha ---")
-	# Pega um ovo cru com Clique Esquerdo
+	# Pega um ovo cru com a mão livre (Slot 3)
+	player.active_tool_slot = 3
 	station.active_item_index = 1
 	station.interact_item(player)
 	var egg_item = player.held_item as Egg
@@ -214,24 +224,29 @@ func _init() -> void:
 	assert(egg_item.state == Egg.State.BURNT, "Ovo queima e estraga se abandonado na chapa (BURNT)")
 	print("  [PASS] Ovo queima completamente (Estado 6: BURNT).")
 
-	# Retira o ovo queimado
-	grill.interact(player)
+	# Retira o ovo queimado com espátula
+	player.active_tool_slot = 1
+	grill.interact_item(player)
 	player.take_held_item().queue_free()
 
 	# =========================================================================
 	# TESTE 8: MONTAGEM COMPLETA DE RECEITAS COM BACON E OVO NA PREP TABLE
 	# =========================================================================
 	print("\n--- Teste 8: Montagem de Sanduíches com Bacon e Ovo Prontos ---")
-	var prep_scene = load("res://src/stations/prep_table.tscn")
-	assert(prep_scene != null, "Cena prep_table.tscn deve existir")
-	var prep = prep_scene.instantiate() as PrepTable
+	var prep_scene = load("res://src/stations/assembly_table.tscn")
+	assert(prep_scene != null, "Cena assembly_table.tscn deve existir")
+	var prep = prep_scene.instantiate() as AssemblyTable
 	root.add_child(prep)
 	prep._ready()
 
 	# 1. Cria ingredientes para Burger Bacon: Pão + Carne bovina pronta + Queijo prato + Bacon pronto + Maionese
 	var b_bun = load("res://src/items/bread.tscn").instantiate()
 	var b_meat = load("res://src/items/patty.tscn").instantiate() as Patty
-	b_meat.set_state(Patty.State.COOKED)
+	b_meat.state = Patty.State.COOKED
+	b_meat.side_a_cooked = 100.0
+	b_meat.side_b_cooked = 100.0
+	b_meat.is_flipped = true
+	b_meat._update_visuals()
 	var b_cheese = load("res://src/items/cheese.tscn").instantiate()
 	b_cheese.item_id = "cheese_prato"
 	var b_bacon = load("res://src/items/bacon.tscn").instantiate() as Bacon
@@ -239,11 +254,11 @@ func _init() -> void:
 	var b_mayo = load("res://src/items/sauce.tscn").instantiate()
 	b_mayo.item_id = "mayo"
 
-	prep._place_item(b_bun)
-	prep._place_item(b_meat)
-	prep._place_item(b_cheese)
-	prep._place_item(b_bacon)
-	prep._place_item(b_mayo)
+	prep.place_item(b_bun)
+	prep.place_item(b_meat)
+	prep.place_item(b_cheese)
+	prep.place_item(b_bacon)
+	prep.place_item(b_mayo)
 
 	assert(prep.placed_items.size() == 1, "Receita de Burger Bacon deve montar lanche final")
 	var finished_bacon_burger = prep.placed_items[0]
@@ -255,7 +270,11 @@ func _init() -> void:
 	# 2. Cria ingredientes para Burger Egg: Pão + Carne bovina pronta + Queijo prato + Alface + Tomate + Ovo frito
 	var e_bun = load("res://src/items/bread.tscn").instantiate()
 	var e_meat = load("res://src/items/patty.tscn").instantiate() as Patty
-	e_meat.set_state(Patty.State.COOKED)
+	e_meat.state = Patty.State.COOKED
+	e_meat.side_a_cooked = 100.0
+	e_meat.side_b_cooked = 100.0
+	e_meat.is_flipped = true
+	e_meat._update_visuals()
 	var e_cheese = load("res://src/items/cheese.tscn").instantiate()
 	e_cheese.item_id = "cheese_prato"
 	var e_lettuce = load("res://src/items/lettuce.tscn").instantiate()
@@ -263,12 +282,12 @@ func _init() -> void:
 	var e_egg = load("res://src/items/egg.tscn").instantiate() as Egg
 	e_egg.set_state(Egg.State.COOKED)
 
-	prep._place_item(e_bun)
-	prep._place_item(e_meat)
-	prep._place_item(e_cheese)
-	prep._place_item(e_lettuce)
-	prep._place_item(e_tomato)
-	prep._place_item(e_egg)
+	prep.place_item(e_bun)
+	prep.place_item(e_meat)
+	prep.place_item(e_cheese)
+	prep.place_item(e_lettuce)
+	prep.place_item(e_tomato)
+	prep.place_item(e_egg)
 
 	assert(prep.placed_items.size() == 1, "Receita de Burger Egg deve montar lanche final")
 	var finished_egg_burger = prep.placed_items[0]

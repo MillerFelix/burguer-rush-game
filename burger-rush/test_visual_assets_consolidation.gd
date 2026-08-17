@@ -1,4 +1,4 @@
-﻿extends SceneTree
+extends SceneTree
 
 func _check_scene(scene_path, required_nodes):
 	var packed = load(scene_path)
@@ -23,7 +23,7 @@ func _init():
 		["res://src/stations/fryer.tscn", ["Model/Cabinet","Model/OilMesh","Model/BasketWire","Model/BasketHandle","FryerSlot","StatusLabel"]],
 		["res://src/stations/drink_machine.tscn", ["Model/BaseCabinet","Model/Nozzle1","Model/Nozzle2","Model/Nozzle3","Model/DripTray","CupSlot","StatusLabel"]],
 		["res://src/stations/prep_table.tscn", ["Model/TableTop","Model/GNPan1","Model/Leg1","ItemSlot","StatusLabel"]],
-		["res://src/stations/packaging_station.tscn", ["Model/PaperRoll","Model/BoxStack","PackagingSlot","StatusLabel"]],
+		["res://src/stations/packaging_station.tscn", ["Model/TableTop","Model/BurgerBoxes","Model/PotatoBoxes","Model/Cups","Model/DeliveryBags","PackagingSlot"]],
 		["res://src/stations/restaurant_table.tscn", ["Model/TableTop","Model/TablePole","Model/Chair1","Model/Chair2","Seat","PlateSlot","StatusLabel"]],
 		["res://src/stations/computer_station.tscn", ["Model/MonitorScreen","Model/Keyboard","StatusLabel"]],
 		["res://src/stations/ingredient_dispenser.tscn", ["Model/ShelfStand","Model/StorageBin","Label3D"]],

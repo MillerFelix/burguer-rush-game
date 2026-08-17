@@ -51,6 +51,18 @@ const POWER_BUTTON_Y_MIN = 0.70
 @onready var power_knob: MeshInstance3D = get_node_or_null("Model/ControlPanel/PowerControl/PowerKnob")
 @onready var power_pilot_light: MeshInstance3D = get_node_or_null("Model/ControlPanel/PowerControl/PowerPilotLight")
 
+# Nós de Áudio 3D Posicional
+@onready var hum_audio: AudioStreamPlayer3D = get_node_or_null("Audio/HumAudioPlayer")
+@onready var sizzle_audio: AudioStreamPlayer3D = get_node_or_null("Audio/SizzleAudioPlayer")
+@onready var oneshot_audio: AudioStreamPlayer3D = get_node_or_null("Audio/OneShotAudioPlayer")
+@onready var basket_audio: AudioStreamPlayer3D = get_node_or_null("Audio/BasketAudioPlayer")
+
+const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+
+var _has_played_ready_chime: bool = false
+var _target_hum_vol: float = -80.0
+var _target_sizzle_vol: float = -80.0
+
 # Compatibilidade com sistemas anteriores
 var active_potatoes: Array[Dictionary]:
 	get:
@@ -61,7 +73,75 @@ var active_potatoes: Array[Dictionary]:
 		return list
 
 func _ready() -> void:
+	_setup_audio()
 	_update_all_visuals_instant()
+
+func _setup_audio() -> void:
+	if not hum_audio:
+		hum_audio = get_node_or_null("Audio/HumAudioPlayer")
+	if not sizzle_audio:
+		sizzle_audio = get_node_or_null("Audio/SizzleAudioPlayer")
+	if not oneshot_audio:
+		oneshot_audio = get_node_or_null("Audio/OneShotAudioPlayer")
+	if not basket_audio:
+		basket_audio = get_node_or_null("Audio/BasketAudioPlayer")
+
+	# Cria nós dinamicamente se a cena for instanciada programaticamente sem nós de áudio
+	if not hum_audio:
+		var audio_root = get_node_or_null("Audio")
+		if not audio_root:
+			audio_root = Node3D.new()
+			audio_root.name = "Audio"
+			audio_root.position = Vector3(0, 0.88, 0)
+			add_child(audio_root)
+
+		hum_audio = AudioStreamPlayer3D.new()
+		hum_audio.name = "HumAudioPlayer"
+		hum_audio.unit_size = 2.8
+		hum_audio.max_distance = 18.0
+		audio_root.add_child(hum_audio)
+
+		sizzle_audio = AudioStreamPlayer3D.new()
+		sizzle_audio.name = "SizzleAudioPlayer"
+		sizzle_audio.unit_size = 2.8
+		sizzle_audio.max_distance = 18.0
+		audio_root.add_child(sizzle_audio)
+
+		oneshot_audio = AudioStreamPlayer3D.new()
+		oneshot_audio.name = "OneShotAudioPlayer"
+		oneshot_audio.unit_size = 2.8
+		oneshot_audio.max_distance = 18.0
+		audio_root.add_child(oneshot_audio)
+
+		basket_audio = AudioStreamPlayer3D.new()
+		basket_audio.name = "BasketAudioPlayer"
+		basket_audio.unit_size = 2.8
+		basket_audio.max_distance = 18.0
+		audio_root.add_child(basket_audio)
+
+	hum_audio.volume_db = -80.0
+	sizzle_audio.volume_db = -80.0
+
+func _safe_play(player: AudioStreamPlayer3D) -> void:
+	if player and player.is_inside_tree():
+		player.play()
+
+func _play_oneshot(sound_id: String, vol_db: float = -6.0) -> void:
+	if not oneshot_audio:
+		_setup_audio()
+	if oneshot_audio:
+		oneshot_audio.stream = SoundSynthesizer.get_stream(sound_id)
+		oneshot_audio.volume_db = vol_db
+		_safe_play(oneshot_audio)
+
+func _play_basket_move(is_lowering: bool) -> void:
+	if not basket_audio:
+		_setup_audio()
+	if basket_audio:
+		var sound_id = "fryer_basket_lower" if is_lowering else "fryer_basket_raise"
+		basket_audio.stream = SoundSynthesizer.get_stream(sound_id)
+		basket_audio.volume_db = -14.0
+		_safe_play(basket_audio)
 
 func is_ideal_temp() -> bool:
 	return current_temperature >= IDEAL_TEMP_MIN
@@ -84,7 +164,15 @@ func _process(delta: float) -> void:
 	# 2. Atualiza termômetro horizontal e luz piloto
 	_update_thermometer(delta)
 
-	# 3. Processa cada um dos 4 compartimentos de forma 100% independente
+	# 3. Disparo único do Feedback Sonoro (Chime de Prontidão) ao atingir 150°C
+	if is_on and is_ideal_temp():
+		if not _has_played_ready_chime:
+			_has_played_ready_chime = true
+			_play_oneshot("fryer_ready_chime", -7.0)
+	elif not is_on or current_temperature < (IDEAL_TEMP_MIN - 10.0):
+		_has_played_ready_chime = false
+
+	# 4. Processa cada um dos 4 compartimentos de forma 100% independente
 	var speed = get_cooking_speed_factor()
 
 	for i in range(4):
@@ -125,11 +213,69 @@ func _process(delta: float) -> void:
 		# Atualização visual do alimento, ondulação líquida do óleo e partículas
 		_update_compartment_visuals(i, is_frying)
 
+	# 5. Processamento Sonoro Contínuo (Hum de Aquecimento e Sizzle de Fritura)
+	_process_audio(delta)
+
+func _process_audio(delta: float) -> void:
+	if not hum_audio or not sizzle_audio:
+		_setup_audio()
+
+	# 1. Zumbido contínuo de aquecimento e funcionamento (Hum Loop)
+	if is_on:
+		if not hum_audio.playing:
+			hum_audio.stream = SoundSynthesizer.get_stream("fryer_hum_loop")
+			_safe_play(hum_audio)
+		_target_hum_vol = -27.0
+	else:
+		_target_hum_vol = -80.0
+
+	var w_hum = 1.0 - exp(-6.0 * delta)
+	hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w_hum)
+	if not is_on and hum_audio.volume_db <= -60.0 and hum_audio.playing:
+		hum_audio.stop()
+
+	# 2. Chiado e borbulhamento dinâmico do óleo (Sizzle Loop)
+	var frying_baskets_count = 0
+	var any_burnt = false
+	var speed = get_cooking_speed_factor()
+
+	for comp in compartments:
+		if comp["basket_down"] and speed > 0.0 and comp["food_state"] != "empty":
+			frying_baskets_count += 1
+			if comp["food_state"] == "burnt":
+				any_burnt = true
+
+	if frying_baskets_count > 0 and current_temperature >= 80.0:
+		if not sizzle_audio.playing:
+			sizzle_audio.stream = SoundSynthesizer.get_stream("fryer_sizzle_loop")
+			_safe_play(sizzle_audio)
+
+		# Volume base conforme temperatura do óleo
+		var temp_ratio = clampf((current_temperature - 80.0) / (IDEAL_TEMP_MIN - 80.0), 0.3, 1.0)
+		var base_vol = lerpf(-19.0, -11.0, temp_ratio)
+
+		# Escalação natural com múltiplos cestos (+1.2 dB por cesto adicional)
+		var multi_bonus = (frying_baskets_count - 1) * 1.2
+		_target_sizzle_vol = minf(-7.0, base_vol + multi_bonus)
+
+		# Pitch dinâmico: mais borbulhante e agressivo quando muito quente ou queimando
+		var target_pitch = 1.08 if any_burnt else (1.02 if is_ideal_temp() else 0.96)
+		var w_pitch = 1.0 - exp(-4.0 * delta)
+		sizzle_audio.pitch_scale = lerpf(sizzle_audio.pitch_scale, target_pitch, w_pitch)
+	else:
+		_target_sizzle_vol = -80.0
+
+	var w_sizzle = 1.0 - exp(-8.0 * delta)
+	sizzle_audio.volume_db = lerpf(sizzle_audio.volume_db, _target_sizzle_vol, w_sizzle)
+	if frying_baskets_count == 0 and sizzle_audio.volume_db <= -60.0 and sizzle_audio.playing:
+		sizzle_audio.stop()
+
 func _update_compartment_visuals(i: int, is_frying: bool) -> void:
 	var comp = compartments[i]
 	var food_state: String = comp["food_state"]
+	var timer: float = comp["timer"]
 
-	# Malha das batatas palito visíveis dentro do cesto aramado
+	# Malha das batatas palito com evolução contínua e rica de cor
 	var fries_mesh = get_node_or_null("Model/Basket%d/FriesMesh" % i) as MeshInstance3D
 	if fries_mesh:
 		if food_state == "empty":
@@ -146,20 +292,25 @@ func _update_compartment_visuals(i: int, is_frying: bool) -> void:
 					mat.albedo_color = Color(0.96, 0.93, 0.76, 1.0)
 					mat.roughness = 0.65
 				"cooking":
-					mat.albedo_color = Color(0.95, 0.82, 0.35, 1.0)
-					mat.roughness = 0.5
+					# Transição gradual suave de cor conforme o tempo de fritura
+					var prog = clampf(timer / cook_time, 0.0, 1.0)
+					mat.albedo_color = Color(0.96, 0.93, 0.76, 1.0).lerp(Color(0.95, 0.72, 0.18, 1.0), prog)
+					mat.roughness = lerpf(0.65, 0.40, prog)
 				"cooked":
+					# Dourado apetitoso pronto
 					mat.albedo_color = Color(0.95, 0.72, 0.18, 1.0)
-					mat.roughness = 0.4
+					mat.roughness = 0.40
 				"burnt":
+					# Escurecido queimado
 					mat.albedo_color = Color(0.18, 0.12, 0.08, 1.0)
-					mat.roughness = 0.8
+					mat.roughness = 0.85
 
 	# Superfície líquida de óleo dourado com ondulações suaves
 	var oil_mesh = get_node_or_null("Model/OilMesh%d" % i) as MeshInstance3D
 	if oil_mesh:
 		oil_mesh.visible = true
-		var wave = sin(Time.get_ticks_msec() * 0.003 + i * 1.5) * 0.002
+		var wave_amp = 0.004 if is_frying else 0.0015
+		var wave = sin(Time.get_ticks_msec() * 0.004 + i * 1.5) * wave_amp
 		oil_mesh.position.y = 0.74 + wave
 
 	# Partículas de Fritura e Borbulhamento ao redor das batatas
@@ -242,8 +393,10 @@ func toggle_power(player: Node3D = null) -> void:
 	is_on = !is_on
 	_update_all_visuals_instant()
 	if is_on:
+		_play_oneshot("fryer_switch_on", -6.0)
 		_show_feedback(player, "♨️ Fritadeira Ligada! Aquecendo os 4 compartimentos...")
 	else:
+		_play_oneshot("fryer_switch_off", -6.0)
 		_show_feedback(player, "⚪ Fritadeira Desligada.")
 
 # Alterna subir/descer alavanca e cesto
@@ -253,6 +406,7 @@ func toggle_basket(slot_idx: int, player: Node3D = null) -> void:
 
 	var comp = compartments[slot_idx]
 	comp["basket_down"] = !comp["basket_down"]
+	_play_basket_move(comp["basket_down"])
 
 	if not comp["basket_down"]:
 		# Levantou o cesto: inicia drenagem se tinha alimento
@@ -310,6 +464,7 @@ func interact_item(player: Node3D) -> void:
 		var pot_item = player.take_held_item()
 		if pot_item:
 			pot_item.queue_free()
+		_play_oneshot("fryer_place_potatoes", -6.0)
 		_update_compartment_visuals(slot_idx, false)
 		_show_feedback(player, "🍟 Batata congelada colocada no Cesto %d! Abaixe a alavanca [E] para fritar." % (slot_idx + 1))
 		return
@@ -348,6 +503,7 @@ func _finish_and_pack_fries(slot_idx: int, player: Node3D) -> void:
 	compartments[slot_idx]["food_state"] = "empty"
 	compartments[slot_idx]["timer"] = 0.0
 	_update_compartment_visuals(slot_idx, false)
+	_play_oneshot("fryer_pack_fries", -5.0)
 
 	var pack = fries_pack_scene.instantiate() as FriesPack
 	var root_node: Node = null

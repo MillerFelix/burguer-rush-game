@@ -30,7 +30,7 @@ script = ExtResource("1_item")
 item_id = "potato_box"
 display_name = "Embalagem de Batata"
 item_type = "packaging"
-prompt_text = "E — Pegar Embalagem de Batata"
+prompt_text = "🖱️ Pegar Embalagem de Batata"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)

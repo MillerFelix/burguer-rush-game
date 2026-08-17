@@ -29,17 +29,76 @@ enum ToolSlot {
 @onready var tool_holder: Node3D = get_node_or_null("Head/Camera3D/ToolHolder")
 @onready var hud = $HUD
 
+# Áudio do Jogador (Passos, Ferramentas, Itens)
+var footstep_audio: AudioStreamPlayer3D = null
+var tool_audio: AudioStreamPlayer3D = null
+var item_audio: AudioStreamPlayer3D = null
+const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+
+var _step_timer: float = 0.0
+
 var held_item: Node3D = null
 var active_tool_slot: int = ToolSlot.HANDS
 
 const SCENE_SPATULA = preload("res://src/tools/spatula.tscn")
 const SCENE_SPONGE = preload("res://src/tools/sponge.tscn")
 
+func _enter_tree() -> void:
+	_setup_audio()
+
 func _ready() -> void:
 	add_to_group("player")
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_ensure_audio_listener()
+	_setup_audio()
 	select_tool_slot(ToolSlot.HANDS, false)
 	_update_interaction_detection()
+
+func _ensure_audio_listener() -> void:
+	var listener = get_node_or_null("Head/Camera3D/AudioListener3D") as AudioListener3D
+	if not listener and camera:
+		listener = AudioListener3D.new()
+		listener.name = "AudioListener3D"
+		camera.add_child(listener)
+	if listener:
+		listener.make_current()
+
+func _setup_audio() -> void:
+	if not footstep_audio:
+		footstep_audio = AudioStreamPlayer3D.new()
+		footstep_audio.name = "FootstepAudioPlayer"
+		footstep_audio.unit_size = 4.5
+		footstep_audio.max_distance = 22.0
+		footstep_audio.volume_db = -11.0
+		add_child(footstep_audio)
+
+	if not tool_audio:
+		tool_audio = AudioStreamPlayer3D.new()
+		tool_audio.name = "ToolAudioPlayer"
+		tool_audio.unit_size = 4.0
+		tool_audio.max_distance = 20.0
+		tool_audio.volume_db = -4.0
+		add_child(tool_audio)
+
+	if not item_audio:
+		item_audio = AudioStreamPlayer3D.new()
+		item_audio.name = "ItemAudioPlayer"
+		item_audio.unit_size = 4.0
+		item_audio.max_distance = 20.0
+		item_audio.volume_db = -4.0
+		add_child(item_audio)
+
+func _play_sound(audio_player: AudioStreamPlayer3D, sound_id: String, vol_db: float = -8.0, pitch_var: float = 0.0) -> void:
+	if not audio_player:
+		return
+	audio_player.stream = SoundSynthesizer.get_stream(sound_id)
+	audio_player.volume_db = vol_db
+	if pitch_var > 0.0:
+		audio_player.pitch_scale = randf_range(1.0 - pitch_var, 1.0 + pitch_var)
+	else:
+		audio_player.pitch_scale = 1.0
+	if audio_player.is_inside_tree():
+		audio_player.play()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
@@ -94,19 +153,25 @@ func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
 			if tool_holder:
 				var spatula = SCENE_SPATULA.instantiate()
 				tool_holder.add_child(spatula)
-			if show_feedback and hud and hud.has_method("show_temporary_feedback"):
-				hud.show_temporary_feedback("🍳 Espátula equipada [1]")
+			if show_feedback:
+				_play_sound(tool_audio, "tool_spatula_equip", -8.0, 0.05)
+				if hud and hud.has_method("show_temporary_feedback"):
+					hud.show_temporary_feedback("🍳 Espátula equipada [1]")
 
 		ToolSlot.SPONGE:
 			if tool_holder:
 				var sponge = SCENE_SPONGE.instantiate()
 				tool_holder.add_child(sponge)
-			if show_feedback and hud and hud.has_method("show_temporary_feedback"):
-				hud.show_temporary_feedback("🧽 Bucha de limpeza equipada [2]")
+			if show_feedback:
+				_play_sound(tool_audio, "tool_sponge_equip", -8.0, 0.05)
+				if hud and hud.has_method("show_temporary_feedback"):
+					hud.show_temporary_feedback("🧽 Bucha de limpeza equipada [2]")
 
 		ToolSlot.HANDS:
-			if show_feedback and hud and hud.has_method("show_temporary_feedback"):
-				hud.show_temporary_feedback("✋ Mão livre [3]")
+			if show_feedback:
+				_play_sound(tool_audio, "tool_hands_equip", -8.0, 0.05)
+				if hud and hud.has_method("show_temporary_feedback"):
+					hud.show_temporary_feedback("✋ Mão livre [3]")
 
 	# Reanexa o item segurado ao ponto correto (BladeRestPoint da espátula ou HoldPosition da mão)
 	if transferring_item:
@@ -259,7 +324,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			held_item.stop_squeezing()
 
-	if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+	if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and DisplayServer.get_name() != "headless":
 		velocity.x = 0.0
 		velocity.z = 0.0
 		if not is_on_floor():
@@ -280,12 +345,25 @@ func _physics_process(delta: float) -> void:
 	if direction:
 		velocity.x = lerp(velocity.x, direction.x * speed, acceleration * delta)
 		velocity.z = lerp(velocity.z, direction.z * speed, acceleration * delta)
-	else:
+	elif DisplayServer.get_name() != "headless":
 		velocity.x = lerp(velocity.x, 0.0, acceleration * delta)
 		velocity.z = lerp(velocity.z, 0.0, acceleration * delta)
 
+	var move_speed_h = Vector2(velocity.x, velocity.z).length()
 	move_and_slide()
+	_process_footsteps(delta, maxf(move_speed_h, Vector2(velocity.x, velocity.z).length()))
 	_update_interaction_detection()
+
+func _process_footsteps(delta: float, speed_h: float = -1.0) -> void:
+	var horizontal_speed = speed_h if speed_h >= 0.0 else Vector2(velocity.x, velocity.z).length()
+	if horizontal_speed > 0.4:
+		var step_interval = 0.38 if not Input.is_action_pressed("sprint") else 0.26
+		_step_timer -= delta
+		if _step_timer <= 0.0:
+			_step_timer = step_interval
+			_play_sound(footstep_audio, "player_footstep", -11.0, 0.08)
+	else:
+		_step_timer = 0.05
 
 func _update_interaction_detection() -> void:
 	if not hud:
@@ -351,6 +429,8 @@ func pick_up(item: Node3D) -> void:
 		hold_position.add_child(item)
 		item.position = Vector3.ZERO
 		item.rotation = Vector3.ZERO
+
+	_play_sound(item_audio, "item_pickup", -7.5, 0.05)
 
 	if item.has_method("on_picked_up"):
 		item.on_picked_up()
@@ -476,4 +556,5 @@ func drop_item() -> void:
 	elif item.get("collision_shape") != null and item.collision_shape:
 		item.collision_shape.disabled = false
 
+	_play_sound(item_audio, "item_drop", -8.0, 0.05)
 	_update_interaction_detection()

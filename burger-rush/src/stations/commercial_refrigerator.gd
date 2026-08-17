@@ -28,17 +28,25 @@ const DOOR_ANIM_SECS: float = 0.45
 var is_open: bool = false
 var is_animating: bool = false
 
-@onready var door_pivot: Node3D = $DoorPivot
-@onready var status_label: Label3D = $StatusLabel
-@onready var beef_slot_col: CollisionShape3D = $BeefSlot/CollisionShape3D
-@onready var chicken_slot_col: CollisionShape3D = $ChickenSlot/CollisionShape3D
+@onready var door_pivot: Node3D = get_node_or_null("DoorPivot")
+@onready var status_label: Label3D = get_node_or_null("StatusLabel")
+@onready var beef_slot_col: CollisionShape3D = get_node_or_null("BeefSlot/CollisionShape3D")
+@onready var chicken_slot_col: CollisionShape3D = get_node_or_null("ChickenSlot/CollisionShape3D")
 @onready var interior_light: OmniLight3D = get_node_or_null("InteriorLight")
 
 # Grupos de alimentos visuais
 @onready var beef_food_group: Node3D = get_node_or_null("FridgeBody/BeefFoodGroup")
 @onready var chicken_food_group: Node3D = get_node_or_null("FridgeBody/ChickenFoodGroup")
 
+var door_audio: AudioStreamPlayer3D = null
+var hum_audio: AudioStreamPlayer3D = null
+var _target_hum_vol: float = -28.0
+
+func _enter_tree() -> void:
+	_setup_audio()
+
 func _ready() -> void:
+	_setup_audio()
 	# Inicialmente porta fechada → slots desabilitados
 	_set_slots_enabled(false)
 	if interior_light:
@@ -50,6 +58,33 @@ func _ready() -> void:
 
 	_update_label()
 	_update_patty_visuals()
+
+func _setup_audio() -> void:
+	if not door_audio:
+		door_audio = AudioStreamPlayer3D.new()
+		door_audio.name = "DoorAudioPlayer"
+		door_audio.unit_size = 2.5
+		door_audio.max_distance = 15.0
+		door_audio.volume_db = -4.0
+		add_child(door_audio)
+
+	if not hum_audio:
+		hum_audio = AudioStreamPlayer3D.new()
+		hum_audio.name = "HumAudioPlayer"
+		hum_audio.unit_size = 2.5
+		hum_audio.max_distance = 15.0
+		hum_audio.volume_db = -28.0
+		hum_audio.stream = SoundSynthesizer.get_stream("fridge_hum_loop")
+		add_child(hum_audio)
+	if hum_audio.is_inside_tree() and not hum_audio.playing:
+		hum_audio.play()
+
+func _process(delta: float) -> void:
+	if hum_audio:
+		if is_inside_tree() and not hum_audio.playing:
+			hum_audio.play()
+		var w = 1.0 - exp(-6.0 * delta)
+		hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w)
 
 ## Retorna se a geladeira está com a porta aberta
 func is_door_open() -> bool:
@@ -75,6 +110,13 @@ func open_door(player: Node3D = null) -> void:
 		return
 	is_animating = true
 	_set_slots_enabled(false)
+	_target_hum_vol = -16.0
+
+	if door_audio:
+		door_audio.stream = SoundSynthesizer.get_stream("fridge_door_open")
+		door_audio.pitch_scale = randf_range(0.98, 1.02)
+		if door_audio.is_inside_tree():
+			door_audio.play()
 
 	var tween = create_tween()
 	tween.set_parallel(true)
@@ -100,6 +142,13 @@ func close_door(player: Node3D = null) -> void:
 		return
 	is_animating = true
 	_set_slots_enabled(false)
+	_target_hum_vol = -28.0
+
+	if door_audio:
+		door_audio.stream = SoundSynthesizer.get_stream("fridge_door_close")
+		door_audio.pitch_scale = randf_range(0.98, 1.02)
+		if door_audio.is_inside_tree():
+			door_audio.play()
 
 	var tween = create_tween()
 	tween.set_parallel(true)

@@ -103,6 +103,17 @@ const SYRUP_CANISTER_SCENE = preload("res://src/items/syrup_canister.tscn")
 @onready var left_door_hinge: Node3D = get_node_or_null("Model/LeftDoorHinge")
 @onready var right_door_hinge: Node3D = get_node_or_null("Model/RightDoorHinge")
 @onready var cup_slot: Node3D = get_node_or_null("CupSlot_0") # Compatibilidade legada
+
+# Nós de Áudio 3D Posicional
+@onready var hum_audio: AudioStreamPlayer3D = get_node_or_null("Audio/HumAudioPlayer")
+@onready var dispense_audio: AudioStreamPlayer3D = get_node_or_null("Audio/DispenseAudioPlayer")
+@onready var oneshot_audio: AudioStreamPlayer3D = get_node_or_null("Audio/OneShotAudioPlayer")
+
+const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+
+var _target_hum_vol: float = -80.0
+var _target_dispense_vol: float = -80.0
+
 var door_hinge: Node3D:
 	get:
 		return left_door_hinge if left_door_hinge else get_node_or_null("Model/LeftDoorHinge")
@@ -126,8 +137,58 @@ var fill_progress: float:
 		fill_progresses[current_flavor_index] = val
 
 func _ready() -> void:
+	_setup_audio()
 	_init_canisters()
 	_update_all_visuals()
+
+func _setup_audio() -> void:
+	if not hum_audio:
+		hum_audio = get_node_or_null("Audio/HumAudioPlayer")
+	if not dispense_audio:
+		dispense_audio = get_node_or_null("Audio/DispenseAudioPlayer")
+	if not oneshot_audio:
+		oneshot_audio = get_node_or_null("Audio/OneShotAudioPlayer")
+
+	if not hum_audio:
+		var audio_root = get_node_or_null("Audio")
+		if not audio_root:
+			audio_root = Node3D.new()
+			audio_root.name = "Audio"
+			audio_root.position = Vector3(0, 0.95, 0.1)
+			add_child(audio_root)
+
+		hum_audio = AudioStreamPlayer3D.new()
+		hum_audio.name = "HumAudioPlayer"
+		hum_audio.unit_size = 2.8
+		hum_audio.max_distance = 18.0
+		audio_root.add_child(hum_audio)
+
+		dispense_audio = AudioStreamPlayer3D.new()
+		dispense_audio.name = "DispenseAudioPlayer"
+		dispense_audio.unit_size = 2.8
+		dispense_audio.max_distance = 18.0
+		audio_root.add_child(dispense_audio)
+
+		oneshot_audio = AudioStreamPlayer3D.new()
+		oneshot_audio.name = "OneShotAudioPlayer"
+		oneshot_audio.unit_size = 2.8
+		oneshot_audio.max_distance = 18.0
+		audio_root.add_child(oneshot_audio)
+
+	hum_audio.volume_db = -80.0
+	dispense_audio.volume_db = -80.0
+
+func _safe_play(player: AudioStreamPlayer3D) -> void:
+	if player and player.is_inside_tree():
+		player.play()
+
+func _play_oneshot(sound_id: String, vol_db: float = -6.0) -> void:
+	if not oneshot_audio:
+		_setup_audio()
+	if oneshot_audio:
+		oneshot_audio.stream = SoundSynthesizer.get_stream(sound_id)
+		oneshot_audio.volume_db = vol_db
+		_safe_play(oneshot_audio)
 
 func _init_canisters() -> void:
 	for i in range(4):
@@ -154,7 +215,47 @@ func _process(delta: float) -> void:
 	for i in range(4):
 		_process_station_dispense(i, delta)
 
+	_process_audio(delta)
 	_update_all_visuals()
+
+func _process_audio(delta: float) -> void:
+	if not hum_audio or not dispense_audio:
+		_setup_audio()
+
+	# 1. Zumbido sutil do compressor/refrigeração
+	if is_powered:
+		if not hum_audio.playing:
+			hum_audio.stream = SoundSynthesizer.get_stream("soda_fridge_loop")
+			_safe_play(hum_audio)
+		_target_hum_vol = -28.0
+	else:
+		_target_hum_vol = -80.0
+
+	var w_hum = 1.0 - exp(-6.0 * delta)
+	hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w_hum)
+	if not is_powered and hum_audio.volume_db <= -60.0 and hum_audio.playing:
+		hum_audio.stop()
+
+	# 2. Fluxo contínuo de refrigerante com gás
+	var any_dispensing = false
+	if is_powered:
+		for i in range(4):
+			if is_lever_down[i] and syrup_levels[i] > 0.0:
+				any_dispensing = true
+				break
+
+	if any_dispensing:
+		if not dispense_audio.playing:
+			dispense_audio.stream = SoundSynthesizer.get_stream("soda_dispense_loop")
+			_safe_play(dispense_audio)
+		_target_dispense_vol = -17.0
+	else:
+		_target_dispense_vol = -80.0
+
+	var w_disp = 1.0 - exp(-10.0 * delta)
+	dispense_audio.volume_db = lerpf(dispense_audio.volume_db, _target_dispense_vol, w_disp)
+	if not any_dispensing and dispense_audio.volume_db <= -60.0 and dispense_audio.playing:
+		dispense_audio.stop()
 
 func _process_station_dispense(idx: int, delta: float) -> void:
 	var lever_pivot = get_node_or_null("Model/LeverPivot_%d" % idx)
@@ -202,8 +303,12 @@ func _process_station_dispense(idx: int, delta: float) -> void:
 func toggle_power(worker: Node3D = null) -> void:
 	is_powered = !is_powered
 	if not is_powered:
+		_play_oneshot("soda_switch_off", -6.0)
 		for i in range(4):
 			stop_pouring(i)
+	else:
+		_play_oneshot("soda_switch_on", -6.0)
+
 	if worker:
 		var msg = "⚡ Máquina de Bebidas LIGADA (Refrigeração Ativa)" if is_powered else "⚡ Máquina de Bebidas DESLIGADA"
 		_show_feedback(worker, msg)
@@ -212,6 +317,7 @@ func toggle_power(worker: Node3D = null) -> void:
 # Abre / Fecha a porta esquerda (acesso a Cola e Cola Zero)
 func toggle_left_door(worker: Node3D = null) -> void:
 	is_left_door_open = !is_left_door_open
+	_play_oneshot("soda_door_open" if is_left_door_open else "soda_door_close", -5.0)
 	if worker:
 		var msg = "🚪 Porta Esquerda ABERTA (Cola / Cola Zero)" if is_left_door_open else "🚪 Porta Esquerda FECHADA"
 		_show_feedback(worker, msg)
@@ -219,6 +325,7 @@ func toggle_left_door(worker: Node3D = null) -> void:
 # Abre / Fecha a porta direita (acesso a Limão e Laranja)
 func toggle_right_door(worker: Node3D = null) -> void:
 	is_right_door_open = !is_right_door_open
+	_play_oneshot("soda_door_open" if is_right_door_open else "soda_door_close", -5.0)
 	if worker:
 		var msg = "🚪 Porta Direita ABERTA (Limão / Laranja)" if is_right_door_open else "🚪 Porta Direita FECHADA"
 		_show_feedback(worker, msg)
@@ -228,9 +335,11 @@ func toggle_door(worker: Node3D = null) -> void:
 	if is_door_open:
 		is_left_door_open = false
 		is_right_door_open = false
+		_play_oneshot("soda_door_close", -5.0)
 	else:
 		is_left_door_open = true
 		is_right_door_open = true
+		_play_oneshot("soda_door_open", -5.0)
 	if worker:
 		_show_feedback(worker, "🚪 Portas %s" % ("ABERTAS" if is_door_open else "FECHADAS"))
 
@@ -274,6 +383,7 @@ func start_pouring(idx: int) -> void:
 	if idx < 0 or idx >= 4:
 		return
 	is_lever_down[idx] = true
+	_play_oneshot("soda_lever_pull", -6.0)
 	var cup = current_cups[idx]
 	if cup and is_instance_valid(cup):
 		cup.set_flavor(FLAVORS[idx].id)
@@ -284,6 +394,8 @@ func start_pouring(idx: int) -> void:
 func stop_pouring(idx: int) -> void:
 	if idx < 0 or idx >= 4:
 		return
+	if is_lever_down[idx]:
+		_play_oneshot("soda_lever_release", -6.0)
 	is_lever_down[idx] = false
 	var stream_mesh = get_node_or_null("Model/Stream_%d" % idx)
 	if stream_mesh:
@@ -316,6 +428,8 @@ func place_cup_in_slot(idx: int, cup: DrinkCup, worker: Node3D = null) -> bool:
 	if cup.has_method("on_placed_in_station"):
 		cup.on_placed_in_station()
 
+	_play_oneshot("soda_cup_place", -6.0)
+
 	if worker:
 		_show_feedback(worker, "🥤 Copo posicionado no bico de %s" % FLAVORS[idx].name)
 	_update_all_visuals()
@@ -341,6 +455,8 @@ func take_cup_from_slot(idx: int, player: Node3D) -> DrinkCup:
 
 	if player and player.has_method("pick_up"):
 		player.pick_up(cup)
+
+	_play_oneshot("soda_cup_remove", -6.0)
 
 	_show_feedback(player, "🥤 %s retirado da máquina!" % cup.get_flavor_display_name())
 	_update_all_visuals()
@@ -368,6 +484,8 @@ func remove_canister(idx: int, player: Node3D) -> SyrupCanister:
 	if player and player.has_method("pick_up"):
 		player.pick_up(can)
 
+	_play_oneshot("soda_canister_remove", -5.0)
+
 	_show_feedback(player, "📦 %s desconectado e retirado" % can.display_name)
 	_update_all_visuals()
 	return can
@@ -389,11 +507,9 @@ func insert_canister(idx: int, can: SyrupCanister, player: Node3D) -> bool:
 			_show_feedback(player, "⚠️ Já existe um galão conectado nesta posição. Remova-o primeiro.")
 		return false
 
-	var prev = can.get_parent()
-	if prev:
-		prev.remove_child(can)
-
-	can.owner = null
+	var prev_parent = can.get_parent()
+	if prev_parent:
+		prev_parent.remove_child(can)
 
 	var slot_node = get_node_or_null("CanisterSlot_%d" % idx)
 	if slot_node:
@@ -406,11 +522,13 @@ func insert_canister(idx: int, can: SyrupCanister, player: Node3D) -> bool:
 	canisters[idx] = can
 	syrup_levels[idx] = can.current_amount
 
+	_play_oneshot("soda_canister_insert", -5.0)
+
 	if can.has_method("on_placed_in_station"):
 		can.on_placed_in_station()
 
 	if player:
-		_show_feedback(player, "✨ %s conectado com sucesso! (Nível: %d%%)" % [can.display_name, int(can.current_amount)])
+		_show_feedback(player, "✅ %s instalado e conectado!" % can.display_name)
 	_update_all_visuals()
 	return true
 

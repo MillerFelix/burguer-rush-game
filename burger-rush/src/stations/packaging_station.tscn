@@ -23,19 +23,28 @@ roughness = 0.85
 albedo_color = Color(0.85, 0.15, 0.12, 1)
 roughness = 0.4
 
-[sub_resource type="StandardMaterial3D" id="Material_CupWhite"]
-albedo_color = Color(0.95, 0.96, 0.98, 1)
-roughness = 0.3
+[sub_resource type="StandardMaterial3D" id="Material_FriesYellow"]
+albedo_color = Color(0.96, 0.78, 0.18, 1)
+roughness = 0.5
 
-[sub_resource type="StandardMaterial3D" id="Material_WrappingPaper"]
-albedo_color = Color(0.92, 0.9, 0.85, 1)
-roughness = 0.7
+[sub_resource type="StandardMaterial3D" id="Material_ClearPlastic"]
+transparency = 1
+albedo_color = Color(0.92, 0.96, 1, 0.32)
+roughness = 0.08
+metallic = 0.05
+metallic_specular = 0.95
+clearcoat_enabled = true
+clearcoat = 1.0
 
-[sub_resource type="StandardMaterial3D" id="Material_Chrome"]
-albedo_color = Color(0.9, 0.92, 0.95, 1)
-metallic = 0.95
-roughness = 0.15
+[sub_resource type="StandardMaterial3D" id="Material_KraftPaperBag"]
+albedo_color = Color(0.76, 0.58, 0.38, 1)
+roughness = 0.88
 
+[sub_resource type="StandardMaterial3D" id="Material_BagSealRed"]
+albedo_color = Color(0.82, 0.18, 0.14, 1)
+roughness = 0.65
+
+; ================= MESHES DA ESTRUTURA =================
 [sub_resource type="BoxMesh" id="BoxMesh_TableTop"]
 material = SubResource("Material_StainlessSteel")
 size = Vector3(0.7, 0.05, 2.2)
@@ -54,36 +63,31 @@ size = Vector3(0.6, 0.03, 2.1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Divider"]
 material = SubResource("Material_StainlessSteel")
-size = Vector3(0.6, 0.08, 0.02)
+size = Vector3(0.6, 0.06, 0.02)
 
-[sub_resource type="BoxMesh" id="BoxMesh_BurgerBoxStack"]
+; ================= MESHES DE ITENS =================
+[sub_resource type="BoxMesh" id="BoxMesh_BurgerBoxSingle"]
 material = SubResource("Material_CardboardKraft")
-size = Vector3(0.24, 0.16, 0.24)
+size = Vector3(0.22, 0.05, 0.22)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_PaperRoll"]
-material = SubResource("Material_WrappingPaper")
-top_radius = 0.06
-bottom_radius = 0.06
-height = 0.3
-radial_segments = 16
-
-[sub_resource type="BoxMesh" id="BoxMesh_FriesBoxStack"]
+[sub_resource type="BoxMesh" id="BoxMesh_PotatoBoxSingle"]
 material = SubResource("Material_FriesBoxRed")
-size = Vector3(0.18, 0.18, 0.14)
+size = Vector3(0.14, 0.18, 0.06)
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_CupDispenserTube"]
-material = SubResource("Material_Chrome")
-top_radius = 0.065
-bottom_radius = 0.065
-height = 0.45
+[sub_resource type="CylinderMesh" id="CylinderMesh_CupBody"]
+material = SubResource("Material_ClearPlastic")
+top_radius = 0.06
+bottom_radius = 0.044
+height = 0.16
 radial_segments = 16
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_CupWhite"]
-material = SubResource("Material_CupWhite")
-top_radius = 0.055
-bottom_radius = 0.042
-height = 0.14
-radial_segments = 16
+[sub_resource type="BoxMesh" id="BoxMesh_DeliveryBagSingle"]
+material = SubResource("Material_KraftPaperBag")
+size = Vector3(0.24, 0.28, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_DeliveryBagFold"]
+material = SubResource("Material_BagSealRed")
+size = Vector3(0.08, 0.03, 0.045)
 
 [node name="PackagingStation" type="StaticBody3D"]
 script = ExtResource("1_pack")
@@ -94,6 +98,7 @@ shape = SubResource("BoxShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
 
+; --- Bancada de Inox e Pernas ---
 [node name="TableTop" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.875, 0)
 mesh = SubResource("BoxMesh_TableTop")
@@ -103,11 +108,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.33, 0.96, 0)
 mesh = SubResource("BoxMesh_Backsplash")
 
 [node name="Divider1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, -0.36)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, -0.50)
 mesh = SubResource("BoxMesh_Divider")
 
 [node name="Divider2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.94, 0.36)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0.0)
+mesh = SubResource("BoxMesh_Divider")
+
+[node name="Divider3" type="MeshInstance3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0.50)
 mesh = SubResource("BoxMesh_Divider")
 
 [node name="Leg1" type="MeshInstance3D" parent="Model"]
@@ -130,33 +139,250 @@ mesh = SubResource("BoxMesh_Leg")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 mesh = SubResource("BoxMesh_UnderShelf")
 
-[node name="BoxStack" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.98, -0.72)
-mesh = SubResource("BoxMesh_BurgerBoxStack")
+; =========================================================================
+; 1. CAIXAS DE LANCHE (BURGER BOXES) - Z ~ -0.75
+; =========================================================================
+[node name="BurgerBoxes" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.90, -0.75)
 
-[node name="PaperRoll" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -0.22, 1.04, -0.72)
-mesh = SubResource("CylinderMesh_PaperRoll")
+[node name="Full" type="Node3D" parent="Model/BurgerBoxes"]
 
-[node name="FriesStack" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 0.99, 0)
-mesh = SubResource("BoxMesh_FriesBoxStack")
+[node name="Box1" type="MeshInstance3D" parent="Model/BurgerBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
 
-[node name="CupDispenser" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 1.15, 0.72)
-mesh = SubResource("CylinderMesh_CupDispenserTube")
+[node name="Box2" type="MeshInstance3D" parent="Model/BurgerBoxes/Full"]
+transform = Transform3D(0.996, 0, 0.087, 0, 1, 0, -0.087, 0, 0.996, 0.005, 0.075, 0.002)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
 
-[node name="CupStack" type="MeshInstance3D" parent="Model/CupDispenser"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.18, 0)
-mesh = SubResource("CylinderMesh_CupWhite")
+[node name="Box3" type="MeshInstance3D" parent="Model/BurgerBoxes/Full"]
+transform = Transform3D(0.985, 0, -0.174, 0, 1, 0, 0.174, 0, 0.985, -0.004, 0.125, -0.003)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
 
+[node name="Box4" type="MeshInstance3D" parent="Model/BurgerBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002, 0.175, 0.001)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
+
+[node name="Box5" type="MeshInstance3D" parent="Model/BurgerBoxes/Full"]
+transform = Transform3D(0.996, 0, 0.087, 0, 1, 0, -0.087, 0, 0.996, -0.003, 0.225, 0.004)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
+
+[node name="Box6" type="MeshInstance3D" parent="Model/BurgerBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.275, 0)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
+
+[node name="Medium" type="Node3D" parent="Model/BurgerBoxes"]
+visible = false
+
+[node name="BoxM1" type="MeshInstance3D" parent="Model/BurgerBoxes/Medium"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
+
+[node name="BoxM2" type="MeshInstance3D" parent="Model/BurgerBoxes/Medium"]
+transform = Transform3D(0.996, 0, 0.087, 0, 1, 0, -0.087, 0, 0.996, 0.005, 0.075, 0.002)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
+
+[node name="BoxM3" type="MeshInstance3D" parent="Model/BurgerBoxes/Medium"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.002, 0.125, -0.002)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
+
+[node name="Low" type="Node3D" parent="Model/BurgerBoxes"]
+visible = false
+
+[node name="BoxL1" type="MeshInstance3D" parent="Model/BurgerBoxes/Low"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+mesh = SubResource("BoxMesh_BurgerBoxSingle")
+
+; =========================================================================
+; 2. EMBALAGENS DE BATATA (POTATO BOXES) - Z ~ -0.25
+; =========================================================================
+[node name="PotatoBoxes" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.90, -0.25)
+
+[node name="Full" type="Node3D" parent="Model/PotatoBoxes"]
+
+[node name="Fries1" type="MeshInstance3D" parent="Model/PotatoBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, -0.09)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="Fries2" type="MeshInstance3D" parent="Model/PotatoBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, -0.05)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="Fries3" type="MeshInstance3D" parent="Model/PotatoBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, -0.01)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="Fries4" type="MeshInstance3D" parent="Model/PotatoBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, 0.03)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="Fries5" type="MeshInstance3D" parent="Model/PotatoBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, 0.07)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="Fries6" type="MeshInstance3D" parent="Model/PotatoBoxes/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, 0.11)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="Medium" type="Node3D" parent="Model/PotatoBoxes"]
+visible = false
+
+[node name="FriesM1" type="MeshInstance3D" parent="Model/PotatoBoxes/Medium"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, -0.04)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="FriesM2" type="MeshInstance3D" parent="Model/PotatoBoxes/Medium"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, 0.00)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="FriesM3" type="MeshInstance3D" parent="Model/PotatoBoxes/Medium"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, 0.04)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+[node name="Low" type="Node3D" parent="Model/PotatoBoxes"]
+visible = false
+
+[node name="FriesL1" type="MeshInstance3D" parent="Model/PotatoBoxes/Low"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.09, 0.00)
+mesh = SubResource("BoxMesh_PotatoBoxSingle")
+
+; =========================================================================
+; 3. COPOS TRANSPARENTES (TRANSPARENT CUPS) - Z ~ +0.25
+; =========================================================================
+[node name="Cups" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.90, 0.25)
+
+[node name="Full" type="Node3D" parent="Model/Cups"]
+
+[node name="Cup1" type="MeshInstance3D" parent="Model/Cups/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Cup2" type="MeshInstance3D" parent="Model/Cups/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Cup3" type="MeshInstance3D" parent="Model/Cups/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Cup4" type="MeshInstance3D" parent="Model/Cups/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Cup5" type="MeshInstance3D" parent="Model/Cups/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.20, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Cup6" type="MeshInstance3D" parent="Model/Cups/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.23, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Cup7" type="MeshInstance3D" parent="Model/Cups/Full"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.26, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Medium" type="Node3D" parent="Model/Cups"]
+visible = false
+
+[node name="CupM1" type="MeshInstance3D" parent="Model/Cups/Medium"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="CupM2" type="MeshInstance3D" parent="Model/Cups/Medium"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="CupM3" type="MeshInstance3D" parent="Model/Cups/Medium"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.14, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+[node name="Low" type="Node3D" parent="Model/Cups"]
+visible = false
+
+[node name="CupL1" type="MeshInstance3D" parent="Model/Cups/Low"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+mesh = SubResource("CylinderMesh_CupBody")
+
+; =========================================================================
+; 4. SACOS DE DELIVERY (DELIVERY BAGS) - Z ~ +0.75
+; =========================================================================
+[node name="DeliveryBags" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.90, 0.75)
+
+[node name="Full" type="Node3D" parent="Model/DeliveryBags"]
+
+[node name="Bag1" type="MeshInstance3D" parent="Model/DeliveryBags/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, -0.10)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagSeal1" type="MeshInstance3D" parent="Model/DeliveryBags/Full/Bag1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.145, 0)
+mesh = SubResource("BoxMesh_DeliveryBagFold")
+
+[node name="Bag2" type="MeshInstance3D" parent="Model/DeliveryBags/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, -0.06)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagSeal2" type="MeshInstance3D" parent="Model/DeliveryBags/Full/Bag2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.145, 0)
+mesh = SubResource("BoxMesh_DeliveryBagFold")
+
+[node name="Bag3" type="MeshInstance3D" parent="Model/DeliveryBags/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, -0.02)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagSeal3" type="MeshInstance3D" parent="Model/DeliveryBags/Full/Bag3"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.145, 0)
+mesh = SubResource("BoxMesh_DeliveryBagFold")
+
+[node name="Bag4" type="MeshInstance3D" parent="Model/DeliveryBags/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, 0.02)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagSeal4" type="MeshInstance3D" parent="Model/DeliveryBags/Full/Bag4"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.145, 0)
+mesh = SubResource("BoxMesh_DeliveryBagFold")
+
+[node name="Bag5" type="MeshInstance3D" parent="Model/DeliveryBags/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, 0.06)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagSeal5" type="MeshInstance3D" parent="Model/DeliveryBags/Full/Bag5"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.145, 0)
+mesh = SubResource("BoxMesh_DeliveryBagFold")
+
+[node name="Bag6" type="MeshInstance3D" parent="Model/DeliveryBags/Full"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, 0.10)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagSeal6" type="MeshInstance3D" parent="Model/DeliveryBags/Full/Bag6"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.145, 0)
+mesh = SubResource("BoxMesh_DeliveryBagFold")
+
+[node name="Medium" type="Node3D" parent="Model/DeliveryBags"]
+visible = false
+
+[node name="BagM1" type="MeshInstance3D" parent="Model/DeliveryBags/Medium"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, -0.04)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagM2" type="MeshInstance3D" parent="Model/DeliveryBags/Medium"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, 0.00)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="BagM3" type="MeshInstance3D" parent="Model/DeliveryBags/Medium"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, 0.04)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+[node name="Low" type="Node3D" parent="Model/DeliveryBags"]
+visible = false
+
+[node name="BagL1" type="MeshInstance3D" parent="Model/DeliveryBags/Low"]
+transform = Transform3D(1, 0, 0, 0, 0.985, -0.174, 0, 0.174, 0.985, 0, 0.14, 0.00)
+mesh = SubResource("BoxMesh_DeliveryBagSingle")
+
+; --- Slot de montagem / embalamento ---
 [node name="PackagingSlot" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.9, -0.72)
-
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
-billboard = 1
-double_sided = false
-text = "📦 ESTAÇÃO DE EMBALAGEM"
-font_size = 18
-outline_size = 5
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.90, -0.75)

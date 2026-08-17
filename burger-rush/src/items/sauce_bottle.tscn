@@ -97,3 +97,5 @@ mesh = SubResource("CylinderMesh_Nozzle")
 [node name="StreamMesh" type="MeshInstance3D" parent="."]
 material_override = SubResource("Material_Stream")
 visible = false
+
+

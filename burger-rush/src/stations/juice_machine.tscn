@@ -502,3 +502,30 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.42, 0.894, 0.22)
 
 [node name="CupSlot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.894, 0.22)
+
+[node name="Audio" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.10, 0.1)
+
+[node name="HumAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"
+
+[node name="DispenseAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"
+
+[node name="ProcessAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"
+
+[node name="OneShotAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+bus = &"Master"

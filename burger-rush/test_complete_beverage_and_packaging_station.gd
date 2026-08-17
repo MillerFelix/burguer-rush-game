@@ -41,15 +41,16 @@ func _init() -> void:
 	# TESTE 1: EMBALAGENS E SUPORTE DE COPOS NA BANCADA
 	# ---------------------------------------------------------
 	print("\n--- Teste 1: Área de Embalagem e Dispensador de Copos ---")
-	assert(packaging_station.has_node("Model/BoxStack"), "Bancada deve possuir pilha de caixas de hambúrguer")
-	assert(packaging_station.has_node("Model/FriesStack"), "Bancada deve possuir suporte de embalagens de batata")
-	assert(packaging_station.has_node("Model/CupDispenser"), "Bancada deve possuir suporte/coluna dispensadora de copos")
+	assert(packaging_station.has_node("Model/BurgerBoxes"), "Bancada deve possuir pilha de caixas de hambúrguer")
+	assert(packaging_station.has_node("Model/PotatoBoxes"), "Bancada deve possuir suporte de embalagens de batata")
+	assert(packaging_station.has_node("Model/Cups"), "Bancada deve possuir suporte/coluna dispensadora de copos")
+	assert(packaging_station.has_node("Model/DeliveryBags"), "Bancada deve possuir suporte de sacos de delivery")
 	assert(packaging_station.has_node("PackagingSlot"), "Bancada deve possuir PackagingSlot")
-	print("  [PASS] Elementos visuais de embalagem (Caixas, Batatas, Copos) validados")
+	print("  [PASS] Elementos visuais de embalagem (Caixas, Batatas, Copos, Sacos de Delivery) validados")
 
-	# Pegar copo vazio da bancada com a mão livre
-	packaging_station.active_item_index = 2
-	packaging_station.interact(player)
+	# Pegar copo vazio da bancada com a mão livre via clique esquerdo na seção de copos (Z = 0.25)
+	player.global_position = packaging_station.global_position + Vector3(0, 0, 0.25)
+	packaging_station.interact_item(player)
 	assert(player.held_item != null and player.held_item is DrinkCup, "Jogador deve pegar um Copo Vazio")
 	var empty_cup = player.held_item as DrinkCup
 	assert(empty_cup.state == DrinkCup.State.EMPTY, "Copo pego deve estar VAZIO")
@@ -58,19 +59,19 @@ func _init() -> void:
 	# ---------------------------------------------------------
 	# TESTE 2: CICLO COMPLETO NA MÁQUINA DE SUCO
 	# ---------------------------------------------------------
-	print("\n--- Teste 2: Máquina de Suco (Laranja, Uva, Maracujá com Alavancas Animadas) ---")
-	assert(juice_machine.available_flavors.size() == 3, "Suqueira deve ter 3 sabores de suco")
-	assert(juice_machine.has_node("Model/Tank1"), "Suqueira deve ter Reservatório 1")
-	assert(juice_machine.has_node("Model/Tank2"), "Suqueira deve ter Reservatório 2")
-	assert(juice_machine.has_node("Model/Tank3"), "Suqueira deve ter Reservatório 3")
-	assert(juice_machine.has_node("Model/Lever1"), "Suqueira deve ter Alavanca 1")
-	assert(juice_machine.has_node("Model/Lever2"), "Suqueira deve ter Alavanca 2")
-	assert(juice_machine.has_node("Model/Lever3"), "Suqueira deve ter Alavanca 3")
+	print("\n--- Teste 2: Máquina de Suco (Laranja, Uva, Morango com Alavancas Animadas) ---")
+	assert(JuiceMachine.FLAVORS.size() == 3, "Suqueira deve ter 3 sabores de suco")
+	assert(juice_machine.has_node("Model/Reservoir_0"), "Suqueira deve ter Reservatório 1")
+	assert(juice_machine.has_node("Model/Reservoir_1"), "Suqueira deve ter Reservatório 2")
+	assert(juice_machine.has_node("Model/Reservoir_2"), "Suqueira deve ter Reservatório 3")
+	assert(juice_machine.has_node("Model/LeverPivot_0"), "Suqueira deve ter Alavanca 1")
+	assert(juice_machine.has_node("Model/LeverPivot_1"), "Suqueira deve ter Alavanca 2")
+	assert(juice_machine.has_node("Model/LeverPivot_2"), "Suqueira deve ter Alavanca 3")
 
 	var juice_flavors = [
 		{"id": "juice_orange", "name": "Suco de Laranja"},
 		{"id": "juice_grape", "name": "Suco de Uva"},
-		{"id": "juice_passion", "name": "Suco de Maracujá"}
+		{"id": "juice_strawberry", "name": "Suco de Morango"}
 	]
 
 	for i in range(juice_flavors.size()):
@@ -79,7 +80,8 @@ func _init() -> void:
 
 		# Coloca o copo que está na mão do jogador na máquina
 		if player.held_item == null:
-			packaging_station.interact(player)
+			player.global_position = packaging_station.global_position + Vector3(0, 0, 0.25)
+			packaging_station.interact_item(player)
 
 		juice_machine.interact(player)
 		assert(player.held_item == null, "Copo deve ter saído da mão do jogador")
@@ -121,8 +123,8 @@ func _init() -> void:
 	var soda_flavors = ["soda_cola", "soda_cola_zero", "soda_sprite", "juice_orange"]
 	for i in range(soda_flavors.size()):
 		drink_machine.select_flavor_by_index(i)
-		packaging_station.active_item_index = 2
-		packaging_station.interact(player)
+		player.global_position = packaging_station.global_position + Vector3(0, 0, 0.25)
+		packaging_station.interact_item(player)
 		drink_machine.interact(player)
 		drink_machine.interact(player) # Encher
 		drink_machine._process(1.0) # Concluir
@@ -136,8 +138,8 @@ func _init() -> void:
 	# TESTE 4: SELAGEM DE BEBIDA NA BANCADA DE EMBALAGEM
 	# ---------------------------------------------------------
 	print("\n--- Teste 4: Preparar Suco Aberto -> Levar para Selagem na Bancada de Embalagem ---")
-	packaging_station.active_item_index = 2
-	packaging_station.interact(player)
+	player.global_position = packaging_station.global_position + Vector3(0, 0, 0.25)
+	packaging_station.interact_item(player)
 	juice_machine.select_flavor_by_index(0) # Laranja
 	juice_machine.interact(player)
 	juice_machine.interact(player) # Encher

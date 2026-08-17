@@ -46,6 +46,12 @@ static var next_customer_id: int = 1
 @onready var label_3d: Label3D = $Label3D
 @onready var animator: HumanoidAnimator = $HumanoidAnimator
 
+# Áudio 3D Posicional do Cliente
+var customer_audio: AudioStreamPlayer3D = null
+const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+var _has_played_arrival_sound: bool = false
+var _call_attention_timer: float = 4.0
+
 var customer_id: int = 1
 var state: State = State.ARRIVING
 var current_order: Order = null
@@ -92,6 +98,7 @@ func _ready() -> void:
 	customer_id = next_customer_id
 	next_customer_id += 1
 
+	_setup_audio()
 	_setup_archetype()
 
 	if mood == null:
@@ -111,6 +118,42 @@ func _ready() -> void:
 		animator.setup($Model)
 	CharacterAppearance.apply_random_customer_appearance(self, is_child)
 	_update_visual_status()
+
+func _setup_audio() -> void:
+	if not customer_audio or not is_instance_valid(customer_audio):
+		customer_audio = get_node_or_null("CustomerAudioPlayer") as AudioStreamPlayer3D
+		if not customer_audio:
+			customer_audio = AudioStreamPlayer3D.new()
+			customer_audio.name = "CustomerAudioPlayer"
+			customer_audio.transform.origin = Vector3(0, 1.5, 0)
+			customer_audio.unit_size = 5.0
+			customer_audio.max_distance = 45.0
+			customer_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+			customer_audio.volume_db = 0.0
+			customer_audio.bus = "Master"
+			add_child(customer_audio)
+		else:
+			customer_audio.unit_size = 5.0
+			customer_audio.max_distance = 45.0
+			customer_audio.attenuation_model = AudioStreamPlayer3D.ATTENUATION_INVERSE_DISTANCE
+			customer_audio.volume_db = 0.0
+			customer_audio.bus = "Master"
+
+func _play_customer_sound(sound_id: String, vol_db: float = 0.0, pitch_var: float = 0.05) -> void:
+	_setup_audio()
+	if not customer_audio:
+		return
+	var stream = SoundSynthesizer.get_stream(sound_id)
+	if not stream:
+		return
+	customer_audio.stream = stream
+	customer_audio.volume_db = vol_db
+	if pitch_var > 0.0:
+		customer_audio.pitch_scale = randf_range(1.0 - pitch_var, 1.0 + pitch_var)
+	else:
+		customer_audio.pitch_scale = 1.0
+	if is_inside_tree() and customer_audio.is_inside_tree():
+		customer_audio.play()
 
 func _setup_archetype() -> void:
 	if is_child:
@@ -256,6 +299,9 @@ func _physics_process(delta: float) -> void:
 	# Processamento de Humor Progressivo e Tolerância por Etapa
 	match state:
 		State.ARRIVING, State.GOING_TO_ENTRANCE, State.ENTERING_RESTAURANT, State.GOING_TO_SEAT:
+			if not _has_played_arrival_sound and position.z <= 8.5:
+				_has_played_arrival_sound = true
+				_play_customer_sound("customer_arrive", -10.0, 0.08)
 			_follow_path_to_destination(delta, true)
 
 		State.SITTING:
@@ -263,6 +309,10 @@ func _physics_process(delta: float) -> void:
 
 		State.SEATED_WAITING_TO_ORDER:
 			total_wait_time += delta
+			_call_attention_timer -= delta
+			if _call_attention_timer <= 0.0:
+				_call_attention_to_order()
+
 			if experience:
 				experience.wait_time_to_order += delta
 			if mood:
@@ -398,7 +448,22 @@ func _complete_sitting_transition() -> void:
 			else:
 				experience.table_cleanliness = 1.0
 
+	_call_attention_to_order()
 	_update_visual_status()
+
+func _call_attention_to_order() -> void:
+	_call_attention_timer = randf_range(8.0, 14.0)
+	var call_options = ["customer_call_hey", "customer_call_hello", "customer_call_whistle", "customer_call_excuse"]
+	var choice = call_options[randi() % call_options.size()]
+	match archetype:
+		Archetype.IMPATIENT:
+			_play_customer_sound("customer_call_hey", 0.0, 0.06)
+		Archetype.CHILD:
+			_play_customer_sound("customer_call_hello", 0.0, 0.08)
+		Archetype.ELDER:
+			_play_customer_sound("customer_call_excuse", 0.0, 0.05)
+		_:
+			_play_customer_sound(choice, 0.0, 0.06)
 
 func _head_to_checkout_queue() -> void:
 	if assigned_table and is_instance_valid(assigned_table):
@@ -491,6 +556,7 @@ func on_payment_completed() -> void:
 		mood.boost(15.0)
 	_submit_review()
 
+	_play_customer_sound("customer_leave", -12.0, 0.06)
 	state = State.LEAVING
 	_build_exit_path()
 	_update_visual_status()
@@ -511,6 +577,8 @@ func abandon_restaurant(reason: String) -> void:
 		experience.abandoned = true
 		experience.abandon_reason = reason
 		experience.final_mood = mood.current_mood if mood else 0.0
+
+	_play_customer_sound("customer_leave", -12.0, 0.06)
 
 	# Libera a mesa imediatamente
 	if assigned_table and is_instance_valid(assigned_table):
@@ -631,6 +699,7 @@ func place_order(player: Node = null) -> void:
 	if mood:
 		mood.boost(15.0)
 
+	_play_customer_sound("customer_attend", -8.0, 0.04)
 	state = State.WAITING_FOR_FOOD
 	_update_visual_status()
 
@@ -663,6 +732,8 @@ func receive_food() -> void:
 
 		if mood:
 			mood.boost(30.0) # Alimento recebido recupera bastante satisfação
+
+		_play_customer_sound("customer_thank", -8.0, 0.05)
 
 		if experience and current_order:
 			var items_str: Array[String] = []

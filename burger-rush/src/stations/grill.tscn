@@ -367,3 +367,32 @@ spread = 45.0
 gravity = Vector3(0, -9.8, 0)
 initial_velocity_min = 1.2
 initial_velocity_max = 2.2
+
+; Sistema de Áudio 3D Posicional da Chapa
+[node name="Audio" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, -0.02)
+
+[node name="HumAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+volume_db = -80.0
+
+[node name="SizzleAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+volume_db = -80.0
+
+[node name="OneShotAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+volume_db = -8.0
+
+[node name="SpatulaAudioPlayer" type="AudioStreamPlayer3D" parent="Audio"]
+unit_size = 2.8
+max_distance = 18.0
+attenuation_model = 1
+volume_db = -6.0
+
