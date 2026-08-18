@@ -1,8 +1,10 @@
 class_name PotatoBoxItem
-extends Item
+extends FriesPack
+
+func _init() -> void:
+	side_type = "empty"
+	super._init()
 
 func _ready() -> void:
-	item_id = "potato_box"
-	display_name = "Recipiente de Batata Vazio"
-	item_type = "packaging"
-	prompt_text = "E — Pegar Recipiente de Batata"
+	side_type = "empty"
+	super._ready()

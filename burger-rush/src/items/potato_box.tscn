@@ -1,47 +1,182 @@
 [gd_scene format=3 uid="uid://potato_box_scene_uid"]
 
-[ext_resource type="Script" path="res://src/items/item.gd" id="1_item"]
+[ext_resource type="Script" path="res://src/items/fries_pack.gd" id="1_fries_pack"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(0.18, 0.22, 0.12)
+size = Vector3(0.18, 0.24, 0.12)
 
+; Materiais da Embalagem Vermelha e Alimentos
 [sub_resource type="StandardMaterial3D" id="Material_FriesBoxRed"]
-albedo_color = Color(0.85, 0.15, 0.12, 1)
+albedo_color = Color(0.86, 0.14, 0.12, 1)
+roughness = 0.35
+metallic = 0.05
+
+[sub_resource type="StandardMaterial3D" id="Material_InteriorPaper"]
+albedo_color = Color(0.94, 0.91, 0.82, 1)
+roughness = 0.55
+
+[sub_resource type="StandardMaterial3D" id="Material_FriesYellowLogo"]
+albedo_color = Color(0.96, 0.78, 0.18, 1)
+roughness = 0.40
+
+[sub_resource type="StandardMaterial3D" id="Material_CrispyFries"]
+albedo_color = Color(0.95, 0.74, 0.18, 1)
+roughness = 0.42
+
+[sub_resource type="StandardMaterial3D" id="Material_CrispyOnion"]
+albedo_color = Color(0.92, 0.68, 0.16, 1)
 roughness = 0.45
 
-[sub_resource type="StandardMaterial3D" id="Material_FriesYellow"]
-albedo_color = Color(0.96, 0.78, 0.18, 1)
-roughness = 0.5
-
-[sub_resource type="BoxMesh" id="BoxMesh_PocketBody"]
+; Meshes Estruturais da Caixinha Oca (Fast-Food Pocket Box)
+[sub_resource type="BoxMesh" id="BoxMesh_BottomFloor"]
 material = SubResource("Material_FriesBoxRed")
-size = Vector3(0.16, 0.18, 0.08)
+size = Vector3(0.16, 0.012, 0.08)
 
-[sub_resource type="BoxMesh" id="BoxMesh_FrontArch"]
+[sub_resource type="BoxMesh" id="BoxMesh_BackWall"]
 material = SubResource("Material_FriesBoxRed")
-size = Vector3(0.12, 0.04, 0.082)
+size = Vector3(0.16, 0.19, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FrontWall"]
+material = SubResource("Material_FriesBoxRed")
+size = Vector3(0.16, 0.12, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SideWall"]
+material = SubResource("Material_FriesBoxRed")
+size = Vector3(0.012, 0.155, 0.076)
+
+[sub_resource type="BoxMesh" id="BoxMesh_InteriorBack"]
+material = SubResource("Material_InteriorPaper")
+size = Vector3(0.154, 0.175, 0.006)
+
+[sub_resource type="BoxMesh" id="BoxMesh_InteriorFloor"]
+material = SubResource("Material_InteriorPaper")
+size = Vector3(0.154, 0.006, 0.074)
 
 [sub_resource type="BoxMesh" id="BoxMesh_GoldenLogo"]
-material = SubResource("Material_FriesYellow")
-size = Vector3(0.06, 0.05, 0.085)
+material = SubResource("Material_FriesYellowLogo")
+size = Vector3(0.055, 0.045, 0.006)
+
+; Meshes das Batatas Palito
+[sub_resource type="BoxMesh" id="BoxMesh_FryStick1"]
+material = SubResource("Material_CrispyFries")
+size = Vector3(0.016, 0.125, 0.016)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FryStick2"]
+material = SubResource("Material_CrispyFries")
+size = Vector3(0.015, 0.11, 0.015)
+
+; Meshes dos Anéis de Cebola
+[sub_resource type="TorusMesh" id="TorusMesh_Onion1"]
+material = SubResource("Material_CrispyOnion")
+inner_radius = 0.022
+outer_radius = 0.046
+
+[sub_resource type="TorusMesh" id="TorusMesh_Onion2"]
+material = SubResource("Material_CrispyOnion")
+inner_radius = 0.018
+outer_radius = 0.038
 
 [node name="PotatoBox" type="StaticBody3D"]
-script = ExtResource("1_item")
+script = ExtResource("1_fries_pack")
+side_type = "empty"
 item_id = "potato_box"
 display_name = "Embalagem de Batata"
 item_type = "packaging"
 prompt_text = "🖱️ Pegar Embalagem de Batata"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.10, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="MeshInstance3D" type="Node3D" parent="."]
 
-[node name="Body" type="MeshInstance3D" parent="MeshInstance3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09, 0)
-mesh = SubResource("BoxMesh_PocketBody")
+; ─── CAIXINHA VERMELHA OCA COM ABERTURA SUPERIOR REAL ────────────
+[node name="RedContainer" type="Node3D" parent="MeshInstance3D"]
 
-[node name="Logo" type="MeshInstance3D" parent="MeshInstance3D"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+[node name="BottomFloor" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006, 0)
+mesh = SubResource("BoxMesh_BottomFloor")
+
+[node name="BackWall" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.101, -0.038)
+mesh = SubResource("BoxMesh_BackWall")
+
+[node name="FrontWall" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.066, 0.038)
+mesh = SubResource("BoxMesh_FrontWall")
+
+[node name="LeftWall" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.076, 0.083, 0)
+mesh = SubResource("BoxMesh_SideWall")
+
+[node name="RightWall" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.076, 0.083, 0)
+mesh = SubResource("BoxMesh_SideWall")
+
+[node name="InteriorBack" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.095, -0.033)
+mesh = SubResource("BoxMesh_InteriorBack")
+
+[node name="InteriorFloor" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.014, 0)
+mesh = SubResource("BoxMesh_InteriorFloor")
+
+[node name="Logo" type="MeshInstance3D" parent="MeshInstance3D/RedContainer"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.065, 0.046)
 mesh = SubResource("BoxMesh_GoldenLogo")
+
+; ─── BATATAS ACOMODADAS DENTRO DA CAIXINHA (ANINHADAS NO INTERIOR)
+[node name="FriesContent" type="Node3D" parent="MeshInstance3D"]
+visible = false
+
+[node name="Fry1" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(0.98, 0, 0.18, 0.04, 0.97, -0.22, -0.17, 0.22, 0.95, -0.05, 0.10, -0.015)
+mesh = SubResource("BoxMesh_FryStick1")
+
+[node name="Fry2" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(0.96, 0.26, 0, -0.25, 0.94, -0.24, -0.06, 0.23, 0.97, -0.025, 0.115, -0.01)
+mesh = SubResource("BoxMesh_FryStick1")
+
+[node name="Fry3" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(1, 0, 0, 0, 0.98, -0.18, 0, 0.18, 0.98, 0.005, 0.125, -0.005)
+mesh = SubResource("BoxMesh_FryStick1")
+
+[node name="Fry4" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(0.96, -0.26, 0, 0.25, 0.94, -0.24, 0.06, 0.23, 0.97, 0.03, 0.115, -0.01)
+mesh = SubResource("BoxMesh_FryStick1")
+
+[node name="Fry5" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(0.98, 0, -0.18, -0.04, 0.97, -0.22, 0.17, 0.22, 0.95, 0.055, 0.10, -0.015)
+mesh = SubResource("BoxMesh_FryStick1")
+
+[node name="Fry6" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(0.99, 0.12, 0, -0.12, 0.98, 0.16, 0.02, -0.16, 0.98, -0.04, 0.085, 0.015)
+mesh = SubResource("BoxMesh_FryStick2")
+
+[node name="Fry7" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(0.99, -0.12, 0, 0.12, 0.98, 0.16, -0.02, -0.16, 0.98, 0.04, 0.085, 0.015)
+mesh = SubResource("BoxMesh_FryStick2")
+
+[node name="Fry8" type="MeshInstance3D" parent="MeshInstance3D/FriesContent"]
+transform = Transform3D(1, 0, 0, 0, 0.98, 0.20, 0, -0.20, 0.98, 0.0, 0.09, 0.02)
+mesh = SubResource("BoxMesh_FryStick2")
+
+; ─── ANÉIS DE CEBOLA ACOMODADOS DENTRO DA MESMA CAIXINHA ─────────
+[node name="OnionRingsContent" type="Node3D" parent="MeshInstance3D"]
+visible = false
+
+[node name="Ring1" type="MeshInstance3D" parent="MeshInstance3D/OnionRingsContent"]
+transform = Transform3D(0.96, 0, 0.26, 0.08, 0.95, -0.29, -0.25, 0.30, 0.91, -0.025, 0.08, -0.01)
+mesh = SubResource("TorusMesh_Onion1")
+
+[node name="Ring2" type="MeshInstance3D" parent="MeshInstance3D/OnionRingsContent"]
+transform = Transform3D(0.98, -0.18, 0, 0.15, 0.88, -0.45, 0.08, 0.44, 0.89, 0.025, 0.10, -0.005)
+mesh = SubResource("TorusMesh_Onion1")
+
+[node name="Ring3" type="MeshInstance3D" parent="MeshInstance3D/OnionRingsContent"]
+transform = Transform3D(0.94, 0.33, 0.08, -0.31, 0.93, -0.18, -0.13, 0.14, 0.98, -0.005, 0.125, 0.01)
+mesh = SubResource("TorusMesh_Onion2")
+
+[node name="Ring4" type="MeshInstance3D" parent="MeshInstance3D/OnionRingsContent"]
+transform = Transform3D(0.99, 0, -0.12, -0.04, 0.92, -0.38, 0.11, 0.38, 0.92, 0.035, 0.075, 0.015)
+mesh = SubResource("TorusMesh_Onion2")

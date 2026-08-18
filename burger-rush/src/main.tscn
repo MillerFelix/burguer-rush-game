@@ -74,6 +74,8 @@
 [ext_resource type="Script" uid="uid://dajmnvtn4dwdd" path="res://src/core/daily_event_manager.gd" id="85_event_mgr"]
 [ext_resource type="Script" uid="uid://ci5qiy2ckv4c1" path="res://src/employees/employee_task_manager.gd" id="86_task_mgr"]
 [ext_resource type="Script" path="res://src/utils/screen_manager.gd" id="87_screen_mgr"]
+[ext_resource type="Script" path="res://src/core/water_manager.gd" id="88_water_mgr"]
+[ext_resource type="Script" path="res://src/economy/finance_manager.gd" id="89_finance_mgr"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.35, 0.62, 0.9, 1)
@@ -304,6 +306,12 @@ script = ExtResource("12_clock")
 
 [node name="EconomyManager" type="Node" parent="." unique_id=645125179]
 script = ExtResource("8_economy")
+
+[node name="WaterManager" type="Node" parent="." unique_id=987123456]
+script = ExtResource("88_water_mgr")
+
+[node name="FinanceManager" type="Node" parent="." unique_id=987654321]
+script = ExtResource("89_finance_mgr")
 
 [node name="OrderManager" type="Node" parent="." unique_id=1595978904]
 script = ExtResource("9_order_mgr")

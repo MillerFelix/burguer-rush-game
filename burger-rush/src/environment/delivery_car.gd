@@ -298,22 +298,6 @@ func _physics_process(delta: float) -> void:
 				car_left.emit(self)
 				queue_free()
 
-func get_interaction_prompt(player: Node = null) -> String:
-	match current_state:
-		CarState.AT_WINDOW_WAITING_ORDER:
-			return "[E] Atender Pedido (Drive-Thru Carro #%d)" % car_id
-		CarState.AT_WINDOW_WAITING_FOOD:
-			if current_order:
-				return "Carro #%d aguardando pedido #%03d (R$ %.2f)" % [car_id, current_order.id, current_order.total_price]
-			return "Carro #%d aguardando pedido" % car_id
-		CarState.WAITING_IN_LINE:
-			return "Carro #%d na fila (Posição #%d)" % [car_id, target_queue_index + 1]
-		_:
-			return ""
-
-func interact(player: Node3D) -> void:
-	if current_state == CarState.AT_WINDOW_WAITING_ORDER:
-		take_order(player)
 
 func take_order(player: Node3D = null) -> Order:
 	if current_order != null:
@@ -356,6 +340,136 @@ func take_order(player: Node3D = null) -> Order:
 
 	order_placed.emit(current_order)
 	return current_order
+
+func get_interaction_prompt(player: Node = null) -> String:
+	if current_state == CarState.AT_WINDOW_WAITING_ORDER:
+		return "[E] Atender Pedido (Drive-Thru Carro #%d)" % car_id
+	elif current_state == CarState.AT_WINDOW_WAITING_FOOD:
+		if player and player.get("held_item") != null:
+			var held = player.get("held_item")
+			var d_name = held.get_display_name() if held.has_method("get_display_name") else str(held.get("item_id", "Pedido")).capitalize()
+			return "🖱️ / [E] Entregar %s (Carro #%d)" % [d_name, car_id]
+		return "Carro #%d aguardando entrega..." % car_id
+	return ""
+
+func interact(player: Node3D) -> void:
+	if current_state == CarState.AT_WINDOW_WAITING_ORDER:
+		if player.get("held_item") == null:
+			take_order(player)
+		return
+
+	if current_state == CarState.AT_WINDOW_WAITING_FOOD:
+		_process_delivery(player)
+
+func interact_item(player: Node3D) -> void:
+	if current_state == CarState.AT_WINDOW_WAITING_ORDER:
+		if player.get("held_item") == null:
+			take_order(player)
+		return
+
+	if current_state == CarState.AT_WINDOW_WAITING_FOOD:
+		_process_delivery(player)
+
+func _process_delivery(player: Node3D) -> void:
+	if not player or player.get("held_item") == null:
+		return
+
+	var deliv_station: Node = null
+	if is_inside_tree() and get_tree() and get_tree().root:
+		deliv_station = get_tree().root.find_child("DeliveryStation", true, false)
+
+	if deliv_station:
+		deliv_station.interact(player)
+		return
+
+	# Fallback caso não haja DeliveryStation na cena:
+	var held_item = player.get("held_item")
+	var product_id: String = str(held_item.get("item_id")) if held_item.get("item_id") != null else ""
+	var item: Node3D = player.take_held_item()
+	if not item:
+		return
+
+	var matching_order = current_order
+	var is_valid_delivery = false
+
+	if matching_order != null and current_state == CarState.AT_WINDOW_WAITING_FOOD:
+		if item is DeliveryBag:
+			var bag = item as DeliveryBag
+			var prods = bag.get_products()
+			if not prods.is_empty():
+				var all_match = true
+				var delivered_items: Array[String] = []
+				for itm in prods:
+					var p_id = str(itm.get("id", ""))
+					var r_id = str(itm.get("recipe_id", ""))
+					var matched_id = ""
+
+					if matching_order.has_pending_product(p_id):
+						matched_id = p_id
+					elif r_id != "" and matching_order.has_pending_product(r_id):
+						matched_id = r_id
+					elif (p_id == "packaged_burger" or r_id != "") and matching_order.has_pending_product("burger"):
+						matched_id = "burger"
+					elif (p_id == "packaged_burger" or r_id != "") and matching_order.has_pending_product("cheeseburger"):
+						matched_id = "cheeseburger"
+					elif p_id in ["fries", "fries_pack", "potato_box"] and matching_order.has_pending_product("fries"):
+						matched_id = "fries"
+					elif p_id in ["onion_rings", "fried_onions"] and matching_order.has_pending_product("onion_rings"):
+						matched_id = "onion_rings"
+					elif p_id.begins_with("soda_") or p_id.begins_with("juice_") or p_id == "drink_cup":
+						for ord_itm in matching_order.items:
+							var oid = str(ord_itm.get("product_id", ""))
+							if (oid.begins_with("soda_") or oid.begins_with("juice_") or oid == "drink_cup" or oid == "soda") and matching_order.has_pending_product(oid):
+								matched_id = oid
+								break
+
+					if matched_id != "":
+						matching_order.register_product_delivered(matched_id)
+						delivered_items.append(matched_id)
+					else:
+						all_match = false
+						break
+
+				if all_match and not delivered_items.is_empty():
+					is_valid_delivery = true
+		else:
+			var matched_id = ""
+			if matching_order.has_pending_product(product_id):
+				matched_id = product_id
+			elif product_id == "packaged_burger" and (matching_order.has_pending_product("burger") or matching_order.has_pending_product("cheeseburger")):
+				matched_id = "burger" if matching_order.has_pending_product("burger") else "cheeseburger"
+			elif product_id in ["fries", "fries_pack"] and matching_order.has_pending_product("fries"):
+				matched_id = "fries"
+			elif product_id in ["onion_rings", "fried_onions"] and matching_order.has_pending_product("onion_rings"):
+				matched_id = "onion_rings"
+			elif (product_id.begins_with("soda_") or product_id.begins_with("juice_")) and matching_order.has_pending_product(product_id):
+				matched_id = product_id
+
+			if matched_id != "":
+				matching_order.register_product_delivered(matched_id)
+				is_valid_delivery = true
+
+	if is_valid_delivery and matching_order != null:
+		if matching_order.is_all_delivered():
+			var economy = EconomyManager.get_instance()
+			if economy:
+				economy.add_money(matching_order.total_price, "Drive-Thru: %s" % matching_order.items[0].get("product_name", product_id))
+			receive_order(product_id)
+			var order_mgr = OrderManager.get_instance()
+			if order_mgr:
+				order_mgr.complete_order(matching_order)
+			if player and player.has_node("HUD"):
+				var hud = player.get_node("HUD")
+				if hud and hud.has_method("show_temporary_feedback"):
+					hud.show_temporary_feedback("🚗 Pedido #%03d entregue com sucesso! +$%.2f" % [matching_order.id, matching_order.total_price])
+	else:
+		on_order_wrong("Pedido incorreto entregue no Drive-Thru!")
+		if player and player.has_node("HUD"):
+			var hud = player.get_node("HUD")
+			if hud and hud.has_method("show_temporary_feedback"):
+				hud.show_temporary_feedback("❌ Pedido incorreto no Drive-Thru! O cliente foi embora sem pagar.")
+
+	item.queue_free()
 
 func receive_order(product_id: String) -> void:
 	if current_order == null:
@@ -400,6 +514,7 @@ func on_order_wrong(reason: String = "Pedido incorreto no Drive-Thru!") -> void:
 	if experience:
 		experience.order_correct = false
 		experience.abandoned = true
+		experience.abandon_type = CustomerExperience.AbandonType.WRONG_ORDER
 		experience.abandon_reason = reason
 		experience.food_quality = 0.0
 
@@ -407,7 +522,7 @@ func on_order_wrong(reason: String = "Pedido incorreto no Drive-Thru!") -> void:
 		_setup_audio()
 	if horn_audio:
 		horn_audio.stream = SoundSynthesizer.get_stream("customer_wrong_order")
-		if horn_audio.stream:
+		if horn_audio.stream and horn_audio.is_inside_tree():
 			horn_audio.play()
 
 	# Cancela o pedido no OrderManager se existir (sem pagamento)
@@ -434,6 +549,8 @@ func abandon_drive_thru(reason: String) -> void:
 
 	if experience:
 		experience.abandoned = true
+		if experience.abandon_type == CustomerExperience.AbandonType.NONE:
+			experience.abandon_type = CustomerExperience.AbandonType.TIMEOUT
 		experience.abandon_reason = reason
 		experience.final_mood = mood.current_mood if mood else 0.0
 
@@ -532,8 +649,12 @@ func _update_status_label() -> void:
 
 		CarState.LEAVING:
 			if experience and experience.abandoned:
-				status_label.text = "😡 🚗 Desistiu do Drive-Thru!"
-				status_label.modulate = Color(1.0, 0.2, 0.2)
+				if experience.abandon_type == CustomerExperience.AbandonType.WRONG_ORDER or "errad" in experience.abandon_reason.to_lower() or "incorret" in experience.abandon_reason.to_lower():
+					status_label.text = "😡 🚗 'Esse pedido não é o meu! Fui.'"
+					status_label.modulate = Color(1.0, 0.2, 0.2)
+				else:
+					status_label.text = "😡 ⏰ 'Demorou demais! Desisti do Drive-Thru.'"
+					status_label.modulate = Color(1.0, 0.25, 0.25)
 			else:
 				status_label.text = "%s ✓ Obrigado!" % emoji
 				status_label.modulate = Color(0.4, 1.0, 0.5, 1.0)

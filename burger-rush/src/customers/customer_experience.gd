@@ -20,6 +20,13 @@ var food_quality: float = 1.0          # 0.0 a 1.0
 var table_cleanliness: float = 1.0     # 1.0 = limpa, 0.0 = suja
 var restaurant_cleanliness: float = 1.0 # 1.0 = limpo
 
+enum AbandonType {
+	NONE,
+	TIMEOUT,
+	WRONG_ORDER
+}
+
+var abandon_type: AbandonType = AbandonType.NONE
 var abandoned: bool = false
 var abandon_reason: String = ""
 var order_summary: String = ""
@@ -145,7 +152,10 @@ func _generate_tags(review: CustomerReview) -> void:
 
 	if abandoned:
 		review.tags.append("Abandono")
-		review.tags.append("Espera Excessiva")
+		if abandon_type == AbandonType.WRONG_ORDER or "errad" in abandon_reason.to_lower() or "incorret" in abandon_reason.to_lower():
+			review.tags.append("Pedido Incorreto")
+		else:
+			review.tags.append("Espera Excessiva")
 		if is_dt:
 			review.tags.append("Drive-Thru")
 		return
@@ -177,15 +187,31 @@ func _generate_comment(review: CustomerReview) -> String:
 
 	# Casos de Abandono por Frustração
 	if abandoned:
+		var is_wrong = (abandon_type == AbandonType.WRONG_ORDER or "errad" in abandon_reason.to_lower() or "incorret" in abandon_reason.to_lower())
 		if is_dt:
-			var dt_abandon_msgs = [
-				"Desisti de esperar na fila do drive-thru e fui embora!",
-				"Fiquei preso na fila do drive-thru sem atendimento. Demora excessiva!",
-				"Cancelei meu pedido no drive-thru, muito lento hoje."
-			]
-			return dt_abandon_msgs[customer_id % dt_abandon_msgs.size()]
+			if is_wrong:
+				var dt_wrong_msgs = [
+					"Entregaram o pedido errado no drive-thru! Não foi o que pedi, fui embora.",
+					"Pedido veio incorreto na janela do drive-thru! Péssima atenção, não paguei e saí.",
+					"Deram o pedido trocado no drive-thru. Inadmissível!"
+				]
+				return dt_wrong_msgs[customer_id % dt_wrong_msgs.size()]
+			else:
+				var dt_abandon_msgs = [
+					"Desisti de esperar na fila do drive-thru e fui embora!",
+					"Fiquei preso na fila do drive-thru sem atendimento. Demora excessiva!",
+					"Cancelei meu pedido no drive-thru, muito lento hoje."
+				]
+				return dt_abandon_msgs[customer_id % dt_abandon_msgs.size()]
 		else:
-			if "atendimento" in abandon_reason.to_lower():
+			if is_wrong:
+				var dine_wrong_msgs = [
+					"Esse não foi o meu pedido! Serviram itens errados na mesa, me recusei a pagar e fui embora.",
+					"Pedido completamente errado. Pedi uma coisa e trouxeram outra. Fui embora!",
+					"Erraram meu pedido na mesa. Atendimento desatento, cancelei e saí."
+				]
+				return dine_wrong_msgs[customer_id % dine_wrong_msgs.size()]
+			elif "atendimento" in abandon_reason.to_lower():
 				var msgs = [
 					"Desisti de esperar pelo atendimento e fui embora! Ninguém veio anotar meu pedido.",
 					"Fiquei esperando uma eternidade na mesa e ninguém me atendeu. Falta de consideração!",

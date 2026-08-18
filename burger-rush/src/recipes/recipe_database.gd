@@ -22,26 +22,26 @@ static func _initialize_recipes() -> void:
 	# NOVO CARDÁPIO DE BURGERS (11 RECEITAS REFORMULADAS)
 	# =========================================================================
 
-	# 1. Burger Clássico: Pão + Carne bovina + Queijo + Alface + Tomate + Cebola normal + Ketchup + Mostarda
+	# 1. Burger Clássico: Pão + Carne bovina + Queijo + Tomate + Ketchup + Mostarda
 	var burger_classic = Recipe.new()
 	burger_classic.id = "burger_classic"
 	burger_classic.display_name = "Burger Clássico"
 	burger_classic.category = "burger"
 	burger_classic.required_ingredients.assign([
-		"bread", "patty_beef:cooked", "cheese_cheddar", "lettuce", "tomato", "onion", "ketchup", "mustard"
+		"bread", "patty_beef:cooked", "cheese_cheddar", "tomato", "ketchup", "mustard"
 	])
 	burger_classic.result_scene = burger_scene
 	burger_classic.base_price = 22.90
 	burger_classic.is_unlocked = true
 	_recipes.append(burger_classic)
 
-	# 2. Burger Duplo: Pão + 2x Carne bovina + 2x Queijo + Alface + Picles
+	# 2. Burger Duplo: Pão + 2x Carne bovina + 1x Queijo + Tomate
 	var burger_double = Recipe.new()
 	burger_double.id = "burger_double"
 	burger_double.display_name = "Burger Duplo"
 	burger_double.category = "burger"
 	burger_double.required_ingredients.assign([
-		"bread", "patty_beef:cooked", "patty_beef:cooked", "cheese_cheddar", "cheese_cheddar", "lettuce", "pickle"
+		"bread", "patty_beef:cooked", "patty_beef:cooked", "cheese_cheddar", "tomato"
 	])
 	burger_double.result_scene = burger_scene
 	burger_double.base_price = 32.90
@@ -74,26 +74,26 @@ static func _initialize_recipes() -> void:
 	burger_bacon.is_unlocked = true
 	_recipes.append(burger_bacon)
 
-	# 5. Burger Salada: Pão + Carne bovina + Queijo + Alface + Tomate + Cebola normal + Picles
+	# 5. Burger Salada: Pão + Carne bovina + Queijo + Alface + Tomate + Cebola normal + 3x Picles
 	var burger_salad = Recipe.new()
 	burger_salad.id = "burger_salad"
 	burger_salad.display_name = "Burger Salada"
 	burger_salad.category = "burger"
 	burger_salad.required_ingredients.assign([
-		"bread", "patty_beef:cooked", "cheese_prato", "lettuce", "tomato", "onion", "pickle"
+		"bread", "patty_beef:cooked", "cheese_prato", "lettuce", "tomato", "onion", "pickle", "pickle", "pickle"
 	])
 	burger_salad.result_scene = x_salada_scene
 	burger_salad.base_price = 24.90
 	burger_salad.is_unlocked = true
 	_recipes.append(burger_salad)
 
-	# 6. Burger Onion: Pão + Carne bovina + Queijo + Cebola grelhada + Maionese
+	# 6. Burger Onion: Pão + Carne bovina + Queijo + Cebola comum + Cebola roxa + Maionese
 	var burger_onion = Recipe.new()
 	burger_onion.id = "burger_onion"
 	burger_onion.display_name = "Burger Onion"
 	burger_onion.category = "burger"
 	burger_onion.required_ingredients.assign([
-		"bread", "patty_beef:cooked", "cheese_cheddar", "onion", "mayo"
+		"bread", "patty_beef:cooked", "cheese_cheddar", "onion", "red_onion", "mayo"
 	])
 	burger_onion.result_scene = burger_scene
 	burger_onion.base_price = 26.90
@@ -113,13 +113,13 @@ static func _initialize_recipes() -> void:
 	burger_chicken.is_unlocked = true
 	_recipes.append(burger_chicken)
 
-	# 8. Burger Supreme: Pão + 2x Carne bovina + 2x Queijo + Bacon + Cebola normal + Alface + Molho especial
+	# 8. Burger Supreme: Pão + 2x Carne bovina + 2x Queijo + Bacon + Cebola normal + Alface + Molho especial + 3x Picles
 	var burger_supreme = Recipe.new()
 	burger_supreme.id = "burger_supreme"
 	burger_supreme.display_name = "Burger Supreme"
 	burger_supreme.category = "burger"
 	burger_supreme.required_ingredients.assign([
-		"bread", "patty_beef:cooked", "patty_beef:cooked", "cheese_cheddar", "cheese_cheddar", "bacon", "onion", "lettuce", "special_sauce"
+		"bread", "patty_beef:cooked", "patty_beef:cooked", "cheese_cheddar", "cheese_cheddar", "bacon", "onion", "lettuce", "special_sauce", "pickle", "pickle", "pickle"
 	])
 	burger_supreme.result_scene = burger_scene
 	burger_supreme.base_price = 36.90
@@ -180,7 +180,17 @@ static func _initialize_recipes() -> void:
 	fries_recipe.is_unlocked = true
 	_recipes.append(fries_recipe)
 
-	# --- BEBIDAS (4 SABORES DEFINITIVOS) ---
+	var onion_rings_recipe = Recipe.new()
+	onion_rings_recipe.id = "onion_rings"
+	onion_rings_recipe.display_name = "Cebola Frita"
+	onion_rings_recipe.category = "fries"
+	onion_rings_recipe.required_ingredients.assign(["onion_rings_raw", "potato_box"])
+	onion_rings_recipe.result_scene = fries_scene
+	onion_rings_recipe.base_price = 9.0
+	onion_rings_recipe.is_unlocked = true
+	_recipes.append(onion_rings_recipe)
+
+	# --- BEBIDAS (REFRIGERANTES DE CILINDRO) ---
 	var cola_recipe = Recipe.new()
 	cola_recipe.id = "soda_cola"
 	cola_recipe.display_name = "Refrigerante Cola"
@@ -221,24 +231,36 @@ static func _initialize_recipes() -> void:
 	citrus_recipe.is_unlocked = true
 	_recipes.append(citrus_recipe)
 
-	# Combos
-	var combo_classic = Recipe.new()
-	combo_classic.id = "combo_classic"
-	combo_classic.display_name = "Combo Clássico (Burger + Batata + Cola)"
-	combo_classic.category = "combo"
-	combo_classic.combo_items.assign(["burger_classic", "fries", "soda_cola"])
-	combo_classic.base_price = 32.0
-	combo_classic.is_unlocked = true
-	_recipes.append(combo_classic)
+	# --- BEBIDAS (SUCOS DE POLPA NATURAL) ---
+	var orange_juice_recipe = Recipe.new()
+	orange_juice_recipe.id = "juice_orange"
+	orange_juice_recipe.display_name = "Suco de Laranja"
+	orange_juice_recipe.category = "drink"
+	orange_juice_recipe.required_ingredients.assign(["cup_empty", "pulp_orange"])
+	orange_juice_recipe.result_scene = soda_scene
+	orange_juice_recipe.base_price = 7.0
+	orange_juice_recipe.is_unlocked = true
+	_recipes.append(orange_juice_recipe)
 
-	var combo_cheddar = Recipe.new()
-	combo_cheddar.id = "combo_cheddar"
-	combo_cheddar.display_name = "Combo Cheddar (Burger Cheddar + Batata + Guaraná)"
-	combo_cheddar.category = "combo"
-	combo_cheddar.combo_items.assign(["burger_cheddar", "fries", "soda_guarana"])
-	combo_cheddar.base_price = 38.0
-	combo_cheddar.is_unlocked = true
-	_recipes.append(combo_cheddar)
+	var grape_juice_recipe = Recipe.new()
+	grape_juice_recipe.id = "juice_grape"
+	grape_juice_recipe.display_name = "Suco de Uva"
+	grape_juice_recipe.category = "drink"
+	grape_juice_recipe.required_ingredients.assign(["cup_empty", "pulp_grape"])
+	grape_juice_recipe.result_scene = soda_scene
+	grape_juice_recipe.base_price = 7.0
+	grape_juice_recipe.is_unlocked = true
+	_recipes.append(grape_juice_recipe)
+
+	var strawberry_juice_recipe = Recipe.new()
+	strawberry_juice_recipe.id = "juice_strawberry"
+	strawberry_juice_recipe.display_name = "Suco de Morango"
+	strawberry_juice_recipe.category = "drink"
+	strawberry_juice_recipe.required_ingredients.assign(["cup_empty", "pulp_strawberry"])
+	strawberry_juice_recipe.result_scene = soda_scene
+	strawberry_juice_recipe.base_price = 7.0
+	strawberry_juice_recipe.is_unlocked = true
+	_recipes.append(strawberry_juice_recipe)
 
 static func find_matching_recipe(ingredient_keys: Array) -> Recipe:
 	for recipe in get_all_recipes():

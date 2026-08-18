@@ -94,10 +94,9 @@ var canisters: Array[SyrupCanister] = [null, null, null, null]
 
 const FILL_DURATION: float = 0.85 # segundos para encher 100%
 
-# Cenas e scripts instanciáveis
 const SyrupCanister = preload("res://src/items/syrup_canister.gd")
 const DrinkCup = preload("res://src/items/drink_cup.gd")
-const DRINK_CUP_SCENE = preload("res://src/items/drink_cup.tscn")
+const WaterManager = preload("res://src/core/water_manager.gd")
 const SYRUP_CANISTER_SCENE = preload("res://src/items/syrup_canister.tscn")
 
 # Nós de Interface 3D
@@ -301,6 +300,10 @@ func _process_station_dispense(idx: int, delta: float) -> void:
 		var fill_step = next_fill - prev_fill
 		var consumed = fill_step * CONSUMPTION_PER_CUP
 		syrup_levels[idx] = maxf(0.0, syrup_levels[idx] - consumed)
+
+		var wm = WaterManager.get_instance()
+		if wm and fill_step > 0.0:
+			wm.consume_water(fill_step * 0.35, "drink_machine")
 
 		if canisters[idx] and is_instance_valid(canisters[idx]):
 			canisters[idx].current_amount = syrup_levels[idx]

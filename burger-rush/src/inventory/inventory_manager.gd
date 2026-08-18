@@ -53,10 +53,12 @@ func _initialize_default_inventory() -> void:
 	_register_item("pickle", "Picles", "vegetables", 15, 50, 1.5, 5, load("res://src/items/pickle.tscn"))
 
 	# =========================================================================
-	# 5. EXTRAS
+	# 5. EXTRAS & INSUMOS
 	# =========================================================================
 	_register_item("bacon", "Bacon", "extras", 15, 50, 3.0, 5, load("res://src/items/bacon.tscn"))
 	_register_item("egg", "Ovo", "extras", 15, 50, 1.5, 5, load("res://src/items/egg.tscn"))
+	_register_item("potato_raw", "Saco de Batata", "vegetables", 25, 80, 20.0, 5, load("res://src/items/potato.tscn"))
+	_register_item("onion_rings_raw", "Saco de Cebola", "vegetables", 25, 80, 15.0, 5, load("res://src/items/onion_bag.tscn"))
 
 	# =========================================================================
 	# 6. EMBALAGENS E ACOMPANHAMENTOS (SUPPLIES)
@@ -65,22 +67,21 @@ func _initialize_default_inventory() -> void:
 	_register_item("potato_box", "Embalagem de Batata", "supplies", 50, 50, 0.3, 10, load("res://src/items/potato_box.tscn"))
 	_register_item("cup_empty", "Copo", "supplies", 50, 50, 0.2, 10, load("res://src/items/drink_cup.tscn"))
 	_register_item("delivery_bag", "Saco de Delivery", "supplies", 50, 50, 0.4, 10, load("res://src/items/delivery_bag.tscn"))
-	_register_item("potato_raw", "Saco de Batata", "supplies", 25, 80, 1.0, 5, load("res://src/items/potato.tscn"))
 
 	# =========================================================================
 	# 8. BEBIDAS: CILINDROS RESERVA DE REFRIGERANTE (MÁXIMO 1 UNIDADE RESERVA CADA)
 	# =========================================================================
-	_register_item("cylinder_cola", "Cilindro Cola", "beverages", 1, 1, 15.0, 0, null)
-	_register_item("cylinder_cola_zero", "Cilindro Cola Zero", "beverages", 1, 1, 15.0, 0, null)
-	_register_item("cylinder_soda", "Cilindro Soda", "beverages", 1, 1, 15.0, 0, null)
-	_register_item("cylinder_citrus", "Cilindro Citrus", "beverages", 1, 1, 15.0, 0, null)
+	_register_item("cylinder_cola", "Cilindro Cola", "beverages", 1, 1, 80.0, 0, null)
+	_register_item("cylinder_cola_zero", "Cilindro Cola Zero", "beverages", 1, 1, 80.0, 0, null)
+	_register_item("cylinder_soda", "Cilindro Soda", "beverages", 1, 1, 80.0, 0, null)
+	_register_item("cylinder_citrus", "Cilindro Citrus", "beverages", 1, 1, 80.0, 0, null)
 
 	# =========================================================================
 	# 9. BEBIDAS: POLPAS DE FRUTA CONGELADA (FROZEN PULP)
 	# =========================================================================
-	_register_item("pulp_orange", "Polpa de Laranja", "beverages", 10, 10, 2.5, 3, load("res://src/items/juice_pulp.tscn"))
-	_register_item("pulp_grape", "Polpa de Uva", "beverages", 10, 10, 2.5, 3, load("res://src/items/juice_pulp.tscn"))
-	_register_item("pulp_strawberry", "Polpa de Morango", "beverages", 10, 10, 2.8, 3, load("res://src/items/juice_pulp.tscn"))
+	_register_item("pulp_orange", "Polpa de Laranja", "beverages", 10, 10, 15.0, 3, load("res://src/items/juice_pulp.tscn"))
+	_register_item("pulp_grape", "Polpa de Uva", "beverages", 10, 10, 15.0, 3, load("res://src/items/juice_pulp.tscn"))
+	_register_item("pulp_strawberry", "Polpa de Morango", "beverages", 10, 10, 15.0, 3, load("res://src/items/juice_pulp.tscn"))
 
 func _register_item(
 	id: String,

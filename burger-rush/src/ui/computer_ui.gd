@@ -1,6 +1,10 @@
 class_name ComputerUI
 extends CanvasLayer
 
+const MenuPricingManager = preload("res://src/recipes/menu_pricing_manager.gd")
+const FinanceManager = preload("res://src/economy/finance_manager.gd")
+const WaterManager = preload("res://src/core/water_manager.gd")
+
 # =============================================================================
 # BURGER RUSH - SISTEMA ADMINISTRATIVO DO RESTAURANTE (PC v2.0)
 #
@@ -25,6 +29,7 @@ signal closed()
 # Área de Conteúdo
 @onready var inventory_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab
 @onready var purchases_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab
+@onready var menu_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab
 @onready var placeholder_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab
 @onready var placeholder_title: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab/TitleLabel
 @onready var placeholder_desc: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab/DescLabel
@@ -60,17 +65,47 @@ signal closed()
 @onready var confirm_order_btn: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/MainLayout/CartColumn/CartMargin/CartVBox/ConfirmOrderBtn
 @onready var deliveries_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab/DeliveriesBar/DeliveriesPanel/DeliveriesLabel
 
+# Elementos da Aba Cardápio
+@onready var menu_search_input: LineEdit = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar/HBox/MenuSearchInput
+@onready var menu_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar/HBox/MenuSummaryLabel
+@onready var btn_menu_all: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox/BtnMenuAll
+@onready var btn_menu_burgers: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox/BtnMenuBurgers
+@onready var btn_menu_sides: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox/BtnMenuSides
+@onready var btn_menu_drinks: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox/BtnMenuDrinks
+@onready var menu_list_container: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/MenuScroll/Margin/MenuList
+
+# Elementos da Aba Receitas
+@onready var recipes_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab
+@onready var recipes_search_input: LineEdit = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar/HBox/RecipesSearchInput
+@onready var recipes_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar/HBox/RecipesSummaryLabel
+@onready var btn_recipe_all: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox/BtnRecipeAll
+@onready var btn_recipe_burgers: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox/BtnRecipeBurgers
+@onready var btn_recipe_sides: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox/BtnRecipeSides
+@onready var btn_recipe_drinks: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox/BtnRecipeDrinks
+@onready var recipes_grid_container: GridContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/RecipesScroll/Margin/RecipesGrid
+
+# Elementos da Aba Finanças
+@onready var finances_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab
+@onready var finances_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/TopBar/HBox/FinancesSummaryLabel
+@onready var finances_kpi_hbox: HBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/KPICardsBar/HBox
+@onready var btn_finances_overview: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesOverview
+@onready var btn_finances_revenue: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesRevenue
+@onready var btn_finances_expenses: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesExpenses
+@onready var btn_finances_bills: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesBills
+@onready var btn_finances_history: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesHistory
+@onready var finances_content_vbox: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesScroll/Margin/FinancesContentVBox
+
 enum TabID {
 	INVENTORY,
 	PURCHASES,
+	MENU,
+	RECIPES,
+	FINANCES,
 	EMPLOYEES,
 	ORDERS,
-	MENU,
-	FINANCES,
 	ENERGY,
 	NEWS,
 	EQUIPMENT,
-	RECIPES,
 	SETTINGS
 }
 
@@ -80,6 +115,14 @@ var current_search: String = ""
 
 var current_buy_filter: String = "ALL"
 var current_buy_search: String = ""
+
+var current_menu_filter: String = "ALL"
+var current_menu_search: String = ""
+
+var current_recipe_filter: String = "ALL"
+var current_recipe_search: String = ""
+
+var current_finances_section: String = "OVERVIEW" # OVERVIEW, REVENUE, EXPENSES, BILLS, HISTORY
 
 # Quantidades temporárias selecionadas nos cards antes de adicionar ao carrinho
 var card_selected_quantities: Dictionary = {}
@@ -91,19 +134,27 @@ func _ready() -> void:
 	_setup_signals()
 	_setup_navigation_sidebar()
 	_setup_purchases_tab()
+	_setup_menu_tab()
+	_setup_recipes_tab()
+	_setup_finances_tab()
 
 func _setup_signals() -> void:
-	if close_btn:
+	if close_btn and not close_btn.pressed.is_connected(close):
 		close_btn.pressed.connect(close)
 
-	if stock_search_input:
+	if stock_search_input and not stock_search_input.text_changed.is_connected(_on_search_text_changed):
 		stock_search_input.text_changed.connect(_on_search_text_changed)
 
-	if filter_all_btn: filter_all_btn.pressed.connect(func(): _set_category_filter("ALL"))
-	if filter_ingredients_btn: filter_ingredients_btn.pressed.connect(func(): _set_category_filter("INGREDIENTS"))
-	if filter_drinks_btn: filter_drinks_btn.pressed.connect(func(): _set_category_filter("DRINKS"))
-	if filter_supplies_btn: filter_supplies_btn.pressed.connect(func(): _set_category_filter("SUPPLIES"))
-	if filter_others_btn: filter_others_btn.pressed.connect(func(): _set_category_filter("OTHERS"))
+	if filter_all_btn and not filter_all_btn.pressed.is_connected(_on_filter_all_pressed):
+		filter_all_btn.pressed.connect(_on_filter_all_pressed)
+	if filter_ingredients_btn and not filter_ingredients_btn.pressed.is_connected(_on_filter_ingredients_pressed):
+		filter_ingredients_btn.pressed.connect(_on_filter_ingredients_pressed)
+	if filter_drinks_btn and not filter_drinks_btn.pressed.is_connected(_on_filter_drinks_pressed):
+		filter_drinks_btn.pressed.connect(_on_filter_drinks_pressed)
+	if filter_supplies_btn and not filter_supplies_btn.pressed.is_connected(_on_filter_supplies_pressed):
+		filter_supplies_btn.pressed.connect(_on_filter_supplies_pressed)
+	if filter_others_btn and not filter_others_btn.pressed.is_connected(_on_filter_others_pressed):
+		filter_others_btn.pressed.connect(_on_filter_others_pressed)
 
 	# Conecta ao InventoryManager
 	var inv = InventoryManager.get_instance()
@@ -122,20 +173,31 @@ func _setup_signals() -> void:
 		if not pm.delivery_arrived.is_connected(_on_delivery_arrived):
 			pm.delivery_arrived.connect(_on_delivery_arrived)
 
+func _on_filter_all_pressed() -> void: _set_category_filter("ALL")
+func _on_filter_ingredients_pressed() -> void: _set_category_filter("INGREDIENTS")
+func _on_filter_drinks_pressed() -> void: _set_category_filter("DRINKS")
+func _on_filter_supplies_pressed() -> void: _set_category_filter("SUPPLIES")
+func _on_filter_others_pressed() -> void: _set_category_filter("OTHERS")
+
 func _setup_purchases_tab() -> void:
-	if purchases_search_input:
+	if purchases_search_input and not purchases_search_input.text_changed.is_connected(_on_buy_search_text_changed):
 		purchases_search_input.text_changed.connect(_on_buy_search_text_changed)
 
-	if btn_buy_all: btn_buy_all.pressed.connect(func(): _set_buy_category_filter("ALL"))
-	if btn_buy_ingredients: btn_buy_ingredients.pressed.connect(func(): _set_buy_category_filter("INGREDIENTS"))
-	if btn_buy_fries: btn_buy_fries.pressed.connect(func(): _set_buy_category_filter("FRIES"))
-	if btn_buy_drinks: btn_buy_drinks.pressed.connect(func(): _set_buy_category_filter("DRINKS"))
-	if btn_buy_supplies: btn_buy_supplies.pressed.connect(func(): _set_buy_category_filter("SUPPLIES"))
+	if btn_buy_all and not btn_buy_all.pressed.is_connected(_on_buy_all_pressed):
+		btn_buy_all.pressed.connect(_on_buy_all_pressed)
+	if btn_buy_ingredients and not btn_buy_ingredients.pressed.is_connected(_on_buy_ingredients_pressed):
+		btn_buy_ingredients.pressed.connect(_on_buy_ingredients_pressed)
+	if btn_buy_fries and not btn_buy_fries.pressed.is_connected(_on_buy_fries_pressed):
+		btn_buy_fries.pressed.connect(_on_buy_fries_pressed)
+	if btn_buy_drinks and not btn_buy_drinks.pressed.is_connected(_on_buy_drinks_pressed):
+		btn_buy_drinks.pressed.connect(_on_buy_drinks_pressed)
+	if btn_buy_supplies and not btn_buy_supplies.pressed.is_connected(_on_buy_supplies_pressed):
+		btn_buy_supplies.pressed.connect(_on_buy_supplies_pressed)
 
-	if clear_cart_btn:
+	if clear_cart_btn and not clear_cart_btn.pressed.is_connected(_on_clear_cart_pressed):
 		clear_cart_btn.pressed.connect(_on_clear_cart_pressed)
 
-	if confirm_order_btn:
+	if confirm_order_btn and not confirm_order_btn.pressed.is_connected(_on_confirm_order_pressed):
 		confirm_order_btn.pressed.connect(_on_confirm_order_pressed)
 
 	if supplier_option:
@@ -143,7 +205,14 @@ func _setup_purchases_tab() -> void:
 		supplier_option.add_item("🚚 Fornecedor Normal (Padrão)", 0)
 		supplier_option.add_item("⚡ Fornecedor Rápido (Expresso)", 1)
 		supplier_option.add_item("📦 Fornecedor Atacado (Econômico)", 2)
-		supplier_option.item_selected.connect(_on_supplier_selected)
+		if not supplier_option.item_selected.is_connected(_on_supplier_selected):
+			supplier_option.item_selected.connect(_on_supplier_selected)
+
+func _on_buy_all_pressed() -> void: _set_buy_category_filter("ALL")
+func _on_buy_ingredients_pressed() -> void: _set_buy_category_filter("INGREDIENTS")
+func _on_buy_fries_pressed() -> void: _set_buy_category_filter("FRIES")
+func _on_buy_drinks_pressed() -> void: _set_buy_category_filter("DRINKS")
+func _on_buy_supplies_pressed() -> void: _set_buy_category_filter("SUPPLIES")
 
 func _setup_navigation_sidebar() -> void:
 	if not nav_buttons_container:
@@ -155,15 +224,15 @@ func _setup_navigation_sidebar() -> void:
 
 	var tabs_def = [
 		{"id": TabID.INVENTORY, "icon": "📦", "title": "Estoque Geral", "active": true, "badge": ""},
-		{"id": TabID.PURCHASES, "icon": "🛒", "title": "Central de Compras", "active": true, "badge": "NOVO"},
+		{"id": TabID.PURCHASES, "icon": "🛒", "title": "Central de Compras", "active": true, "badge": ""},
+		{"id": TabID.MENU, "icon": "🍔", "title": "Cardápio & Preços", "active": true, "badge": ""},
+		{"id": TabID.RECIPES, "icon": "📖", "title": "Livro de Receitas", "active": true, "badge": ""},
+		{"id": TabID.FINANCES, "icon": "💵", "title": "Fluxo Financeiro", "active": true, "badge": "NOVO"},
 		{"id": TabID.EMPLOYEES, "icon": "👥", "title": "Funcionários", "active": false, "badge": "Em breve"},
 		{"id": TabID.ORDERS, "icon": "📋", "title": "Histórico de Pedidos", "active": false, "badge": "Em breve"},
-		{"id": TabID.MENU, "icon": "🍔", "title": "Cardápio & Preços", "active": false, "badge": "Em breve"},
-		{"id": TabID.FINANCES, "icon": "💵", "title": "Fluxo Financeiro", "active": false, "badge": "Em breve"},
 		{"id": TabID.ENERGY, "icon": "⚡", "title": "Rede Elétrica", "active": false, "badge": "Em breve"},
 		{"id": TabID.NEWS, "icon": "📰", "title": "Jornal da Cidade", "active": false, "badge": "Em breve"},
 		{"id": TabID.EQUIPMENT, "icon": "⚙️", "title": "Equipamentos", "active": false, "badge": "Em breve"},
-		{"id": TabID.RECIPES, "icon": "📖", "title": "Livro de Receitas", "active": false, "badge": "Em breve"},
 		{"id": TabID.SETTINGS, "icon": "🛠️", "title": "Configurações", "active": false, "badge": "Em breve"}
 	]
 
@@ -188,12 +257,23 @@ func _setup_navigation_sidebar() -> void:
 func open() -> void:
 	visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	_switch_tab(current_tab, "Estoque Geral" if current_tab == TabID.INVENTORY else "Central de Compras")
+	var t_title = "Estoque Geral"
+	if current_tab == TabID.PURCHASES: t_title = "Central de Compras"
+	elif current_tab == TabID.MENU: t_title = "Cardápio & Preços"
+	elif current_tab == TabID.RECIPES: t_title = "Livro de Receitas"
+	elif current_tab == TabID.FINANCES: t_title = "Fluxo Financeiro"
+	_switch_tab(current_tab, t_title)
 	_refresh_header_data()
 	if current_tab == TabID.INVENTORY:
 		_refresh_inventory_tab()
 	elif current_tab == TabID.PURCHASES:
 		_refresh_purchases_tab()
+	elif current_tab == TabID.MENU:
+		_refresh_menu_tab()
+	elif current_tab == TabID.RECIPES:
+		_refresh_recipes_tab()
+	elif current_tab == TabID.FINANCES:
+		_refresh_finances_tab()
 
 func close() -> void:
 	visible = false
@@ -220,24 +300,52 @@ func _refresh_header_data() -> void:
 	if econ and header_money_label:
 		header_money_label.text = "$ %.2f" % econ.get_money()
 
+func _get_tab_node(tab_name: String) -> VBoxContainer:
+	return get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/" + tab_name) as VBoxContainer
+
 func _switch_tab(tab_id: TabID, tab_title: String = "") -> void:
 	current_tab = tab_id
 	_update_nav_button_styles()
 
-	if inventory_tab: inventory_tab.visible = (tab_id == TabID.INVENTORY)
-	if purchases_tab: purchases_tab.visible = (tab_id == TabID.PURCHASES)
-	if placeholder_tab: placeholder_tab.visible = (tab_id != TabID.INVENTORY and tab_id != TabID.PURCHASES)
+	var inv_t = inventory_tab if inventory_tab else _get_tab_node("InventoryTab")
+	var pur_t = purchases_tab if purchases_tab else _get_tab_node("PurchasesTab")
+	var men_t = menu_tab if menu_tab else _get_tab_node("MenuTab")
+	var rec_t = recipes_tab if recipes_tab else _get_tab_node("RecipesTab")
+	var fin_t = finances_tab if finances_tab else _get_tab_node("FinancesTab")
+	var plc_t = placeholder_tab if placeholder_tab else _get_tab_node("PlaceholderTab")
+
+	inventory_tab = inv_t
+	purchases_tab = pur_t
+	menu_tab = men_t
+	recipes_tab = rec_t
+	finances_tab = fin_t
+	placeholder_tab = plc_t
+
+	if inv_t: inv_t.visible = (tab_id == TabID.INVENTORY)
+	if pur_t: pur_t.visible = (tab_id == TabID.PURCHASES)
+	if men_t: men_t.visible = (tab_id == TabID.MENU)
+	if rec_t: rec_t.visible = (tab_id == TabID.RECIPES)
+	if fin_t: fin_t.visible = (tab_id == TabID.FINANCES)
+	if plc_t: plc_t.visible = (tab_id != TabID.INVENTORY and tab_id != TabID.PURCHASES and tab_id != TabID.MENU and tab_id != TabID.RECIPES and tab_id != TabID.FINANCES)
 
 	if tab_id == TabID.INVENTORY:
 		_refresh_inventory_tab()
 	elif tab_id == TabID.PURCHASES:
 		_refresh_purchases_tab()
+	elif tab_id == TabID.MENU:
+		_refresh_menu_tab()
+	elif tab_id == TabID.RECIPES:
+		_refresh_recipes_tab()
+	elif tab_id == TabID.FINANCES:
+		_refresh_finances_tab()
 	else:
-		if placeholder_tab:
-			if placeholder_title:
-				placeholder_title.text = "Módulo: %s" % tab_title
-			if placeholder_desc:
-				placeholder_desc.text = "Este módulo será integrado nas próximas etapas do Burger Rush OS.\nTodos os dados e sistemas de gameplay continuam funcionando normalmente."
+		if plc_t:
+			var p_title = placeholder_title if placeholder_title else plc_t.get_node_or_null("TitleLabel") as Label
+			var p_desc = placeholder_desc if placeholder_desc else plc_t.get_node_or_null("DescLabel") as Label
+			if p_title:
+				p_title.text = "Módulo: %s" % tab_title
+			if p_desc:
+				p_desc.text = "Este módulo será integrado nas próximas etapas do Burger Rush OS.\nTodos os dados e sistemas de gameplay continuam funcionando normalmente."
 
 func _update_nav_button_styles() -> void:
 	for t_id in nav_buttons_map.keys():
@@ -373,13 +481,13 @@ func _is_item_in_filter(item_cat: String, filter_type: String) -> bool:
 		"ALL":
 			return true
 		"INGREDIENTS":
-			return item_cat in ["bakery", "meats", "cheeses", "vegetables", "extras", "sauces"]
+			return item_cat in ["bakery", "meats", "cheeses", "vegetables", "extras", "sauces", "ingredients", "fries"]
 		"DRINKS":
 			return item_cat in ["beverages", "drinks", "pulps"]
 		"SUPPLIES":
-			return item_cat in ["supplies", "packaging"]
+			return item_cat in ["supplies", "packaging"] and not (item_cat in ["vegetables", "ingredients", "extras"])
 		"OTHERS":
-			return not (item_cat in ["bakery", "meats", "cheeses", "vegetables", "extras", "sauces", "beverages", "drinks", "pulps", "supplies", "packaging"])
+			return not (item_cat in ["bakery", "meats", "cheeses", "vegetables", "extras", "sauces", "ingredients", "fries", "beverages", "drinks", "pulps", "supplies", "packaging"])
 		_:
 			return true
 
@@ -996,7 +1104,11 @@ func _get_item_icon(id: String) -> String:
 			return "⚪"
 		"sauce_special", "special_sauce":
 			return "🟠"
-		"potato_raw", "potato_box", "french_fries_box", "fries_box":
+		"potato_raw", "potato_bag", "french_fries_bag":
+			return "🥔"
+		"onion_rings_raw", "onion_bag", "onion_rings", "fried_onions":
+			return "🧅"
+		"potato_box", "french_fries_box", "fries_box", "fries":
 			return "🍟"
 		"cup_empty", "cup", "drink_cup":
 			return "🥤"
@@ -1014,3 +1126,1480 @@ func _get_item_icon(id: String) -> String:
 			return "🍓"
 		_:
 			return "📦"
+
+# =============================================================================
+# ABA 3: CARDÁPIO & PRECIFICAÇÃO DINÂMICA
+# =============================================================================
+
+func _setup_menu_tab() -> void:
+	if menu_search_input and not menu_search_input.text_changed.is_connected(_on_menu_search_text_changed):
+		menu_search_input.text_changed.connect(_on_menu_search_text_changed)
+
+	if btn_menu_all and not btn_menu_all.pressed.is_connected(_on_menu_filter_all_pressed):
+		btn_menu_all.pressed.connect(_on_menu_filter_all_pressed)
+	if btn_menu_burgers and not btn_menu_burgers.pressed.is_connected(_on_menu_filter_burgers_pressed):
+		btn_menu_burgers.pressed.connect(_on_menu_filter_burgers_pressed)
+	if btn_menu_sides and not btn_menu_sides.pressed.is_connected(_on_menu_filter_sides_pressed):
+		btn_menu_sides.pressed.connect(_on_menu_filter_sides_pressed)
+	if btn_menu_drinks and not btn_menu_drinks.pressed.is_connected(_on_menu_filter_drinks_pressed):
+		btn_menu_drinks.pressed.connect(_on_menu_filter_drinks_pressed)
+
+func _on_menu_filter_all_pressed() -> void: _set_menu_category_filter("ALL")
+func _on_menu_filter_burgers_pressed() -> void: _set_menu_category_filter("BURGER")
+func _on_menu_filter_sides_pressed() -> void: _set_menu_category_filter("SIDES")
+func _on_menu_filter_drinks_pressed() -> void: _set_menu_category_filter("DRINKS")
+
+func _on_menu_search_text_changed(new_text: String) -> void:
+	current_menu_search = new_text.strip_edges().to_lower()
+	_refresh_menu_tab()
+
+func _set_menu_category_filter(cat: String) -> void:
+	current_menu_filter = cat
+	_update_menu_filter_button_styles()
+	_refresh_menu_tab()
+
+func _update_menu_filter_button_styles() -> void:
+	var buttons = {
+		"ALL": btn_menu_all,
+		"BURGER": btn_menu_burgers,
+		"SIDES": btn_menu_sides,
+		"DRINKS": btn_menu_drinks
+	}
+
+	for key in buttons.keys():
+		var b: Button = buttons[key]
+		if not b:
+			continue
+		var is_sel = (key == current_menu_filter)
+		var style = StyleBoxFlat.new()
+		style.corner_radius_top_left = 6
+		style.corner_radius_top_right = 6
+		style.corner_radius_bottom_right = 6
+		style.corner_radius_bottom_left = 6
+		if is_sel:
+			style.bg_color = Color(0.85, 0.2, 0.15, 1.0)
+			style.border_width_bottom = 2
+			style.border_color = Color(1.0, 0.85, 0.2, 1.0)
+			b.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		else:
+			style.bg_color = Color(0.12, 0.15, 0.22, 1.0)
+			b.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1))
+		b.add_theme_stylebox_override("normal", style)
+		b.add_theme_stylebox_override("hover", style)
+		b.add_theme_stylebox_override("pressed", style)
+
+func _refresh_menu_tab() -> void:
+	var list_c = menu_list_container if menu_list_container else get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/MenuScroll/Margin/MenuList") as VBoxContainer
+	if not list_c:
+		return
+
+	for child in list_c.get_children():
+		list_c.remove_child(child)
+		child.queue_free()
+
+	_update_menu_filter_button_styles()
+
+	var all_recipes = RecipeDatabase.get_all_recipes()
+	var displayed_count = 0
+	var total_margin_sum = 0.0
+	var valid_margin_count = 0
+
+	for recipe in all_recipes:
+		var r_id = recipe.id
+		var cat = recipe.category # "burger", "fries", "drink"
+		var d_name = recipe.display_name
+
+		# 1. Filtro por categoria
+		if current_menu_filter != "ALL":
+			match current_menu_filter:
+				"BURGER":
+					if cat != "burger": continue
+				"SIDES":
+					if cat != "fries" and not r_id.contains("fries") and not r_id.contains("onion"): continue
+				"DRINKS":
+					if cat != "drink" and not r_id.begins_with("soda_") and not r_id.begins_with("juice_"): continue
+
+		# 2. Filtro por busca
+		if current_menu_search != "":
+			if not d_name.to_lower().contains(current_menu_search) and not r_id.to_lower().contains(current_menu_search):
+				continue
+
+		displayed_count += 1
+
+		# 3. Cálculos Dinâmicos
+		var cost = MenuPricingManager.calculate_production_cost(r_id)
+		var market_ref = MenuPricingManager.get_market_reference_price(r_id)
+		var recommended = MenuPricingManager.get_recommended_price(r_id)
+		var min_price = MenuPricingManager.get_min_price(r_id)
+		var max_price = MenuPricingManager.get_max_price(r_id)
+		var current_price = MenuPricingManager.get_selling_price(r_id)
+		var margin_pct = MenuPricingManager.get_gross_margin_pct(r_id)
+		var gross_profit = MenuPricingManager.get_gross_profit(r_id)
+
+		total_margin_sum += margin_pct
+		valid_margin_count += 1
+
+		# 4. Criação da Linha/Card do Produto
+		var row_card = _create_menu_item_row(recipe, cost, market_ref, recommended, min_price, max_price, current_price, margin_pct, gross_profit)
+		list_c.add_child(row_card)
+
+	var s_lbl = menu_summary_label if menu_summary_label else get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar/HBox/MenuSummaryLabel") as Label
+	if s_lbl:
+		var avg_margin = (total_margin_sum / float(valid_margin_count)) if valid_margin_count > 0 else 0.0
+		s_lbl.text = "%d itens • Margem Média: %.1f%%" % [displayed_count, avg_margin]
+
+func _create_menu_item_row(
+	recipe: Recipe,
+	cost: float,
+	market_ref: float,
+	recommended: float,
+	min_price: float,
+	max_price: float,
+	current_price: float,
+	margin_pct: float,
+	gross_profit: float
+) -> PanelContainer:
+	var panel = PanelContainer.new()
+	panel.custom_minimum_size = Vector2(0, 48)
+
+	var p_style = StyleBoxFlat.new()
+	p_style.bg_color = Color(0.10, 0.12, 0.17, 0.95)
+	p_style.border_width_left = 1
+	p_style.border_width_top = 1
+	p_style.border_width_right = 1
+	p_style.border_width_bottom = 1
+	p_style.border_color = Color(0.18, 0.22, 0.30, 1.0)
+	p_style.corner_radius_top_left = 8
+	p_style.corner_radius_top_right = 8
+	p_style.corner_radius_bottom_right = 8
+	p_style.corner_radius_bottom_left = 8
+	panel.add_theme_stylebox_override("panel", p_style)
+
+	var margin_c = MarginContainer.new()
+	margin_c.add_theme_constant_override("margin_left", 12)
+	margin_c.add_theme_constant_override("margin_right", 12)
+	margin_c.add_theme_constant_override("margin_top", 6)
+	margin_c.add_theme_constant_override("margin_bottom", 6)
+	panel.add_child(margin_c)
+
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+	margin_c.add_child(hbox)
+
+	# 1. Coluna Produto
+	var col_prod = HBoxContainer.new()
+	col_prod.custom_minimum_size = Vector2(230, 0)
+	col_prod.add_theme_constant_override("separation", 8)
+	hbox.add_child(col_prod)
+
+	var icon_lbl = Label.new()
+	icon_lbl.text = _get_recipe_icon(recipe)
+	icon_lbl.add_theme_font_size_override("font_size", 16)
+	col_prod.add_child(icon_lbl)
+
+	var name_vbox = VBoxContainer.new()
+	name_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_vbox.add_theme_constant_override("separation", 0)
+	col_prod.add_child(name_vbox)
+
+	var name_lbl = Label.new()
+	name_lbl.text = recipe.display_name
+	name_lbl.add_theme_font_size_override("font_size", 13)
+	name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	name_vbox.add_child(name_lbl)
+
+	var cat_tag = Label.new()
+	cat_tag.text = _get_category_label(recipe.category)
+	cat_tag.add_theme_font_size_override("font_size", 10)
+	cat_tag.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1))
+	name_vbox.add_child(cat_tag)
+
+	# 2. Coluna Custo Real
+	var cost_lbl = Label.new()
+	cost_lbl.custom_minimum_size = Vector2(110, 0)
+	cost_lbl.text = "$ %.2f" % cost
+	cost_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cost_lbl.add_theme_font_size_override("font_size", 13)
+	cost_lbl.add_theme_color_override("font_color", Color(0.55, 0.85, 1.0, 1))
+	hbox.add_child(cost_lbl)
+
+	# 3. Coluna Mercado Regional
+	var market_lbl = Label.new()
+	market_lbl.custom_minimum_size = Vector2(110, 0)
+	market_lbl.text = "$ %.2f" % market_ref
+	market_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	market_lbl.add_theme_font_size_override("font_size", 13)
+	market_lbl.add_theme_color_override("font_color", Color(0.75, 0.8, 0.9, 1))
+	hbox.add_child(market_lbl)
+
+	# 4. Coluna Sugerido
+	var rec_lbl = Label.new()
+	rec_lbl.custom_minimum_size = Vector2(110, 0)
+	rec_lbl.text = "$ %.2f" % recommended
+	rec_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rec_lbl.add_theme_font_size_override("font_size", 13)
+	rec_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4, 1))
+	hbox.add_child(rec_lbl)
+
+	# 5. Coluna Seu Preço (com controles interativos)
+	var price_ctrl = HBoxContainer.new()
+	price_ctrl.custom_minimum_size = Vector2(200, 0)
+	price_ctrl.add_theme_constant_override("separation", 4)
+	hbox.add_child(price_ctrl)
+
+	var btn_minus = Button.new()
+	btn_minus.text = "－"
+	btn_minus.custom_minimum_size = Vector2(28, 28)
+	btn_minus.focus_mode = Control.FOCUS_NONE
+	btn_minus.add_theme_font_size_override("font_size", 12)
+	price_ctrl.add_child(btn_minus)
+
+	var price_input = LineEdit.new()
+	price_input.text = "%.2f" % current_price
+	price_input.custom_minimum_size = Vector2(65, 28)
+	price_input.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	price_input.add_theme_font_size_override("font_size", 13)
+	var in_style = StyleBoxFlat.new()
+	in_style.bg_color = Color(0.06, 0.08, 0.12, 1)
+	in_style.border_width_left = 1
+	in_style.border_width_top = 1
+	in_style.border_width_right = 1
+	in_style.border_width_bottom = 1
+	in_style.border_color = Color(0.25, 0.32, 0.45, 1)
+	in_style.corner_radius_top_left = 4
+	in_style.corner_radius_top_right = 4
+	in_style.corner_radius_bottom_right = 4
+	in_style.corner_radius_bottom_left = 4
+	price_input.add_theme_stylebox_override("normal", in_style)
+	price_ctrl.add_child(price_input)
+
+	var btn_plus = Button.new()
+	btn_plus.text = "＋"
+	btn_plus.custom_minimum_size = Vector2(28, 28)
+	btn_plus.focus_mode = Control.FOCUS_NONE
+	btn_plus.add_theme_font_size_override("font_size", 12)
+	price_ctrl.add_child(btn_plus)
+
+	var btn_reset = Button.new()
+	btn_reset.text = "↺"
+	btn_reset.tooltip_text = "Restaurar Preço Sugerido ($ %.2f)" % recommended
+	btn_reset.custom_minimum_size = Vector2(28, 28)
+	btn_reset.focus_mode = Control.FOCUS_NONE
+	btn_reset.add_theme_font_size_override("font_size", 12)
+	price_ctrl.add_child(btn_reset)
+
+	# 6. Coluna Margem Bruta (Badge Colorida)
+	var margin_panel = PanelContainer.new()
+	margin_panel.custom_minimum_size = Vector2(140, 28)
+	var m_style = StyleBoxFlat.new()
+	m_style.corner_radius_top_left = 5
+	m_style.corner_radius_top_right = 5
+	m_style.corner_radius_bottom_right = 5
+	m_style.corner_radius_bottom_left = 5
+	if margin_pct >= 40.0:
+		m_style.bg_color = Color(0.08, 0.35, 0.18, 0.9)
+		m_style.border_width_left = 1
+		m_style.border_color = Color(0.2, 0.7, 0.4, 1)
+	elif margin_pct >= 20.0:
+		m_style.bg_color = Color(0.40, 0.30, 0.08, 0.9)
+		m_style.border_width_left = 1
+		m_style.border_color = Color(0.8, 0.65, 0.2, 1)
+	else:
+		m_style.bg_color = Color(0.40, 0.10, 0.10, 0.9)
+		m_style.border_width_left = 1
+		m_style.border_color = Color(0.8, 0.25, 0.25, 1)
+	margin_panel.add_theme_stylebox_override("panel", m_style)
+	hbox.add_child(margin_panel)
+
+	var margin_lbl = Label.new()
+	margin_lbl.text = "%.1f%% (+$%.2f)" % [margin_pct, gross_profit]
+	margin_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	margin_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	margin_lbl.add_theme_font_size_override("font_size", 11)
+	margin_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	margin_panel.add_child(margin_lbl)
+
+	# 7. Coluna Limites Permitidos
+	var limits_lbl = Label.new()
+	limits_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	limits_lbl.text = "Mín: $%.2f | Máx: $%.2f" % [min_price, max_price]
+	limits_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	limits_lbl.add_theme_font_size_override("font_size", 11)
+	limits_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1))
+	hbox.add_child(limits_lbl)
+
+	# Callbacks Interativos para Alteração de Preço com Validação
+	var apply_new_price = func(target_p: float):
+		var clamped = clampf(target_p, min_price, max_price)
+		MenuPricingManager.set_selling_price(recipe.id, clamped)
+		_refresh_menu_tab()
+
+	btn_minus.pressed.connect(func():
+		var p = MenuPricingManager.get_selling_price(recipe.id) - 0.50
+		apply_new_price.call(p)
+	)
+
+	btn_plus.pressed.connect(func():
+		var p = MenuPricingManager.get_selling_price(recipe.id) + 0.50
+		apply_new_price.call(p)
+	)
+
+	btn_reset.pressed.connect(func():
+		apply_new_price.call(recommended)
+	)
+
+	price_input.text_submitted.connect(func(text_val: String):
+		var val = text_val.to_float()
+		if val <= 0.0:
+			val = current_price
+		apply_new_price.call(val)
+	)
+
+	return panel
+
+# =============================================================================
+# ABA 4: LIVRO DE RECEITAS DO RESTAURANTE
+# =============================================================================
+
+func _setup_recipes_tab() -> void:
+	if recipes_search_input and not recipes_search_input.text_changed.is_connected(_on_recipe_search_text_changed):
+		recipes_search_input.text_changed.connect(_on_recipe_search_text_changed)
+
+	if btn_recipe_all and not btn_recipe_all.pressed.is_connected(_on_recipe_filter_all_pressed):
+		btn_recipe_all.pressed.connect(_on_recipe_filter_all_pressed)
+	if btn_recipe_burgers and not btn_recipe_burgers.pressed.is_connected(_on_recipe_filter_burgers_pressed):
+		btn_recipe_burgers.pressed.connect(_on_recipe_filter_burgers_pressed)
+	if btn_recipe_sides and not btn_recipe_sides.pressed.is_connected(_on_recipe_filter_sides_pressed):
+		btn_recipe_sides.pressed.connect(_on_recipe_filter_sides_pressed)
+	if btn_recipe_drinks and not btn_recipe_drinks.pressed.is_connected(_on_recipe_filter_drinks_pressed):
+		btn_recipe_drinks.pressed.connect(_on_recipe_filter_drinks_pressed)
+
+func _on_recipe_filter_all_pressed() -> void: _set_recipe_category_filter("ALL")
+func _on_recipe_filter_burgers_pressed() -> void: _set_recipe_category_filter("BURGER")
+func _on_recipe_filter_sides_pressed() -> void: _set_recipe_category_filter("SIDES")
+func _on_recipe_filter_drinks_pressed() -> void: _set_recipe_category_filter("DRINKS")
+
+func _on_recipe_search_text_changed(new_text: String) -> void:
+	current_recipe_search = new_text.strip_edges().to_lower()
+	_refresh_recipes_tab()
+
+func _set_recipe_category_filter(cat: String) -> void:
+	current_recipe_filter = cat
+	_update_recipe_filter_button_styles()
+	_refresh_recipes_tab()
+
+func _update_recipe_filter_button_styles() -> void:
+	var buttons = {
+		"ALL": btn_recipe_all,
+		"BURGER": btn_recipe_burgers,
+		"SIDES": btn_recipe_sides,
+		"DRINKS": btn_recipe_drinks
+	}
+
+	for key in buttons.keys():
+		var b: Button = buttons[key]
+		if not b:
+			continue
+		var is_sel = (key == current_recipe_filter)
+		var style = StyleBoxFlat.new()
+		style.corner_radius_top_left = 6
+		style.corner_radius_top_right = 6
+		style.corner_radius_bottom_right = 6
+		style.corner_radius_bottom_left = 6
+		if is_sel:
+			style.bg_color = Color(0.85, 0.2, 0.15, 1.0)
+			style.border_width_bottom = 2
+			style.border_color = Color(1.0, 0.85, 0.2, 1.0)
+			b.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		else:
+			style.bg_color = Color(0.12, 0.15, 0.22, 1.0)
+			b.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1))
+		b.add_theme_stylebox_override("normal", style)
+		b.add_theme_stylebox_override("hover", style)
+		b.add_theme_stylebox_override("pressed", style)
+
+func _refresh_recipes_tab() -> void:
+	var grid = recipes_grid_container if recipes_grid_container else get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/RecipesScroll/Margin/RecipesGrid") as GridContainer
+	if not grid:
+		return
+
+	for child in grid.get_children():
+		grid.remove_child(child)
+		child.queue_free()
+
+	_update_recipe_filter_button_styles()
+
+	var all_recipes = RecipeDatabase.get_all_recipes()
+	var displayed_count = 0
+
+	for recipe in all_recipes:
+		var r_id = recipe.id
+		var cat = recipe.category
+		var d_name = recipe.display_name
+
+		# 1. Filtro por categoria
+		if current_recipe_filter != "ALL":
+			match current_recipe_filter:
+				"BURGER":
+					if cat != "burger": continue
+				"SIDES":
+					if cat != "fries" and not r_id.contains("fries") and not r_id.contains("onion"): continue
+				"DRINKS":
+					if cat != "drink" and not r_id.begins_with("soda_") and not r_id.begins_with("juice_"): continue
+
+		# 2. Filtro por busca
+		if current_recipe_search != "":
+			if not d_name.to_lower().contains(current_recipe_search) and not r_id.to_lower().contains(current_recipe_search):
+				continue
+
+		displayed_count += 1
+		var card = _create_recipe_detail_card(recipe)
+		grid.add_child(card)
+
+	var s_lbl = recipes_summary_label if recipes_summary_label else get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar/HBox/RecipesSummaryLabel") as Label
+	if s_lbl:
+		s_lbl.text = "%d receitas cadastradas • Montagem flexível" % displayed_count
+
+func _create_recipe_detail_card(recipe: Recipe) -> PanelContainer:
+	var panel = PanelContainer.new()
+	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var p_style = StyleBoxFlat.new()
+	p_style.bg_color = Color(0.10, 0.12, 0.17, 0.95)
+	p_style.border_width_left = 1
+	p_style.border_width_top = 1
+	p_style.border_width_right = 1
+	p_style.border_width_bottom = 1
+	p_style.border_color = Color(0.20, 0.25, 0.35, 1.0)
+	p_style.corner_radius_top_left = 8
+	p_style.corner_radius_top_right = 8
+	p_style.corner_radius_bottom_right = 8
+	p_style.corner_radius_bottom_left = 8
+	panel.add_theme_stylebox_override("panel", p_style)
+
+	var margin_c = MarginContainer.new()
+	margin_c.add_theme_constant_override("margin_left", 14)
+	margin_c.add_theme_constant_override("margin_right", 14)
+	margin_c.add_theme_constant_override("margin_top", 12)
+	margin_c.add_theme_constant_override("margin_bottom", 12)
+	panel.add_child(margin_c)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	margin_c.add_child(vbox)
+
+	# 1. Cabeçalho do Card da Receita
+	var header_hbox = HBoxContainer.new()
+	header_hbox.add_theme_constant_override("separation", 8)
+	vbox.add_child(header_hbox)
+
+	var icon_lbl = Label.new()
+	icon_lbl.text = _get_recipe_icon(recipe)
+	icon_lbl.add_theme_font_size_override("font_size", 20)
+	header_hbox.add_child(icon_lbl)
+
+	var title_vbox = VBoxContainer.new()
+	title_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_vbox.add_theme_constant_override("separation", 0)
+	header_hbox.add_child(title_vbox)
+
+	var title_lbl = Label.new()
+	title_lbl.text = recipe.display_name
+	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_color_override("font_color", Color(1, 0.95, 0.8, 1))
+	title_vbox.add_child(title_lbl)
+
+	var cat_tag = Label.new()
+	cat_tag.text = "[%s]" % _get_category_label(recipe.category)
+	cat_tag.add_theme_font_size_override("font_size", 10)
+	cat_tag.add_theme_color_override("font_color", Color(0.6, 0.7, 0.85, 1))
+	title_vbox.add_child(cat_tag)
+
+	# Badges Financeiras no Cabeçalho
+	var cost = MenuPricingManager.calculate_production_cost(recipe.id)
+	var price = MenuPricingManager.get_selling_price(recipe.id)
+	var margin_pct = MenuPricingManager.get_gross_margin_pct(recipe.id)
+
+	var badges_hbox = HBoxContainer.new()
+	badges_hbox.add_theme_constant_override("separation", 6)
+	header_hbox.add_child(badges_hbox)
+
+	var cost_badge = _create_pill_badge("Custo: $%.2f" % cost, Color(0.12, 0.28, 0.45, 0.9), Color(0.5, 0.8, 1.0, 1))
+	badges_hbox.add_child(cost_badge)
+
+	var price_badge = _create_pill_badge("Venda: $%.2f" % price, Color(0.35, 0.25, 0.05, 0.9), Color(1.0, 0.85, 0.3, 1))
+	badges_hbox.add_child(price_badge)
+
+	var margin_col = Color(0.2, 0.7, 0.4, 1) if margin_pct >= 40.0 else (Color(0.85, 0.7, 0.2, 1) if margin_pct >= 20.0 else Color(0.9, 0.3, 0.3, 1))
+	var margin_bg = Color(0.08, 0.30, 0.15, 0.9) if margin_pct >= 40.0 else (Color(0.35, 0.25, 0.05, 0.9) if margin_pct >= 20.0 else Color(0.35, 0.08, 0.08, 0.9))
+	var margin_badge = _create_pill_badge("Margem: %.1f%%" % margin_pct, margin_bg, margin_col)
+	badges_hbox.add_child(margin_badge)
+
+	# 2. Aviso de Montagem Livre
+	var free_order_panel = PanelContainer.new()
+	var fo_style = StyleBoxFlat.new()
+	fo_style.bg_color = Color(0.08, 0.10, 0.14, 0.9)
+	fo_style.border_width_left = 2
+	fo_style.border_color = Color(1.0, 0.8, 0.2, 0.8)
+	fo_style.corner_radius_top_left = 4
+	fo_style.corner_radius_top_right = 4
+	fo_style.corner_radius_bottom_right = 4
+	fo_style.corner_radius_bottom_left = 4
+	free_order_panel.add_theme_stylebox_override("panel", fo_style)
+	vbox.add_child(free_order_panel)
+
+	var fo_margin = MarginContainer.new()
+	fo_margin.add_theme_constant_override("margin_left", 8)
+	fo_margin.add_theme_constant_override("margin_right", 8)
+	fo_margin.add_theme_constant_override("margin_top", 4)
+	fo_margin.add_theme_constant_override("margin_bottom", 4)
+	free_order_panel.add_child(fo_margin)
+
+	var fo_label = Label.new()
+	fo_label.text = "🔓 Montagem Livre: Todos os ingredientes necessários devem estar presentes. A ordem entre os pães é livre!"
+	fo_label.add_theme_font_size_override("font_size", 11)
+	fo_label.add_theme_color_override("font_color", Color(0.95, 0.85, 0.6, 1))
+	fo_margin.add_child(fo_label)
+
+	# 3. Lista Estruturada de Ingredientes Necessários
+	var ing_section = VBoxContainer.new()
+	ing_section.add_theme_constant_override("separation", 3)
+	vbox.add_child(ing_section)
+
+	var ing_title = Label.new()
+	ing_title.text = "📋 INGREDIENTES NECESSÁRIOS:"
+	ing_title.add_theme_font_size_override("font_size", 11)
+	ing_title.add_theme_color_override("font_color", Color(0.65, 0.72, 0.85, 1))
+	ing_section.add_child(ing_title)
+
+	var lines = _format_recipe_ingredients_list(recipe)
+	for line in lines:
+		var line_lbl = Label.new()
+		line_lbl.text = "  " + line
+		line_lbl.add_theme_font_size_override("font_size", 12)
+		line_lbl.add_theme_color_override("font_color", Color(0.9, 0.92, 0.96, 1))
+		ing_section.add_child(line_lbl)
+
+	# 4. Rodapé do Card
+	var footer_hbox = HBoxContainer.new()
+	vbox.add_child(footer_hbox)
+
+	var active_lbl = Label.new()
+	active_lbl.text = "🟢 Ativo no Restaurante"
+	active_lbl.add_theme_font_size_override("font_size", 11)
+	active_lbl.add_theme_color_override("font_color", Color(0.4, 0.85, 0.5, 1))
+	footer_hbox.add_child(active_lbl)
+
+	var f_spacer = Control.new()
+	f_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer_hbox.add_child(f_spacer)
+
+	var yield_lbl = Label.new()
+	yield_lbl.text = "Rendimento: 1 unidade"
+	yield_lbl.add_theme_font_size_override("font_size", 11)
+	yield_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1))
+	footer_hbox.add_child(yield_lbl)
+
+	return panel
+
+func _create_pill_badge(text: String, bg_color: Color, text_color: Color) -> PanelContainer:
+	var pill = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = bg_color
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left = 4
+	pill.add_theme_stylebox_override("panel", style)
+
+	var m = MarginContainer.new()
+	m.add_theme_constant_override("margin_left", 6)
+	m.add_theme_constant_override("margin_right", 6)
+	m.add_theme_constant_override("margin_top", 2)
+	m.add_theme_constant_override("margin_bottom", 2)
+	pill.add_child(m)
+
+	var lbl = Label.new()
+	lbl.text = text
+	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_color_override("font_color", text_color)
+	m.add_child(lbl)
+
+	return pill
+
+func _format_recipe_ingredients_list(recipe: Recipe) -> Array[String]:
+	var result: Array[String] = []
+
+	if recipe.category == "burger":
+		result.append("🍞 1x Base do Pão (Inferior)")
+
+		# Conta ingredientes da receita
+		var counts: Dictionary = {}
+		for ing in recipe.required_ingredients:
+			var clean = ing
+			if clean == "bread":
+				continue
+			counts[clean] = counts.get(clean, 0) + 1
+
+		for k in counts.keys():
+			var qty = counts[k]
+			var desc = _get_ingredient_display_name_and_icon(k, qty)
+			result.append(desc)
+
+		result.append("🍞 1x Tampa do Pão (Superior)")
+		result.append("📦 1x Embalado na Caixa de Hambúrguer")
+
+	elif recipe.category == "fries" or recipe.id == "fries" or recipe.id == "onion_rings":
+		if recipe.id == "fries":
+			result.append("🥔 1x Saco de Batata (1 Saco abastece o Cesto -> 5 Porções)")
+			result.append("🍟 1x Embalagem de Batata")
+		else:
+			result.append("🧅 1x Saco de Cebola (1 Saco abastece o Cesto -> 3 Porções)")
+			result.append("🍟 1x Embalagem de Cebola")
+
+	elif recipe.category == "drink" or recipe.id.begins_with("soda_") or recipe.id.begins_with("juice_"):
+		if recipe.id.begins_with("soda_"):
+			match recipe.id:
+				"soda_cola": result.append("🍾 1x Xarope de Cola (1 Cilindro = 20 Copos)")
+				"soda_cola_zero": result.append("🍾 1x Xarope de Cola Zero (1 Cilindro = 20 Copos)")
+				"soda_lime": result.append("🍾 1x Xarope de Limão/Soda (1 Cilindro = 20 Copos)")
+				"soda_citrus": result.append("🍾 1x Xarope Citrus (1 Cilindro = 20 Copos)")
+				_: result.append("🍾 1x Xarope do Cilindro (1 Cilindro = 20 Copos)")
+			result.append("🥤 1x Copo Descartável")
+		elif recipe.id.begins_with("juice_"):
+			match recipe.id:
+				"juice_orange": result.append("🍊 1x Polpa de Laranja (1 Polpa = 5 Copos)")
+				"juice_grape": result.append("🍇 1x Polpa de Uva (1 Polpa = 5 Copos)")
+				"juice_strawberry": result.append("🍓 1x Polpa de Morango (1 Polpa = 5 Copos)")
+				_: result.append("🍊 1x Polpa de Fruta (1 Polpa = 5 Copos)")
+			result.append("🥤 1x Copo Descartável")
+		else:
+			result.append("🥤 1x Copo de Bebida")
+	else:
+		for ing in recipe.required_ingredients:
+			result.append("• 1x %s" % ing.capitalize())
+
+	return result
+
+func _get_ingredient_display_name_and_icon(ing_key: String, qty: int) -> String:
+	match ing_key:
+		"patty_beef:cooked", "patty_beef", "patty":
+			return "🥩 %dx Carne Bovina (Grelhada)" % qty
+		"patty_chicken:cooked", "patty_chicken":
+			return "🍗 %dx Hambúrguer de Frango (Grelhado)" % qty
+		"cheese_cheddar", "cheese":
+			return "🧀 %dx Queijo Cheddar" % qty
+		"cheese_mozzarella":
+			return "🧀 %dx Queijo Muçarela" % qty
+		"cheese_prato":
+			return "🧀 %dx Queijo Prato" % qty
+		"lettuce":
+			return "🥬 %dx Alface Fresca" % qty
+		"tomato":
+			return "🍅 %dx Tomate em Rodelas" % qty
+		"onion":
+			return "🧅 %dx Cebola Comum" % qty
+		"red_onion":
+			return "🧅 %dx Cebola Roxa" % qty
+		"pickle":
+			return "🥒 %dx Picles Fatiado" % qty
+		"bacon", "bacon:cooked":
+			return "🥓 %dx Bacon Crocante (Frito)" % qty
+		"egg", "egg:cooked":
+			return "🍳 %dx Ovo Frito" % qty
+		"ketchup":
+			return "🥫 %dx Ketchup Especial" % qty
+		"mustard":
+			return "🟡 %dx Mostarda Suave" % qty
+		"mayo":
+			return "⚪ %dx Maionese da Casa" % qty
+		"special_sauce":
+			return "🟠 %dx Molho Especial Secreto" % qty
+		_:
+			return "• %dx %s" % [qty, ing_key.capitalize()]
+
+func _get_recipe_icon(recipe: Recipe) -> String:
+	if recipe.id == "juice_orange": return "🍊"
+	elif recipe.id == "juice_grape": return "🍇"
+	elif recipe.id == "juice_strawberry": return "🍓"
+	elif recipe.id == "onion_rings": return "🧅"
+	elif recipe.id == "fries": return "🍟"
+	elif recipe.category == "burger": return "🍔"
+	elif recipe.category == "drink": return "🥤"
+	return "🍽️"
+
+func _get_category_label(cat: String) -> String:
+	match cat:
+		"burger": return "Hambúrguer"
+		"fries": return "Acompanhamento"
+		"drink": return "Bebida"
+		_: return "Geral"
+
+# =============================================================================
+# ABA 5: FINANÇAS & CONTAS DO RESTAURANTE (FINANCES TAB)
+# =============================================================================
+
+func _setup_finances_tab() -> void:
+	if not finances_tab:
+		finances_tab = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab")
+	if not finances_summary_label:
+		finances_summary_label = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/TopBar/HBox/FinancesSummaryLabel")
+	if not finances_kpi_hbox:
+		finances_kpi_hbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/KPICardsBar/HBox")
+	if not btn_finances_overview:
+		btn_finances_overview = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesOverview")
+	if not btn_finances_revenue:
+		btn_finances_revenue = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesRevenue")
+	if not btn_finances_expenses:
+		btn_finances_expenses = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesExpenses")
+	if not btn_finances_bills:
+		btn_finances_bills = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesBills")
+	if not btn_finances_history:
+		btn_finances_history = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesHistory")
+	if not finances_content_vbox:
+		finances_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesScroll/Margin/FinancesContentVBox")
+
+	if btn_finances_overview and not btn_finances_overview.pressed.is_connected(_on_finances_overview_pressed):
+		btn_finances_overview.pressed.connect(_on_finances_overview_pressed)
+	if btn_finances_revenue and not btn_finances_revenue.pressed.is_connected(_on_finances_revenue_pressed):
+		btn_finances_revenue.pressed.connect(_on_finances_revenue_pressed)
+	if btn_finances_expenses and not btn_finances_expenses.pressed.is_connected(_on_finances_expenses_pressed):
+		btn_finances_expenses.pressed.connect(_on_finances_expenses_pressed)
+	if btn_finances_bills and not btn_finances_bills.pressed.is_connected(_on_finances_bills_pressed):
+		btn_finances_bills.pressed.connect(_on_finances_bills_pressed)
+	if btn_finances_history and not btn_finances_history.pressed.is_connected(_on_finances_history_pressed):
+		btn_finances_history.pressed.connect(_on_finances_history_pressed)
+
+	var fin = FinanceManager.get_instance()
+	if fin:
+		if not fin.finances_updated.is_connected(_on_finances_manager_updated):
+			fin.finances_updated.connect(_on_finances_manager_updated)
+
+func _on_finances_manager_updated() -> void:
+	if visible and current_tab == TabID.FINANCES:
+		_refresh_finances_tab()
+
+func _on_finances_overview_pressed() -> void:
+	_set_finances_section("OVERVIEW")
+
+func _on_finances_revenue_pressed() -> void:
+	_set_finances_section("REVENUE")
+
+func _on_finances_expenses_pressed() -> void:
+	_set_finances_section("EXPENSES")
+
+func _on_finances_bills_pressed() -> void:
+	_set_finances_section("BILLS")
+
+func _on_finances_history_pressed() -> void:
+	_set_finances_section("HISTORY")
+
+func _set_finances_section(sec: String) -> void:
+	current_finances_section = sec
+	_update_finances_filter_button_styles()
+	_refresh_finances_tab()
+
+func _update_finances_filter_button_styles() -> void:
+	var buttons = {
+		"OVERVIEW": btn_finances_overview,
+		"REVENUE": btn_finances_revenue,
+		"EXPENSES": btn_finances_expenses,
+		"BILLS": btn_finances_bills,
+		"HISTORY": btn_finances_history
+	}
+
+	for sec in buttons.keys():
+		var btn = buttons[sec]
+		if not btn:
+			continue
+		var is_selected = (sec == current_finances_section)
+		var style = StyleBoxFlat.new()
+		style.set_corner_radius_all(6)
+		style.set_content_margin_all(8)
+		if is_selected:
+			style.bg_color = Color(0.20, 0.45, 0.85, 0.95)
+			style.border_color = Color(0.4, 0.7, 1.0, 1.0)
+			style.border_width_bottom = 2
+			btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		else:
+			style.bg_color = Color(0.12, 0.16, 0.24, 0.85)
+			style.border_color = Color(0.2, 0.28, 0.4, 0.6)
+			style.border_width_bottom = 1
+			btn.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1))
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
+
+func _refresh_finances_tab() -> void:
+	if not finances_kpi_hbox:
+		finances_kpi_hbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/KPICardsBar/HBox")
+	if not finances_content_vbox:
+		finances_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesScroll/Margin/FinancesContentVBox")
+	if not finances_summary_label:
+		finances_summary_label = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/TopBar/HBox/FinancesSummaryLabel")
+
+	var fin = FinanceManager.get_instance()
+	if not fin and is_inside_tree() and get_tree() and get_tree().root:
+		fin = get_tree().root.find_child("FinanceManager", true, false) as FinanceManager
+
+	var econ = EconomyManager.get_instance()
+	if not econ and is_inside_tree() and get_tree() and get_tree().root:
+		econ = get_tree().root.find_child("EconomyManager", true, false) as EconomyManager
+
+	var clock = GameClock.get_instance()
+	if clock and finances_summary_label:
+		finances_summary_label.text = "Dia %d • %s | Balanço Operacional" % [clock.day_number, clock.get_weekday_name()]
+
+	var balance: float = econ.get_money() if econ else 0.0
+	var revenue: float = fin.get_total_daily_revenue() if fin else 0.0
+	var expenses: float = fin.get_total_daily_expenses() if fin else 0.0
+	var net_profit: float = fin.get_daily_net_profit() if fin else 0.0
+
+	_render_kpi_cards(balance, revenue, expenses, net_profit)
+	_update_finances_filter_button_styles()
+
+	if not finances_content_vbox:
+		return
+
+	# Limpa o container de conteúdo
+	for child in finances_content_vbox.get_children():
+		finances_content_vbox.remove_child(child)
+		child.queue_free()
+
+	if not fin:
+		var empty_lbl = Label.new()
+		empty_lbl.text = "⚠️ Sistema financeiro indisponível no momento."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		finances_content_vbox.add_child(empty_lbl)
+		return
+
+	match current_finances_section:
+		"OVERVIEW":
+			_render_overview_section(fin, econ)
+		"REVENUE":
+			_render_revenue_section(fin)
+		"EXPENSES":
+			_render_expenses_section(fin)
+		"BILLS":
+			_render_bills_section(fin)
+		"HISTORY":
+			_render_history_section(fin)
+
+func _render_kpi_cards(balance: float, revenue: float, expenses: float, net_profit: float) -> void:
+	if not finances_kpi_hbox:
+		return
+
+	for child in finances_kpi_hbox.get_children():
+		finances_kpi_hbox.remove_child(child)
+		child.queue_free()
+
+	var kpis = [
+		{
+			"icon": "💰",
+			"title": "SALDO ATUAL",
+			"value": "R$ %.2f" % balance,
+			"color": Color(0.3, 0.85, 0.45, 1.0),
+			"bg": Color(0.08, 0.18, 0.12, 0.95),
+			"border": Color(0.2, 0.6, 0.3, 0.8)
+		},
+		{
+			"icon": "📈",
+			"title": "RECEITA DO DIA",
+			"value": "+R$ %.2f" % revenue,
+			"color": Color(0.35, 0.75, 1.0, 1.0),
+			"bg": Color(0.08, 0.14, 0.22, 0.95),
+			"border": Color(0.2, 0.5, 0.8, 0.8)
+		},
+		{
+			"icon": "📉",
+			"title": "DESPESAS DO DIA",
+			"value": "-R$ %.2f" % expenses,
+			"color": Color(1.0, 0.45, 0.4, 1.0),
+			"bg": Color(0.22, 0.08, 0.08, 0.95),
+			"border": Color(0.8, 0.3, 0.3, 0.8)
+		},
+		{
+			"icon": "🏆",
+			"title": "LUCRO LÍQUIDO",
+			"value": "%sR$ %.2f" % ["+" if net_profit >= 0.0 else "", net_profit],
+			"color": Color(0.3, 0.95, 0.5, 1.0) if net_profit >= 0.0 else Color(1.0, 0.3, 0.3, 1.0),
+			"bg": Color(0.12, 0.18, 0.12, 0.95) if net_profit >= 0.0 else Color(0.25, 0.08, 0.08, 0.95),
+			"border": Color(0.3, 0.7, 0.4, 0.8) if net_profit >= 0.0 else Color(0.9, 0.25, 0.25, 0.8)
+		}
+	]
+
+	for k in kpis:
+		var card = PanelContainer.new()
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.custom_minimum_size = Vector2(0, 68)
+
+		var style = StyleBoxFlat.new()
+		style.bg_color = k["bg"]
+		style.border_color = k["border"]
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(8)
+		style.set_content_margin_all(10)
+		card.add_theme_stylebox_override("panel", style)
+
+		var hbox = HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 12)
+
+		var icon_lbl = Label.new()
+		icon_lbl.text = k["icon"]
+		icon_lbl.add_theme_font_size_override("font_size", 24)
+		icon_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		hbox.add_child(icon_lbl)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 2)
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var title_lbl = Label.new()
+		title_lbl.text = k["title"]
+		title_lbl.add_theme_font_size_override("font_size", 11)
+		title_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+		vbox.add_child(title_lbl)
+
+		var val_lbl = Label.new()
+		val_lbl.text = k["value"]
+		val_lbl.add_theme_font_size_override("font_size", 17)
+		val_lbl.add_theme_color_override("font_color", k["color"])
+		vbox.add_child(val_lbl)
+
+		hbox.add_child(vbox)
+		card.add_child(hbox)
+		finances_kpi_hbox.add_child(card)
+
+# =============================================================================
+# SEÇÃO 1: VISÃO GERAL
+# =============================================================================
+
+func _render_overview_section(fin: FinanceManager, _econ: EconomyManager) -> void:
+	# 1. Painel de Contas a Pagar / Pendentes
+	var bills_title = Label.new()
+	bills_title.text = "📑 CONTAS DO DIA (PAGAMENTOS OPERACIONAIS)"
+	bills_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+	bills_title.add_theme_font_size_override("font_size", 14)
+	finances_content_vbox.add_child(bills_title)
+
+	var bills = fin.get_active_bills()
+	var bills_grid = HBoxContainer.new()
+	bills_grid.add_theme_constant_override("separation", 10)
+	bills_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	for bill_id in ["electricity", "water", "salaries"]:
+		if bills.has(bill_id):
+			var bill_card = _create_bill_card(bills[bill_id], fin)
+			bill_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			bills_grid.add_child(bill_card)
+
+	finances_content_vbox.add_child(bills_grid)
+
+	# 2. Resumo de Entradas e Saídas lado a lado
+	var summary_split = HBoxContainer.new()
+	summary_split.add_theme_constant_override("separation", 14)
+	summary_split.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# Coluna Esquerda: Entradas por Canal
+	var revenue_items = [
+		{"name": "🍔 Vendas no Salão / Balcão", "amount": fin.get_daily_revenue_by_channel("dine_in")},
+		{"name": "🚗 Vendas no Drive-Thru", "amount": fin.get_daily_revenue_by_channel("drive_thru")},
+		{"name": "🛵 Vendas por Delivery / App", "amount": fin.get_daily_revenue_by_channel("delivery")},
+		{"name": "✨ Outras Entradas", "amount": fin.get_daily_revenue_by_channel("other")}
+	]
+	var revenue_card = _create_breakdown_card("Entradas de Vendas", "📥", fin.get_total_daily_revenue(), revenue_items, false)
+	revenue_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary_split.add_child(revenue_card)
+
+	# Coluna Direita: Saídas por Categoria
+	var expense_items = [
+		{"name": "🛒 Compras de Insumos / Embalagens", "amount": fin.get_daily_purchases_cost()},
+		{"name": "⚡ Conta de Energia Elétrica (%.1f kWh)" % fin.get_daily_electricity_kwh(), "amount": fin.calculate_daily_electricity_cost()},
+		{"name": "💧 Conta de Água (%.1f Litros)" % fin.get_daily_water_liters(), "amount": fin.calculate_daily_water_cost()},
+		{"name": "👥 Salários de Funcionários (%d ativos)" % fin.get_active_employees_count(), "amount": fin.calculate_daily_salaries_cost()}
+	]
+	var expense_card = _create_breakdown_card("Despesas Operacionais", "📤", fin.get_total_daily_expenses(), expense_items, true)
+	expense_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	summary_split.add_child(expense_card)
+
+	finances_content_vbox.add_child(summary_split)
+
+# =============================================================================
+# SEÇÃO 2: ENTRADAS DETALHADAS (VENDAS)
+# =============================================================================
+
+func _render_revenue_section(fin: FinanceManager) -> void:
+	var title = Label.new()
+	title.text = "📥 DETALHAMENTO DE ENTRADAS E VENDAS POR CANAL"
+	title.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+	title.add_theme_font_size_override("font_size", 15)
+	finances_content_vbox.add_child(title)
+
+	var total_rev = fin.get_total_daily_revenue()
+
+	var channels = [
+		{
+			"id": "dine_in",
+			"icon": "🍔",
+			"name": "Restaurante / Balcão (Salão)",
+			"desc": "Pedidos feitos e consumidos nas mesas ou retirados no balcão presencial.",
+			"amount": fin.get_daily_revenue_by_channel("dine_in")
+		},
+		{
+			"id": "drive_thru",
+			"icon": "🚗",
+			"name": "Janela Drive-Thru",
+			"desc": "Pedidos atendidos e entregues pela janela do Drive-Thru automotivo.",
+			"amount": fin.get_daily_revenue_by_channel("drive_thru")
+		},
+		{
+			"id": "delivery",
+			"icon": "🛵",
+			"name": "Entregas Delivery & App",
+			"desc": "Pedidos solicitados via aplicativo ou telefone com despacho para entrega.",
+			"amount": fin.get_daily_revenue_by_channel("delivery")
+		},
+		{
+			"id": "other",
+			"icon": "✨",
+			"name": "Outras Receitas Operacionais",
+			"desc": "Bônus por avaliações positivas, recompensas de eventos e gorjetas.",
+			"amount": fin.get_daily_revenue_by_channel("other")
+		}
+	]
+
+	for ch in channels:
+		var card = PanelContainer.new()
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.10, 0.15, 0.22, 0.9)
+		style.border_color = Color(0.2, 0.4, 0.65, 0.7)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(8)
+		style.set_content_margin_all(14)
+		card.add_theme_stylebox_override("panel", style)
+
+		var hbox = HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 16)
+
+		var icon_lbl = Label.new()
+		icon_lbl.text = ch["icon"]
+		icon_lbl.add_theme_font_size_override("font_size", 28)
+		hbox.add_child(icon_lbl)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 4)
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var name_lbl = Label.new()
+		name_lbl.text = ch["name"]
+		name_lbl.add_theme_font_size_override("font_size", 14)
+		name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		vbox.add_child(name_lbl)
+
+		var desc_lbl = Label.new()
+		desc_lbl.text = ch["desc"]
+		desc_lbl.add_theme_font_size_override("font_size", 11)
+		desc_lbl.add_theme_color_override("font_color", Color(0.65, 0.75, 0.85, 1.0))
+		vbox.add_child(desc_lbl)
+
+		# Barra de proporção percentual
+		var pct = (ch["amount"] / total_rev * 100.0) if total_rev > 0.0 else 0.0
+		var pct_lbl = Label.new()
+		pct_lbl.text = "Participação no Faturamento: %.1f%%" % pct
+		pct_lbl.add_theme_font_size_override("font_size", 11)
+		pct_lbl.add_theme_color_override("font_color", Color(0.4, 0.7, 1.0, 1.0))
+		vbox.add_child(pct_lbl)
+
+		hbox.add_child(vbox)
+
+		var amount_lbl = Label.new()
+		amount_lbl.text = "+R$ %.2f" % ch["amount"]
+		amount_lbl.add_theme_font_size_override("font_size", 18)
+		amount_lbl.add_theme_color_override("font_color", Color(0.35, 0.85, 0.5, 1.0))
+		amount_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		hbox.add_child(amount_lbl)
+
+		card.add_child(hbox)
+		finances_content_vbox.add_child(card)
+
+# =============================================================================
+# SEÇÃO 3: SAÍDAS DETALHADAS (CUSTOS)
+# =============================================================================
+
+func _render_expenses_section(fin: FinanceManager) -> void:
+	var title = Label.new()
+	title.text = "📤 DETALHAMENTO DE DESPESAS E CUSTOS OPERACIONAIS"
+	title.add_theme_color_override("font_color", Color(1.0, 0.5, 0.4, 1.0))
+	title.add_theme_font_size_override("font_size", 15)
+	finances_content_vbox.add_child(title)
+
+	var expenses_list = [
+		{
+			"icon": "🛒",
+			"name": "Compras de Ingredientes e Embalagens",
+			"details": "Gastos reais na Central de Compras (Hambúrgueres, Queijos, Batatas, Caixas, Copos, etc.)",
+			"metric": "Compras do Dia",
+			"amount": fin.get_daily_purchases_cost()
+		},
+		{
+			"icon": "⚡",
+			"name": "Energia Elétrica (kWh)",
+			"details": "Consumo de equipamentos (Geladeiras, Freezers, Chapa, Fritadeira, TV, AC). Geladeiras abertas consomem 3x mais.",
+			"metric": "Consumo: %.2f kWh (Tarifa R$ %.2f/kWh)" % [fin.get_daily_electricity_kwh(), fin.electricity_tariff_kwh],
+			"amount": fin.calculate_daily_electricity_cost()
+		},
+		{
+			"icon": "💧",
+			"name": "Água e Saneamento (Litros)",
+			"details": "Consumo da Pia industrial (lavagem de bucha), Máquina de Refrigerante e Máquina de Suco.",
+			"metric": "Consumo: %.1f Litros (Tarifa R$ %.2f/L)" % [fin.get_daily_water_liters(), fin.water_tariff_liter],
+			"amount": fin.calculate_daily_water_cost()
+		},
+		{
+			"icon": "👥",
+			"name": "Folha de Salários de Funcionários",
+			"details": "Salário diário fixo estabelecido na contratação de cada funcionário operacional.",
+			"metric": "%d funcionários ativos (R$ %.2f/dia cada)" % [fin.get_active_employees_count(), fin.daily_salary_per_employee],
+			"amount": fin.calculate_daily_salaries_cost()
+		}
+	]
+
+	for exp in expenses_list:
+		var card = PanelContainer.new()
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.18, 0.10, 0.12, 0.9)
+		style.border_color = Color(0.65, 0.25, 0.25, 0.7)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(8)
+		style.set_content_margin_all(14)
+		card.add_theme_stylebox_override("panel", style)
+
+		var hbox = HBoxContainer.new()
+		hbox.add_theme_constant_override("separation", 16)
+
+		var icon_lbl = Label.new()
+		icon_lbl.text = exp["icon"]
+		icon_lbl.add_theme_font_size_override("font_size", 28)
+		hbox.add_child(icon_lbl)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 4)
+		vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+		var name_lbl = Label.new()
+		name_lbl.text = exp["name"]
+		name_lbl.add_theme_font_size_override("font_size", 14)
+		name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		vbox.add_child(name_lbl)
+
+		var desc_lbl = Label.new()
+		desc_lbl.text = exp["details"]
+		desc_lbl.add_theme_font_size_override("font_size", 11)
+		desc_lbl.add_theme_color_override("font_color", Color(0.85, 0.7, 0.7, 1.0))
+		vbox.add_child(desc_lbl)
+
+		var metric_lbl = Label.new()
+		metric_lbl.text = "📊 %s" % exp["metric"]
+		metric_lbl.add_theme_font_size_override("font_size", 11)
+		metric_lbl.add_theme_color_override("font_color", Color(1.0, 0.8, 0.4, 1.0))
+		vbox.add_child(metric_lbl)
+
+		hbox.add_child(vbox)
+
+		var amount_lbl = Label.new()
+		amount_lbl.text = "-R$ %.2f" % exp["amount"]
+		amount_lbl.add_theme_font_size_override("font_size", 18)
+		amount_lbl.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4, 1.0))
+		amount_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		hbox.add_child(amount_lbl)
+
+		card.add_child(hbox)
+		finances_content_vbox.add_child(card)
+
+# =============================================================================
+# SEÇÃO 4: CONTAS A PAGAR (BILLS)
+# =============================================================================
+
+func _render_bills_section(fin: FinanceManager) -> void:
+	var title = Label.new()
+	title.text = "📑 CONTAS A PAGAR & FATURAS DO RESTAURANTE"
+	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	title.add_theme_font_size_override("font_size", 15)
+	finances_content_vbox.add_child(title)
+
+	var desc = Label.new()
+	desc.text = "Gerencie e efetue o pagamento das contas de utilidades e salários diretamente pelo terminal."
+	desc.add_theme_font_size_override("font_size", 12)
+	desc.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	finances_content_vbox.add_child(desc)
+
+	var bills = fin.get_active_bills()
+	for bill_id in ["electricity", "water", "salaries"]:
+		if bills.has(bill_id):
+			var card = _create_bill_card(bills[bill_id], fin, true)
+			finances_content_vbox.add_child(card)
+
+# =============================================================================
+# SEÇÃO 5: RELATÓRIOS E HISTÓRICO DOS DIAS
+# =============================================================================
+
+func _render_history_section(fin: FinanceManager) -> void:
+	var title = Label.new()
+	title.text = "📅 HISTÓRICO DE DIAS & RELATÓRIOS FINANCEIROS FECHADOS"
+	title.add_theme_color_override("font_color", Color(0.4, 0.85, 0.6, 1.0))
+	title.add_theme_font_size_override("font_size", 15)
+	finances_content_vbox.add_child(title)
+
+	var history = fin.get_reports_history()
+	if history.is_empty():
+		var empty_panel = PanelContainer.new()
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.12, 0.15, 0.20, 0.9)
+		style.border_color = Color(0.2, 0.3, 0.45, 0.7)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(8)
+		style.set_content_margin_all(20)
+		empty_panel.add_theme_stylebox_override("panel", style)
+
+		var empty_lbl = Label.new()
+		empty_lbl.text = "📅 Nenhum dia anterior fechado ainda.\nO relatório consolidado de cada dia será salvo e disponibilizado aqui ao encerrar o expediente!"
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+		empty_panel.add_child(empty_lbl)
+		finances_content_vbox.add_child(empty_panel)
+		return
+
+	# Renderiza os relatórios do mais recente ao mais antigo
+	for i in range(history.size() - 1, -1, -1):
+		var rep = history[i]
+		var card = PanelContainer.new()
+		var style = StyleBoxFlat.new()
+		style.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+		style.border_color = Color(0.25, 0.45, 0.7, 0.7)
+		style.set_border_width_all(1)
+		style.set_corner_radius_all(8)
+		style.set_content_margin_all(14)
+		card.add_theme_stylebox_override("panel", style)
+
+		var vbox = VBoxContainer.new()
+		vbox.add_theme_constant_override("separation", 8)
+
+		# Top header do dia
+		var top_hbox = HBoxContainer.new()
+		var day_lbl = Label.new()
+		day_lbl.text = "📅 DIA %d (%s)" % [rep.get("day_number", 1), rep.get("weekday", "Segunda-feira").to_upper()]
+		day_lbl.add_theme_font_size_override("font_size", 14)
+		day_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+		top_hbox.add_child(day_lbl)
+
+		var spacer = Control.new()
+		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		top_hbox.add_child(spacer)
+
+		var net_p: float = rep.get("net_profit", 0.0)
+		var profit_lbl = Label.new()
+		profit_lbl.text = "Lucro Líquido: %sR$ %.2f" % ["+" if net_p >= 0.0 else "", net_p]
+		profit_lbl.add_theme_font_size_override("font_size", 14)
+		profit_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1.0) if net_p >= 0.0 else Color(1.0, 0.4, 0.4, 1.0))
+		top_hbox.add_child(profit_lbl)
+		vbox.add_child(top_hbox)
+
+		# Linha de métricas
+		var metrics_hbox = HBoxContainer.new()
+		metrics_hbox.add_theme_constant_override("separation", 20)
+
+		var rev_lbl = Label.new()
+		rev_lbl.text = "📈 Receita: R$ %.2f" % rep.get("total_revenue", 0.0)
+		rev_lbl.add_theme_font_size_override("font_size", 12)
+		rev_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+		metrics_hbox.add_child(rev_lbl)
+
+		var pur_lbl = Label.new()
+		pur_lbl.text = "🛒 Compras: R$ %.2f" % rep.get("purchases_cost", 0.0)
+		pur_lbl.add_theme_font_size_override("font_size", 12)
+		pur_lbl.add_theme_color_override("font_color", Color(0.85, 0.7, 0.7, 1.0))
+		metrics_hbox.add_child(pur_lbl)
+
+		var elec_lbl = Label.new()
+		elec_lbl.text = "⚡ Energia: R$ %.2f (%.1f kWh)" % [rep.get("electricity_cost", 0.0), rep.get("electricity_kwh", 0.0)]
+		elec_lbl.add_theme_font_size_override("font_size", 12)
+		elec_lbl.add_theme_color_override("font_color", Color(0.9, 0.7, 0.4, 1.0))
+		metrics_hbox.add_child(elec_lbl)
+
+		var water_lbl = Label.new()
+		water_lbl.text = "💧 Água: R$ %.2f (%.1f L)" % [rep.get("water_cost", 0.0), rep.get("water_liters", 0.0)]
+		water_lbl.add_theme_font_size_override("font_size", 12)
+		water_lbl.add_theme_color_override("font_color", Color(0.4, 0.7, 0.9, 1.0))
+		metrics_hbox.add_child(water_lbl)
+
+		var sal_lbl = Label.new()
+		sal_lbl.text = "👥 Salários: R$ %.2f" % rep.get("salaries_cost", 0.0)
+		sal_lbl.add_theme_font_size_override("font_size", 12)
+		sal_lbl.add_theme_color_override("font_color", Color(0.8, 0.7, 0.9, 1.0))
+		metrics_hbox.add_child(sal_lbl)
+
+		vbox.add_child(metrics_hbox)
+		card.add_child(vbox)
+		finances_content_vbox.add_child(card)
+
+# =============================================================================
+# HELPERS DE CARDS
+# =============================================================================
+
+func _create_bill_card(bill: Dictionary, fin: FinanceManager, expanded: bool = false) -> PanelContainer:
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	var is_paid: bool = bill.get("is_paid", false)
+	var amount: float = bill.get("amount", 0.0)
+
+	if is_paid:
+		style.bg_color = Color(0.08, 0.16, 0.12, 0.92)
+		style.border_color = Color(0.2, 0.6, 0.35, 0.8)
+	else:
+		style.bg_color = Color(0.18, 0.12, 0.08, 0.92)
+		style.border_color = Color(0.85, 0.55, 0.2, 0.8)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	var top_hbox = HBoxContainer.new()
+	top_hbox.add_theme_constant_override("separation", 8)
+
+	var icon_str = "⚡"
+	if bill.get("id") == "water": icon_str = "💧"
+	elif bill.get("id") == "salaries": icon_str = "👥"
+
+	var icon_lbl = Label.new()
+	icon_lbl.text = icon_str
+	icon_lbl.add_theme_font_size_override("font_size", 18)
+	top_hbox.add_child(icon_lbl)
+
+	var title_lbl = Label.new()
+	title_lbl.text = bill.get("title", "Conta")
+	title_lbl.add_theme_font_size_override("font_size", 13)
+	title_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	top_hbox.add_child(title_lbl)
+
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_hbox.add_child(spacer)
+
+	var status_badge = Label.new()
+	if is_paid:
+		status_badge.text = "✔ PAGA"
+		status_badge.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45, 1.0))
+	else:
+		status_badge.text = "⚠️ PENDENTE"
+		status_badge.add_theme_color_override("font_color", Color(1.0, 0.65, 0.2, 1.0))
+	status_badge.add_theme_font_size_override("font_size", 11)
+	top_hbox.add_child(status_badge)
+
+	vbox.add_child(top_hbox)
+
+	var details_lbl = Label.new()
+	details_lbl.text = bill.get("details", "")
+	details_lbl.add_theme_font_size_override("font_size", 11)
+	details_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	vbox.add_child(details_lbl)
+
+	var bot_hbox = HBoxContainer.new()
+	bot_hbox.add_theme_constant_override("separation", 10)
+
+	var amount_lbl = Label.new()
+	amount_lbl.text = "R$ %.2f" % amount
+	amount_lbl.add_theme_font_size_override("font_size", 16)
+	amount_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+	bot_hbox.add_child(amount_lbl)
+
+	var bot_spacer = Control.new()
+	bot_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bot_hbox.add_child(bot_spacer)
+
+	if not is_paid and amount > 0.0:
+		var pay_btn = Button.new()
+		pay_btn.custom_minimum_size = Vector2(100 if not expanded else 140, 30)
+		pay_btn.text = "💳 PAGAR"
+		pay_btn.focus_mode = Control.FOCUS_NONE
+		var btn_style = StyleBoxFlat.new()
+		btn_style.bg_color = Color(0.15, 0.55, 0.25, 0.95)
+		btn_style.set_corner_radius_all(6)
+		pay_btn.add_theme_stylebox_override("normal", btn_style)
+		var bill_id_str = bill.get("id", "")
+		pay_btn.pressed.connect(func(): _on_pay_bill_clicked(bill_id_str, fin))
+		bot_hbox.add_child(pay_btn)
+
+	vbox.add_child(bot_hbox)
+	card.add_child(vbox)
+	return card
+
+func _create_breakdown_card(title: String, icon: String, total_amount: float, items: Array[Dictionary], is_expense: bool = false) -> PanelContainer:
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.16, 0.22, 0.92) if not is_expense else Color(0.18, 0.12, 0.14, 0.92)
+	style.border_color = Color(0.25, 0.45, 0.7, 0.7) if not is_expense else Color(0.7, 0.3, 0.35, 0.7)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(14)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+
+	var header_hbox = HBoxContainer.new()
+	var title_lbl = Label.new()
+	title_lbl.text = "%s %s" % [icon, title]
+	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0) if not is_expense else Color(1.0, 0.55, 0.5, 1.0))
+	header_hbox.add_child(title_lbl)
+
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_hbox.add_child(spacer)
+
+	var total_lbl = Label.new()
+	total_lbl.text = "%sR$ %.2f" % ["-" if is_expense else "+", total_amount]
+	total_lbl.add_theme_font_size_override("font_size", 15)
+	total_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1.0) if not is_expense else Color(1.0, 0.4, 0.4, 1.0))
+	header_hbox.add_child(total_lbl)
+	vbox.add_child(header_hbox)
+
+	var sep = HSeparator.new()
+	vbox.add_child(sep)
+
+	for item in items:
+		var item_hbox = HBoxContainer.new()
+		var item_name = Label.new()
+		item_name.text = item.get("name", "")
+		item_name.add_theme_font_size_override("font_size", 12)
+		item_name.add_theme_color_override("font_color", Color(0.8, 0.85, 0.9, 1.0))
+		item_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		item_hbox.add_child(item_name)
+
+		var item_val = Label.new()
+		var amt = item.get("amount", 0.0)
+		item_val.text = "R$ %.2f" % amt
+		item_val.add_theme_font_size_override("font_size", 12)
+		item_val.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+		item_hbox.add_child(item_val)
+
+		vbox.add_child(item_hbox)
+
+	card.add_child(vbox)
+	return card
+
+func _on_pay_bill_clicked(bill_id: String, fin: FinanceManager) -> void:
+	if not fin:
+		return
+
+	var res = fin.pay_bill(bill_id)
+	_refresh_header_data()
+	_refresh_finances_tab()
+
+	var p = get_parent()
+	if p and p.has_node("HUD") and p.get_node("HUD").has_method("show_temporary_feedback"):
+		var icon = "💳" if res.get("success", false) else "⚠️"
+		p.get_node("HUD").show_temporary_feedback("%s %s" % [icon, res.get("message", "")])

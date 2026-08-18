@@ -1,10 +1,11 @@
-class_name EconomyManager
 extends Node
+
+const Transaction = preload("res://src/economy/transaction.gd")
 
 signal money_changed(new_amount: float, delta: float)
 signal transaction_recorded(transaction: Transaction)
 
-static var instance: EconomyManager = null
+static var instance = null
 
 @export var starting_money: float = 100.0
 
@@ -23,8 +24,10 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	current_money = starting_money
 
-static func get_instance() -> EconomyManager:
-	return instance
+static func get_instance():
+	if instance and is_instance_valid(instance):
+		return instance
+	return null
 
 func add_money(amount: float, description: String = "Venda") -> void:
 	if amount <= 0:

@@ -15,7 +15,7 @@ signal power_state_changed(is_on: bool)
 signal appliance_registered(appliance: Node)
 signal appliance_unregistered(appliance: Node)
 
-static var instance: PowerManager = null
+static var instance = null
 
 ## Estado da chave geral de energia do restaurante (Inicia desligada a cada novo dia)
 @export var is_main_power_on: bool = false
@@ -34,8 +34,10 @@ func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
-static func get_instance() -> PowerManager:
-	return instance
+static func get_instance():
+	if instance and is_instance_valid(instance):
+		return instance
+	return null
 
 func _ready() -> void:
 	# Notifica o estado inicial (desligado por padrão)
@@ -78,7 +80,7 @@ func _broadcast_power_state() -> void:
 	power_state_changed.emit(is_main_power_on)
 	for id in registered_appliances.keys():
 		var app = registered_appliances[id]
-		var node: Node = app.get("node")
+		var node = app.get("node")
 		if node and is_instance_valid(node):
 			if node.has_method("on_power_state_changed"):
 				node.on_power_state_changed(is_main_power_on)

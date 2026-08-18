@@ -207,6 +207,14 @@ func _try_interact_equipment() -> void:
 						var tb = collider if collider is TrashBin else collider.get_parent()
 						tb.interact(self)
 						return
+					elif collider is DeliveryStation or (collider.get_parent() and collider.get_parent() is DeliveryStation):
+						var ds = collider if collider is DeliveryStation else collider.get_parent()
+						ds.interact(self)
+						return
+					elif collider is DeliveryCar or (collider.get_parent() and collider.get_parent() is DeliveryCar):
+						var dc = collider if collider is DeliveryCar else collider.get_parent()
+						dc.interact(self)
+						return
 					elif collider is RestaurantTable:
 						var tbl = collider as RestaurantTable
 						if tbl.table_state == RestaurantTable.TableState.DIRTY or (not tbl.seated_customers.is_empty() and tbl.seated_customers[0].state == Customer.State.WAITING_FOR_FOOD):
@@ -288,6 +296,21 @@ func _try_interact_item() -> void:
 
 		var collider = _get_target_interactable(raw_collider)
 		if not collider:
+			return
+
+		if collider is DeliveryStation or (collider.get_parent() and collider.get_parent() is DeliveryStation):
+			var ds = collider if collider is DeliveryStation else collider.get_parent()
+			if ds.has_method("interact_item"):
+				ds.interact_item(self)
+			else:
+				ds.interact(self)
+			return
+		elif collider is DeliveryCar or (collider.get_parent() and collider.get_parent() is DeliveryCar):
+			var dc = collider if collider is DeliveryCar else collider.get_parent()
+			if dc.has_method("interact_item"):
+				dc.interact_item(self)
+			else:
+				dc.interact(self)
 			return
 
 		if collider.has_method("interact_item"):
@@ -619,8 +642,17 @@ func _process_sponge_cleaning(delta: float) -> void:
 				break
 			curr = curr.get_parent() if curr is Node else null
 
-	if cleanable_target and cleanable_target.has_method("is_dirty"):
-		if cleanable_target.is_dirty():
+	if cleanable_target:
+		var is_target_dirty = false
+		if cleanable_target.has_method("get_dirt_level"):
+			is_target_dirty = (cleanable_target.get_dirt_level() > 0.01)
+		elif cleanable_target.has_method("is_dirty"):
+			is_target_dirty = cleanable_target.is_dirty()
+
+		if cleanable_target is RestaurantTable and cleanable_target.has_tray_on_table():
+			is_target_dirty = false
+
+		if is_target_dirty:
 			if sponge:
 				if sponge.is_dirty:
 					if hud and hud.has_method("show_temporary_feedback"):

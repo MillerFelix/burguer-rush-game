@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://prep_island_scene_uid"]
 
 [ext_resource type="Script" path="res://src/stations/prep_island.gd" id="1_prep_island_script"]
+[ext_resource type="Texture2D" path="res://assets/textures/dirt_stain_counter.png" id="2_counter_dirt_tex"]
 
 ; ================================================================
 ; COLISÃO FÍSICA (ILHA DUPLA COM 6 BANCADAS CONECTADAS)
@@ -94,12 +95,15 @@ size = Vector3(0.60, 0.09, 0.008)
 ; CENA PRINCIPAL DA ILHA (6 BANCADAS CONECTADAS)
 [sub_resource type="StandardMaterial3D" id="Material_IslandDirt"]
 transparency = 1
-albedo_color = Color(0.32, 0.22, 0.14, 0.85)
-roughness = 0.85
+cull_mode = 2
+albedo_texture = ExtResource("2_counter_dirt_tex")
+albedo_color = Color(1, 1, 1, 0.95)
+roughness = 0.80
 
-[sub_resource type="BoxMesh" id="BoxMesh_IslandDirtPatch"]
+[sub_resource type="QuadMesh" id="QuadMesh_IslandDirtPatch"]
 material = SubResource("Material_IslandDirt")
-size = Vector3(0.35, 0.004, 0.35)
+size = Vector2(0.48, 0.44)
+orientation = 1
 
 [node name="PrepIsland" type="StaticBody3D"]
 script = ExtResource("1_prep_island_script")
@@ -116,15 +120,23 @@ visible = false
 
 [node name="DirtPatch1" type="MeshInstance3D" parent="Model/IslandDirt"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.895, 0.45)
-mesh = SubResource("BoxMesh_IslandDirtPatch")
+mesh = SubResource("QuadMesh_IslandDirtPatch")
 
 [node name="DirtPatch2" type="MeshInstance3D" parent="Model/IslandDirt"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.20, 0.895, 0.45)
-mesh = SubResource("BoxMesh_IslandDirtPatch")
+transform = Transform3D(0.258819, 0, 0.965926, 0, 1, 0, -0.965926, 0, 0.258819, -1.20, 0.895, 0.45)
+mesh = SubResource("QuadMesh_IslandDirtPatch")
 
 [node name="DirtPatch3" type="MeshInstance3D" parent="Model/IslandDirt"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.20, 0.895, -0.45)
-mesh = SubResource("BoxMesh_IslandDirtPatch")
+transform = Transform3D(-0.34202, 0, -0.939693, 0, 1, 0, 0.939693, 0, -0.34202, 1.20, 0.895, -0.45)
+mesh = SubResource("QuadMesh_IslandDirtPatch")
+
+[node name="DirtPatch4" type="MeshInstance3D" parent="Model/IslandDirt"]
+transform = Transform3D(0.766044, 0, 0.642788, 0, 1, 0, -0.642788, 0, 0.766044, -0.60, 0.895, -0.45)
+mesh = SubResource("QuadMesh_IslandDirtPatch")
+
+[node name="DirtPatch5" type="MeshInstance3D" parent="Model/IslandDirt"]
+transform = Transform3D(0.5, 0, -0.866025, 0, 1, 0, 0.866025, 0, 0.5, 0.80, 0.895, 0.35)
+mesh = SubResource("QuadMesh_IslandDirtPatch")
 
 ; Tampo Duplo Gigante de Aço Inox (3.80m x 1.90m)
 [node name="TableTop" type="MeshInstance3D" parent="Model"]

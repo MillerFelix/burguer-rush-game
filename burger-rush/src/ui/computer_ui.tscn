@@ -96,22 +96,23 @@ grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_Backdrop")
 
 [node name="OuterWindow" type="PanelContainer" parent="MainPanel"]
+custom_minimum_size = Vector2(860, 520)
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -780.0
-offset_top = -450.0
-offset_right = 780.0
-offset_bottom = 450.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 30.0
+offset_right = -40.0
+offset_bottom = -30.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_OuterWindow")
 
 [node name="VBox" type="VBoxContainer" parent="MainPanel/OuterWindow"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
 theme_override_constants/separation = 0
 
 [node name="Header" type="PanelContainer" parent="MainPanel/OuterWindow/VBox"]
@@ -620,7 +621,443 @@ theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 12
 text = "🚚 Nenhuma entrega a caminho no momento."
 
-; ─── ABA 3: PLACEHOLDER ───────────────────────────────────────────
+; ─── ABA 3: CARDÁPIO & PRECIFICAÇÃO (MENU TAB) ────────────────────
+[node name="MenuTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+; ── TopBar: Título, Filtros, Busca e Resumo
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "🍔 GESTÃO DE CARDÁPIO & PREÇOS"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MenuSearchInput" type="LineEdit" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar/HBox"]
+custom_minimum_size = Vector2(240, 36)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_placeholder_color = Color(0.5, 0.55, 0.65, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_Search")
+placeholder_text = "🔍 Buscar item do cardápio..."
+clear_button_enabled = true
+
+[node name="MenuSummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "18 produtos no cardápio"
+
+; ── Barra de Categorias do Cardápio
+[node name="FilterBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnMenuAll" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(90, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "Todos"
+
+[node name="BtnMenuBurgers" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🍔 Hambúrgueres"
+
+[node name="BtnMenuSides" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(150, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🍟 Acompanhamentos"
+
+[node name="BtnMenuDrinks" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🥤 Bebidas"
+
+; ── Cabeçalho da Tabela do Cardápio
+[node name="TableHeader" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HeaderPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader"]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_Header")
+
+[node name="HeaderHBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ColProduct" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(230, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = " PRODUTO & CATEGORIA"
+
+[node name="ColCost" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "CUSTO REAL"
+horizontal_alignment = 1
+
+[node name="ColMarket" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "MERCADO REG."
+horizontal_alignment = 1
+
+[node name="ColRecommended" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(110, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "SUGERIDO"
+horizontal_alignment = 1
+
+[node name="ColPrice" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 11
+text = "SEU PREÇO DE VENDA"
+horizontal_alignment = 1
+
+[node name="ColMargin" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "MARGEM BRUTA"
+horizontal_alignment = 1
+
+[node name="ColLimits" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/TableHeader/HeaderPanel/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.6, 0.65, 0.75, 1)
+theme_override_font_sizes/font_size = 11
+text = "LIMITES PERMITIDOS (MÍN / MÁX)"
+horizontal_alignment = 1
+
+; ── Scroll com as Linhas de Produtos do Cardápio
+[node name="MenuScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/MenuScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="MenuList" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/MenuScroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+; ── Barra Inferior Informativa
+[node name="MenuBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/MenuBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab/MenuBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 Os preços definidos aqui são aplicados imediatamente em todos os pedidos e drive-thru."
+
+; ─── ABA 4: RECEITAS (RECIPES TAB) ────────────────────────────────
+[node name="RecipesTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+; ── TopBar: Título, Busca e Resumo
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "📖 LIVRO DE RECEITAS DO RESTAURANTE"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="RecipesSearchInput" type="LineEdit" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar/HBox"]
+custom_minimum_size = Vector2(240, 36)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_placeholder_color = Color(0.5, 0.55, 0.65, 1)
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_Search")
+placeholder_text = "🔍 Buscar receita..."
+clear_button_enabled = true
+
+[node name="RecipesSummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "11 receitas de hambúrgueres cadastradas"
+
+; ── Barra de Categorias de Receitas
+[node name="FilterBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnRecipeAll" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(90, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "Todas"
+
+[node name="BtnRecipeBurgers" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🍔 Hambúrgueres"
+
+[node name="BtnRecipeSides" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(150, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🍟 Acompanhamentos"
+
+[node name="BtnRecipeDrinks" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "🥤 Bebidas"
+
+; ── Scroll com os Cartões de Receitas
+[node name="RecipesScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/RecipesScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="RecipesGrid" type="GridContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/RecipesScroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 12
+columns = 2
+
+; ── Barra Inferior Informativa
+[node name="RecipesBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/RecipesBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/RecipesTab/RecipesBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 Montagem Livre: Monte com todos os ingredientes da receita. A ordem de montagem entre os pães é livre!"
+
+; ─── ABA 5: FINANÇAS (FINANCES TAB) ────────────────────────────────
+[node name="FinancesTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+; ── TopBar: Título e Resumo
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "💵 CENTRO FINANCEIRO DO RESTAURANTE"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FinancesSummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Balanço Operacional do Dia"
+
+; ── Linha dos 4 Cards de Destaque (KPIs)
+[node name="KPICardsBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/KPICardsBar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+; ── Barra de Sub-Navegação
+[node name="FilterBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnFinancesOverview" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(140, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "📊 Visão Geral"
+
+[node name="BtnFinancesRevenue" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "📥 Entradas (Vendas)"
+
+[node name="BtnFinancesExpenses" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "📤 Saídas (Custos)"
+
+[node name="BtnFinancesBills" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(140, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "📑 Contas a Pagar"
+
+[node name="BtnFinancesHistory" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(140, 32)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 12
+text = "📅 Relatório dos Dias"
+
+; ── Scroll com o Conteúdo Dinâmico das Finanças
+[node name="FinancesScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="FinancesContentVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesScroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+; ── Barra Inferior Informativa
+[node name="FinancesBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 Mantenha as contas em dia e economize energia fechando portas de geladeiras e desligando equipamentos sem uso."
+
+; ─── ABA 6: PLACEHOLDER ───────────────────────────────────────────
 [node name="PlaceholderTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
 visible = false
 layout_mode = 2

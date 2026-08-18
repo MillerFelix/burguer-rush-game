@@ -10,6 +10,7 @@ extends StaticBody3D
 # ================================================================
 
 const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+const WaterManager = preload("res://src/core/water_manager.gd")
 
 @onready var water_stream_mesh: MeshInstance3D = get_node_or_null("Model/Faucet/WaterStream")
 @onready var water_pool_left: MeshInstance3D = get_node_or_null("Model/BasinLeftWaterPool")
@@ -87,6 +88,10 @@ func wash_or_sanitize(player: Node3D) -> void:
 
 	set_water_flow(true)
 	_wash_timer = 1.2
+
+	var wm = WaterManager.get_instance()
+	if wm:
+		wm.consume_water(0.50, "sink")
 
 	if sponge:
 		if sponge.has_method("play_wash_animation"):

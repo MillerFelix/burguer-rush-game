@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://onion_bag_item_scene_uid"]
+
+[ext_resource type="Script" path="res://src/items/onion_bag.gd" id="1_onion_bag"]
+[ext_resource type="Texture2D" path="res://assets/textures/frozen_onion_bag.png" id="2_tex_onion_bag"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.24, 0.36, 0.14)
+
+[sub_resource type="StandardMaterial3D" id="Material_OnionBag"]
+albedo_texture = ExtResource("2_tex_onion_bag")
+roughness = 0.35
+metallic = 0.15
+
+[sub_resource type="BoxMesh" id="BoxMesh_BagBody"]
+material = SubResource("Material_OnionBag")
+size = Vector3(0.24, 0.34, 0.12)
+
+[sub_resource type="StandardMaterial3D" id="Material_CookedRings"]
+albedo_color = Color(0.95, 0.72, 0.2, 1)
+roughness = 0.55
+
+[sub_resource type="TorusMesh" id="TorusMesh_Ring1"]
+material = SubResource("Material_CookedRings")
+inner_radius = 0.04
+outer_radius = 0.07
+
+[node name="OnionBag" type="StaticBody3D"]
+script = ExtResource("1_onion_bag")
+item_id = "onion_rings_raw"
+display_name = "Saco de Cebola"
+item_type = "ingredient"
+prompt_text = "E — Pegar Saco de Cebola"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.18, 0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="MeshBag" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.17, 0)
+mesh = SubResource("BoxMesh_BagBody")
+
+[node name="MeshRings" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06, 0)
+visible = false
+
+[node name="Ring1" type="MeshInstance3D" parent="MeshRings"]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 0, 0)
+mesh = SubResource("TorusMesh_Ring1")

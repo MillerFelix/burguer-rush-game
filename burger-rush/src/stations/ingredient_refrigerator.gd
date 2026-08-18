@@ -39,11 +39,16 @@ const SCENE_PUDDLE = preload("res://src/stations/floor_puddle.tscn")
 @onready var col_red_onion: CollisionShape3D = get_node_or_null("RedOnionSlot/CollisionShape3D")
 @onready var col_white_onion: CollisionShape3D = get_node_or_null("WhiteOnionSlot/CollisionShape3D")
 @onready var col_pickle: CollisionShape3D = get_node_or_null("PickleSlot/CollisionShape3D")
+@onready var col_onion_bag: CollisionShape3D = get_node_or_null("OnionBagSlot/CollisionShape3D")
 
 # Nós de Estoque Visual Dinâmico (3 Estágios)
 @onready var potato_full: Node3D = get_node_or_null("FridgeBody/Products/PotatoBagsGroup/Full")
 @onready var potato_med: Node3D = get_node_or_null("FridgeBody/Products/PotatoBagsGroup/Medium")
 @onready var potato_low: Node3D = get_node_or_null("FridgeBody/Products/PotatoBagsGroup/Low")
+
+@onready var onion_bag_full: Node3D = get_node_or_null("FridgeBody/Products/OnionBagsGroup/Full")
+@onready var onion_bag_med: Node3D = get_node_or_null("FridgeBody/Products/OnionBagsGroup/Medium")
+@onready var onion_bag_low: Node3D = get_node_or_null("FridgeBody/Products/OnionBagsGroup/Low")
 
 @onready var lettuce_full: Node3D = get_node_or_null("FridgeBody/Products/LettuceGroup/Full")
 @onready var lettuce_med: Node3D = get_node_or_null("FridgeBody/Products/LettuceGroup/Medium")
@@ -263,6 +268,7 @@ func _apply_state_instant(open_state: bool) -> void:
 
 func _set_slots_enabled(enabled: bool) -> void:
 	if col_potato: col_potato.disabled = not enabled
+	if col_onion_bag: col_onion_bag.disabled = not enabled
 	if col_lettuce: col_lettuce.disabled = not enabled
 	if col_tomato: col_tomato.disabled = not enabled
 	if col_red_onion: col_red_onion.disabled = not enabled
@@ -314,7 +320,7 @@ func handle_ingredient_interaction(player: Node3D, ing_id: String) -> void:
 			_update_all_visual_stocks()
 		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var box_item_id = str(held.get("contained_item_id"))
-			var valid_fridge_items = ["lettuce", "tomato", "onion", "red_onion", "pickle", "potato_raw"]
+			var valid_fridge_items = ["lettuce", "tomato", "onion", "red_onion", "pickle", "potato_raw", "onion_rings_raw"]
 			if box_item_id == ing_id or (box_item_id == "" and ing_id in valid_fridge_items):
 				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
 				player.take_held_item().queue_free()
@@ -363,6 +369,12 @@ func _instantiate_ingredient_item(ing_id: String) -> Node3D:
 			var pot = sc.instantiate() as Potato
 			pot.state = Potato.State.RAW
 			return pot
+		"onion_rings_raw":
+			var sc = load("res://src/items/onion_bag.tscn")
+			var on_bag = sc.instantiate()
+			if on_bag.has_method("set_state"):
+				on_bag.set_state(0) # RAW
+			return on_bag
 		"lettuce":
 			var sc = load("res://src/items/lettuce.tscn")
 			return sc.instantiate()
@@ -396,6 +408,11 @@ func _is_matching_ingredient(held: Node3D, ing_id: String) -> bool:
 			if held is Potato:
 				return held.state == Potato.State.RAW
 			return held_id == "potato_raw" or held_id == "potato"
+		"onion_rings_raw":
+			var h_state = held.get("state")
+			if h_state != null and typeof(h_state) == TYPE_INT:
+				return h_state == 0 and (held_id == "onion_rings_raw" or held_id == "onion_bag")
+			return held_id == "onion_rings_raw" or held_id == "onion_bag"
 		"lettuce":
 			return held is Lettuce or held_id == "lettuce"
 		"tomato":
@@ -416,7 +433,9 @@ func _is_matching_ingredient(held: Node3D, ing_id: String) -> bool:
 func _get_ingredient_info(ing_id: String) -> Dictionary:
 	match ing_id:
 		"potato_raw":
-			return {"name": "Saco de Batata Frita", "icon": "🍟"}
+			return {"name": "Saco de Batata", "icon": "🥔"}
+		"onion_rings_raw":
+			return {"name": "Saco de Cebola", "icon": "🧅"}
 		"lettuce":
 			return {"name": "Alface", "icon": "🥬"}
 		"tomato":
@@ -436,6 +455,7 @@ func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
 func _update_all_visual_stocks() -> void:
 	var inv = InventoryManager.get_instance()
 	var pot_stock = inv.get_stock("potato_raw") if inv else 25
+	var oni_bag_stock = inv.get_stock("onion_rings_raw") if inv else 25
 	var let_stock = inv.get_stock("lettuce")    if inv else 15
 	var tom_stock = inv.get_stock("tomato")     if inv else 15
 	var red_stock = inv.get_stock("red_onion")  if inv else 15
@@ -443,6 +463,7 @@ func _update_all_visual_stocks() -> void:
 	var pic_stock = inv.get_stock("pickle")     if inv else 15
 
 	_update_section_visual(pot_stock, potato_full, potato_med, potato_low, 20, 8)
+	_update_section_visual(oni_bag_stock, onion_bag_full, onion_bag_med, onion_bag_low, 20, 8)
 	_update_section_visual(let_stock, lettuce_full, lettuce_med, lettuce_low, 15, 6)
 	_update_section_visual(tom_stock, tomato_full, tomato_med, tomato_low, 15, 6)
 	_update_section_visual(red_stock, red_onion_full, red_onion_med, red_onion_low, 15, 6)

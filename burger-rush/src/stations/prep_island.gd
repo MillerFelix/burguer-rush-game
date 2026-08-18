@@ -26,6 +26,9 @@ func _ready() -> void:
 func is_dirty() -> bool:
 	return dirt_level >= 0.70
 
+func get_dirt_level() -> float:
+	return dirt_level
+
 func clean_station(player: Node3D = null) -> void:
 	dirt_level = 0.0
 	_update_dirt_visuals()
@@ -39,14 +42,20 @@ func add_dirt(amount: float = 0.15) -> void:
 func _update_dirt_visuals() -> void:
 	var dirt_mesh = get_node_or_null("Model/IslandDirt")
 	if dirt_mesh:
-		dirt_mesh.visible = (dirt_level > 0.0)
-		dirt_mesh.scale = Vector3.ONE * clampf(dirt_level, 0.2, 1.0)
+		dirt_mesh.visible = (dirt_level > 0.001)
+		var sc = lerpf(0.20, 1.0, dirt_level) if dirt_level > 0.001 else 0.0
+		dirt_mesh.scale = Vector3(sc, sc, sc)
+		for child in dirt_mesh.get_children():
+			if child is MeshInstance3D:
+				var mat = child.get_active_material(0)
+				if mat is StandardMaterial3D and mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+					mat.albedo_color.a = clampf(dirt_level * 0.95, 0.0, 0.95)
 
 func clean_progress(delta: float, player: Node3D = null) -> bool:
 	if dirt_level <= 0.0:
 		return true
 
-	dirt_level = maxf(0.0, dirt_level - (delta / 1.0))
+	dirt_level = maxf(0.0, dirt_level - (delta / 5.0))
 	_update_dirt_visuals()
 
 	if dirt_level <= 0.0:

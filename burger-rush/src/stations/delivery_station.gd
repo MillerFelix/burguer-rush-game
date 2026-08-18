@@ -34,6 +34,9 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 	return ""
 
+func interact_item(player: Node3D) -> void:
+	interact(player)
+
 func interact(player: Node3D) -> void:
 	var deliv_mgr = null
 	if is_inside_tree() and get_tree() and get_tree().root:
@@ -60,34 +63,86 @@ func interact(player: Node3D) -> void:
 		return
 
 	var order_manager = OrderManager.get_instance()
-	var matching_order = null
+	var matching_order = car.current_order if (car and "current_order" in car and car.current_order != null) else null
 
-	if order_manager:
+	if not matching_order and order_manager:
 		for order in order_manager.get_active_orders():
 			if order.source_type == "DELIVERY" and order.state in [Order.State.RECEIVED, Order.State.WAITING, Order.State.IN_PROGRESS]:
-				if order.has_pending_product(product_id):
-					matching_order = order
-					break
-				elif held_item.has_method("get_products"): # Saco de delivery ou bandeja
-					var prods = held_item.get_products()
-					var all_match = true
-					for pr in prods:
-						var pr_id = str(pr.get("item_id")) if pr.get("item_id") != null else ""
-						if not order.has_pending_product(pr_id):
-							all_match = false
-							break
-					if all_match and not prods.is_empty():
-						matching_order = order
-						break
+				matching_order = order
+				break
+
+	var is_valid_delivery = false
 
 	if matching_order != null and car != null and car.get("current_state") == 4:
-		# Pedido CORRETO: registra entrega e conclui pagamento
-		matching_order.register_product_delivered(product_id)
+		if item is DeliveryBag:
+			var bag = item as DeliveryBag
+			var prods = bag.get_products()
+			if not prods.is_empty():
+				var all_match = true
+				var delivered_items: Array[String] = []
 
-		if matching_order.is_all_delivered():
-			var economy = EconomyManager.get_instance()
-			if economy:
-				economy.add_money(matching_order.total_price, "Drive-Thru: %s" % matching_order.items[0].get("product_name", product_id))
+				for itm in prods:
+					var p_id = str(itm.get("id", ""))
+					var r_id = str(itm.get("recipe_id", ""))
+					var matched_id = ""
+
+					if matching_order.has_pending_product(p_id):
+						matched_id = p_id
+					elif r_id != "" and matching_order.has_pending_product(r_id):
+						matched_id = r_id
+					elif (p_id == "packaged_burger" or r_id != "") and matching_order.has_pending_product("burger"):
+						matched_id = "burger"
+					elif (p_id == "packaged_burger" or r_id != "") and matching_order.has_pending_product("cheeseburger"):
+						matched_id = "cheeseburger"
+					elif p_id in ["fries", "fries_pack", "potato_box"] and matching_order.has_pending_product("fries"):
+						matched_id = "fries"
+					elif p_id in ["onion_rings", "fried_onions"] and matching_order.has_pending_product("onion_rings"):
+						matched_id = "onion_rings"
+					elif p_id.begins_with("soda_") or p_id.begins_with("juice_") or p_id == "drink_cup":
+						for ord_itm in matching_order.items:
+							var oid = str(ord_itm.get("product_id", ""))
+							if (oid.begins_with("soda_") or oid.begins_with("juice_") or oid == "drink_cup" or oid == "soda") and matching_order.has_pending_product(oid):
+								matched_id = oid
+								break
+
+					if matched_id != "":
+						matching_order.register_product_delivered(matched_id)
+						delivered_items.append(matched_id)
+					else:
+						all_match = false
+						break
+
+				if all_match and not delivered_items.is_empty():
+					is_valid_delivery = true
+		else:
+			# Entrega de item individual
+			var matched_id = ""
+			if matching_order.has_pending_product(product_id):
+				matched_id = product_id
+			elif product_id == "packaged_burger" and (matching_order.has_pending_product("burger") or matching_order.has_pending_product("cheeseburger")):
+				matched_id = "burger" if matching_order.has_pending_product("burger") else "cheeseburger"
+			elif product_id in ["fries", "fries_pack"] and matching_order.has_pending_product("fries"):
+				matched_id = "fries"
+			elif product_id in ["onion_rings", "fried_onions"] and matching_order.has_pending_product("onion_rings"):
+				matched_id = "onion_rings"
+			elif (product_id.begins_with("soda_") or product_id.begins_with("juice_")) and matching_order.has_pending_product(product_id):
+				matched_id = product_id
+
+			if matched_id != "":
+				matching_order.register_product_delivered(matched_id)
+				is_valid_delivery = true
+
+	if is_valid_delivery and matching_order != null:
+		# Pedido CORRETO: registra entrega e conclui pagamento
+			var fin = FinanceManager.get_instance()
+			if not fin and is_inside_tree():
+				fin = get_tree().root.find_child("FinanceManager", true, false) as FinanceManager
+			if fin:
+				fin.record_sale(matching_order.total_price, "drive_thru", "Drive-Thru: %s" % matching_order.items[0].get("product_name", product_id))
+			else:
+				var economy = EconomyManager.get_instance()
+				if economy:
+					economy.add_money(matching_order.total_price, "Drive-Thru: %s" % matching_order.items[0].get("product_name", product_id))
 
 			if car and is_instance_valid(car) and car.has_method("receive_order"):
 				car.receive_order(product_id)
@@ -95,11 +150,11 @@ func interact(player: Node3D) -> void:
 			order_manager.complete_order(matching_order)
 			_show_player_feedback(player, "🚗 Pedido #%03d entregue com sucesso! +$%.2f" % [matching_order.id, matching_order.total_price])
 		else:
-			_show_player_feedback(player, "Item %s entregue! Faltam %d itens." % [product_id.capitalize(), matching_order.get_total_quantity() - matching_order.get_delivered_count()])
+			_show_player_feedback(player, "Item entregue! Faltam %d itens." % [matching_order.get_total_quantity() - matching_order.get_delivered_count()])
 
 		delivery_succeeded.emit(matching_order, product_id)
 	else:
-		# Pedido INCORRETO: cliente recebe o item, percebe o erro, reage negativamente e vai embora sem pagar
+		# Pedido INCORRETO: cliente recebe o item/sacola, identifica erro, fala que está errado e vai embora sem pagar
 		if car and is_instance_valid(car) and car.has_method("on_order_wrong"):
 			car.on_order_wrong("Pedido incorreto entregue no Drive-Thru!")
 		elif car and is_instance_valid(car) and car.has_method("abandon_drive_thru"):

@@ -11,6 +11,7 @@ enum State {
 }
 
 @export var state: State = State.RAW
+@export var cooking_progress: float = 0.0
 
 @onready var visual_root: Node3D = get_node_or_null("VisualRoot")
 @onready var mesh_whole_egg: Node3D = get_node_or_null("VisualRoot/MeshWholeEgg")
@@ -52,7 +53,7 @@ func get_display_name() -> String:
 		State.CRACKED:
 			return "Ovo Quebrado (Na Chapa)"
 		State.COOKING:
-			return "Ovo Fritando"
+			return "Ovo Fritando (%d%%)" % int(cooking_progress) if cooking_progress > 0.0 else "Ovo Fritando"
 		State.COOKED:
 			return "Ovo Frito (Pronto)"
 		State.DRYING:
@@ -63,7 +64,7 @@ func get_display_name() -> String:
 			return "Ovo"
 
 func get_interaction_prompt(player: Node = null) -> String:
-	if location != ItemLocation.WORLD:
+	if is_held or location == ItemLocation.PLAYER_HAND:
 		return ""
 	if player and player.get("held_item") != null:
 		return ""
@@ -71,13 +72,13 @@ func get_interaction_prompt(player: Node = null) -> String:
 		State.RAW:
 			return "🖱️ Pegar Ovo Cru"
 		State.CRACKED, State.COOKING:
-			return "🖱️ Pegar Ovo (Em Fritura)"
+			return "🍳 Ovo Fritando (%d%%)" % int(cooking_progress) if cooking_progress > 0.0 else "🍳 Ovo Fritando"
 		State.COOKED:
-			return "🖱️ Pegar Ovo Frito Pronto"
+			return "🍳 [Clique] Pegar Ovo Frito Pronto"
 		State.DRYING:
-			return "🖱️ Pegar Ovo Ressecado"
+			return "⚠️ Pegar Ovo Ressecado"
 		State.BURNT:
-			return "🖱️ Pegar Ovo Queimado"
+			return "🗑️ Pegar Ovo Queimado"
 		_:
 			return "🖱️ Pegar Ovo"
 

@@ -71,7 +71,7 @@ func _ensure_components() -> void:
 	_setup_rain_audio()
 
 func _setup_rain_visuals() -> void:
-	# 1. Partículas de chuva caindo
+	# 1. Partículas de chuva caindo (Densas, nítidas e cobrindo todo o exterior)
 	if not rain_particles:
 		rain_particles = get_node_or_null("RainParticles") as CPUParticles3D
 		if not rain_particles:
@@ -79,27 +79,27 @@ func _setup_rain_visuals() -> void:
 			rain_particles.name = "RainParticles"
 			add_child(rain_particles)
 
-		rain_particles.amount = 600
-		rain_particles.lifetime = 0.95
+		rain_particles.amount = 2000
+		rain_particles.lifetime = 0.55
 		rain_particles.preprocess = 0.5
 		rain_particles.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-		rain_particles.emission_box_extents = Vector3(22.0, 0.4, 22.0)
-		rain_particles.position = Vector3(0.0, 11.0, 0.0)
-		rain_particles.direction = Vector3(-0.12, -1.0, 0.04).normalized()
-		rain_particles.spread = 3.0
-		rain_particles.initial_velocity_min = 24.0
-		rain_particles.initial_velocity_max = 30.0
-		rain_particles.gravity = Vector3(0, -12.0, 0)
+		rain_particles.emission_box_extents = Vector3(36.0, 0.5, 36.0)
+		rain_particles.position = Vector3(0.0, 12.0, 0.0)
+		rain_particles.direction = Vector3(-0.15, -1.0, 0.05).normalized()
+		rain_particles.spread = 2.5
+		rain_particles.initial_velocity_min = 34.0
+		rain_particles.initial_velocity_max = 44.0
+		rain_particles.gravity = Vector3(-2.0, -32.0, 0.5)
 
-		# Streak fino e alongado estilizado
+		# Gotas alongadas, nítidas e brilhantes (altamente visíveis através de vidros e no ar)
 		var drop_mesh = CylinderMesh.new()
-		drop_mesh.top_radius = 0.012
-		drop_mesh.bottom_radius = 0.012
-		drop_mesh.height = 0.60
+		drop_mesh.top_radius = 0.016
+		drop_mesh.bottom_radius = 0.016
+		drop_mesh.height = 1.15
 
 		var drop_mat = StandardMaterial3D.new()
 		drop_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		drop_mat.albedo_color = Color(0.82, 0.90, 0.98, 0.65)
+		drop_mat.albedo_color = Color(0.90, 0.95, 1.0, 0.85)
 		drop_mat.roughness = 0.1
 		drop_mat.metallic = 0.1
 		drop_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -108,7 +108,7 @@ func _setup_rain_visuals() -> void:
 		rain_particles.mesh = drop_mesh
 		rain_particles.emitting = false
 
-	# 2. Respingos no chão externo
+	# 2. Respingos e impacto das gotas no chão externo (Water Splashes)
 	if not rain_splashes:
 		rain_splashes = get_node_or_null("RainSplashes") as CPUParticles3D
 		if not rain_splashes:
@@ -116,25 +116,25 @@ func _setup_rain_visuals() -> void:
 			rain_splashes.name = "RainSplashes"
 			add_child(rain_splashes)
 
-		rain_splashes.amount = 180
-		rain_splashes.lifetime = 0.35
+		rain_splashes.amount = 800
+		rain_splashes.lifetime = 0.30
 		rain_splashes.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-		rain_splashes.emission_box_extents = Vector3(20.0, 0.05, 20.0)
-		rain_splashes.position = Vector3(0.0, 0.02, 0.0)
+		rain_splashes.emission_box_extents = Vector3(34.0, 0.05, 34.0)
+		rain_splashes.position = Vector3(0.0, 0.03, 0.0)
 		rain_splashes.direction = Vector3(0, 1, 0)
-		rain_splashes.spread = 70.0
-		rain_splashes.initial_velocity_min = 1.2
-		rain_splashes.initial_velocity_max = 2.4
-		rain_splashes.gravity = Vector3(0, -9.8, 0)
-		rain_splashes.scale_amount_min = 0.02
-		rain_splashes.scale_amount_max = 0.05
+		rain_splashes.spread = 80.0
+		rain_splashes.initial_velocity_min = 2.2
+		rain_splashes.initial_velocity_max = 5.0
+		rain_splashes.gravity = Vector3(0, -18.0, 0)
+		rain_splashes.scale_amount_min = 0.03
+		rain_splashes.scale_amount_max = 0.08
 
 		var splash_mesh = SphereMesh.new()
-		splash_mesh.radius = 0.03
-		splash_mesh.height = 0.06
+		splash_mesh.radius = 0.04
+		splash_mesh.height = 0.08
 		var splash_mat = StandardMaterial3D.new()
 		splash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		splash_mat.albedo_color = Color(0.85, 0.92, 1.0, 0.55)
+		splash_mat.albedo_color = Color(0.90, 0.95, 1.0, 0.75)
 		splash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		splash_mesh.material = splash_mat
 		rain_splashes.mesh = splash_mesh
@@ -285,27 +285,33 @@ func _pick_next_weather_randomly() -> void:
 func _apply_weather_state(_delta: float) -> void:
 	_ensure_components()
 
-	# 1. Posicionamento das partículas de chuva acompanhando o jogador
+	# 1. Posicionamento das partículas de chuva acompanhando o jogador em área ampla
 	var player = _get_player_node()
 	var p_pos = player.global_position if player else Vector3.ZERO
 
 	if rain_particles:
 		if rain_intensity > 0.05:
-			rain_particles.global_position = Vector3(p_pos.x, 11.0, p_pos.z)
+			if is_inside_tree() and rain_particles.is_inside_tree():
+				rain_particles.global_position = Vector3(p_pos.x, 12.0, p_pos.z)
+			else:
+				rain_particles.position = Vector3(p_pos.x, 12.0, p_pos.z)
 			rain_particles.emitting = true
-			rain_particles.amount = int(lerpf(120.0, 650.0, rain_intensity))
+			rain_particles.amount = int(lerpf(600.0, 2000.0, rain_intensity))
 		else:
 			rain_particles.emitting = false
 
 	if rain_splashes:
-		if rain_intensity > 0.15:
-			rain_splashes.global_position = Vector3(p_pos.x, 0.02, p_pos.z)
+		if rain_intensity > 0.10:
+			if is_inside_tree() and rain_splashes.is_inside_tree():
+				rain_splashes.global_position = Vector3(p_pos.x, 0.03, p_pos.z)
+			else:
+				rain_splashes.position = Vector3(p_pos.x, 0.03, p_pos.z)
 			rain_splashes.emitting = true
-			rain_splashes.amount = int(lerpf(40.0, 200.0, rain_intensity))
+			rain_splashes.amount = int(lerpf(250.0, 800.0, rain_intensity))
 		else:
 			rain_splashes.emitting = false
 
-	# 2. Áudio Espacial da Chuva com Abafamento Interno
+	# 2. Áudio Espacial da Chuva com Abafamento Interno e Presença nas Portas/Janelas
 	_process_spatial_audio(p_pos)
 
 	# 3. Superfícies Molhadas (Asfalto, Calçada, Deck, Pallet)
@@ -351,13 +357,13 @@ func _process_spatial_audio(p_pos: Vector3) -> void:
 
 	if not is_indoor:
 		# Totalmente no exterior (rua, doca, pallet de entrega)
-		if rain_audio_ext: rain_audio_ext.volume_db = lerpf(-40.0, -9.0, rain_intensity)
+		if rain_audio_ext: rain_audio_ext.volume_db = lerpf(-30.0, -6.0, rain_intensity)
 		if rain_audio_int: rain_audio_int.volume_db = -80.0
 	else:
-		# No interior do restaurante
+		# No interior do restaurante (abafado no telhado, mais aberto perto de janelas e portas)
 		var openness_factor = clampf(1.0 - (dist_to_openings / 4.0), 0.0, 1.0)
-		var ext_vol = lerpf(-26.0, -14.0, openness_factor) * rain_intensity
-		var int_vol = lerpf(-15.0, -18.0, openness_factor) * rain_intensity
+		var ext_vol = lerpf(-22.0, -9.0, openness_factor) * rain_intensity
+		var int_vol = lerpf(-10.0, -14.0, openness_factor) * rain_intensity
 
 		if rain_audio_ext: rain_audio_ext.volume_db = ext_vol
 		if rain_audio_int: rain_audio_int.volume_db = int_vol

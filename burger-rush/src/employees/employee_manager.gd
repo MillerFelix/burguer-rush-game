@@ -11,7 +11,7 @@ extends Node
 signal employee_hired(employee: Employee)
 signal employee_fired(employee_id: int)
 
-static var instance: EmployeeManager = null
+static var instance = null
 
 const Employee = preload("res://src/employees/employee.gd")
 var employee_scene: PackedScene = preload("res://src/employees/employee.tscn")
@@ -28,8 +28,10 @@ func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
-static func get_instance() -> EmployeeManager:
-	return instance
+static func get_instance():
+	if instance and is_instance_valid(instance):
+		return instance
+	return null
 
 @export var auto_spawn_initial_employee: bool = false
 

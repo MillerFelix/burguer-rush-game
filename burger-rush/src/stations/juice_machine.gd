@@ -50,6 +50,7 @@ const FILL_DURATION: float = 0.85 # tempo para encher um copo
 const JuicePulp = preload("res://src/items/juice_pulp.gd")
 const DrinkCup = preload("res://src/items/drink_cup.gd")
 const PowerManager = preload("res://src/core/power_manager.gd")
+const WaterManager = preload("res://src/core/water_manager.gd")
 
 # Estado Geral da Máquina
 @export var is_powered: bool = true
@@ -276,6 +277,10 @@ func _process_dispensing(idx: int, delta: float) -> void:
 		var next_fill = minf(1.0, prev_fill + flow_step)
 		fill_progresses[idx] = next_fill
 		var fill_step = next_fill - prev_fill
+
+		var wm = WaterManager.get_instance()
+		if wm and fill_step > 0.0:
+			wm.consume_water(fill_step * 0.35, "juice_machine")
 
 		cup.fill_amount = fill_progresses[idx]
 		cup.set_flavor(FLAVORS[idx].id)

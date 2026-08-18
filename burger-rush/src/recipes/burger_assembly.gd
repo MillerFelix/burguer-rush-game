@@ -49,7 +49,7 @@ func _ready() -> void:
 	_update_status()
 
 # Adiciona um ingrediente físico como filho da montagem do lanche
-func add_ingredient(item: Item, hit_pos: Vector3, player_rot_y: float = 0.0) -> bool:
+func add_ingredient(item: Item, hit_pos: Vector3 = Vector3.ZERO, player_rot_y: float = 0.0) -> bool:
 	if state == State.CLOSED or state == State.PACKAGED:
 		return false
 	if not item or item == base_bun or item == self or ingredients.has(item):

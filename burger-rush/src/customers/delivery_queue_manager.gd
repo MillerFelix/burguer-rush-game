@@ -76,23 +76,38 @@ func _process(delta: float) -> void:
 			spawn_car()
 
 func _calculate_interval_for_time(time_h: float) -> float:
-	# CURVA DE INTERVALOS DINÂMICOS PARA DELIVERY (10:00 — 22:00):
-	# 10:00 - 11:30 (Manhã calma):        30.0s a 45.0s
-	# 11:30 - 14:00 (Pico Almoço):         15.0s a 22.0s
-	# 14:00 - 17:00 (Tarde moderada):      24.0s a 35.0s
-	# 17:00 - 19:00 (Fim de Tarde):        16.0s a 24.0s
-	# 19:00 - 22:00 (Pico Noite / Jantar): 10.0s a 16.0s (MAIOR FREQUÊNCIA)
+	# CURVA DE INTERVALOS EQUILIBRADOS PARA DELIVERY (10:00 — 22:00):
+	# Redução leve no fluxo em dias normais para garantir um ritmo natural e administrável
+	# 10:00 - 11:30 (Manhã calma):        38.0s a 52.0s
+	# 11:30 - 14:00 (Pico Almoço):         20.0s a 28.0s
+	# 14:00 - 17:00 (Tarde moderada):      30.0s a 42.0s
+	# 17:00 - 19:00 (Fim de Tarde):        22.0s a 30.0s
+	# 19:00 - 22:00 (Pico Noite / Jantar): 15.0s a 22.0s
+	var base_int: float = 35.0
 	if time_h < 11.5:
-		return randf_range(30.0, 45.0)
+		base_int = randf_range(38.0, 52.0)
 	elif time_h < 14.0:
-		return randf_range(15.0, 22.0)
+		base_int = randf_range(20.0, 28.0)
 	elif time_h < 17.0:
-		return randf_range(24.0, 35.0)
+		base_int = randf_range(30.0, 42.0)
 	elif time_h < 19.0:
-		return randf_range(16.0, 24.0)
+		base_int = randf_range(22.0, 30.0)
 	elif time_h <= 22.0:
-		return randf_range(10.0, 16.0)
-	return randf_range(30.0, 50.0)
+		base_int = randf_range(15.0, 22.0)
+	else:
+		base_int = randf_range(38.0, 55.0)
+
+	# Eventos diários de alta movimentação (chuva, tempestade, etc.) aceleram o fluxo adequadamente
+	var event_mgr = DailyEventManager.instance
+	if not event_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		event_mgr = get_tree().root.find_child("DailyEventManager", true, false) as DailyEventManager
+
+	if event_mgr and event_mgr.has_method("get_drive_thru_multiplier"):
+		var mult = event_mgr.get_drive_thru_multiplier()
+		if mult > 0.01:
+			base_int = base_int / mult
+
+	return base_int
 
 func spawn_car() -> Node3D:
 	if not car_scene:

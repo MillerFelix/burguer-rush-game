@@ -23,18 +23,19 @@ extends StaticBody3D
 const IDEAL_TEMP_MIN: float = 150.0
 const IDEAL_TEMP_MAX: float = 200.0
 
-@export var cook_time: float = 8.0 # 8 segundos para fritar
-@export var burn_time: float = 12.0 # 12 segundos adicionais até queimar
+@export var cook_time: float = 84.0 # 84 segundos para fritar (aumentado em mais 200% / 3x de 28.0s)
+@export var burn_time: float = 126.0 # 126 segundos adicionais até queimar (3x de 42.0s)
 @export var max_capacity: int = 4
 
 var fries_pack_scene: PackedScene = preload("res://src/items/fries_pack.tscn")
 
 # Estrutura dos 4 compartimentos (óleo pré-existente e permanente)
+# 1 saco de batata = 5 porções | 1 saco de cebola = 3 porções
 var compartments: Array[Dictionary] = [
-	{ "basket_down": false, "food_state": "empty", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0 },
-	{ "basket_down": false, "food_state": "empty", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0 },
-	{ "basket_down": false, "food_state": "empty", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0 },
-	{ "basket_down": false, "food_state": "empty", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0 },
+	{ "basket_down": false, "food_state": "empty", "food_type": "potato", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0, "portions_remaining": 0 },
+	{ "basket_down": false, "food_state": "empty", "food_type": "potato", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0, "portions_remaining": 0 },
+	{ "basket_down": false, "food_state": "empty", "food_type": "potato", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0, "portions_remaining": 0 },
+	{ "basket_down": false, "food_state": "empty", "food_type": "potato", "timer": 0.0, "oil_level": 1.0, "drain_timer": 0.0, "portions_remaining": 0 },
 ]
 
 # Posições dos 4 compartimentos
@@ -70,7 +71,7 @@ var active_potatoes: Array[Dictionary]:
 		var list: Array[Dictionary] = []
 		for i in range(4):
 			if compartments[i]["food_state"] != "empty":
-				list.append({ "slot_index": i, "timer": compartments[i]["timer"], "state": compartments[i]["food_state"] })
+				list.append({ "slot_index": i, "timer": compartments[i]["timer"], "state": compartments[i]["food_state"], "portions": compartments[i].get("portions_remaining", 5) })
 		return list
 
 func _ready() -> void:
@@ -173,7 +174,7 @@ func get_cooking_speed_factor() -> float:
 
 func _process(delta: float) -> void:
 	var pm = PowerManager.get_instance()
-	var has_power = pm.is_main_power_on if pm else false
+	var has_power = pm.is_main_power_on if pm != null else true
 	var is_actively_heating = is_on and has_power
 
 	# 1. Simulação física contínua da temperatura
@@ -228,6 +229,8 @@ func _process(delta: float) -> void:
 				comp["food_state"] = "burnt"
 			elif timer >= cook_time:
 				comp["food_state"] = "cooked"
+				if not comp.has("portions_remaining") or comp["portions_remaining"] <= 0:
+					comp["portions_remaining"] = 3 if comp.get("food_type") == "onion" else 5
 			else:
 				comp["food_state"] = "cooking"
 
@@ -241,12 +244,12 @@ func _process_audio(delta: float) -> void:
 	if not hum_audio or not sizzle_audio:
 		_setup_audio()
 
-	# 1. Zumbido contínuo de aquecimento e funcionamento (Hum Loop)
+	# 1. Zumbido contínuo de aquecimento e funcionamento (Hum Loop suave e discreto)
 	if is_on:
 		if not hum_audio.playing:
 			hum_audio.stream = SoundSynthesizer.get_stream("fryer_hum_loop")
 			_safe_play(hum_audio)
-		_target_hum_vol = -27.0
+		_target_hum_vol = -36.0
 	else:
 		_target_hum_vol = -80.0
 
@@ -255,7 +258,7 @@ func _process_audio(delta: float) -> void:
 	if not is_on and hum_audio.volume_db <= -60.0 and hum_audio.playing:
 		hum_audio.stop()
 
-	# 2. Chiado e borbulhamento dinâmico do óleo (Sizzle Loop)
+	# 2. Chiado e borbulhamento dinâmico do óleo (Sizzle Loop moderado e equilibrado)
 	var frying_baskets_count = 0
 	var any_burnt = false
 	var speed = get_cooking_speed_factor()
@@ -271,13 +274,13 @@ func _process_audio(delta: float) -> void:
 			sizzle_audio.stream = SoundSynthesizer.get_stream("fryer_sizzle_loop")
 			_safe_play(sizzle_audio)
 
-		# Volume base conforme temperatura do óleo
+		# Volume base equilibrado conforme temperatura do óleo
 		var temp_ratio = clampf((current_temperature - 80.0) / (IDEAL_TEMP_MIN - 80.0), 0.3, 1.0)
-		var base_vol = lerpf(-19.0, -11.0, temp_ratio)
+		var base_vol = lerpf(-27.0, -19.0, temp_ratio)
 
-		# Escalação natural com múltiplos cestos (+1.2 dB por cesto adicional)
-		var multi_bonus = (frying_baskets_count - 1) * 1.2
-		_target_sizzle_vol = minf(-7.0, base_vol + multi_bonus)
+		# Escalação natural com múltiplos cestos (+1.0 dB por cesto adicional)
+		var multi_bonus = (frying_baskets_count - 1) * 1.0
+		_target_sizzle_vol = minf(-15.0, base_vol + multi_bonus)
 
 		# Pitch dinâmico: mais borbulhante e agressivo quando muito quente ou queimando
 		var target_pitch = 1.08 if any_burnt else (1.02 if is_ideal_temp() else 0.96)
@@ -296,13 +299,20 @@ func _update_compartment_visuals(i: int, is_frying: bool) -> void:
 	var food_state: String = comp["food_state"]
 	var timer: float = comp["timer"]
 
-	# Malha das batatas palito com evolução contínua e rica de cor
+	# Malha do alimento no cesto (Batata ou Cebola) com evolução de cor e redução física por porção
 	var fries_mesh = get_node_or_null("Model/Basket%d/FriesMesh" % i) as MeshInstance3D
 	if fries_mesh:
-		if food_state == "empty":
+		var f_type = comp.get("food_type", "potato")
+		var max_p = 3.0 if f_type == "onion" else 5.0
+		var portions = comp.get("portions_remaining", int(max_p))
+		if food_state == "empty" or portions <= 0:
 			fries_mesh.visible = false
 		else:
 			fries_mesh.visible = true
+			var port_ratio = clampf(float(portions) / max_p, 0.25, 1.0)
+			fries_mesh.scale = Vector3(1.0, port_ratio, 1.0)
+			fries_mesh.position.y = -0.04 - (1.0 - port_ratio) * 0.02
+
 			var mat = fries_mesh.material_override as StandardMaterial3D
 			if not mat:
 				mat = StandardMaterial3D.new()
@@ -310,16 +320,17 @@ func _update_compartment_visuals(i: int, is_frying: bool) -> void:
 
 			match food_state:
 				"frozen":
-					mat.albedo_color = Color(0.96, 0.93, 0.76, 1.0)
+					mat.albedo_color = Color(0.96, 0.93, 0.76, 1.0) if f_type == "potato" else Color(0.94, 0.88, 0.82, 1.0)
 					mat.roughness = 0.65
 				"cooking":
 					# Transição gradual suave de cor conforme o tempo de fritura
 					var prog = clampf(timer / cook_time, 0.0, 1.0)
-					mat.albedo_color = Color(0.96, 0.93, 0.76, 1.0).lerp(Color(0.95, 0.72, 0.18, 1.0), prog)
+					var target_col = Color(0.95, 0.72, 0.18, 1.0) if f_type == "potato" else Color(0.92, 0.68, 0.16, 1.0)
+					mat.albedo_color = (Color(0.96, 0.93, 0.76, 1.0) if f_type == "potato" else Color(0.94, 0.88, 0.82, 1.0)).lerp(target_col, prog)
 					mat.roughness = lerpf(0.65, 0.40, prog)
 				"cooked":
 					# Dourado apetitoso pronto
-					mat.albedo_color = Color(0.95, 0.72, 0.18, 1.0)
+					mat.albedo_color = Color(0.95, 0.72, 0.18, 1.0) if f_type == "potato" else Color(0.92, 0.68, 0.16, 1.0)
 					mat.roughness = 0.40
 				"burnt":
 					# Escurecido queimado
@@ -470,10 +481,10 @@ func interact_item(player: Node3D) -> void:
 
 	var comp = compartments[slot_idx]
 
-	# CASO 1: Jogador segurando Saco de Batata Congelada
+	# CASO 1: Jogador segurando Saco de Batata
 	if held is Potato or (held != null and str(held.get("item_id")) == "potato_raw"):
 		if comp["basket_down"]:
-			_show_feedback(player, "⚠️ Levante o Cesto %d [E] antes de colocar a batata!" % (slot_idx + 1))
+			_show_feedback(player, "⚠️ Levante o Cesto %d [E] antes de abastecer com o saco de batata!" % (slot_idx + 1))
 			return
 
 		if comp["food_state"] != "empty":
@@ -481,75 +492,127 @@ func interact_item(player: Node3D) -> void:
 			return
 
 		comp["food_state"] = "frozen"
+		comp["food_type"] = "potato"
+		comp["portions_remaining"] = 5
 		comp["timer"] = 0.0
 		var pot_item = player.take_held_item()
 		if pot_item:
 			pot_item.queue_free()
 		_play_oneshot("fryer_place_potatoes", -6.0)
 		_update_compartment_visuals(slot_idx, false)
-		_show_feedback(player, "🍟 Batata congelada colocada no Cesto %d! Abaixe a alavanca [E] para fritar." % (slot_idx + 1))
+		_show_feedback(player, "🍟 Cesto %d abastecido com saco de batata! Cesto cheio pronto para fritar (5 porções)." % (slot_idx + 1))
 		return
 
-	# CASO 2: Jogador retirando Batata Pronta (com Recipiente ou Mão Livre)
+	# CASO 1B: Jogador segurando Saco de Cebola
+	var is_held_onion = held != null and (held.get("item_id") in ["onion_rings_raw", "onion_bag"] or str(held.get("display_name")) == "Saco de Cebola")
+	if is_held_onion:
+		if comp["basket_down"]:
+			_show_feedback(player, "⚠️ Levante o Cesto %d [E] antes de abastecer com o saco de cebola!" % (slot_idx + 1))
+			return
+
+		if comp["food_state"] != "empty":
+			_show_feedback(player, "⚠️ O Cesto %d já contém alimento!" % (slot_idx + 1))
+			return
+
+		comp["food_state"] = "frozen"
+		comp["food_type"] = "onion"
+		comp["portions_remaining"] = 3
+		comp["timer"] = 0.0
+		var on_item = player.take_held_item()
+		if on_item:
+			on_item.queue_free()
+		_play_oneshot("fryer_place_potatoes", -6.0)
+		_update_compartment_visuals(slot_idx, false)
+		_show_feedback(player, "🧅 Cesto %d abastecido com saco de cebola! Cesto cheio pronto para fritar (3 porções)." % (slot_idx + 1))
+		return
+
+	# CASO 2: Jogador retirando Comida Pronta (com Recipiente ou Mão Livre)
 	if comp["food_state"] == "cooked":
 		if comp["basket_down"]:
-			_show_feedback(player, "⚠️ Levante o Cesto %d [E] para retirar as batatas prontas!" % (slot_idx + 1))
+			_show_feedback(player, "⚠️ Levante o Cesto %d [E] para retirar as porções prontas!" % (slot_idx + 1))
 			return
 
 		var inv = InventoryManager.get_instance()
-		if held is PotatoBoxItem or (held != null and str(held.get("item_id")) == "potato_box"):
-			var used_box = player.take_held_item()
-			if used_box:
-				used_box.queue_free()
-			_finish_and_pack_fries(slot_idx, player)
+		if held is FriesPack or held is PotatoBoxItem or (held != null and str(held.get("item_id")) == "potato_box"):
+			_finish_and_pack_fries(slot_idx, player, held)
 			return
 		elif held == null:
 			if inv and not inv.has_stock("potato_box", 1):
-				_show_feedback(player, "❌ Sem recipientes de batata no estoque! Compre no computador.")
+				_show_feedback(player, "❌ Sem recipientes de batata/cebola no estoque! Compre no computador.")
 				return
 			if inv:
 				inv.consume_stock("potato_box", 1)
-			_finish_and_pack_fries(slot_idx, player)
+			_finish_and_pack_fries(slot_idx, player, null)
 			return
 
-	# CASO 3: Retirar Batata Queimada
+	# CASO 3: Retirar Comida Queimada
 	if comp["food_state"] == "burnt" and held == null:
 		comp["food_state"] = "empty"
+		comp["portions_remaining"] = 0
 		comp["timer"] = 0.0
 		_update_compartment_visuals(slot_idx, false)
-		_show_feedback(player, "🗑️ Batata queimada descartada do Cesto %d." % (slot_idx + 1))
+		_show_feedback(player, "🗑️ Alimento queimado descartado do Cesto %d." % (slot_idx + 1))
 		return
 
-func _finish_and_pack_fries(slot_idx: int, player: Node3D) -> void:
-	compartments[slot_idx]["food_state"] = "empty"
-	compartments[slot_idx]["timer"] = 0.0
+func _finish_and_pack_fries(slot_idx: int, player: Node3D, existing_box: Node = null) -> void:
+	var comp = compartments[slot_idx]
+	var num = slot_idx + 1
+	var is_onion = (comp.get("food_type") == "onion")
+	var max_p = 3 if is_onion else 5
+	var portions = comp.get("portions_remaining", max_p) - 1
+	comp["portions_remaining"] = max(0, portions)
+	if comp["portions_remaining"] <= 0:
+		comp["food_state"] = "empty"
+		comp["timer"] = 0.0
 	_update_compartment_visuals(slot_idx, false)
 	_play_oneshot("fryer_pack_fries", -5.0)
 
-	var pack = fries_pack_scene.instantiate() as FriesPack
-	var root_node: Node = null
-	if is_inside_tree() and get_tree():
-		root_node = get_tree().current_scene if get_tree().current_scene else get_tree().root
-	if not root_node and player and player.get_parent():
-		root_node = player.get_parent()
-	if not root_node and get_parent():
-		root_node = get_parent()
+	var pack: FriesPack = null
+	if existing_box != null and (existing_box is FriesPack or existing_box.has_method("set_side_type")):
+		pack = existing_box as FriesPack
+		if is_onion:
+			pack.set_side_type("onion_rings")
+		else:
+			pack.set_side_type("fries")
+	else:
+		pack = fries_pack_scene.instantiate() as FriesPack
+		if is_onion:
+			pack.set_side_type("onion_rings")
+		else:
+			pack.set_side_type("fries")
 
-	if root_node:
-		root_node.add_child(pack)
-	if player and player.has_method("pick_up"):
-		player.pick_up(pack)
-	_show_feedback(player, "🍟 Batata frita crocante e sequinha embalada com sucesso!")
+		var root_node: Node = null
+		if is_inside_tree() and get_tree():
+			root_node = get_tree().current_scene if get_tree().current_scene else get_tree().root
+		if not root_node and player and player.get_parent():
+			root_node = player.get_parent()
+		if not root_node and get_parent():
+			root_node = get_parent()
+
+		if root_node:
+			root_node.add_child(pack)
+		if player and player.has_method("pick_up"):
+			player.pick_up(pack)
+
+	var name_pt = "cebola frita" if is_onion else "batata frita"
+	var icon_pt = "🧅" if is_onion else "🍟"
+	if comp["portions_remaining"] > 0:
+		_show_feedback(player, "%s Porção de %s embalada! Restam %d/%d porções no Cesto %d." % [icon_pt, name_pt, comp["portions_remaining"], max_p, num])
+	else:
+		_show_feedback(player, "%s Última porção de %s embalada! Cesto %d agora está vazio." % [icon_pt, name_pt, num])
 
 # Posicionamento de batata para compatibilidade com testes anteriores
-func place_potato(pot: Potato) -> void:
+func place_potato(pot: Node) -> void:
 	var free_slot = 0
 	for i in range(4):
 		if compartments[i]["food_state"] == "empty":
 			free_slot = i
 			break
 
+	var is_onion = (pot != null and (pot.get("item_id") in ["onion_rings_raw", "onion_bag"] or str(pot.get("display_name")) == "Saco de Cebola"))
 	compartments[free_slot]["food_state"] = "frozen"
+	compartments[free_slot]["food_type"] = "onion" if is_onion else "potato"
+	compartments[free_slot]["portions_remaining"] = 3 if is_onion else 5
 	compartments[free_slot]["timer"] = 0.0
 	compartments[free_slot]["basket_down"] = true
 	if is_instance_valid(pot):
@@ -558,6 +621,9 @@ func place_potato(pot: Potato) -> void:
 func _find_most_relevant_slot() -> int:
 	for i in range(4):
 		if compartments[i]["food_state"] == "cooked" and not compartments[i]["basket_down"]:
+			return i
+	for i in range(4):
+		if compartments[i]["food_state"] == "cooking" or (compartments[i]["basket_down"] and compartments[i]["food_state"] != "empty"):
 			return i
 	for i in range(4):
 		if compartments[i]["food_state"] == "empty" and not compartments[i]["basket_down"]:
@@ -615,30 +681,55 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 	# 2. Se mirou em um compartimento/alavanca específico (0..3)
 	var slot_idx = _get_aimed_slot(player_3d)
+	if slot_idx == -1 and player_3d:
+		slot_idx = _find_most_relevant_slot()
+
 	if slot_idx != -1:
 		var comp = compartments[slot_idx]
 		var num = slot_idx + 1
+		var is_onion = (comp.get("food_type") == "onion")
+		var max_p = 3 if is_onion else 5
 
-		# Se segurando batata crua
-		if held is Potato or (held != null and str(held.get("item_id")) == "potato_raw"):
+		# Se segurando saco de batata e cesto está vazio
+		if (held is Potato or (held != null and str(held.get("item_id")) == "potato_raw")) and comp["food_state"] == "empty":
 			if comp["basket_down"]:
-				return "⬆️ [E] Levantar Cesto %d para colocar batata" % num
-			elif comp["food_state"] == "empty":
-				return "🍟 [Clique] Colocar Batatas no Cesto %d" % num
-
-		# Se cesto tem batata pronta
-		if comp["food_state"] == "cooked":
-			if comp["basket_down"]:
-				return "⬆️ [E] Levantar Cesto %d (Batata Pronta!)" % num
+				return "⬆️ [E] Levantar Cesto %d para abastecer" % num
 			else:
-				return "🍟 [Clique] Embalar Batata Frita (Cesto %d)" % num
+				return "🍟 [Clique] Abastecer Cesto %d (1 Saco = 5 Porções)" % num
 
-		# Se cesto tem batata queimada
+		# Se segurando saco de cebola e cesto está vazio
+		var is_held_onion = held != null and (held.get("item_id") in ["onion_rings_raw", "onion_bag"] or str(held.get("display_name")) == "Saco de Cebola")
+		if is_held_onion and comp["food_state"] == "empty":
+			if comp["basket_down"]:
+				return "⬆️ [E] Levantar Cesto %d para abastecer" % num
+			else:
+				return "🧅 [Clique] Abastecer Cesto %d com Cebola (1 Saco = 3 Porções)" % num
+
+		# Se cesto está fritando (mesmo modelo do hambúrguer: discreto, no HUD ao olhar)
+		if comp["food_state"] == "cooking" or (comp["basket_down"] and comp["food_state"] in ["frozen", "cooking"]):
+			var prog_pct = clampf((comp["timer"] / cook_time) * 100.0, 0.0, 100.0)
+			if is_onion:
+				return "🧅 Cebola Fritando (%d%%)" % int(prog_pct)
+			else:
+				return "🍟 Batata Fritando (%d%%)" % int(prog_pct)
+
+		# Se cesto tem comida pronta
+		if comp["food_state"] == "cooked":
+			var rem = comp.get("portions_remaining", max_p)
+			if comp["basket_down"]:
+				return "⬆️ [E] Levantar Cesto %d (%s Pronta!)" % [num, ("Cebola" if is_onion else "Batata")]
+			else:
+				if is_onion:
+					return "🧅 [Clique] Embalar Porção de Cebola Frita (%d/3 restantes)" % rem
+				else:
+					return "🍟 [Clique] Embalar Porção de Batata Frita (%d/5 restantes)" % rem
+
+		# Se cesto tem comida queimada
 		if comp["food_state"] == "burnt":
 			if comp["basket_down"]:
 				return "⬆️ [E] Levantar Cesto %d (Queimada)" % num
 			else:
-				return "🗑️ [Clique] Retirar Batata Queimada (Cesto %d)" % num
+				return "🗑️ [Clique] Retirar Alimento Queimado (Cesto %d)" % num
 
 		# Alavanca do cesto
 		if comp["basket_down"]:
@@ -668,6 +759,9 @@ var dirt_level: float = 0.0
 func is_dirty() -> bool:
 	return dirt_level >= 0.70
 
+func get_dirt_level() -> float:
+	return dirt_level
+
 func add_dirt(amount: float = 0.20) -> void:
 	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)
 	_update_dirt_visuals()
@@ -675,14 +769,26 @@ func add_dirt(amount: float = 0.20) -> void:
 func _update_dirt_visuals() -> void:
 	var dirt_mesh = get_node_or_null("Model/FryerDirt")
 	if dirt_mesh:
-		dirt_mesh.visible = (dirt_level > 0.0)
-		dirt_mesh.scale = Vector3.ONE * clampf(dirt_level, 0.2, 1.0)
+		dirt_mesh.visible = (dirt_level > 0.001)
+		var sc = lerpf(0.20, 1.0, dirt_level) if dirt_level > 0.001 else 0.0
+		dirt_mesh.scale = Vector3(sc, sc, sc)
+		for child in dirt_mesh.get_children():
+			if child is MeshInstance3D:
+				var mat = child.get_active_material(0)
+				if mat is StandardMaterial3D and mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+					mat.albedo_color.a = clampf(dirt_level * 0.95, 0.0, 0.95)
+
+func clean_station(player: Node3D = null) -> void:
+	dirt_level = 0.0
+	_update_dirt_visuals()
+	if player:
+		_show_feedback(player, "✨ Fritadeira limpa e higienizada!")
 
 func clean_progress(delta: float, player: Node3D = null) -> bool:
 	if dirt_level <= 0.0:
 		return true
 
-	dirt_level = maxf(0.0, dirt_level - (delta / 1.2))
+	dirt_level = maxf(0.0, dirt_level - (delta / 5.0))
 	_update_dirt_visuals()
 
 	if dirt_level <= 0.0:

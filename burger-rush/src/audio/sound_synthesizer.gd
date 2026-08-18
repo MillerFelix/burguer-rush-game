@@ -1563,26 +1563,47 @@ static func _generate_trash_dispose() -> AudioStreamWAV:
 	stream.data = pcm
 	return stream
 
-# 38. Som suave e agradável de bucha esfregando / limpando superfície
+# 38. Som suave, aveludado e natural de bucha/esponja esfregando superfície úmida
 static func _generate_sponge_scrub() -> AudioStreamWAV:
 	var sample_rate = 22050
-	var duration = 0.50
+	var duration = 0.60
 	var num_samples = int(sample_rate * duration)
 	var pcm = PackedByteArray()
 	pcm.resize(num_samples * 2)
 
+	# Filtro passa-baixa de 2 polos para eliminar aspereza e dar textura de esponja aveludada
+	var lp_y1 = 0.0
+	var lp_y2 = 0.0
+	var lp_cutoff = 0.12 # ~1300 Hz
+
 	for i in range(num_samples):
 		var t = float(i) / float(sample_rate)
-		# Dois ciclos suaves de esfregação (ida e volta)
-		var cycle = sin(2.0 * PI * 3.8 * t)
-		var cycle_amp = absf(cycle)
+		# Dois ciclos suaves e orgânicos de esfregação
+		var cycle = sin(2.0 * PI * 3.33 * t)
+		var cycle_amp = 0.40 + 0.60 * absf(cycle)
 
-		# Ruído de fricção aveludado de espuma com gordura/sabão em superfície lisa
-		var base_noise = (randf() * 2.0 - 1.0)
-		var foam_texture = sin(2.0 * PI * 280.0 * t + base_noise * 0.4)
-		var friction = (base_noise * 0.40 + foam_texture * 0.60) * (0.35 + 0.65 * cycle_amp)
+		# Ruído branco base
+		var white = (randf() * 2.0 - 1.0)
+		
+		# Micro-textura de espuma/bolhas úmidas
+		var foam_micro = sin(2.0 * PI * 320.0 * t + white * 0.35) * 0.25
 
-		var sample = clampf(friction * 0.50, -1.0, 1.0)
+		# Aplica filtro passa-baixa IIR suave
+		var input_val = (white * 0.75 + foam_micro * 0.25)
+		lp_y1 += lp_cutoff * (input_val - lp_y1)
+		lp_y2 += lp_cutoff * (lp_y1 - lp_y2)
+
+		# Modulação com o ciclo de movimento da esponja
+		var sample = lp_y2 * cycle_amp * 0.42
+
+		# Fade suave nas bordas para loop perfeito e sem estalos
+		var fade_samples = int(sample_rate * 0.05)
+		if i < fade_samples:
+			sample *= float(i) / float(fade_samples)
+		elif i > num_samples - fade_samples:
+			sample *= float(num_samples - i) / float(fade_samples)
+
+		sample = clampf(sample, -1.0, 1.0)
 		var s16 = int(sample * 32767.0)
 		pcm.encode_s16(i * 2, s16)
 
@@ -1590,8 +1611,8 @@ static func _generate_sponge_scrub() -> AudioStreamWAV:
 	stream.format = AudioStreamWAV.FORMAT_16_BITS
 	stream.mix_rate = sample_rate
 	stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
-	stream.loop_begin = int(sample_rate * 0.04)
-	stream.loop_end = int(sample_rate * 0.46)
+	stream.loop_begin = int(sample_rate * 0.05)
+	stream.loop_end = int(sample_rate * 0.55)
 	stream.stereo = false
 	stream.data = pcm
 	return stream

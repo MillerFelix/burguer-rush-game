@@ -19,8 +19,6 @@ signal event_ended(event_type: EventType)
 signal power_outage_occurred(reason: String)
 signal water_supply_state_changed(is_active: bool)
 
-static var instance: DailyEventManager = null
-
 enum EventType {
 	NONE,
 	NETWORK_MAINTENANCE,     # Manutenção na rede elétrica (quedas de energia durante o expediente)
@@ -66,6 +64,8 @@ var game_peak_end_hour: float = 21.0
 ## Histórico de Eventos Diários (para PC / Estatísticas)
 var event_history: Array[Dictionary] = []
 
+static var instance = null
+
 func _enter_tree() -> void:
 	instance = self
 
@@ -73,8 +73,10 @@ func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
-static func get_instance() -> DailyEventManager:
-	return instance
+static func get_instance():
+	if instance and is_instance_valid(instance):
+		return instance
+	return null
 
 func _ready() -> void:
 	var clock = _get_game_clock()

@@ -30,8 +30,14 @@ func _update_visuals() -> void:
 	if not model:
 		model = get_node_or_null("Model")
 	if model:
-		model.scale = Vector3(puddle_size, 1.0, puddle_size)
-		model.visible = (puddle_size > 0.01)
+		var sc = lerpf(0.20, 1.0, puddle_size) if puddle_size > 0.001 else 0.0
+		model.scale = Vector3(sc, 1.0, sc)
+		model.visible = (puddle_size > 0.001)
+		for child in model.get_children():
+			if child is MeshInstance3D:
+				var mat = child.get_active_material(0)
+				if mat is StandardMaterial3D and mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+					mat.albedo_color.a = clampf(puddle_size * 0.70, 0.0, 0.70)
 
 func is_dirty() -> bool:
 	return puddle_size > 0.01

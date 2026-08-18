@@ -9,6 +9,7 @@ enum State {
 }
 
 @export var state: State = State.RAW
+@export var cooking_progress: float = 0.0
 
 @onready var visual_root: Node3D = get_node_or_null("VisualRoot")
 @onready var mesh_raw_strip: Node3D = get_node_or_null("VisualRoot/BaconRawStrip")
@@ -44,7 +45,7 @@ func get_display_name() -> String:
 		State.RAW:
 			return "Tirinha de Bacon (Crua)"
 		State.COOKING:
-			return "Bacon (Fritando na Chapa)"
+			return "Bacon Fritando (%d%%)" % int(cooking_progress) if cooking_progress > 0.0 else "Bacon (Fritando na Chapa)"
 		State.COOKED:
 			return "Bacon Crocante (Pronto)"
 		State.BURNT:
@@ -53,7 +54,7 @@ func get_display_name() -> String:
 			return "Bacon"
 
 func get_interaction_prompt(player: Node = null) -> String:
-	if location != ItemLocation.WORLD:
+	if is_held or location == ItemLocation.PLAYER_HAND:
 		return ""
 	if player and player.get("held_item") != null:
 		return ""
@@ -61,11 +62,11 @@ func get_interaction_prompt(player: Node = null) -> String:
 		State.RAW:
 			return "🖱️ Pegar Tirinha de Bacon Crua"
 		State.COOKING:
-			return "🖱️ Pegar Bacon (Em Preparo)"
+			return "🥓 Bacon Fritando (%d%%)" % int(cooking_progress) if cooking_progress > 0.0 else "🥓 Bacon Fritando"
 		State.COOKED:
-			return "🖱️ Pegar Bacon Crocante Pronto"
+			return "🥓 [Clique] Pegar Bacon Crocante Pronto"
 		State.BURNT:
-			return "🖱️ Pegar Bacon Queimado"
+			return "🗑️ Pegar Bacon Queimado"
 		_:
 			return "🖱️ Pegar Bacon"
 

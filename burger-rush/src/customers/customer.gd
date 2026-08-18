@@ -623,6 +623,7 @@ func on_order_wrong(reason: String = "Pedido incorreto entregue!") -> void:
 	if experience:
 		experience.order_correct = false
 		experience.abandoned = true
+		experience.abandon_type = CustomerExperience.AbandonType.WRONG_ORDER
 		experience.abandon_reason = reason
 		experience.food_quality = 0.0
 
@@ -644,6 +645,8 @@ func abandon_restaurant(reason: String) -> void:
 
 	if experience:
 		experience.abandoned = true
+		if experience.abandon_type == CustomerExperience.AbandonType.NONE:
+			experience.abandon_type = CustomerExperience.AbandonType.TIMEOUT
 		experience.abandon_reason = reason
 		experience.final_mood = mood.current_mood if mood else 0.0
 
@@ -671,6 +674,7 @@ func abandon_restaurant(reason: String) -> void:
 			if is_instance_valid(companion) and companion != self and companion.state != State.LEAVING:
 				if companion.experience:
 					companion.experience.abandoned = true
+					companion.experience.abandon_type = experience.abandon_type if experience else CustomerExperience.AbandonType.TIMEOUT
 					companion.experience.abandon_reason = reason
 					companion.experience.final_mood = companion.mood.current_mood if companion.mood else 0.0
 				companion._submit_review()
@@ -876,8 +880,12 @@ func _update_visual_status() -> void:
 
 		State.LEAVING:
 			if experience and experience.abandoned:
-				label_3d.text = "😡 🚶 Desistiu e foi embora!"
-				label_3d.modulate = Color(1.0, 0.2, 0.2)
+				if experience.abandon_type == CustomerExperience.AbandonType.WRONG_ORDER or "errad" in experience.abandon_reason.to_lower() or "incorret" in experience.abandon_reason.to_lower():
+					label_3d.text = "😡 ❌ 'Esse pedido está errado! Vou embora.'"
+					label_3d.modulate = Color(1.0, 0.2, 0.2)
+				else:
+					label_3d.text = "😡 ⏰ 'Cansei de esperar! Demorou demais, fui.'"
+					label_3d.modulate = Color(1.0, 0.25, 0.25)
 			else:
 				label_3d.text = "%s 👋 Volte sempre!" % emoji
 				label_3d.modulate = Color(0.85, 0.85, 0.85)

@@ -1,6 +1,8 @@
 class_name OrderManager
 extends Node
 
+const MenuPricingManager = preload("res://src/recipes/menu_pricing_manager.gd")
+
 signal order_created(order: Order)
 signal order_updated(order: Order)
 signal order_completed(order: Order)
@@ -69,7 +71,8 @@ func create_group_order(customer: Node, group_size: int, table_id: int = 0, sour
 
 	for _p in range(order.group_size):
 		var b = available_burgers[randi() % available_burgers.size()]
-		order.add_item(b.id, b.name, 1, b.price)
+		var b_price = MenuPricingManager.get_selling_price(b.id)
+		order.add_item(b.id, b.name, 1, b_price)
 
 		var drinks_for_person = 1
 		if bev_mult >= 1.8:
@@ -77,22 +80,28 @@ func create_group_order(customer: Node, group_size: int, table_id: int = 0, sour
 
 		for _k in range(drinks_for_person):
 			var d = available_drinks[randi() % available_drinks.size()]
-			order.add_item(d.id, d.name, 1, d.price)
+			var d_price = MenuPricingManager.get_selling_price(d.id)
+			order.add_item(d.id, d.name, 1, d_price)
 
-	# 2. Acompanhamento (Batata Frita) proporcional e com variação realista
-	var fries_count = 0
+	# 2. Acompanhamento (Batata Frita ou Cebola Frita) proporcional e com variação realista
+	var sides_count = 0
 	if order.group_size == 1:
-		if randf() < 0.4:
-			fries_count = 1
+		if randf() < 0.45:
+			sides_count = 1
 	elif order.group_size == 2:
-		fries_count = 1 if randf() < 0.8 else 2
+		sides_count = 1 if randf() < 0.8 else 2
 	elif order.group_size == 3:
-		fries_count = 1 if randf() < 0.5 else 2
+		sides_count = 1 if randf() < 0.5 else 2
 	elif order.group_size >= 4:
-		fries_count = 2 if randf() < 0.7 else 3
+		sides_count = 2 if randf() < 0.7 else 3
 
-	if fries_count > 0:
-		order.add_item("fries", "Batata Frita", fries_count, 8.0)
+	for _s in range(sides_count):
+		if randf() < 0.5:
+			var f_price = MenuPricingManager.get_selling_price("fries")
+			order.add_item("fries", "Batata Frita", 1, f_price)
+		else:
+			var o_price = MenuPricingManager.get_selling_price("onion_rings")
+			order.add_item("onion_rings", "Cebola Frita", 1, o_price)
 
 	order.state = Order.State.WAITING
 	active_orders.append(order)
@@ -112,25 +121,13 @@ func create_order(customer: Node, product_id: String = "", quantity: int = 1, ta
 	order.source_type = source_type
 	order.created_time = Time.get_ticks_msec() / 1000.0
 
-	var recipe = RecipeDatabase.get_recipe_by_id(product_id)
-	if recipe and recipe.category == "combo" and not recipe.combo_items.is_empty():
-		var combo_price_per_item = recipe.base_price / float(recipe.combo_items.size())
-		for sub_id in recipe.combo_items:
-			var sub_info = _get_product_info(sub_id)
-			order.add_item(
-				sub_id,
-				sub_info.get("name", sub_id.capitalize()),
-				quantity,
-				combo_price_per_item
-			)
-	else:
-		var product_info = _get_product_info(product_id)
-		order.add_item(
-			product_id,
-			product_info.get("name", product_id.capitalize()),
-			quantity,
-			product_info.get("price", 10.0)
-		)
+	var product_info = _get_product_info(product_id)
+	order.add_item(
+		product_id,
+		product_info.get("name", product_id.capitalize()),
+		quantity,
+		product_info.get("price", 10.0)
+	)
 
 	order.state = Order.State.WAITING
 	active_orders.append(order)
@@ -201,34 +198,37 @@ func _pick_random_available_product() -> String:
 	return chosen.id
 
 func _get_product_info(product_id: String) -> Dictionary:
+	var current_price = MenuPricingManager.get_selling_price(product_id)
 	var recipe = RecipeDatabase.get_recipe_by_id(product_id)
 	if recipe:
 		return {
 			"name": recipe.display_name,
-			"price": recipe.base_price
+			"price": current_price
 		}
 
 	match product_id:
 		# Acompanhamentos e Bebidas (fallback caso não estejam no RecipeDatabase)
 		"fries":
-			return {"name": "Batata Frita", "price": 8.0}
+			return {"name": "Batata Frita", "price": current_price}
+		"onion_rings":
+			return {"name": "Cebola Frita", "price": current_price}
 		"soda_cola", "drink_cola":
-			return {"name": "Refrigerante Cola", "price": 6.0}
+			return {"name": "Refrigerante Cola", "price": current_price}
 		"soda_guarana":
-			return {"name": "Refrigerante Guaraná", "price": 6.0}
+			return {"name": "Refrigerante Guaraná", "price": current_price}
 		"soda_sprite":
-			return {"name": "Refrigerante Limão", "price": 6.0}
+			return {"name": "Refrigerante Limão", "price": current_price}
 		"soda_grape":
-			return {"name": "Refrigerante Uva", "price": 6.0}
+			return {"name": "Refrigerante Uva", "price": current_price}
 		"soda_cola_zero":
-			return {"name": "Cola Zero", "price": 6.0}
+			return {"name": "Cola Zero", "price": current_price}
 		"soda", "drink_orange":
-			return {"name": "Refrigerante", "price": 6.0}
+			return {"name": "Refrigerante", "price": current_price}
 		"juice_orange":
-			return {"name": "Suco de Laranja", "price": 7.0}
+			return {"name": "Suco de Laranja", "price": current_price}
 		"juice_grape":
-			return {"name": "Suco de Uva", "price": 7.0}
+			return {"name": "Suco de Uva", "price": current_price}
 		"juice_passion":
-			return {"name": "Suco de Maracujá", "price": 7.0}
+			return {"name": "Suco de Maracujá", "price": current_price}
 		_:
-			return {"name": product_id.capitalize(), "price": 10.0}
+			return {"name": product_id.capitalize(), "price": current_price}

@@ -58,6 +58,15 @@ var weekdays: Array[String] = [
 func _enter_tree() -> void:
 	instance = self
 
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
+
+static func get_instance():
+	if instance and is_instance_valid(instance):
+		return instance
+	return null
+
 func _ready() -> void:
 	current_hour = start_hour
 	current_minute = start_minute

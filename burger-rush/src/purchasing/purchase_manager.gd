@@ -108,19 +108,20 @@ func _initialize_catalog() -> void:
 	_register_catalog_item("bacon", "Bacon", "ingredients", 3.00, 20)
 	_register_catalog_item("egg", "Ovo", "ingredients", 1.50, 20)
 
-	# 2. BATATAS
-	_register_catalog_item("potato_raw", "Saco de Batata", "fries", 1.00, 25)
+	# 2. INSUMOS DE FRITURA (BATATAS & CEBOLAS)
+	_register_catalog_item("potato_raw", "Saco de Batata", "ingredients", 20.00, 25)
+	_register_catalog_item("onion_rings_raw", "Saco de Cebola", "ingredients", 15.00, 25)
 
 	# 3. BEBIDAS (CILINDROS RESERVA - MÁXIMO 1 UNIDADE RESERVA)
-	_register_catalog_item("cylinder_cola", "Cilindro Cola", "beverages", 15.00, 1)
-	_register_catalog_item("cylinder_cola_zero", "Cilindro Cola Zero", "beverages", 15.00, 1)
-	_register_catalog_item("cylinder_soda", "Cilindro Soda", "beverages", 15.00, 1)
-	_register_catalog_item("cylinder_citrus", "Cilindro Citrus", "beverages", 15.00, 1)
+	_register_catalog_item("cylinder_cola", "Cilindro Cola", "beverages", 80.00, 1)
+	_register_catalog_item("cylinder_cola_zero", "Cilindro Cola Zero", "beverages", 80.00, 1)
+	_register_catalog_item("cylinder_soda", "Cilindro Soda", "beverages", 80.00, 1)
+	_register_catalog_item("cylinder_citrus", "Cilindro Citrus", "beverages", 80.00, 1)
 
 	# BEBIDAS (POLPAS DE FRUTA)
-	_register_catalog_item("pulp_orange", "Polpa de Laranja", "beverages", 2.50, 10)
-	_register_catalog_item("pulp_grape", "Polpa de Uva", "beverages", 2.50, 10)
-	_register_catalog_item("pulp_strawberry", "Polpa de Morango", "beverages", 2.80, 10)
+	_register_catalog_item("pulp_orange", "Polpa de Laranja", "beverages", 15.00, 10)
+	_register_catalog_item("pulp_grape", "Polpa de Uva", "beverages", 15.00, 10)
+	_register_catalog_item("pulp_strawberry", "Polpa de Morango", "beverages", 15.00, 10)
 
 	# 4. EMBALAGENS
 	_register_catalog_item("burger_box", "Caixa de Lanche", "supplies", 0.50, 30)

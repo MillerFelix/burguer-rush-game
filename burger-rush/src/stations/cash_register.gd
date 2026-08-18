@@ -1,6 +1,9 @@
 class_name CashRegister
 extends StaticBody3D
 
+const FinanceManager = preload("res://src/economy/finance_manager.gd")
+const EconomyManager = preload("res://src/economy/economy_manager.gd")
+
 static var instance: CashRegister = null
 
 @onready var status_label: Label3D = $StatusLabel
@@ -100,12 +103,22 @@ func process_checkout(player: Node3D = null) -> void:
 	register_balance += order_price
 
 	# Processa pagamento financeiro e XP
-	var economy = EconomyManager.get_instance()
-	if not economy and is_inside_tree():
-		economy = get_tree().root.find_child("EconomyManager", true, false) as EconomyManager
-	if economy:
-		economy.add_money(order_price)
-		economy.register_sale(order_price)
+	var fin = FinanceManager.get_instance()
+	if not fin and is_inside_tree():
+		fin = get_tree().root.find_child("FinanceManager", true, false) as FinanceManager
+
+	var channel = "dine_in"
+	if cust.current_order and cust.current_order.source_type:
+		channel = cust.current_order.source_type.to_lower()
+
+	if fin:
+		fin.record_sale(order_price, channel, "Venda no Caixa")
+	else:
+		var economy = EconomyManager.get_instance()
+		if not economy and is_inside_tree():
+			economy = get_tree().root.find_child("EconomyManager", true, false) as EconomyManager
+		if economy:
+			economy.add_money(order_price, "Venda no Caixa")
 
 	var prog = ProgressionManager.get_instance()
 	if prog:

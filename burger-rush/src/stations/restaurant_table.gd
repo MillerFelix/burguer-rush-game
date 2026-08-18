@@ -162,12 +162,18 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 			_show_player_feedback(player, "⚠️ Recolha a bandeja antes de limpar a mesa!")
 		return false
 
-	dirt_amount = maxf(0.0, dirt_amount - (delta / 1.2))
+	dirt_amount = maxf(0.0, dirt_amount - (delta / 5.0))
 
 	var dirt_mesh = get_node_or_null("Model/TableTop/TableTopDirt")
 	if dirt_mesh:
 		dirt_mesh.visible = (dirt_amount > 0.0)
-		dirt_mesh.scale = Vector3.ONE * clampf(dirt_amount, 0.2, 1.0)
+		var sc = lerpf(0.20, 1.0, dirt_amount) if dirt_amount > 0.001 else 0.0
+		dirt_mesh.scale = Vector3(sc, sc, sc)
+		for child in dirt_mesh.get_children():
+			if child is MeshInstance3D:
+				var mat = child.get_active_material(0)
+				if mat is StandardMaterial3D and mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+					mat.albedo_color.a = clampf(dirt_amount * 0.95, 0.0, 0.95)
 
 	if dirt_amount <= 0.0:
 		table_state = TableState.AVAILABLE
@@ -178,28 +184,39 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 
 	return false
 
+func get_dirt_level() -> float:
+	return dirt_amount if table_state == TableState.DIRTY else 0.0
+
 func clean_table(player: Node3D) -> void:
 	if table_state != TableState.DIRTY:
 		return
 
-	# Recolhe e descarta quaisquer bandejas usadas sobre a mesa
-	for item in served_items:
-		if is_instance_valid(item):
-			if item.get_parent():
-				item.get_parent().remove_child(item)
-			item.queue_free()
-	served_items.clear()
+	# Se tiver bandeja na mesa, recolhe a bandeja primeiro (mantendo a mesa DIRTY para ser esfregada com a bucha)
+	if has_tray_on_table():
+		for item in served_items:
+			if is_instance_valid(item):
+				if item.get_parent():
+					item.get_parent().remove_child(item)
+				item.queue_free()
+		served_items.clear()
 
-	var plate_slot = get_node_or_null("PlateSlot")
-	if plate_slot:
-		for c in plate_slot.get_children():
-			if is_instance_valid(c):
-				c.queue_free()
+		var plate_slot = get_node_or_null("PlateSlot")
+		if plate_slot:
+			for c in plate_slot.get_children():
+				if is_instance_valid(c):
+					c.queue_free()
 
-	if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
-		dirty_dish_instance.queue_free()
-		dirty_dish_instance = null
+		if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
+			dirty_dish_instance.queue_free()
+			dirty_dish_instance = null
 
+		dirt_amount = 1.0
+		_update_visual_status()
+		if player:
+			_show_player_feedback(player, "🗑️ Bandeja recolhida! Agora higienize a mesa com a bucha.")
+		return
+
+	# Se não tiver bandeja, higieniza completamente a mesa
 	dirt_amount = 0.0
 	table_state = TableState.AVAILABLE
 	_update_visual_status()
@@ -281,6 +298,12 @@ func _resolve_product_ids(item: Node3D) -> Array[String]:
 	if item.get("item_id") != null:
 		var iid = str(item.get("item_id"))
 		if iid != "" and not ids.has(iid): ids.append(iid)
+	if item.get("recipe_id") != null:
+		var rid = str(item.get("recipe_id"))
+		if rid != "" and not ids.has(rid): ids.append(rid)
+	if item is PackagedBurger or (item.get("item_id") != null and str(item.get("item_id")) == "packaged_burger"):
+		if not ids.has("burger"): ids.append("burger")
+		if not ids.has("cheeseburger"): ids.append("cheeseburger")
 	if item.get("item_type") != null:
 		var itype = str(item.get("item_type"))
 		if itype != "" and not ids.has(itype): ids.append(itype)
@@ -381,9 +404,15 @@ func _serve_tray(player: Node3D, tray: Node3D) -> void:
 func _update_visual_status() -> void:
 	var dirt_mesh = get_node_or_null("Model/TableTop/TableTopDirt")
 	if dirt_mesh:
-		dirt_mesh.visible = (table_state == TableState.DIRTY)
-		if table_state == TableState.DIRTY:
-			dirt_mesh.scale = Vector3.ONE * clampf(dirt_amount if dirt_amount > 0.0 else 1.0, 0.2, 1.0)
+		dirt_mesh.visible = (table_state == TableState.DIRTY and dirt_amount > 0.0)
+		if table_state == TableState.DIRTY and dirt_amount > 0.0:
+			var sc = lerpf(0.20, 1.0, dirt_amount)
+			dirt_mesh.scale = Vector3(sc, sc, sc)
+			for child in dirt_mesh.get_children():
+				if child is MeshInstance3D:
+					var mat = child.get_active_material(0)
+					if mat is StandardMaterial3D and mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
+						mat.albedo_color.a = clampf(dirt_amount * 0.95, 0.0, 0.95)
 
 	if not status_label:
 		status_label = get_node_or_null("StatusLabel")

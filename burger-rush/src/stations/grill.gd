@@ -30,13 +30,15 @@ const IDEAL_TEMP_MAX: float = 220.0
 
 @export var max_capacity: int = 4
 
-# Tempos de fritura realistas e equilibrados (segundos)
-@export var patty_side_cook_time: float = 10.0 # 10s por lado = 20s total
-@export var patty_burn_time: float = 10.0 # tempo adicional até queimar
-@export var bacon_cook_time: float = 6.0
-@export var bacon_burn_time: float = 7.0
-@export var egg_cook_time: float = 6.5
-@export var egg_dry_time: float = 5.0
+# Tempos de fritura realistas e equilibrados (segundos) - Aumentados em ~50%
+@export var patty_side_cook_time: float = 15.0 # 15s por lado = 30s total (aumento de 50% de 10s)
+@export var patty_burn_time: float = 15.0 # 15s adicional até queimar (aumento de 50% de 10s)
+@export var cheese_cook_time: float = 9.0 # 9s para derreter (aumento de 50% de 6s)
+@export var cheese_burn_time: float = 10.5 # 10.5s adicional até queimar (aumento de 50% de 7s)
+@export var bacon_cook_time: float = 12.0 # 12s para fritar (aumento de 100% de 6s)
+@export var bacon_burn_time: float = 14.0 # 14s adicional até queimar
+@export var egg_cook_time: float = 8.125 # 8.125s para fritar (aumento de 25% de 6.5s)
+@export var egg_dry_time: float = 6.25 # 6.25s adicional até ressecar
 
 @onready var cooking_slot: Node3D = $CookingSlot
 @onready var fluid_column_pivot: Node3D = get_node_or_null("Model/ControlPanel/HorizontalThermometer/FluidColumnPivot")
@@ -182,17 +184,19 @@ func _process(delta: float) -> void:
 					"cheese":
 						var cheese = node as Cheese
 						if cheese:
-							var progress_delta = (100.0 / 6.0) * delta * speed
+							var progress_delta = (100.0 / cheese_cook_time) * delta * speed
 							cheese.advance_cooking(progress_delta)
 							if cheese.is_melted():
-								if timer > (6.0 + 7.0):
+								if timer > (cheese_cook_time + cheese_burn_time):
 									cheese.set_burnt()
 									any_burning = true
-								elif timer > (6.0 + 7.0 * 0.7):
+								elif timer > (cheese_cook_time + cheese_burn_time * 0.7):
 									any_burning = true
 					"bacon":
 						var bacon = node as Bacon
 						if bacon:
+							var b_pct = clampf((timer / bacon_cook_time) * 100.0, 0.0, 100.0)
+							bacon.cooking_progress = b_pct
 							if timer >= bacon_cook_time + bacon_burn_time:
 								bacon.set_state(Bacon.State.BURNT)
 								any_burning = true
@@ -203,6 +207,8 @@ func _process(delta: float) -> void:
 					"egg":
 						var egg = node as Egg
 						if egg:
+							var e_pct = clampf((timer / egg_cook_time) * 100.0, 0.0, 100.0)
+							egg.cooking_progress = e_pct
 							if timer >= egg_cook_time + egg_dry_time + 4.0:
 								egg.set_state(Egg.State.BURNT)
 								any_burning = true
@@ -441,13 +447,17 @@ func interact_item(player: Node3D) -> void:
 	# CASO 3: Jogador com BUCHA DE LIMPEZA (Slot 2)
 	if tool_slot == 2:
 		if is_dirty():
-			clean_progress(1.5, player)
+			# A limpeza ocorre de forma contínua pelo Player segurando clique esquerdo
+			pass
 		else:
 			_show_feedback(player, "✨ A chapa da grelha já está limpa e brilhando!")
 		return
 
 func is_dirty() -> bool:
 	return dirt_level >= 1.0
+
+func get_dirt_level() -> float:
+	return dirt_level
 
 func add_dirt(amount: float = 0.25) -> void:
 	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)
@@ -457,20 +467,27 @@ func _update_dirt_visuals() -> void:
 	var grill_dirt = get_node_or_null("Model/GrillPlate/GrillDirt")
 	if grill_dirt:
 		grill_dirt.visible = (dirt_level > 0.001)
-		grill_dirt.scale.y = clampf(dirt_level, 0.02, 1.0)
-		grill_dirt.scale.x = lerpf(0.80, 1.0, dirt_level)
-		grill_dirt.scale.z = lerpf(0.80, 1.0, dirt_level)
-		if grill_dirt is MeshInstance3D and grill_dirt.material_override:
-			var mat = grill_dirt.material_override as StandardMaterial3D
-			if mat:
-				mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-				mat.albedo_color.a = clampf(dirt_level, 0.0, 1.0)
+		var sc = lerpf(0.25, 1.0, dirt_level) if dirt_level > 0.001 else 0.0
+		for child in grill_dirt.get_children():
+			if child is MeshInstance3D:
+				child.scale = Vector3(sc, sc, sc)
+				var mat = child.get_active_material(0)
+				if mat is StandardMaterial3D:
+					mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+					mat.albedo_color.a = clampf(dirt_level * 0.95, 0.0, 0.95)
+
+func clean_station(player: Node3D = null) -> void:
+	dirt_level = 0.0
+	_update_dirt_visuals()
+	if player:
+		_show_feedback(player, "✨ Grelha limpa e pronta para uso!")
 
 func clean_progress(delta: float, player: Node3D = null) -> bool:
 	if dirt_level <= 0.0:
 		return true
 
-	dirt_level = maxf(0.0, dirt_level - (delta / 1.5))
+	# Limpeza de bancadas e grelha requer ~5.0 segundos contínuos de esfregação
+	dirt_level = maxf(0.0, dirt_level - (delta / 5.0))
 	_update_dirt_visuals()
 
 	if dirt_level <= 0.0:
@@ -651,14 +668,63 @@ func get_interaction_prompt(player: Node = null) -> String:
 					return "🍳 [Clique] RETIRAR Queijo Derretido!"
 				else:
 					return "🍳 [Clique] Retirar %s" % c.get_display_name()
-			elif node is Bacon or node is Egg:
-				return "🍳 [Clique] Retirar %s" % node.get_display_name()
+			elif node is Bacon:
+				var b = node as Bacon
+				if b.state == Bacon.State.COOKED:
+					return "🥓 [Clique] RETIRAR Bacon Crocante Pronto!"
+				elif b.state == Bacon.State.BURNT:
+					return "🗑️ [Clique] Retirar Bacon Queimado"
+				else:
+					return "🥓 Bacon Fritando (%d%%)" % int(b.cooking_progress)
+			elif node is Egg:
+				var e = node as Egg
+				if e.state == Egg.State.COOKED:
+					return "🍳 [Clique] RETIRAR Ovo Frito Pronto!"
+				elif e.state == Egg.State.BURNT:
+					return "🗑️ [Clique] Retirar Ovo Queimado"
+				elif e.state == Egg.State.DRYING:
+					return "⚠️ [Clique] Retirar Ovo Ressecando!"
+				else:
+					return "🍳 Ovo Fritando (%d%%)" % int(e.cooking_progress)
 		return "🍳 Espátula — Nenhum alimento na chapa"
 
 	# Se estiver com a mão livre e segurando alimento fritável
 	if tool_slot == 3 and held != null:
 		if can_cook_item(held):
 			return "✋ [Clique] Colocar %s na Chapa" % held.get_display_name()
+
+	# Se estiver com a mão livre olhando para os alimentos
+	if tool_slot == 3 and held == null and not active_items.is_empty():
+		var target = _get_aimed_item(player)
+		if not target.is_empty():
+			var node = target["item"]
+			if node is Bacon:
+				var b = node as Bacon
+				if b.state == Bacon.State.COOKED:
+					return "🥓 [Clique] Pegar Bacon Crocante Pronto"
+				elif b.state == Bacon.State.BURNT:
+					return "🗑️ [Clique] Pegar Bacon Queimado"
+				else:
+					return "🥓 Bacon Fritando (%d%%)" % int(b.cooking_progress)
+			elif node is Egg:
+				var e = node as Egg
+				if e.state == Egg.State.COOKED:
+					return "🍳 [Clique] Pegar Ovo Frito Pronto"
+				elif e.state == Egg.State.BURNT:
+					return "🗑️ [Clique] Pegar Ovo Queimado"
+				elif e.state == Egg.State.DRYING:
+					return "⚠️ [Clique] Pegar Ovo Ressecando"
+				else:
+					return "🍳 Ovo Fritando (%d%%)" % int(e.cooking_progress)
+			elif node is Patty:
+				var p = node as Patty
+				if p.is_fully_cooked():
+					return "⚠️ [1] Equipe a Espátula para retirar o hambúrguer pronto!"
+				elif p.state == Patty.State.READY_SIDE_1:
+					return "⚠️ [1] Equipe a Espátula para virar o hambúrguer!"
+				else:
+					var p_pct = int(p.side_a_cooked) if not p.is_flipped else int(p.side_b_cooked)
+					return "🍔 Hambúrguer Grelhando (%d%%)" % p_pct
 
 	# Interação com botão de ligar/desligar
 	if not is_on:

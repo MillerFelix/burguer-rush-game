@@ -10,6 +10,11 @@ enum State {
 
 @export var state: State = State.RAW
 
+func _init() -> void:
+	item_id = "potato_raw"
+	display_name = "Saco de Batata"
+	item_type = "ingredient"
+
 func _ready() -> void:
 	item_id = "potato_raw"
 	item_type = "ingredient"
@@ -19,11 +24,23 @@ func set_state(new_state: State) -> void:
 	state = new_state
 	_update_visuals()
 
+func get_display_name() -> String:
+	if state == State.RAW:
+		return "Saco de Batata"
+	return display_name
+
+func get_interaction_prompt(player: Node = null) -> String:
+	if location != ItemLocation.WORLD or is_held:
+		return ""
+	if state == State.RAW:
+		return "🖱️ [Clique] Pegar Saco de Batata"
+	return "🖱️ [Clique] Pegar %s" % display_name
+
 func _update_visuals() -> void:
 	match state:
 		State.RAW:
-			display_name = "Saco de Batata Frita Congelada"
-			prompt_text = "🖱️ [Clique] Pegar Saco de Batata Congelada"
+			display_name = "Saco de Batata"
+			prompt_text = "🖱️ [Clique] Pegar Saco de Batata"
 			item_id = "potato_raw"
 		State.COOKING:
 			display_name = "Batata Fritando"

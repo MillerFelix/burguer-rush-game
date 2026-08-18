@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://floor_dirt_spot_scene_uid"]
 
 [ext_resource type="Script" path="res://src/stations/floor_dirt_spot.gd" id="1_spot_script"]
+[ext_resource type="Texture2D" path="res://assets/textures/dirt_stain_floor.png" id="2_floor_dirt_tex"]
 
 ; ================================================================
 ; COLISÃO DA MANCHA NO CHÃO
@@ -16,29 +17,29 @@ radius = 0.35
 
 [sub_resource type="StandardMaterial3D" id="Material_SodaSpill"]
 transparency = 1
-albedo_color = Color(0.24, 0.16, 0.12, 0.85)
-roughness = 0.25
+cull_mode = 2
+albedo_texture = ExtResource("2_floor_dirt_tex")
+albedo_color = Color(1, 1, 1, 0.95)
+roughness = 0.30
 
 [sub_resource type="StandardMaterial3D" id="Material_SauceDroplet"]
 transparency = 1
-albedo_color = Color(0.68, 0.18, 0.12, 0.90)
-roughness = 0.40
+albedo_color = Color(0.18, 0.14, 0.10, 0.85)
+roughness = 0.35
 
 ; ================================================================
 ; MESHES DA MANCHA
 ; ================================================================
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_SpotBase"]
+[sub_resource type="QuadMesh" id="QuadMesh_SpotBase"]
 material = SubResource("Material_SodaSpill")
-top_radius = 0.24
-bottom_radius = 0.28
-height = 0.003
-radial_segments = 20
+size = Vector2(0.60, 0.56)
+orientation = 1
 
 [sub_resource type="SphereMesh" id="SphereMesh_SauceDrop"]
 material = SubResource("Material_SauceDroplet")
 radius = 0.025
-height = 0.012
+height = 0.008
 radial_segments = 8
 rings = 3
 
@@ -57,12 +58,12 @@ shape = SubResource("CylinderShape3D_Spot")
 
 [node name="MainSpot" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.003, 0)
-mesh = SubResource("CylinderMesh_SpotBase")
+mesh = SubResource("QuadMesh_SpotBase")
 
 [node name="Droplet1" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.004, 0.10)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.004, 0.14)
 mesh = SubResource("SphereMesh_SauceDrop")
 
 [node name="Droplet2" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(0.7, 0, 0, 0, 1, 0, 0, 0, 0.7, -0.18, 0.004, -0.16)
+transform = Transform3D(0.7, 0, 0, 0, 1, 0, 0, 0, 0.7, -0.22, 0.004, -0.18)
 mesh = SubResource("SphereMesh_SauceDrop")

@@ -37,6 +37,9 @@ const TEX_CHEDDAR = preload("res://assets/textures/cheese_cheddar.png")
 const TEX_PRATO = preload("res://assets/textures/cheese_prato.png")
 const TEX_NORMAL = preload("res://assets/textures/cheese_normal.png")
 
+func _init() -> void:
+	is_grillable = true
+
 func _ready() -> void:
 	is_grillable = true
 	match cheese_type:
@@ -77,7 +80,7 @@ func process_cooking(delta: float, grill_temp: float) -> void:
 	if grill_temp < 90.0 or state == State.BURNT:
 		return
 	var heat_factor = clampf((grill_temp - 90.0) / 70.0, 0.5, 1.5)
-	var delta_pct = (100.0 / 6.0) * delta * heat_factor
+	var delta_pct = (100.0 / 9.0) * delta * heat_factor
 	advance_cooking(delta_pct)
 
 func set_burnt() -> void:
