@@ -28,6 +28,12 @@ func _ensure_assembly() -> void:
 			assembly.position = Vector3.ZERO
 			assembly.base_bun = self
 
+func has_ingredients() -> bool:
+	_ensure_assembly()
+	if assembly:
+		return assembly.stacked_items.size() > 0 or assembly.state != BurgerAssembly.State.EMPTY
+	return false
+
 func get_interaction_prompt(player: Node = null) -> String:
 	if location != ItemLocation.WORLD or is_held:
 		return ""

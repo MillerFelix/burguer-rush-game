@@ -27,6 +27,9 @@ var registered_appliances: Dictionary = {}
 ## Consumo total acumulado no dia em kWh
 var total_energy_kwh: float = 0.0
 
+func _init() -> void:
+	instance = self
+
 func _enter_tree() -> void:
 	instance = self
 
@@ -173,3 +176,6 @@ func reset_daily_consumption() -> void:
 	for id in registered_appliances.keys():
 		registered_appliances[id]["active_seconds"] = 0.0
 		registered_appliances[id]["total_kwh"] = 0.0
+
+func start_new_day() -> void:
+	reset_daily_consumption()

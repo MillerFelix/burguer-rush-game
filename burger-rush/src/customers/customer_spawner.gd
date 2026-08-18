@@ -108,11 +108,11 @@ func _get_max_concurrent_customers(time_h: float) -> int:
 	if time_h < 11.5:
 		return 2 # Abertura: Máximo 2 pessoas
 	elif time_h < 14.5:
-		return 4 # Almoço: 4 pessoas simultâneas no salão
+		return 3 # Almoço: 3 pessoas simultâneas no salão
 	elif time_h < 17.5:
 		return 3 # Tarde: 3 pessoas
 	elif time_h <= 21.0:
-		return 5 # Jantar: 5 pessoas
+		return 4 # Jantar: 4 pessoas
 	return 2 # Encerramento
 
 func _count_dining_customers() -> int:
@@ -132,20 +132,20 @@ func _count_dining_customers() -> int:
 	return count
 
 func _calculate_interval_for_time(time_h: float) -> float:
-	# CURVA DINÂMICA MODERADA E EQUILIBRADA (10:00 — 22:00):
-	# Dá tempo suficiente para cozinhar, montar lanches, atender mesas/drive-thru, limpar e repor estoque
-	var base_interval = 40.0
+	# CURVA DINÂMICA EQUILIBRADA (10:00 — 22:00):
+	# Proporciona tempo natural para preparar os pedidos, cozinhar, fritar, atender e limpar
+	var base_interval = 50.0
 
 	if time_h < 11.5:
-		base_interval = randf_range(42.0, 65.0) # Abertura tranquila
+		base_interval = randf_range(52.0, 78.0) # Abertura tranquila
 	elif time_h < 14.5:
-		base_interval = randf_range(32.0, 48.0) # Almoço moderado
+		base_interval = randf_range(40.0, 60.0) # Almoço moderado
 	elif time_h < 17.5:
-		base_interval = randf_range(40.0, 60.0) # Tarde espaçada
+		base_interval = randf_range(50.0, 72.0) # Tarde espaçada
 	elif time_h <= 21.0:
-		base_interval = randf_range(34.0, 50.0) # Jantar moderado
+		base_interval = randf_range(42.0, 62.0) # Jantar moderado
 	else:
-		base_interval = randf_range(55.0, 80.0) # Fechamento lento
+		base_interval = randf_range(65.0, 95.0) # Fechamento lento
 
 	# Aplicação do multiplicador da Intensidade do Dia
 	var intensity_multiplier = 1.0

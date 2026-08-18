@@ -276,20 +276,20 @@ func _set_slots_enabled(enabled: bool) -> void:
 	if col_pickle: col_pickle.disabled = not enabled
 
 # ─── Manipulação de Ingredientes (Clique do Mouse) ─────────────
-func get_ingredient_prompt(player: Node, ing_id: String) -> String:
+func get_ingredient_prompt(player: Node3D, ing_id: String) -> String:
 	if not is_open:
 		return ""
-
 	var inv = InventoryManager.get_instance()
 	var ing_info = _get_ingredient_info(ing_id)
 	var ing_name = ing_info.name
 	var icon = ing_info.icon
 
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if _is_matching_ingredient(held, ing_id):
-			return "%s 🖱️ Devolver %s" % [icon, ing_name]
-		return ""
+	if player:
+		if player.has_method("is_holding_large_item") and player.is_holding_large_item():
+			var held = player.get("held_item")
+			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+				return "📦 🖱️ Armazenar %s na geladeira" % ing_name
+			return ""
 
 	var stock = inv.get_stock(ing_id) if inv else 0
 	if stock <= 0:
@@ -310,35 +310,46 @@ func handle_ingredient_interaction(player: Node3D, ing_id: String) -> void:
 	var ing_name = ing_info.name
 	var icon = ing_info.icon
 
-	# Caso 1: Jogador segurando um item -> Devolução
-	if player.get("held_item") != null:
+	# Caso 1: Devolução de ingrediente segurado na mão
+	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
 		if _is_matching_ingredient(held, ing_id):
-			player.take_held_item().queue_free()
+			var ret_item = player.take_held_item()
+			if ret_item:
+				ret_item.queue_free()
 			inv.add_stock(ing_id, 1)
 			_show_feedback(player, "%s Devolveu %s à geladeira" % [icon, ing_name])
 			_update_all_visual_stocks()
-		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-			var box_item_id = str(held.get("contained_item_id"))
-			var valid_fridge_items = ["lettuce", "tomato", "onion", "red_onion", "pickle", "potato_raw", "onion_rings_raw"]
-			if box_item_id == ing_id or (box_item_id == "" and ing_id in valid_fridge_items):
-				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-				player.take_held_item().queue_free()
-				inv.add_stock(ing_id, qty)
-				if door_audio:
-					door_audio.stream = SoundSynthesizer.get_stream("box_place")
-					door_audio.play()
-				_show_feedback(player, "📦 %s armazenado (+%d un.)!" % [ing_name, qty])
-				_update_all_visual_stocks()
-			elif box_item_id in valid_fridge_items:
-				_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+			return
+		elif player.has_method("is_holding_large_item") and player.is_holding_large_item():
+			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+				var box_item_id = str(held.get("contained_item_id"))
+				var valid_fridge_items = ["lettuce", "tomato", "onion", "red_onion", "pickle", "potato_raw", "onion_rings_raw"]
+				if box_item_id == ing_id or (box_item_id == "" and ing_id in valid_fridge_items):
+					var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+					player.take_held_item().queue_free()
+					inv.add_stock(ing_id, qty)
+					if door_audio:
+						door_audio.stream = SoundSynthesizer.get_stream("box_place")
+						door_audio.play()
+					_show_feedback(player, "📦 %s armazenado (+%d un.)!" % [ing_name, qty])
+					_update_all_visual_stocks()
+					return
+				elif box_item_id in valid_fridge_items:
+					_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+					return
+				else:
+					_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+					return
 			else:
-				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
-		else:
-			_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
+				_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
+				return
+
+	# Caso 2: Retirada de ingrediente para a mão / slots rápidos
+	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(ing_id):
+		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
 		return
 
-	# Caso 2: Jogador com as mãos livres -> Retirada
 	if not inv.has_stock(ing_id, 1):
 		_show_feedback(player, "❌ Sem estoque de %s! Compre no computador." % ing_name)
 		return

@@ -65,6 +65,8 @@ enum Zone {
 @export var employee_name: String = "Carlos"
 @export var role: Role = Role.GENERAL
 @export var weekly_salary: float = 250.0
+@export var daily_salary: float = 50.0
+@export var hired_day: int = 1
 
 func set_role(new_role: Role) -> void:
 	role = new_role
@@ -72,7 +74,7 @@ func set_role(new_role: Role) -> void:
 func get_role_name() -> String:
 	match role:
 		Role.GENERAL:
-			return "🛠️ Operacional Geral"
+			return "🛠️ Atendente & Auxiliar Geral"
 		Role.GRILL:
 			return "🍳 Chapa"
 		Role.ATTENDANT:
@@ -82,6 +84,110 @@ func get_role_name() -> String:
 		Role.UNASSIGNED:
 			return "⚪ Sem Função"
 	return "Funcionário"
+
+## Retorna a descrição exata do status atual do funcionário
+func get_current_status_text() -> String:
+	match state:
+		State.IDLE_WAITING, State.RETURNING_TO_REST:
+			return "Aguardando tarefa"
+		State.MOVING_TO_SINK, State.WASHING_SPONGE:
+			return "Lavando a bucha"
+		State.CLEANING_SURFACE:
+			if current_task and is_instance_valid(current_task.target_node):
+				var tgt = current_task.target_node
+				if tgt is RestaurantTable:
+					return "Limpando mesa"
+				elif tgt.is_in_group("floor_puddles") or tgt.is_in_group("floor_dirt_spots") or tgt.name.begins_with("Floor"):
+					return "Limpando chão"
+				else:
+					return "Limpando bancada"
+			return "Limpando superfície"
+		State.SERVING_CUSTOMER:
+			return "Atendendo cliente"
+		State.SERVING_DRIVETHRU:
+			return "Atendendo drive-thru"
+		State.OPERATING_CASHIER:
+			return "Trabalhando no caixa"
+		State.MOVING_TO_TASK:
+			if current_task:
+				match current_task.task_type:
+					EmployeeTask.TaskType.CLEAN_TABLE:
+						return "Limpando mesa"
+					EmployeeTask.TaskType.CLEAN_PUDDLE, EmployeeTask.TaskType.CLEAN_FLOOR_SPOT:
+						return "Limpando chão"
+					EmployeeTask.TaskType.CLEAN_STATION:
+						return "Limpando bancada"
+					EmployeeTask.TaskType.SERVE_CUSTOMER:
+						return "Atendendo cliente"
+					EmployeeTask.TaskType.SERVE_DRIVETHRU:
+						return "Atendendo drive-thru"
+					EmployeeTask.TaskType.OPERATE_CASHIER:
+						return "Trabalhando no caixa"
+					EmployeeTask.TaskType.RESTOCK:
+						return "Guardando mercadorias"
+			return "Aguardando tarefa"
+	return "Aguardando tarefa"
+
+## Retorna a tarefa atual em formato de destaque
+func get_current_task_text() -> String:
+	match state:
+		State.IDLE_WAITING:
+			return "Aguardando tarefa"
+		State.RETURNING_TO_REST:
+			return "Retornando ao posto de atendimento"
+		State.MOVING_TO_SINK:
+			return "Indo à pia para higienizar a bucha"
+		State.WASHING_SPONGE:
+			return "Lavando a bucha na pia industrial"
+		State.CLEANING_SURFACE:
+			if current_task and is_instance_valid(current_task.target_node):
+				var tgt = current_task.target_node
+				if tgt is RestaurantTable:
+					return "Limpando e higienizando a Mesa #%d" % tgt.table_id
+				elif tgt.is_in_group("floor_puddles") or tgt.name.begins_with("FloorPuddle"):
+					return "Secando poça de água no chão"
+				elif tgt.is_in_group("floor_dirt_spots") or tgt.name.begins_with("FloorDirt"):
+					return "Limpando mancha de sujeira no piso"
+				elif tgt.has_method("clean_grill"):
+					return "Limpando e raspando a chapa"
+				else:
+					return "Limpando bancada de preparo"
+			return "Higienizando superfície"
+		State.SERVING_CUSTOMER:
+			if current_task and is_instance_valid(current_task.target_node) and current_task.target_node is RestaurantTable:
+				return "Anotando pedido dos clientes na Mesa #%d" % current_task.target_node.table_id
+			return "Atendendo clientes no salão"
+		State.SERVING_DRIVETHRU:
+			return "Atendendo veículo na janela do Drive-Thru"
+		State.OPERATING_CASHIER:
+			return "Processando pagamento no caixa"
+		State.MOVING_TO_TASK:
+			if current_task:
+				match current_task.task_type:
+					EmployeeTask.TaskType.CLEAN_TABLE:
+						if is_instance_valid(current_task.target_node) and current_task.target_node is RestaurantTable:
+							return "Indo limpar a Mesa #%d" % current_task.target_node.table_id
+						return "Indo limpar mesa"
+					EmployeeTask.TaskType.CLEAN_PUDDLE, EmployeeTask.TaskType.CLEAN_FLOOR_SPOT:
+						return "Indo limpar sujeira no chão"
+					EmployeeTask.TaskType.CLEAN_STATION:
+						return "Indo higienizar equipamento/bancada"
+					EmployeeTask.TaskType.SERVE_CUSTOMER:
+						return "Indo atender cliente no salão"
+					EmployeeTask.TaskType.SERVE_DRIVETHRU:
+						return "Indo atender veículo no Drive-Thru"
+					EmployeeTask.TaskType.OPERATE_CASHIER:
+						return "Indo atender fila do caixa"
+					EmployeeTask.TaskType.RESTOCK:
+						return "Guardando caixa de mercadorias no estoque"
+			return "Aguardando tarefa"
+	return "Aguardando tarefa"
+
+## Retorna o estado resumido de trabalho: Trabalhando vs Aguardando
+func get_work_state_text() -> String:
+	if state in [State.MOVING_TO_TASK, State.MOVING_TO_SINK, State.WASHING_SPONGE, State.CLEANING_SURFACE, State.SERVING_CUSTOMER, State.SERVING_DRIVETHRU, State.OPERATING_CASHIER]:
+		return "Trabalhando"
+	return "Aguardando"
 
 @onready var animator: HumanoidAnimator = $HumanoidAnimator
 @onready var hold_position: Node3D = $HoldPosition
@@ -202,7 +308,7 @@ func get_zone_of_pos(pos: Vector3) -> Zone:
 ## Constrói caminho em malha de waypoints respeitando todas as paredes, balcão e portas
 func _build_path_to(dest: Vector3, _use_alt: bool = false) -> Array[Vector3]:
 	var path: Array[Vector3] = []
-	var start = global_position
+	var start = global_position if is_inside_tree() else position
 	var from_zone = get_zone_of_pos(start)
 	var to_zone = get_zone_of_pos(dest)
 

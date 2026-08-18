@@ -1057,7 +1057,552 @@ theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
 theme_override_font_sizes/font_size = 12
 text = "💡 Mantenha as contas em dia e economize energia fechando portas de geladeiras e desligando equipamentos sem uso."
 
-; ─── ABA 6: PLACEHOLDER ───────────────────────────────────────────
+; ─── ABA 6: FUNCIONÁRIOS (EMPLOYEES TAB) ──────────────────────────
+[node name="EmployeesTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+; ── TopBar: Título e Resumo
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "👥 GESTÃO DE FUNCIONÁRIO DO RESTAURANTE"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="EmployeesSummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "1 Vaga Operacional Disponível"
+
+; ── Scroll com o Conteúdo do Funcionário
+[node name="EmployeesScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/EmployeesScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="EmployeesContentVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/EmployeesScroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+; ── Barra Inferior Informativa
+[node name="EmployeesBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/EmployeesBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/EmployeesBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 O funcionário atua autonomamente no salão, mesas, drive-thru, caixa e limpeza para otimizar o restaurante."
+
+; ─── ABA 7: PEDIDOS & DELIVERY (ORDERS TAB) ───────────────────────
+[node name="OrdersTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+; ── TopBar: Título e Resumo
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "📋 GESTÃO DE PEDIDOS & DELIVERY"
+
+[node name="Spacer" type="Control" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="OrdersSummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "0 Pedidos Ativos"
+
+; ── Delivery KPIs / Visão Geral
+[node name="DeliveryKPICardsBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/DeliveryKPICardsBar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+; ── Barra de Filtros
+[node name="FilterBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnOrdersAll" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+focus_mode = 0
+text = "📋 Todos"
+
+[node name="BtnOrdersDineIn" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+text = "🍽️ Restaurante"
+
+[node name="BtnOrdersDriveThru" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(110, 32)
+layout_mode = 2
+focus_mode = 0
+text = "🚗 Drive-Thru"
+
+[node name="BtnOrdersDelivery" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+text = "🛵 Delivery"
+
+; ── Scroll com o Conteúdo de Pedidos
+[node name="OrdersScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/OrdersScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="OrdersContentVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/OrdersScroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+; ── Barra Inferior Informativa
+[node name="OrdersBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/OrdersBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/OrdersBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 Aceite pedidos de delivery no PC, embale no Saco de Papel Kraft e posicione na Área de Entrega no balcão."
+
+; ─── ABA 8: AVALIAÇÕES & SATISFAÇÃO ───────────────────────────────────────────
+[node name="ReviewsTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+; ── TopBar
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/TopBar"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "⭐ Central de Avaliações & Reputação"
+
+[node name="ReviewsSummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 13
+text = "Feed em Tempo Real"
+
+; ── Destaque Superior / Painel de Reputação & Distribuição
+[node name="ReputationHeaderBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HeaderContainer" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/ReputationHeaderBar"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+; ── Barra de Filtros
+[node name="FilterBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab"]
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnReviewsAll" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+focus_mode = 0
+text = "📋 Todas"
+
+[node name="BtnReviewsDineIn" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+text = "🍽️ Restaurante"
+
+[node name="BtnReviewsDriveThru" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+text = "🚗 Drive-Thru"
+
+[node name="BtnReviewsDelivery" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+text = "🛵 Delivery"
+
+[node name="BtnReviews5Stars" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(120, 32)
+layout_mode = 2
+focus_mode = 0
+text = "⭐ 5 Estrelas"
+
+[node name="BtnReviewsComplaints" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox"]
+custom_minimum_size = Vector2(130, 32)
+layout_mode = 2
+focus_mode = 0
+text = "⚠️ Reclamações"
+
+; ── Scroll com o Feed de Avaliações
+[node name="ReviewsScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/ReviewsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="ReviewsContentVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/ReviewsScroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12
+
+; ── Barra Inferior Informativa
+[node name="ReviewsBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/ReviewsBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/ReviewsBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 A reputação do restaurante influencia diretamente a tolerância de preços dos clientes na aba Cardápio."
+
+; ─── ABA 9: CALENDÁRIO VIVO & HISTÓRICO ───────────────────────────────────────────
+[node name="CalendarTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+; ── TopBar
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/TopBar"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "📅 Calendário & Registros Diários"
+
+[node name="CalendarSummaryLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 13
+text = "01/01/2026 — Dia 1"
+
+; ── Layout Principal do Calendário (Split Mês e Detalhes)
+[node name="CalendarBodyMargin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 8
+
+[node name="SplitHBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+; Painel do Grid Mensal (Esquerda)
+[node name="MonthPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox"]
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.0
+
+[node name="MonthVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="MonthNavHBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox"]
+layout_mode = 2
+
+[node name="BtnPrevMonth" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/MonthNavHBox"]
+custom_minimum_size = Vector2(32, 28)
+layout_mode = 2
+focus_mode = 0
+text = "◀"
+
+[node name="MonthTitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/MonthNavHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "Janeiro 2026"
+horizontal_alignment = 1
+
+[node name="BtnNextMonth" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/MonthNavHBox"]
+custom_minimum_size = Vector2(32, 28)
+layout_mode = 2
+focus_mode = 0
+text = "▶"
+
+[node name="WeekHeaderGrid" type="GridContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox"]
+layout_mode = 2
+columns = 7
+
+[node name="DaysGrid" type="GridContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+columns = 7
+
+; Painel de Detalhes do Dia Selecionado (Direita)
+[node name="DayDetailPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.6
+
+[node name="DayDetailVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="DayHeaderHBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox"]
+layout_mode = 2
+
+[node name="SelectedDayTitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DayHeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 15
+text = "01/01/2026 — Dia 1 (Hoje)"
+
+[node name="DaySubNavBar" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="BtnDaySubSummary" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar"]
+custom_minimum_size = Vector2(85, 28)
+layout_mode = 2
+focus_mode = 0
+text = "📊 Resumo"
+
+[node name="BtnDaySubOrders" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar"]
+custom_minimum_size = Vector2(85, 28)
+layout_mode = 2
+focus_mode = 0
+text = "📋 Pedidos"
+
+[node name="BtnDaySubReviews" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar"]
+custom_minimum_size = Vector2(95, 28)
+layout_mode = 2
+focus_mode = 0
+text = "⭐ Avaliações"
+
+[node name="BtnDaySubNews" type="Button" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar"]
+custom_minimum_size = Vector2(85, 28)
+layout_mode = 2
+focus_mode = 0
+text = "📰 Notícias"
+
+[node name="DayDetailScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="DayDetailContentVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DayDetailScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+; ── Barra Inferior
+[node name="CalendarBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 Clique nos dias anteriores para inspecionar o fechamento financeiro, histórico de pedidos e notícias de cada data."
+
+; ─── ABA 10: JORNAL DA CIDADE & NOTÍCIAS ───────────────────────────────────────────
+[node name="NewsTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+; ── TopBar
+[node name="TopBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 2
+
+[node name="HBox" type="HBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/TopBar"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/TopBar/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+text = "📰 Jornal da Cidade • Edição Digital"
+
+[node name="NewsDateLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/TopBar/HBox"]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.7, 0.75, 0.85, 1)
+theme_override_font_sizes/font_size = 13
+text = "Quinta-feira, 1 de janeiro de 2026"
+
+; ── Scroll Principal de Notícias
+[node name="NewsScroll" type="ScrollContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/NewsScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="NewsContentVBox" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/NewsScroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 14
+
+; ── Barra Inferior
+[node name="NewsBottomBar" type="MarginContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab"]
+custom_minimum_size = Vector2(0, 36)
+layout_mode = 2
+theme_override_constants/margin_left = 18
+theme_override_constants/margin_right = 18
+theme_override_constants/margin_bottom = 10
+
+[node name="InfoPanel" type="PanelContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/NewsBottomBar"]
+layout_mode = 2
+
+[node name="InfoLabel" type="Label" parent="MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/NewsBottomBar/InfoPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "💡 Fique atento aos alertas e previsões do jornal para preparar o estoque e o restaurante para os acontecimentos do dia."
+
+; ─── ABA 11: PLACEHOLDER ───────────────────────────────────────────
 [node name="PlaceholderTab" type="VBoxContainer" parent="MainPanel/OuterWindow/VBox/Body/ContentArea"]
 visible = false
 layout_mode = 2

@@ -89,6 +89,23 @@ size = Vector3(0.24, 0.28, 0.04)
 material = SubResource("Material_BagSealRed")
 size = Vector3(0.08, 0.03, 0.045)
 
+[sub_resource type="StandardMaterial3D" id="Material_PlateBodyDark"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_PlateBorderRed"]
+albedo_color = Color(0.85, 0.18, 0.18, 1)
+roughness = 0.4
+metallic = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBorderX"]
+material = SubResource("Material_PlateBorderRed")
+size = Vector3(0.012, 0.12, 0.88)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBodyX"]
+material = SubResource("Material_PlateBodyDark")
+size = Vector3(0.016, 0.10, 0.84)
+
 [node name="PackagingStation" type="StaticBody3D"]
 script = ExtResource("1_pack")
 
@@ -97,6 +114,26 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, 0)
 shape = SubResource("BoxShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
+
+[node name="PhysicalSign" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.355, 0.84, 0.0)
+
+[node name="PlateBorder" type="MeshInstance3D" parent="Model/PhysicalSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBorderX")
+
+[node name="PlateBody" type="MeshInstance3D" parent="Model/PhysicalSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.003, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBodyX")
+
+[node name="SignLabel" type="Label3D" parent="Model/PhysicalSign"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.013, 0, 0)
+double_sided = false
+text = "EMBALAGENS"
+font_size = 18
+outline_size = 4
+modulate = Color(1, 0.88, 0.25, 1)
+outline_modulate = Color(0.12, 0.12, 0.12, 1)
 
 ; --- Bancada de Inox e Pernas ---
 [node name="TableTop" type="MeshInstance3D" parent="Model"]

@@ -15,11 +15,6 @@ signal finances_updated()
 signal bill_paid(bill_id: String, amount: float)
 signal day_report_closed(day_report: Dictionary)
 
-const PowerManager = preload("res://src/core/power_manager.gd")
-const WaterManager = preload("res://src/core/water_manager.gd")
-const EmployeeManager = preload("res://src/employees/employee_manager.gd")
-const EconomyManager = preload("res://src/economy/economy_manager.gd")
-const DailyEventManager = preload("res://src/core/daily_event_manager.gd")
 
 static var instance = null
 
@@ -45,6 +40,9 @@ var active_bills: Dictionary = {}
 
 ## Histórico de Relatórios Diários
 var daily_reports_history: Array[Dictionary] = []
+
+func _init() -> void:
+	instance = self
 
 func _enter_tree() -> void:
 	instance = self
@@ -158,6 +156,12 @@ func record_sale(amount: float, channel: String = "dine_in", description: String
 		economy.add_money(amount, "%s (%s)" % [description, valid_channel.to_upper()])
 
 	finances_updated.emit()
+
+func register_channel_sale(channel: String, amount: float, description: String = "Venda") -> void:
+	record_sale(amount, channel, description)
+
+func get_channel_revenue(channel: String) -> float:
+	return get_daily_revenue_by_channel(channel)
 
 func get_total_daily_revenue() -> float:
 	var sum: float = 0.0
@@ -405,3 +409,16 @@ func get_report_for_day(day_number: int) -> Dictionary:
 		if rep.get("day_number", 0) == day_number:
 			return rep
 	return {}
+
+## Retorna dados agregados para o Calendário e Dashboard
+func get_financial_data() -> Dictionary:
+	return {
+		"daily_revenue": get_total_daily_revenue(),
+		"daily_expenses": get_total_daily_expenses(),
+		"daily_profit": get_daily_net_profit(),
+		"daily_channels": {
+			"dine_in": get_daily_revenue_by_channel("dine_in"),
+			"drive_thru": get_daily_revenue_by_channel("drive_thru"),
+			"delivery": get_daily_revenue_by_channel("delivery")
+		}
+	}

@@ -179,8 +179,14 @@ static func get_stream(sound_id: String) -> AudioStreamWAV:
 			stream = _generate_customer_thank()
 		"customer_wrong_order", "customer_disappointed":
 			stream = _generate_customer_disappointed()
-		"customer_leave":
-			stream = _generate_customer_leave()
+		# --- CAIXA REGISTRADORA & PAGAMENTO ---
+		"register_drawer_open":
+			stream = _generate_register_drawer_open()
+		"payment_success_cash", "cash_payment_success", "money_received":
+			stream = _generate_payment_success_cash()
+		# --- NOTIFICAÇÃO DO PC / SISTEMA ---
+		"pc_notification", "order_notification", "computer_notification":
+			stream = _generate_pc_notification()
 		# --- QUADRO GERAL & AR-CONDICIONADO ---
 		"breaker_switch_on":
 			stream = _generate_breaker_switch(true)
@@ -1864,5 +1870,119 @@ static func _generate_customer_disappointed() -> AudioStreamWAV:
 	stream.stereo = false
 	stream.data = pcm
 	return stream
+
+# 46. Notificação sonora moderna e agradável do PC (Chime suave de 2 notas: D5 -> A5)
+static func _generate_pc_notification() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.28
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	var f1 = 587.33 # Ré (D5)
+	var f2 = 880.00 # Lá (A5)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+
+		var note1_env = exp(-t * 22.0) if t >= 0.0 else 0.0
+		var note1 = (sin(2.0 * PI * f1 * t) + 0.35 * sin(2.0 * PI * f1 * 2.0 * t)) * note1_env
+
+		var t2 = t - 0.09
+		var note2_env = exp(-t2 * 18.0) if t2 >= 0.0 else 0.0
+		var note2 = (sin(2.0 * PI * f2 * t2) + 0.40 * sin(2.0 * PI * f2 * 2.0 * t2) + 0.15 * sin(2.0 * PI * f2 * 3.0 * t2)) * note2_env if t2 >= 0.0 else 0.0
+
+		var sample = clampf((note1 * 0.45 + note2 * 0.55) * 0.70, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 47. Som mecânico de abertura da gaveta da caixa registradora (Clique de destravamento + sino 'ding' + deslizamento suave)
+static func _generate_register_drawer_open() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.35
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	var bell_freq = 1760.0 # Lá agudo (A6 - sino de caixa clássica)
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+
+		# 1. Clique mecânico inicial da trava
+		var click_env = exp(-t * 80.0) if t < 0.05 else 0.0
+		var click = ((randf() * 2.0 - 1.0) * 0.6 + sin(2.0 * PI * 340.0 * t)) * click_env
+
+		# 2. Sino brilhante de abertura
+		var bell_t = t - 0.02
+		var bell_env = exp(-bell_t * 12.0) if bell_t >= 0.0 else 0.0
+		var bell = (sin(2.0 * PI * bell_freq * bell_t) + 0.3 * sin(2.0 * PI * bell_freq * 2.0 * bell_t) + 0.15 * sin(2.0 * PI * bell_freq * 3.0 * bell_t)) * bell_env if bell_t >= 0.0 else 0.0
+
+		# 3. Deslizamento metálico com molas
+		var slide_t = t - 0.04
+		var slide_env = (sin(slide_t * PI / 0.25) if slide_t >= 0.0 and slide_t <= 0.25 else 0.0) * 0.18
+		var slide = (randf() * 2.0 - 1.0) * slide_env
+
+		var sample = clampf((click * 0.40 + bell * 0.50 + slide * 0.15) * 0.85, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+# 48. Som positivo de dinheiro / pagamento recebido (Acorde arpejado brilhante: C5 -> E5 -> G5 -> C6 com efeito de moedas)
+static func _generate_payment_success_cash() -> AudioStreamWAV:
+	var sample_rate = 22050
+	var duration = 0.42
+	var num_samples = int(sample_rate * duration)
+	var pcm = PackedByteArray()
+	pcm.resize(num_samples * 2)
+
+	var notes = [
+		{"freq": 523.25, "start": 0.00, "decay": 16.0}, # C5
+		{"freq": 659.25, "start": 0.06, "decay": 15.0}, # E5
+		{"freq": 783.99, "start": 0.12, "decay": 14.0}, # G5
+		{"freq": 1046.50, "start": 0.18, "decay": 10.0} # C6 (brilho final)
+	]
+
+	for i in range(num_samples):
+		var t = float(i) / float(sample_rate)
+		var mixed_signal = 0.0
+
+		for n in notes:
+			var nt = t - n["start"]
+			if nt >= 0.0:
+				var env = exp(-nt * n["decay"])
+				var tone = sin(2.0 * PI * n["freq"] * nt) + 0.35 * sin(2.0 * PI * n["freq"] * 2.0 * nt) + 0.12 * sin(2.0 * PI * n["freq"] * 3.0 * nt)
+				mixed_signal += tone * env * 0.28
+
+		# Tintilar suave de moedas
+		if t >= 0.04 and t <= 0.24:
+			var coin_env = exp(-(t - 0.04) * 25.0)
+			var coin_tone = (sin(2.0 * PI * 2489.0 * t) + sin(2.0 * PI * 3136.0 * t)) * coin_env * 0.15
+			mixed_signal += coin_tone
+
+		var sample = clampf(mixed_signal * 0.85, -1.0, 1.0)
+		var s16 = int(sample * 32767.0)
+		pcm.encode_s16(i * 2, s16)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
 
 

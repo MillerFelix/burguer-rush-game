@@ -8,12 +8,17 @@ enum TableState {
 	DIRTY
 }
 
-@export var table_id: int = 1
+@export var table_id: int = 1:
+	set(val):
+		table_id = val
+		_update_table_number()
 @export var seat_count: int = 4
 
 @onready var seat_node: Node3D = $Seat
 @onready var plate_slot: Node3D = $PlateSlot
-@onready var status_label: Label3D = $StatusLabel
+@onready var number_front: Label3D = get_node_or_null("Model/TableTop/TableNumberHolder/NumberFront")
+@onready var number_back: Label3D = get_node_or_null("Model/TableTop/TableNumberHolder/NumberBack")
+@onready var status_label: Label3D = get_node_or_null("StatusLabel")
 
 var table_state: TableState = TableState.AVAILABLE
 var seated_customers: Array[Customer] = []
@@ -246,20 +251,23 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 	match primary_cust.state:
 		Customer.State.SEATED_WAITING_TO_ORDER:
-			return "E — Atender Mesa #%d" % table_id
+			return "E / 🖱️ — Atender Mesa #%d" % table_id
 		Customer.State.WAITING_FOR_FOOD:
 			var order = primary_cust.current_order
 			if order and player and player.get("held_item") != null:
 				var held = player.get("held_item")
 				if (held is ServingTray or held is OrderTray) and held.has_items():
-					return "E — Entregar Bandeja na Mesa #%d" % table_id
+					return "E / 🖱️ — Entregar Bandeja na Mesa #%d" % table_id
 				elif held.has_method("get_product_id") or held.get("item_id") != null:
-					return "E — Entregar Item na Mesa #%d" % table_id
+					return "E / 🖱️ — Entregar Item na Mesa #%d" % table_id
 			return "Mesa #%d: Aguardando pedido..." % table_id
 		Customer.State.EATING:
 			return "Mesa #%d: Clientes comendo..." % table_id
 
 	return ""
+
+func interact_item(player: Node3D) -> void:
+	interact(player)
 
 func interact(player: Node3D) -> void:
 	if table_state == TableState.DIRTY:
@@ -321,6 +329,14 @@ func _serve_single_item(player: Node3D, item: Node3D) -> void:
 	else:
 		player.set("held_item", null)
 
+	if not plate_slot:
+		plate_slot = get_node_or_null("PlateSlot")
+	if not plate_slot:
+		plate_slot = Node3D.new()
+		plate_slot.name = "PlateSlot"
+		plate_slot.position = Vector3(0, 0.805, 0)
+		add_child(plate_slot)
+
 	plate_slot.add_child(item)
 	item.position = Vector3.ZERO
 	if item is Item:
@@ -365,6 +381,14 @@ func _serve_tray(player: Node3D, tray: Node3D) -> void:
 	else:
 		player.set("held_item", null)
 
+	if not plate_slot:
+		plate_slot = get_node_or_null("PlateSlot")
+	if not plate_slot:
+		plate_slot = Node3D.new()
+		plate_slot.name = "PlateSlot"
+		plate_slot.position = Vector3(0, 0.805, 0)
+		add_child(plate_slot)
+
 	plate_slot.add_child(tray)
 	tray.position = Vector3.ZERO
 	tray.rotation = Vector3.ZERO
@@ -401,7 +425,16 @@ func _serve_tray(player: Node3D, tray: Node3D) -> void:
 
 	_update_visual_status()
 
+func _update_table_number() -> void:
+	var n_front = number_front if number_front else get_node_or_null("Model/TableTop/TableNumberHolder/NumberFront") as Label3D
+	var n_back = number_back if number_back else get_node_or_null("Model/TableTop/TableNumberHolder/NumberBack") as Label3D
+	if n_front:
+		n_front.text = str(table_id)
+	if n_back:
+		n_back.text = str(table_id)
+
 func _update_visual_status() -> void:
+	_update_table_number()
 	var dirt_mesh = get_node_or_null("Model/TableTop/TableTopDirt")
 	if dirt_mesh:
 		dirt_mesh.visible = (table_state == TableState.DIRTY and dirt_amount > 0.0)
@@ -414,25 +447,11 @@ func _update_visual_status() -> void:
 					if mat is StandardMaterial3D and mat.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED:
 						mat.albedo_color.a = clampf(dirt_amount * 0.95, 0.0, 0.95)
 
+	# Se existir Label3D flutuante legado, desativa para manter o ambiente livre de textos flutuantes
 	if not status_label:
 		status_label = get_node_or_null("StatusLabel")
-	if not status_label:
-		return
-
-	match table_state:
-		TableState.AVAILABLE:
-			status_label.text = "Mesa %d (%d Lugares)\n🟢 Livre" % [table_id, seat_count]
-			status_label.modulate = Color(0.3, 0.9, 0.4)
-		TableState.RESERVED:
-			status_label.text = "Mesa %d\n🟡 A Caminho..." % table_id
-			status_label.modulate = Color(0.95, 0.85, 0.2)
-		TableState.OCCUPIED:
-			var cust_count = seated_customers.size()
-			status_label.text = "Mesa %d (%d Clientes)\n🔵 Ocupada" % [table_id, cust_count]
-			status_label.modulate = Color(0.4, 0.7, 1.0)
-		TableState.DIRTY:
-			status_label.text = "Mesa %d\n🔴 Bandeja / Pratos Sujos" % table_id
-			status_label.modulate = Color(0.9, 0.3, 0.3)
+	if status_label:
+		status_label.visible = false
 
 func _show_player_feedback(player: Node, message: String) -> void:
 	if player and player.has_node("HUD"):

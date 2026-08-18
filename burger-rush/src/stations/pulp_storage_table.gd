@@ -150,7 +150,7 @@ func interact_item(player: Node3D) -> void:
 
 	# Devolução de pedra de polpa
 	if held != null:
-		if held is JuicePulp and held.fruit_type == f_info.id:
+		if held is JuicePulp and (held.fruit_type == f_info.id or held.fruit_type == f_info.item_id or held.get_fruit_id() == f_info.item_id or str(held.get("item_id")) == f_info.item_id):
 			if player.has_method("take_held_item"):
 				var returned_pulp = player.take_held_item()
 				var inv = InventoryManager.get_instance()
@@ -159,10 +159,13 @@ func interact_item(player: Node3D) -> void:
 				else:
 					set_stock(idx, get_stock(idx) + 1)
 				_show_feedback(player, "%s Polpa de %s devolvida à mesa" % [f_info.icon, f_info.name])
-				returned_pulp.queue_free()
+				if returned_pulp:
+					returned_pulp.queue_free()
 				_update_all_visuals()
 				return
-		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+	# 1. Reabastecimento com Caixa de Entrega
+	if player and held != null and (player.has_method("is_holding_large_item") and player.is_holding_large_item()):
+		if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var box_id = str(held.get("contained_item_id"))
 			var target_flavor_id = f_info.item_id
 			var valid_pulps = ["pulp_orange", "pulp_grape", "pulp_strawberry"]
@@ -182,8 +185,7 @@ func interact_item(player: Node3D) -> void:
 			else:
 				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
 				return
-
-		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
+		_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
 		return
 
 	take_pulp(player, idx)
@@ -191,13 +193,15 @@ func interact_item(player: Node3D) -> void:
 func take_pulp(player: Node3D, target_flavor_idx: int = -1) -> JuicePulp:
 	if not player:
 		return null
-	if player.get("held_item") != null:
-		_show_feedback(player, "⚠️ Suas mãos estão ocupadas!")
-		return null
 
 	var idx = target_flavor_idx if (target_flavor_idx >= 0 and target_flavor_idx < 3) else _get_aimed_flavor_index(player)
 	var count = get_stock(idx)
 	var f_info = FLAVORS[idx]
+
+	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(f_info.item_id):
+		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
+		return null
+
 	if count <= 0:
 		_show_feedback(player, "🔴 Polpa de %s esgotada no cesto!" % f_info.name)
 		return null

@@ -8,6 +8,10 @@
 height = 0.805
 radius = 0.62
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_TableInteraction"]
+height = 1.40
+radius = 1.30
+
 [sub_resource type="StandardMaterial3D" id="Material_WoodTable"]
 albedo_texture = ExtResource("2_wood_tex")
 uv1_scale = Vector3(2, 2, 2)
@@ -22,9 +26,13 @@ roughness = 0.45
 albedo_color = Color(0.82, 0.16, 0.16, 1)
 roughness = 0.65
 
-[sub_resource type="StandardMaterial3D" id="Material_CeramicNapkin"]
-albedo_color = Color(0.95, 0.95, 0.95, 1)
-roughness = 0.35
+[sub_resource type="StandardMaterial3D" id="Material_WhiteStand"]
+albedo_color = Color(0.96, 0.96, 0.96, 1)
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_NapkinPaper"]
+albedo_color = Color(0.98, 0.98, 0.95, 1)
+roughness = 0.85
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_TableTop"]
 material = SubResource("Material_WoodTable")
@@ -81,9 +89,17 @@ orientation = 1
 material = SubResource("Material_TableCrumb")
 size = Vector3(0.015, 0.006, 0.015)
 
-[sub_resource type="BoxMesh" id="BoxMesh_NapkinHolder"]
-material = SubResource("Material_CeramicNapkin")
-size = Vector3(0.08, 0.08, 0.06)
+[sub_resource type="BoxMesh" id="BoxMesh_StandBase"]
+material = SubResource("Material_WhiteStand")
+size = Vector3(0.18, 0.015, 0.09)
+
+[sub_resource type="BoxMesh" id="BoxMesh_StandSide"]
+material = SubResource("Material_WhiteStand")
+size = Vector3(0.16, 0.13, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_StandNapkins"]
+material = SubResource("Material_NapkinPaper")
+size = Vector3(0.14, 0.15, 0.04)
 
 [node name="RestaurantTable" type="StaticBody3D"]
 script = ExtResource("1_table")
@@ -91,6 +107,14 @@ script = ExtResource("1_table")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4025, 0)
 shape = SubResource("CylinderShape3D_1")
+
+[node name="TableInteractionArea" type="Area3D" parent="."]
+collision_layer = 1
+collision_mask = 0
+
+[node name="InteractionShape" type="CollisionShape3D" parent="TableInteractionArea"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.70, 0)
+shape = SubResource("CylinderShape3D_TableInteraction")
 
 [node name="Model" type="Node3D" parent="."]
 
@@ -133,9 +157,41 @@ mesh = SubResource("BoxMesh_TableCrumb")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.027, -0.08)
 mesh = SubResource("BoxMesh_TableCrumb")
 
-[node name="Centerpiece" type="MeshInstance3D" parent="Model/TableTop"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.065, 0)
-mesh = SubResource("BoxMesh_NapkinHolder")
+; Suporte Físico Branco de Mesa (Porta-papel / Display de Mesa com Número)
+[node name="TableNumberHolder" type="Node3D" parent="Model/TableTop"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+
+[node name="Base" type="MeshInstance3D" parent="Model/TableTop/TableNumberHolder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0075, 0)
+mesh = SubResource("BoxMesh_StandBase")
+
+[node name="SideFront" type="MeshInstance3D" parent="Model/TableTop/TableNumberHolder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0.028)
+mesh = SubResource("BoxMesh_StandSide")
+
+[node name="SideBack" type="MeshInstance3D" parent="Model/TableTop/TableNumberHolder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, -0.028)
+mesh = SubResource("BoxMesh_StandSide")
+
+[node name="Napkins" type="MeshInstance3D" parent="Model/TableTop/TableNumberHolder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0)
+mesh = SubResource("BoxMesh_StandNapkins")
+
+[node name="NumberFront" type="Label3D" parent="Model/TableTop/TableNumberHolder"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07, 0.036)
+double_sided = false
+text = "1"
+font_size = 32
+modulate = Color(0.06, 0.06, 0.06, 1)
+outline_size = 0
+
+[node name="NumberBack" type="Label3D" parent="Model/TableTop/TableNumberHolder"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0.07, -0.036)
+double_sided = false
+text = "1"
+font_size = 32
+modulate = Color(0.06, 0.06, 0.06, 1)
+outline_size = 0
 
 [node name="Chair1" type="Node3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.68)
@@ -262,12 +318,3 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0, 0)
 
 [node name="PlateSlot" type="Node3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.805, 0)
-
-[node name="StatusLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
-billboard = 1
-double_sided = false
-text = "Mesa 1 (4 Lugares)
-🟢 Livre"
-font_size = 20
-outline_size = 6

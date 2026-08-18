@@ -386,19 +386,26 @@ func interact_item(player: Node3D) -> void:
 	# CASO 1: Jogador segurando um item (Tentando colocar na chapa)
 	if held != null:
 		if can_cook_item(held):
+			if is_dirty():
+				_play_reject_sound()
+				_show_feedback(player, "⚠️ A chapa está suja! Limpe a chapa antes de colocar ingredientes.")
+				return
 			if active_items.size() >= max_capacity:
 				_show_feedback(player, "⚠️ A grelha está cheia (%d/%d itens)!" % [active_items.size(), max_capacity])
 				return
 			var item = player.take_held_item()
 			if item:
-				place_item(item)
-				_show_feedback(player, "♨️ %s colocado na chapa" % item.get_display_name())
+				var placed = place_item(item)
+				if not placed:
+					if player.has_method("pick_up"):
+						player.pick_up(item)
+				else:
+					_show_feedback(player, "♨️ %s colocado na chapa" % item.get_display_name())
 			return
 		else:
-			# ITEM INVÁLIDO: chapa bloqueia e o item é solto para cair no chão naturalmente
+			# ITEM INVÁLIDO: chapa rejeita e mantém na mão do jogador
 			_play_reject_sound()
-			if player.has_method("drop_item"):
-				player.drop_item()
+			_show_feedback(player, "⚠️ Este item não pode ser colocado na chapa!")
 			return
 
 	# CASO 2: Jogador com ESPÁTULA (Slot 1) ou MÃO LIVRE (Slot 3)
@@ -513,6 +520,13 @@ func place_item(item: Node3D) -> bool:
 	var prev_parent = item.get_parent()
 	if prev_parent:
 		prev_parent.remove_child(item)
+
+	if not cooking_slot:
+		cooking_slot = get_node_or_null("CookingSlot")
+	if not cooking_slot:
+		cooking_slot = Node3D.new()
+		cooking_slot.name = "CookingSlot"
+		add_child(cooking_slot)
 
 	cooking_slot.add_child(item)
 	item.position = SLOT_OFFSETS[slot_idx] + Vector3(0, 0.015, 0)

@@ -263,10 +263,79 @@ static func _initialize_recipes() -> void:
 	_recipes.append(strawberry_juice_recipe)
 
 static func find_matching_recipe(ingredient_keys: Array) -> Recipe:
+	# 1. Procura correspondência exata
 	for recipe in get_all_recipes():
-		if recipe.matches(ingredient_keys):
+		if recipe.category == "burger" and recipe.matches(ingredient_keys):
 			return recipe
-	return null
+
+	# 2. Se não encontrar exata, calcula a receita de hambúrguer com maior afinidade de ingredientes
+	var best_recipe: Recipe = null
+	var best_score: float = -1.0
+
+	var given_counts: Dictionary = {}
+	for k in ingredient_keys:
+		var norm = _normalize_recipe_key(str(k))
+		given_counts[norm] = given_counts.get(norm, 0) + 1
+
+	for recipe in get_all_recipes():
+		if recipe.category != "burger":
+			continue
+		var req_counts = recipe.get_ingredient_counts()
+		var matched_count = 0
+		var total_req = 0
+		for rk in req_counts.keys():
+			var req_qty = req_counts[rk]
+			total_req += req_qty
+			var given_qty = given_counts.get(rk, 0)
+			matched_count += min(req_qty, given_qty)
+
+		var extra_count = 0
+		for gk in given_counts.keys():
+			if not req_counts.has(gk):
+				extra_count += given_counts[gk]
+
+		var score = float(matched_count) - float(extra_count) * 0.5
+		if score > best_score and score >= 2.0:
+			best_score = score
+			best_recipe = recipe
+
+	return best_recipe
+
+static func _normalize_recipe_key(k: String) -> String:
+	var s = k.strip_edges()
+	if s == "bread" or s == "bread_bottom" or s == "bread_top":
+		return "bread"
+	elif s == "patty" or s == "patty:cooked" or s == "patty_beef" or s == "patty_beef:cooked":
+		return "patty_beef:cooked"
+	elif s == "patty:raw" or s == "patty_beef:raw":
+		return "patty_beef:raw"
+	elif s == "patty_chicken" or s == "patty_chicken:cooked":
+		return "patty_chicken:cooked"
+	elif s == "patty_chicken:raw":
+		return "patty_chicken:raw"
+	elif s == "cheese" or s == "cheddar" or s == "cheese_cheddar":
+		return "cheese_cheddar"
+	elif s == "prato" or s == "cheese_prato":
+		return "cheese_prato"
+	elif s == "mozzarella" or s == "cheese_mozzarella":
+		return "cheese_mozzarella"
+	elif s == "bacon:cooked" or s == "bacon":
+		return "bacon"
+	elif s == "egg:cooked" or s == "egg":
+		return "egg"
+	elif s == "sauce_mayo" or s == "mayo":
+		return "mayo"
+	elif s == "sauce_ketchup" or s == "ketchup":
+		return "ketchup"
+	elif s == "sauce_mustard" or s == "mustard":
+		return "mustard"
+	elif s == "sauce_special" or s == "special_sauce":
+		return "special_sauce"
+	elif s == "white_onion" or s == "onion":
+		return "onion"
+	elif s == "red_onion" or s == "onion_red":
+		return "red_onion"
+	return s
 
 static func get_recipe_by_id(recipe_id: String) -> Recipe:
 	for recipe in get_all_recipes():

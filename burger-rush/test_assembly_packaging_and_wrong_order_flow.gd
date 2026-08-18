@@ -188,7 +188,7 @@ func _init() -> void:
 	car.current_order = order
 
 	# Mock player com a sacola
-	var player = Node3D.new()
+	var player = CharacterBody3D.new()
 	player.set_script(load("res://src/player/player.gd"))
 	root.add_child(player)
 	player.held_item = bag

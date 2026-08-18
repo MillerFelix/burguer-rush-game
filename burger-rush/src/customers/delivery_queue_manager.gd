@@ -76,26 +76,20 @@ func _process(delta: float) -> void:
 			spawn_car()
 
 func _calculate_interval_for_time(time_h: float) -> float:
-	# CURVA DE INTERVALOS EQUILIBRADOS PARA DELIVERY (10:00 — 22:00):
-	# Redução leve no fluxo em dias normais para garantir um ritmo natural e administrável
-	# 10:00 - 11:30 (Manhã calma):        38.0s a 52.0s
-	# 11:30 - 14:00 (Pico Almoço):         20.0s a 28.0s
-	# 14:00 - 17:00 (Tarde moderada):      30.0s a 42.0s
-	# 17:00 - 19:00 (Fim de Tarde):        22.0s a 30.0s
-	# 19:00 - 22:00 (Pico Noite / Jantar): 15.0s a 22.0s
-	var base_int: float = 35.0
+	# CURVA DE INTERVALOS EQUILIBRADOS PARA DRIVE-THRU (Demanda Secundária Reduzida em 50%):
+	var base_int: float = 200.0
 	if time_h < 11.5:
-		base_int = randf_range(38.0, 52.0)
+		base_int = randf_range(220.0, 340.0) # Abertura calma
 	elif time_h < 14.0:
-		base_int = randf_range(20.0, 28.0)
+		base_int = randf_range(150.0, 220.0) # Almoço moderado
 	elif time_h < 17.0:
-		base_int = randf_range(30.0, 42.0)
+		base_int = randf_range(200.0, 300.0) # Tarde espaçada
 	elif time_h < 19.0:
-		base_int = randf_range(22.0, 30.0)
+		base_int = randf_range(170.0, 260.0) # Fim de tarde
 	elif time_h <= 22.0:
-		base_int = randf_range(15.0, 22.0)
+		base_int = randf_range(145.0, 210.0) # Jantar moderado
 	else:
-		base_int = randf_range(38.0, 55.0)
+		base_int = randf_range(240.0, 360.0) # Fechamento lento
 
 	# Eventos diários de alta movimentação (chuva, tempestade, etc.) aceleram o fluxo adequadamente
 	var event_mgr = DailyEventManager.instance

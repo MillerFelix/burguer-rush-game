@@ -1,100 +1,119 @@
 [gd_scene format=3 uid="uid://dining_menu_board_scene_uid"]
 
-[sub_resource type="StandardMaterial3D" id="Material_BoardWoodFrame"]
-albedo_color = Color(0.22, 0.14, 0.09, 1)
-roughness = 0.70
+[ext_resource type="Script" path="res://src/environment/dining_menu_board.gd" id="1_board_script"]
 
-[sub_resource type="StandardMaterial3D" id="Material_BoardSlate"]
-albedo_color = Color(0.08, 0.09, 0.10, 1)
-roughness = 0.92
+[sub_resource type="StandardMaterial3D" id="Material_SignBorderGold"]
+albedo_color = Color(0.96, 0.80, 0.20, 1)
+metallic = 0.85
+roughness = 0.30
 
-[sub_resource type="BoxMesh" id="BoxMesh_MenuFrame"]
-material = SubResource("Material_BoardWoodFrame")
-size = Vector3(2.80, 2.10, 0.05)
+[sub_resource type="StandardMaterial3D" id="Material_SignPlateCharcoal"]
+albedo_color = Color(0.12, 0.14, 0.18, 1)
+metallic = 0.80
+roughness = 0.25
 
-[sub_resource type="BoxMesh" id="BoxMesh_MenuBoard"]
-material = SubResource("Material_BoardSlate")
-size = Vector3(2.68, 1.98, 0.02)
+[sub_resource type="StandardMaterial3D" id="Material_HeaderBannerRed"]
+albedo_color = Color(0.68, 0.12, 0.12, 1)
+metallic = 0.40
+roughness = 0.40
+
+[sub_resource type="StandardMaterial3D" id="Material_FooterBannerDark"]
+albedo_color = Color(0.08, 0.10, 0.14, 1)
+metallic = 0.60
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_OuterBorder"]
+material = SubResource("Material_SignBorderGold")
+size = Vector3(3.40, 2.30, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_PlateBody"]
+material = SubResource("Material_SignPlateCharcoal")
+size = Vector3(3.34, 2.24, 0.045)
+
+[sub_resource type="BoxMesh" id="BoxMesh_HeaderBanner"]
+material = SubResource("Material_HeaderBannerRed")
+size = Vector3(3.20, 0.30, 0.01)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FooterBanner"]
+material = SubResource("Material_FooterBannerDark")
+size = Vector3(3.20, 0.26, 0.01)
 
 [node name="DiningMenuBoard" type="Node3D"]
+script = ExtResource("1_board_script")
 
-[node name="Frame" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.0)
-mesh = SubResource("BoxMesh_MenuFrame")
+; Moldura e Chapa Física (Mesma identidade visual de Delivery, Drive-Thru e Armazém)
+[node name="PlateBorder" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_OuterBorder")
 
-[node name="Board" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.014)
-mesh = SubResource("BoxMesh_MenuBoard")
+[node name="PlateBody" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.005)
+mesh = SubResource("BoxMesh_PlateBody")
 
+; Faixas Decorativas Integradas
+[node name="HeaderBanner" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0.024)
+mesh = SubResource("BoxMesh_HeaderBanner")
+
+[node name="FooterBanner" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.88, 0.024)
+mesh = SubResource("BoxMesh_FooterBanner")
+
+; Cabeçalho do Cardápio
 [node name="TitleLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.80, 0.025)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.88, 0.032)
 billboard = 0
 double_sided = false
 text = "🍔  BURGER RUSH  •  CARDÁPIO  🍔"
 font_size = 22
 outline_size = 5
-modulate = Color(1.0, 0.86, 0.22, 1.0)
-outline_modulate = Color(0.06, 0.06, 0.08, 1.0)
+modulate = Color(1.0, 0.90, 0.25, 1.0)
+outline_modulate = Color(0.08, 0.08, 0.10, 1.0)
 horizontal_alignment = 1
 
-[node name="DividerLine" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.66, 0.025)
-billboard = 0
-double_sided = false
-text = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-font_size = 11
-modulate = Color(1.0, 0.86, 0.22, 0.5)
-horizontal_alignment = 1
-
+; Coluna Esquerda de Burgers (1 a 6) — Perfeitamente Enquadrada à Esquerda
 [node name="ColLeftLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.68, 0.08, 0.025)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.45, 0.08, 0.030)
 billboard = 0
 double_sided = false
-text = "Burger Clássico ........  R$ 22,90
-Burger Duplo ............  R$ 32,90
-Burger Cheddar .........  R$ 28,90
-Burger Bacon ............  R$ 27,90
-Burger Salada ...........  R$ 24,90
-Burger Onion ............  R$ 26,90"
-font_size = 14
-line_spacing = 8.0
+text = "Burger Clássico ........... R$ 22,90
+Burger Duplo ............... R$ 32,90
+Burger Cheddar ............ R$ 28,90
+Burger Bacon ............... R$ 27,90
+Burger Salada .............. R$ 24,90
+Burger Onion ............... R$ 26,90"
+font_size = 13
+line_spacing = 10.0
 outline_size = 4
-modulate = Color(0.96, 0.96, 0.94, 1.0)
+modulate = Color(0.96, 0.96, 0.98, 1.0)
 outline_modulate = Color(0.06, 0.06, 0.08, 1.0)
 horizontal_alignment = 0
 
+; Coluna Direita de Burgers (7 a 11) — Perfeitamente Enquadrada à Direita
 [node name="ColRightLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.70, 0.08, 0.025)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15, 0.16, 0.030)
 billboard = 0
 double_sided = false
-text = "Burger Chicken ........  R$ 23,90
-Burger Supreme .......  R$ 36,90
-Burger Três Queijos .  R$ 29,90
-Burger Vegano ..........  R$ 22,90
-Burger Egg ................  R$ 25,90"
-font_size = 14
-line_spacing = 8.0
+text = "Burger Chicken ........... R$ 23,90
+Burger Supreme ........... R$ 36,90
+Burger Três Queijos ..... R$ 29,90
+Burger Vegano ............. R$ 22,90
+Burger Egg ................... R$ 25,90"
+font_size = 13
+line_spacing = 10.0
 outline_size = 4
-modulate = Color(0.96, 0.96, 0.94, 1.0)
+modulate = Color(0.96, 0.96, 0.98, 1.0)
 outline_modulate = Color(0.06, 0.06, 0.08, 1.0)
 horizontal_alignment = 0
 
-[node name="DividerLine2" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.60, 0.025)
-billboard = 0
-double_sided = false
-text = "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-font_size = 11
-modulate = Color(1.0, 0.86, 0.22, 0.5)
-horizontal_alignment = 1
-
+; Rodapé com Acompanhamentos e Bebidas
 [node name="ExtrasLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.78, 0.025)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.88, 0.032)
 billboard = 0
 double_sided = false
-text = "🍟  Batata Frita  R$ 8,00     •     🥤  Refrigerante  R$ 6,00     •     🧃  Suco  R$ 7,00"
-font_size = 12
-outline_size = 3
-modulate = Color(0.80, 0.90, 1.0, 1.0)
+text = "🍟  Batata Frita  R$ 8,00     •     🥤  Refrigerante  R$ 6,00     •     🧃  Suco Natural  R$ 7,00"
+font_size = 13
+outline_size = 4
+modulate = Color(0.85, 0.92, 1.0, 1.0)
 outline_modulate = Color(0.06, 0.06, 0.08, 1.0)
 horizontal_alignment = 1

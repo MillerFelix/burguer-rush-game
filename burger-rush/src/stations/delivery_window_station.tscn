@@ -1,0 +1,192 @@
+[gd_scene format=3 uid="uid://delivery_window_station_uid"]
+
+[ext_resource type="Script" path="res://src/stations/delivery_window_station.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_CounterLedge"]
+size = Vector3(1.10, 0.92, 1.75)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_DeliveryZone"]
+size = Vector3(1.35, 1.10, 1.85)
+
+[sub_resource type="StandardMaterial3D" id="Material_StainlessCounter"]
+albedo_color = Color(0.85, 0.87, 0.90, 1)
+metallic = 0.85
+roughness = 0.22
+
+[sub_resource type="BoxMesh" id="BoxMesh_CounterTop"]
+material = SubResource("Material_StainlessCounter")
+size = Vector3(1.05, 0.06, 1.72)
+
+[sub_resource type="StandardMaterial3D" id="Material_DarkFrame"]
+albedo_color = Color(0.14, 0.16, 0.20, 1)
+metallic = 0.7
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_FramePost"]
+material = SubResource("Material_DarkFrame")
+size = Vector3(0.54, 2.06, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_FrameHeader"]
+material = SubResource("Material_DarkFrame")
+size = Vector3(0.54, 0.08, 1.72)
+
+[sub_resource type="BoxMesh" id="BoxMesh_CenterMullion"]
+material = SubResource("Material_DarkFrame")
+size = Vector3(0.48, 1.40, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="Material_WindowGlass"]
+transparency = 1
+albedo_color = Color(0.75, 0.90, 0.98, 0.35)
+metallic = 0.2
+roughness = 0.1
+refraction_scale = 0.02
+
+[sub_resource type="BoxMesh" id="BoxMesh_GlassTransom"]
+material = SubResource("Material_WindowGlass")
+size = Vector3(0.04, 0.55, 1.62)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GlassSideFixed"]
+material = SubResource("Material_WindowGlass")
+size = Vector3(0.04, 1.38, 0.58)
+
+[sub_resource type="BoxMesh" id="BoxMesh_GlassSlidOpen"]
+material = SubResource("Material_WindowGlass")
+size = Vector3(0.04, 1.36, 0.52)
+
+[sub_resource type="StandardMaterial3D" id="Material_DeliveryAwning"]
+albedo_color = Color(0.88, 0.18, 0.18, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_Awning"]
+material = SubResource("Material_DeliveryAwning")
+size = Vector3(0.65, 0.05, 1.85)
+
+[sub_resource type="StandardMaterial3D" id="Material_AwningAccent"]
+albedo_color = Color(0.98, 0.82, 0.18, 1)
+roughness = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_AwningTrim"]
+material = SubResource("Material_AwningAccent")
+size = Vector3(0.67, 0.03, 0.06)
+
+[sub_resource type="StandardMaterial3D" id="Material_SignPlate"]
+albedo_color = Color(0.12, 0.14, 0.18, 1)
+metallic = 0.8
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_SignBorderGold"]
+albedo_color = Color(0.96, 0.80, 0.20, 1)
+metallic = 0.85
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBorder"]
+material = SubResource("Material_SignBorderGold")
+size = Vector3(0.04, 0.20, 0.88)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBody"]
+material = SubResource("Material_SignPlate")
+size = Vector3(0.045, 0.18, 0.86)
+
+[node name="DeliveryWindowStation" type="StaticBody3D" groups=["interactable", "delivery_stations"]]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.46, 0)
+shape = SubResource("BoxShape3D_CounterLedge")
+
+[node name="DeliveryZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+collision_layer = 3
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DeliveryZone"]
+shape = SubResource("BoxShape3D_DeliveryZone")
+
+[node name="Structure" type="Node3D" parent="."]
+
+[node name="CounterTop" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.89, 0)
+mesh = SubResource("BoxMesh_CounterTop")
+
+[node name="FramePostLeft" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.92, -0.82)
+mesh = SubResource("BoxMesh_FramePost")
+
+[node name="FramePostRight" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.92, 0.82)
+mesh = SubResource("BoxMesh_FramePost")
+
+[node name="FrameHeader" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.92, 0)
+mesh = SubResource("BoxMesh_FrameHeader")
+
+[node name="FrameMiddleSill" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.32, 0)
+mesh = SubResource("BoxMesh_FrameHeader")
+
+[node name="FrameDivider" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.60, -0.25)
+mesh = SubResource("BoxMesh_CenterMullion")
+
+[node name="GlassTransomTop" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.62, 0)
+mesh = SubResource("BoxMesh_GlassTransom")
+
+[node name="GlassSideFixed" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.60, -0.53)
+mesh = SubResource("BoxMesh_GlassSideFixed")
+
+[node name="GlassSlidOpenPane" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.05, 1.60, -0.50)
+mesh = SubResource("BoxMesh_GlassSlidOpen")
+
+[node name="ExteriorAwning" type="MeshInstance3D" parent="Structure"]
+transform = Transform3D(0.965926, -0.258819, 0, 0.258819, 0.965926, 0, 0, 0, 1, 0.32, 3.02, 0)
+mesh = SubResource("BoxMesh_Awning")
+
+[node name="AwningTrimFront" type="MeshInstance3D" parent="Structure/ExteriorAwning"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.33, 0, 0)
+mesh = SubResource("BoxMesh_AwningTrim")
+
+; Placa Física Integrada de Delivery com Ícone de Motocicleta (Fixada na parede ACIMA da janela)
+[node name="PhysicalDeliverySign" type="Node3D" parent="Structure"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.12, 0)
+
+[node name="SignPlateKitchen" type="MeshInstance3D" parent="Structure/PhysicalDeliverySign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBody")
+
+[node name="SignBorderKitchen" type="MeshInstance3D" parent="Structure/PhysicalDeliverySign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBorder")
+
+[node name="SignTextKitchen" type="Label3D" parent="Structure/PhysicalDeliverySign"]
+transform = Transform3D(-4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -0.285, 0, 0)
+double_sided = false
+text = "🛵 DELIVERY"
+font_size = 20
+outline_size = 5
+modulate = Color(1, 0.88, 0.25, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+
+[node name="SignPlateExterior" type="MeshInstance3D" parent="Structure/PhysicalDeliverySign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBody")
+
+[node name="SignBorderExterior" type="MeshInstance3D" parent="Structure/PhysicalDeliverySign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.26, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBorder")
+
+[node name="SignTextExterior" type="Label3D" parent="Structure/PhysicalDeliverySign"]
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0.285, 0, 0)
+double_sided = false
+text = "🛵 DELIVERY"
+font_size = 20
+outline_size = 5
+modulate = Color(1, 0.88, 0.25, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+
+[node name="BagSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.93, 0)

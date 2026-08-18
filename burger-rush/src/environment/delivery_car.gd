@@ -111,7 +111,7 @@ func _init() -> void:
 	if mood == null:
 		mood = CustomerMood.new(100.0, 1.0)
 	if experience == null:
-		experience = CustomerExperience.new(car_id, "Drive-Thru", 100.0)
+		experience = CustomerExperience.new(car_id, "Drive-Thru", 100.0, "DRIVE_THRU")
 
 func _enter_tree() -> void:
 	_ensure_spotlight()
@@ -121,8 +121,9 @@ func _ready() -> void:
 	if mood == null:
 		mood = CustomerMood.new(100.0, 1.0)
 	if experience == null:
-		experience = CustomerExperience.new(car_id, "Drive-Thru", mood.current_mood)
+		experience = CustomerExperience.new(car_id, "Drive-Thru", mood.current_mood, "DRIVE_THRU")
 	else:
+		experience.channel_type = "DRIVE_THRU"
 		experience.customer_id = car_id
 		experience.customer_type = "Drive-Thru"
 
@@ -280,6 +281,16 @@ func _physics_process(delta: float) -> void:
 			_update_status_label()
 
 		CarState.AT_WINDOW_WAITING_FOOD:
+			if current_order == null or not is_instance_valid(current_order):
+				abandon_drive_thru("Pedido do Drive-thru cancelado")
+				return
+			if current_order.state == Order.State.COMPLETED or current_order.state == Order.State.DELIVERED:
+				finish_and_leave()
+				return
+			if current_order.state == Order.State.CANCELLED:
+				abandon_drive_thru("Pedido do Drive-thru cancelado")
+				return
+
 			_play_engine("car_engine_idle", -8.0)
 			if experience:
 				experience.wait_time_for_food += delta
@@ -325,7 +336,7 @@ func take_order(player: Node3D = null) -> Order:
 	else:
 		group_size = 3
 
-	current_order = order_mgr.create_group_order(self, group_size, 0, "DELIVERY")
+	current_order = order_mgr.create_group_order(self, group_size, 0, "DRIVE_THRU")
 	current_state = CarState.AT_WINDOW_WAITING_FOOD
 
 	if mood:
@@ -451,9 +462,14 @@ func _process_delivery(player: Node3D) -> void:
 
 	if is_valid_delivery and matching_order != null:
 		if matching_order.is_all_delivered():
-			var economy = EconomyManager.get_instance()
-			if economy:
-				economy.add_money(matching_order.total_price, "Drive-Thru: %s" % matching_order.items[0].get("product_name", product_id))
+			var fin = FinanceManager.get_instance()
+			if fin:
+				fin.record_sale(matching_order.total_price, "drive_thru", "Drive-Thru: %s" % matching_order.items[0].get("product_name", product_id))
+			else:
+				var economy = EconomyManager.get_instance()
+				if economy:
+					economy.add_money(matching_order.total_price, "Drive-Thru: %s" % matching_order.items[0].get("product_name", product_id))
+			_play_payment_sound()
 			receive_order(product_id)
 			var order_mgr = OrderManager.get_instance()
 			if order_mgr:
@@ -470,6 +486,17 @@ func _process_delivery(player: Node3D) -> void:
 				hud.show_temporary_feedback("❌ Pedido incorreto no Drive-Thru! O cliente foi embora sem pagar.")
 
 	item.queue_free()
+
+func _play_payment_sound() -> void:
+	var snd = AudioStreamPlayer3D.new()
+	snd.name = "PaymentAudioPlayer"
+	snd.unit_size = 8.0
+	snd.max_distance = 35.0
+	snd.volume_db = -2.0
+	snd.stream = SoundSynthesizer.get_stream("payment_success_cash")
+	add_child(snd)
+	snd.play()
+	snd.finished.connect(snd.queue_free)
 
 func receive_order(product_id: String) -> void:
 	if current_order == null:
@@ -585,6 +612,14 @@ func _submit_review() -> void:
 
 	if mood:
 		experience.final_mood = mood.current_mood
+
+	if current_order:
+		if current_order.items.size() > 0:
+			var f_item = current_order.items[0]
+			experience.primary_product_id = f_item.get("product_id", f_item.get("recipe_id", "burger_classic"))
+			experience.charged_price = f_item.get("unit_price", current_order.total_price)
+		else:
+			experience.charged_price = current_order.total_price
 
 	var clock_day = 1
 	var clock_time = "12:00"

@@ -293,32 +293,44 @@ func handle_slot_item_interaction(player: Node3D, cheese_type: Cheese.CheeseType
 			item_id = "cheese_prato"
 			cheese_name = "Queijo Prato"
 
-	# Caso 1: Jogador segurando um item -> tentar Devolver
-	if player.get("held_item") != null:
+	# Caso 1: Devolução de queijo segurado na mão
+	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
 		if held is Cheese and held.cheese_type == cheese_type:
-			player.take_held_item().queue_free()
+			var ret_c = player.take_held_item()
+			if ret_c:
+				ret_c.queue_free()
 			inv.add_stock(item_id, 1)
 			_show_feedback(player, "%s Devolveu %s ao freezer" % [icon, cheese_name])
 			_update_all_visual_stocks()
-		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-			var box_item_id = str(held.get("contained_item_id"))
-			var valid_cheeses = ["cheese_mozzarella", "cheese_cheddar", "cheese_prato"]
-			if box_item_id == item_id or (box_item_id == "" and item_id in valid_cheeses):
-				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-				player.take_held_item().queue_free()
-				inv.add_stock(item_id, qty)
-				if door_audio:
-					door_audio.stream = SoundSynthesizer.get_stream("box_place")
-					door_audio.play()
-				_show_feedback(player, "📦 %s armazenado no freezer (+%d un.)!" % [cheese_name, qty])
-				_update_all_visual_stocks()
-			elif box_item_id in valid_cheeses:
-				_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+			return
+		elif player.has_method("is_holding_large_item") and player.is_holding_large_item():
+			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+				var box_item_id = str(held.get("contained_item_id"))
+				var valid_cheeses = ["cheese_mozzarella", "cheese_cheddar", "cheese_prato"]
+				if box_item_id == item_id or (box_item_id == "" and item_id in valid_cheeses):
+					var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+					player.take_held_item().queue_free()
+					inv.add_stock(item_id, qty)
+					if door_audio:
+						door_audio.stream = SoundSynthesizer.get_stream("box_place")
+						door_audio.play()
+					_show_feedback(player, "📦 %s armazenado no freezer (+%d un.)!" % [cheese_name, qty])
+					_update_all_visual_stocks()
+					return
+				elif box_item_id in valid_cheeses:
+					_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+					return
+				else:
+					_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+					return
 			else:
-				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
-		else:
-			_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
+				_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
+				return
+
+	# Caso 2: Retirada de queijo para a mão / slots rápidos
+	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(item_id):
+		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
 		return
 
 	# Caso 2: Jogador com as mãos livres -> Pegar queijo

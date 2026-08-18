@@ -38,45 +38,51 @@ func interact_item(player: Node3D) -> void:
 	interact(player)
 
 func interact(player: Node3D) -> void:
-	var deliv_mgr = null
-	if is_inside_tree() and get_tree() and get_tree().root:
-		deliv_mgr = get_tree().root.find_child("DeliveryQueueManager", true, false)
+	var tree: SceneTree = get_tree() if is_inside_tree() else (player.get_tree() if (player and player.is_inside_tree()) else Engine.get_main_loop() as SceneTree)
+	var root_node: Node = tree.root if (tree and "root" in tree and tree.root) else (get_parent() if get_parent() else (player.get_parent() if player else null))
+
+	var deliv_mgr = root_node.find_child("DeliveryQueueManager", true, false) if (root_node and root_node.has_method("find_child")) else null
 
 	var car = deliv_mgr.get_car_at_window() if (deliv_mgr and deliv_mgr.has_method("get_car_at_window")) else null
+	if not car and root_node:
+		for child in root_node.get_children():
+			if child is DeliveryCar or (child.has_method("receive_order") and child.has_method("on_order_wrong")):
+				car = child
+				break
 
 	# Caso 1: Jogador sem item -> Atender pedido do carro que está na janela
-	if player.get("held_item") == null:
+	var held_item = player.held_item if ("held_item" in player) else player.get("held_item")
+	if held_item == null:
 		if car and car.get("current_state") == 3: # AT_WINDOW_WAITING_ORDER
 			if car.has_method("take_order"):
 				car.take_order(player)
 		return
 
 	# Caso 2: Jogador segurando item -> Entregar produto no Drive-Thru
-	if not player.has_method("take_held_item"):
-		return
+	var product_id: String = str(held_item.get("item_id")) if (held_item and held_item.get("item_id") != null) else ""
 
-	var held_item = player.get("held_item")
-	var product_id: String = str(held_item.get("item_id")) if held_item.get("item_id") != null else ""
+	var item: Node3D = null
+	if player.has_method("take_held_item"):
+		item = player.take_held_item()
+	elif held_item is Node3D:
+		item = held_item
 
-	var item: Node3D = player.take_held_item()
 	if not item:
 		return
 
 	var order_manager = OrderManager.get_instance()
 	var matching_order = car.current_order if (car and "current_order" in car and car.current_order != null) else null
 
-	if not matching_order and order_manager:
+	if not matching_order and order_manager and car:
 		for order in order_manager.get_active_orders():
-			if order.source_type == "DELIVERY" and order.state in [Order.State.RECEIVED, Order.State.WAITING, Order.State.IN_PROGRESS]:
+			if order.source_type == "DRIVE_THRU" and order.customer_ref == car and order.state in [Order.State.RECEIVED, Order.State.WAITING, Order.State.IN_PROGRESS]:
 				matching_order = order
 				break
 
 	var is_valid_delivery = false
-
-	if matching_order != null and car != null and car.get("current_state") == 4:
-		if item is DeliveryBag:
-			var bag = item as DeliveryBag
-			var prods = bag.get_products()
+	if matching_order != null and car != null and (car.get("current_state") in [3, 4] or not "current_state" in car):
+		if item is DeliveryBag or item.has_method("get_products"):
+			var prods: Array = item.get_products() if item.has_method("get_products") else []
 			if not prods.is_empty():
 				var all_match = true
 				var delivered_items: Array[String] = []
@@ -134,6 +140,7 @@ func interact(player: Node3D) -> void:
 
 	if is_valid_delivery and matching_order != null:
 		# Pedido CORRETO: registra entrega e conclui pagamento
+		if matching_order.is_fully_delivered():
 			var fin = FinanceManager.get_instance()
 			if not fin and is_inside_tree():
 				fin = get_tree().root.find_child("FinanceManager", true, false) as FinanceManager
@@ -147,7 +154,10 @@ func interact(player: Node3D) -> void:
 			if car and is_instance_valid(car) and car.has_method("receive_order"):
 				car.receive_order(product_id)
 
-			order_manager.complete_order(matching_order)
+			if order_manager:
+				order_manager.complete_order(matching_order)
+			else:
+				matching_order.state = Order.State.COMPLETED
 			_show_player_feedback(player, "🚗 Pedido #%03d entregue com sucesso! +$%.2f" % [matching_order.id, matching_order.total_price])
 		else:
 			_show_player_feedback(player, "Item entregue! Faltam %d itens." % [matching_order.get_total_quantity() - matching_order.get_delivered_count()])

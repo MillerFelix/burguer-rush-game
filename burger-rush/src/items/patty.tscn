@@ -58,12 +58,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.017, 0)
 [node name="BodyMesh" type="MeshInstance3D" parent="VisualModel"]
 mesh = SubResource("CylinderMesh_Body")
 
-; Face do Lado A (topo inicial)
+; Face do Lado A (base em contato inicial com a chapa quente)
 [node name="SideAFace" type="MeshInstance3D" parent="VisualModel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.015, 0)
 mesh = SubResource("CylinderMesh_CapA")
 
-; Face do Lado B (base inicial)
+; Face do Lado B (topo voltado para cima, cru inicialmente)
 [node name="SideBFace" type="MeshInstance3D" parent="VisualModel"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.015, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
 mesh = SubResource("CylinderMesh_CapB")

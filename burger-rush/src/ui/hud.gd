@@ -85,15 +85,15 @@ func show_prompt(text: String) -> void:
 		interaction_label.text = text
 		interaction_label.visible = true
 
-@onready var slot1_label: Label = get_node_or_null("ToolHotbar/HBox/Slot1Label")
-@onready var slot2_label: Label = get_node_or_null("ToolHotbar/HBox/Slot2Label")
-@onready var slot3_label: Label = get_node_or_null("ToolHotbar/HBox/Slot3Label")
+@onready var slot1_label: Label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot1Label")
+@onready var slot2_label: Label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot2Label")
+@onready var slot3_label: Label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot3Label")
 
 func update_active_tool(slot_number: int) -> void:
 	if not slot1_label or not slot2_label or not slot3_label:
-		slot1_label = get_node_or_null("ToolHotbar/HBox/Slot1Label")
-		slot2_label = get_node_or_null("ToolHotbar/HBox/Slot2Label")
-		slot3_label = get_node_or_null("ToolHotbar/HBox/Slot3Label")
+		slot1_label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot1Label")
+		slot2_label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot2Label")
+		slot3_label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot3Label")
 
 	var col_active = Color(1.0, 0.9, 0.35, 1.0)
 	var col_dimmed = Color(0.65, 0.68, 0.75, 0.45)
@@ -104,6 +104,72 @@ func update_active_tool(slot_number: int) -> void:
 		slot2_label.modulate = col_active if slot_number == 2 else col_dimmed
 	if slot3_label:
 		slot3_label.modulate = col_active if slot_number == 3 else col_dimmed
+
+func update_quick_slots_display(slots_info: Array, active_slot_idx: int, active_item_info: Dictionary, tool_slot: int = 3) -> void:
+	update_active_tool(tool_slot)
+
+	# 1. Atualiza o badge do item ativo
+	var active_badge = get_node_or_null("BottomInventoryBar/TopRowHBox/ActiveItemBadge") as PanelContainer
+	var active_lbl = get_node_or_null("BottomInventoryBar/TopRowHBox/ActiveItemBadge/ActiveItemLabel") as Label
+
+	if active_badge and active_lbl:
+		if not active_item_info.is_empty() and active_item_info.get("name", "") != "":
+			active_badge.visible = true
+			var count_txt = " (x%d)" % active_item_info.get("count", 1) if active_item_info.get("count", 1) > 1 else ""
+			active_lbl.text = "Ativo: %s %s%s" % [
+				active_item_info.get("icon", "📦"),
+				active_item_info.get("name", ""),
+				count_txt
+			]
+		else:
+			active_badge.visible = false
+
+	# 2. Atualiza os 3 slots rápidos (4, 5, 6)
+	var slot_nodes = [
+		{"panel": get_node_or_null("BottomInventoryBar/QuickSlotsHBox/QuickSlot4"), "label": get_node_or_null("BottomInventoryBar/QuickSlotsHBox/QuickSlot4/Label4"), "key": "4"},
+		{"panel": get_node_or_null("BottomInventoryBar/QuickSlotsHBox/QuickSlot5"), "label": get_node_or_null("BottomInventoryBar/QuickSlotsHBox/QuickSlot5/Label5"), "key": "5"},
+		{"panel": get_node_or_null("BottomInventoryBar/QuickSlotsHBox/QuickSlot6"), "label": get_node_or_null("BottomInventoryBar/QuickSlotsHBox/QuickSlot6/Label6"), "key": "6"}
+	]
+
+	for i in range(slot_nodes.size()):
+		var sn = slot_nodes[i]
+		var panel = sn["panel"] as PanelContainer
+		var label = sn["label"] as Label
+		var key_num = sn["key"]
+
+		if not panel or not label:
+			continue
+
+		var is_active = (i == active_slot_idx and tool_slot == 3)
+		var s_data = slots_info[i] if (i < slots_info.size()) else {}
+
+		if s_data.is_empty():
+			label.text = "[%s] (Vazio)" % key_num
+			label.modulate = Color(0.55, 0.60, 0.70, 0.40)
+		else:
+			var icon = s_data.get("icon", "📦")
+			var d_name = s_data.get("display_name", "")
+			var count = s_data.get("count", 1)
+			label.text = "[%s] %s %s x%d" % [key_num, icon, d_name, count]
+			label.modulate = Color(1.0, 1.0, 1.0, 1.0) if is_active else Color(0.85, 0.88, 0.95, 0.75)
+
+		var style = StyleBoxFlat.new()
+		style.set_corner_radius_all(6)
+		style.content_margin_left = 8
+		style.content_margin_right = 8
+		style.content_margin_top = 3
+		style.content_margin_bottom = 3
+
+		if is_active:
+			style.bg_color = Color(0.16, 0.22, 0.32, 0.95)
+			style.border_color = Color(1.0, 0.85, 0.20, 1.0)
+			style.set_border_width_all(2)
+		else:
+			style.bg_color = Color(0.06, 0.08, 0.12, 0.65)
+			style.border_color = Color(0.20, 0.26, 0.36, 0.50)
+			style.set_border_width_all(1)
+
+		panel.add_theme_stylebox_override("panel", style)
 
 func hide_prompt() -> void:
 	if interaction_label:

@@ -51,19 +51,38 @@ func matches(ingredient_keys: Array) -> bool:
 
 func _normalize_key(k: String) -> String:
 	var s = k.strip_edges()
-	# Pão pode ser representado por "bread" ou "bread_bottom"+"bread_top"
-	if s == "bread":
+	if s == "bread" or s == "bread_bottom" or s == "bread_top":
 		return "bread"
-	elif s == "patty" or s == "patty:cooked":
+	elif s == "patty" or s == "patty:cooked" or s == "patty_beef" or s == "patty_beef:cooked":
 		return "patty_beef:cooked"
-	elif s == "patty:raw":
+	elif s == "patty:raw" or s == "patty_beef:raw":
 		return "patty_beef:raw"
-	elif s == "cheese":
+	elif s == "patty_chicken" or s == "patty_chicken:cooked":
+		return "patty_chicken:cooked"
+	elif s == "patty_chicken:raw":
+		return "patty_chicken:raw"
+	elif s == "cheese" or s == "cheddar" or s == "cheese_cheddar":
 		return "cheese_cheddar"
-	elif s == "bacon:cooked":
+	elif s == "prato" or s == "cheese_prato":
+		return "cheese_prato"
+	elif s == "mozzarella" or s == "cheese_mozzarella":
+		return "cheese_mozzarella"
+	elif s == "bacon:cooked" or s == "bacon":
 		return "bacon"
-	elif s == "egg:cooked":
+	elif s == "egg:cooked" or s == "egg":
 		return "egg"
+	elif s == "sauce_mayo" or s == "mayo":
+		return "mayo"
+	elif s == "sauce_ketchup" or s == "ketchup":
+		return "ketchup"
+	elif s == "sauce_mustard" or s == "mustard":
+		return "mustard"
+	elif s == "sauce_special" or s == "special_sauce":
+		return "special_sauce"
+	elif s == "white_onion" or s == "onion":
+		return "onion"
+	elif s == "red_onion" or s == "onion_red":
+		return "red_onion"
 	return s
 
 func calculate_cost() -> float:

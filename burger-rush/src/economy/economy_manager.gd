@@ -1,3 +1,4 @@
+class_name EconomyManager
 extends Node
 
 const Transaction = preload("res://src/economy/transaction.gd")
@@ -18,8 +19,15 @@ var daily_purchases: float = 0.0
 
 var transactions: Array[Transaction] = []
 
+func _init() -> void:
+	instance = self
+
 func _enter_tree() -> void:
 	instance = self
+
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
 
 func _ready() -> void:
 	current_money = starting_money
@@ -80,7 +88,9 @@ func start_new_day() -> void:
 func _create_transaction(type: Transaction.Type, amount: float, description: String) -> Transaction:
 	var day = 1
 	var time_str = "08:00"
-	var clock = GameClock.get_instance()
+	var clock = null
+	if is_inside_tree() and get_tree() and get_tree().root:
+		clock = get_tree().root.find_child("GameClock", true, false)
 	if clock:
 		day = clock.day_number
 		time_str = clock.get_formatted_time()

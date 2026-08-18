@@ -66,6 +66,9 @@ var event_history: Array[Dictionary] = []
 
 static var instance = null
 
+func _init() -> void:
+	instance = self
+
 func _enter_tree() -> void:
 	instance = self
 
@@ -129,6 +132,12 @@ func roll_daily_event(forced_event: EventType = EventType.NONE, force_roll: bool
 			current_event = event_pool[randi() % event_pool.size()]
 
 	_apply_event_rules()
+
+	var nm = null
+	if is_inside_tree() and get_tree() and get_tree().root:
+		nm = get_tree().root.find_child("NewsManager", true, false)
+	if nm and nm.has_method("generate_daily_news"):
+		nm.generate_daily_news()
 
 ## Força a definição de um evento específico (útil para testes ou cenários programados)
 func force_event(event_type: EventType) -> void:
@@ -255,6 +264,12 @@ func _trigger_power_cut(reason: String) -> void:
 	if pm and pm.is_main_power_on:
 		pm.set_main_power(false)
 		power_outage_occurred.emit(reason)
+
+	var nm = null
+	if is_inside_tree() and get_tree() and get_tree().root:
+		nm = get_tree().root.find_child("NewsManager", true, false)
+	if nm and nm.has_method("mark_event_occurred"):
+		nm.mark_event_occurred(current_event)
 
 ## Finaliza o evento ao encerramento do dia e arquiva no histórico
 func end_day_event() -> void:

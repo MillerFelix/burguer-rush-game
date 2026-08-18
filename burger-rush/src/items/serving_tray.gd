@@ -83,6 +83,9 @@ func has_items() -> bool:
 func get_products() -> Array[Node3D]:
 	return carried_items
 
+func add_item(item: Node3D) -> bool:
+	return add_product(item)
+
 func add_product(item: Node3D) -> bool:
 	if not item or carried_items.size() >= max_capacity:
 		return false

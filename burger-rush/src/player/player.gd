@@ -40,6 +40,12 @@ var _step_timer: float = 0.0
 var held_item: Node3D = null
 var active_tool_slot: int = ToolSlot.HANDS
 
+# ================================================================
+# SISTEMA DE SLOTS RÁPIDOS DE INGREDIENTES (SLOTS 4, 5, 6)
+# ================================================================
+var quick_slots: Array[Dictionary] = [{}, {}, {}] # 3 Slots rápidos
+var active_quick_slot: int = -1 # -1 = Nenhum slot rápido ativo, 0 = Slot 4, 1 = Slot 5, 2 = Slot 6
+
 const SCENE_SPATULA = preload("res://src/tools/spatula.tscn")
 const SCENE_SPONGE = preload("res://src/tools/sponge.tscn")
 
@@ -52,6 +58,7 @@ func _ready() -> void:
 	_ensure_audio_listener()
 	_setup_audio()
 	select_tool_slot(ToolSlot.HANDS, false)
+	_notify_hud_quick_slots()
 	_update_interaction_detection()
 
 func _ensure_audio_listener() -> void:
@@ -106,7 +113,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		head.rotate_x(-event.relative.y * mouse_sensitivity)
 		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-80), deg_to_rad(80))
 
-	# Seleção de ferramentas por teclas numéricas (1, 2, 3)
+	# Seleção de ferramentas (1, 2, 3) e Slots Rápidos de Ingredientes (4, 5, 6)
 	if event is InputEventKey and event.pressed and not event.echo:
 		match event.keycode:
 			KEY_1, KEY_KP_1:
@@ -115,6 +122,19 @@ func _unhandled_input(event: InputEvent) -> void:
 				select_tool_slot(ToolSlot.SPONGE)
 			KEY_3, KEY_KP_3:
 				select_tool_slot(ToolSlot.HANDS)
+			KEY_4, KEY_KP_4:
+				select_quick_slot(0)
+			KEY_5, KEY_KP_5:
+				select_quick_slot(1)
+			KEY_6, KEY_KP_6:
+				select_quick_slot(2)
+
+	# Troca de slots rápidos através do Scroll do Mouse
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			cycle_quick_slot(-1)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			cycle_quick_slot(1)
 
 	# Tecla E — Interagir com equipamentos / portas / máquinas
 	if event.is_action_pressed("interact"):
@@ -134,6 +154,16 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
+	if held_item != null and (held_item.get("is_customer_deposit_money") == true or str(held_item.get("item_id")) == "customer_money"):
+		if hud and hud.has_method("show_temporary_feedback"):
+			hud.show_temporary_feedback("⚠️ Deposite o dinheiro no caixa antes de trocar de ferramenta!")
+		return
+
+	if slot == ToolSlot.SPATULA or slot == ToolSlot.SPONGE:
+		# Temporariamente esconde o item visual do quick slot se estiver ativo
+		if active_quick_slot != -1:
+			_despawn_quick_slot_visual()
+
 	var transferring_item: Node3D = held_item
 	if transferring_item and transferring_item.get_parent():
 		transferring_item.get_parent().remove_child(transferring_item)
@@ -168,6 +198,8 @@ func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
 					hud.show_temporary_feedback("🧽 Bucha de limpeza equipada [2]")
 
 		ToolSlot.HANDS:
+			if active_quick_slot != -1 and not quick_slots[active_quick_slot].is_empty():
+				_spawn_quick_slot_visual()
 			if show_feedback:
 				_play_sound(tool_audio, "tool_hands_equip", -8.0, 0.05)
 				if hud and hud.has_method("show_temporary_feedback"):
@@ -186,14 +218,12 @@ func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
 				hold_position.add_child(transferring_item)
 				transferring_item.position = Vector3.ZERO
 				transferring_item.rotation = Vector3.ZERO
-		else:
+		elif hold_position:
 			hold_position.add_child(transferring_item)
 			transferring_item.position = Vector3.ZERO
 			transferring_item.rotation = Vector3.ZERO
 
-	if hud and hud.has_method("update_active_tool"):
-		hud.update_active_tool(active_tool_slot)
-
+	_notify_hud_quick_slots()
 	_update_interaction_detection()
 
 func _try_interact_equipment() -> void:
@@ -203,6 +233,17 @@ func _try_interact_equipment() -> void:
 			var collider = _get_target_interactable(raw_collider)
 			if collider:
 				if held_item != null:
+					# Proteção estrita: Dinheiro em processo de depósito só pode interagir com a Caixa Registradora
+					if held_item.get("is_customer_deposit_money") == true or str(held_item.get("item_id")) == "customer_money":
+						if collider is CashRegister or (collider.get_parent() and collider.get_parent() is CashRegister):
+							var cr = collider if collider is CashRegister else collider.get_parent()
+							cr.interact(self)
+							return
+						else:
+							if hud and hud.has_method("show_temporary_feedback"):
+								hud.show_temporary_feedback("⚠️ O dinheiro do cliente só pode ser depositado na caixa registradora!")
+							return
+
 					if collider is TrashBin or (collider.get_parent() and collider.get_parent() is TrashBin):
 						var tb = collider if collider is TrashBin else collider.get_parent()
 						tb.interact(self)
@@ -215,14 +256,10 @@ func _try_interact_equipment() -> void:
 						var dc = collider if collider is DeliveryCar else collider.get_parent()
 						dc.interact(self)
 						return
-					elif collider is RestaurantTable:
-						var tbl = collider as RestaurantTable
-						if tbl.table_state == RestaurantTable.TableState.DIRTY or (not tbl.seated_customers.is_empty() and tbl.seated_customers[0].state == Customer.State.WAITING_FOR_FOOD):
-							tbl.interact(self)
-							return
-						else:
-							drop_item()
-							return
+					elif collider is RestaurantTable or (collider is Customer and collider.assigned_table != null):
+						var tbl = collider if collider is RestaurantTable else collider.assigned_table
+						tbl.interact(self)
+						return
 					elif collider is IngredientDispenser:
 						if held_item.get("ingredient_id") == collider.get("ingredient_id") or str(held_item.get("item_type")) == "crate":
 							collider.interact(self)
@@ -241,7 +278,13 @@ func _try_interact_equipment() -> void:
 						drop_item()
 						return
 				else:
-					if collider.has_method("interact_equipment"):
+					if collider is Customer:
+						collider.interact(self)
+						return
+					elif collider is RestaurantTable:
+						collider.interact(self)
+						return
+					elif collider.has_method("interact_equipment"):
 						collider.interact_equipment(self)
 						return
 					elif collider.has_method("interact"):
@@ -273,14 +316,30 @@ func _get_target_interactable(collider: Object) -> Object:
 	if collider is Item:
 		return collider
 
-	# Se o colisor for parte de uma estação / equipamento (ex: colisor de porta ou alavanca de DrinkMachine):
+	if collider is Customer:
+		return collider
+
+	# Se o colisor for parte de uma estação / equipamento (ex: colisor de porta ou alavanca de DrinkMachine, RestaurantTable, etc.):
 	var curr = collider
 	while curr != null:
+		if curr is Node and (curr is RestaurantTable or curr is Customer or curr is CashRegister or curr is DeliveryStation or curr is DeliveryCar or curr is TrashBin):
+			return curr
 		if curr is Node and curr.has_method("get_interaction_prompt") and curr.has_method("interact"):
 			return curr
 		curr = curr.get_parent() if curr is Node else null
 
 	return collider
+
+func can_be_picked_with_spatula(obj: Object) -> bool:
+	if not obj or not is_instance_valid(obj):
+		return false
+	if obj is Patty or obj is Cheese or obj is Bacon or obj is Egg:
+		return true
+	if obj.has_method("is_cookable_on_grill") and obj.is_cookable_on_grill():
+		return true
+	if obj.get("is_grillable") == true:
+		return true
+	return false
 
 func _try_interact_item() -> void:
 	if held_item != null and (held_item is SauceBottle or str(held_item.get("item_type")) == "sauce_bottle"):
@@ -288,14 +347,22 @@ func _try_interact_item() -> void:
 
 	if raycast and raycast.is_colliding():
 		var raw_collider = raycast.get_collider()
-		if not raw_collider:
+		if not raw_collider or not is_instance_valid(raw_collider):
 			return
 
-		if raw_collider == held_item or (held_item != null and held_item.is_ancestor_of(raw_collider)):
+		if raw_collider == held_item or (held_item != null and is_instance_valid(held_item) and held_item.is_ancestor_of(raw_collider)):
 			return
 
 		var collider = _get_target_interactable(raw_collider)
-		if not collider:
+		if not collider or not is_instance_valid(collider):
+			return
+
+		if collider is RestaurantTable or (collider is Customer and collider.assigned_table != null):
+			var tbl = collider if collider is RestaurantTable else collider.assigned_table
+			tbl.interact(self)
+			return
+		elif collider is Customer:
+			collider.interact(self)
 			return
 
 		if collider is DeliveryStation or (collider.get_parent() and collider.get_parent() is DeliveryStation):
@@ -314,31 +381,48 @@ func _try_interact_item() -> void:
 			return
 
 		if collider.has_method("interact_item"):
+			if active_tool_slot == ToolSlot.SPONGE:
+				select_tool_slot(ToolSlot.HANDS, false)
 			collider.interact_item(self)
 			return
 
-		elif collider is Item and held_item != null:
+		elif collider is Item and is_holding_large_item():
 			var parent_station = collider.get_parent()
 			if parent_station and parent_station != held_item and parent_station.has_method("interact_item"):
+				if active_tool_slot == ToolSlot.SPONGE:
+					select_tool_slot(ToolSlot.HANDS, false)
 				parent_station.interact_item(self)
 				return
 
-		elif collider is Item and held_item == null:
+		elif collider is Item and not is_holding_large_item():
 			if "is_held" in collider and collider.is_held:
 				return
 
-			if active_tool_slot == ToolSlot.SPATULA and collider is Patty:
-				var parent_grill = collider.get_parent()
-				if parent_grill and parent_grill.get_parent() is Grill:
-					parent_grill.get_parent().interact_item(self)
-					return
-
-			if active_tool_slot == ToolSlot.HANDS:
+			# 1. Bucha de limpeza nunca pega itens -> Troca automaticamente para a Mão Livre
+			if active_tool_slot == ToolSlot.SPONGE:
+				select_tool_slot(ToolSlot.HANDS, false)
 				pick_up(collider as Item)
 				return
-			elif active_tool_slot == ToolSlot.SPATULA:
-				if hud and hud.has_method("show_temporary_feedback"):
-					hud.show_temporary_feedback("✋ Pressione [3] para pegar itens com a mão livre.")
+
+			# 2. Espátula: só manipula itens válidos para grelha; para os demais, troca automaticamente para a Mão
+			if active_tool_slot == ToolSlot.SPATULA:
+				if can_be_picked_with_spatula(collider):
+					if collider is Patty:
+						var parent_grill = collider.get_parent()
+						if parent_grill and parent_grill.get_parent() is Grill:
+							parent_grill.get_parent().interact_item(self)
+							return
+					pick_up(collider as Item)
+					return
+				else:
+					# Item não fritável / não de grelha -> Troca inteligente e automática para a Mão Livre
+					select_tool_slot(ToolSlot.HANDS, false)
+					pick_up(collider as Item)
+					return
+
+			# 3. Mão Livre
+			if active_tool_slot == ToolSlot.HANDS:
+				pick_up(collider as Item)
 				return
 
 func _try_secondary_interact() -> void:
@@ -417,16 +501,23 @@ func _update_interaction_detection() -> void:
 				if prompt != "":
 					hud.show_prompt(prompt)
 					return
-			elif collider is Item and held_item != null:
+			elif collider is Item and not is_holding_large_item():
 				var parent_ass = collider.get_parent()
 				if parent_ass and parent_ass != held_item and parent_ass.has_method("get_interaction_prompt"):
 					var prompt: String = parent_ass.get_interaction_prompt(self)
 					if prompt != "":
 						hud.show_prompt(prompt)
 						return
+				elif not collider.has_method("get_interaction_prompt"):
+					var c_name = collider.get_display_name() if collider.has_method("get_display_name") else collider.name
+					hud.show_prompt("🖱️ Pegar %s" % c_name)
+					return
 
 	if held_item != null:
-		if held_item is SauceBottle:
+		if held_item.get("is_customer_deposit_money") == true or str(held_item.get("item_id")) == "customer_money":
+			hud.show_prompt("💵 Dinheiro em processo de depósito (Leve até a Caixa Registradora)")
+			return
+		elif held_item is SauceBottle:
 			hud.show_prompt("🖱️ (Segurar) Aplicar %s  │  [E] Soltar" % held_item.display_name)
 		else:
 			var d_name = held_item.get_display_name() if held_item.has_method("get_display_name") else held_item.name
@@ -435,13 +526,380 @@ func _update_interaction_detection() -> void:
 
 	hud.hide_prompt()
 
+# ================================================================
+# MÉTODOS DE CONTROLE DOS SLOTS RÁPIDOS (4, 5, 6)
+# ================================================================
+
+func is_quick_slot_compatible(item: Node3D) -> bool:
+	if item == null:
+		return false
+	# Objetos grandes e únicos — NUNCA entram em slots rápidos
+	if item is ServingTray or item is OrderTray: return false
+	if item is DeliveryBag or item is DeliveryBox or item is BurgerBox or item is PackagedBurger: return false
+	if item is DrinkCup or item is SyrupCanister or item is SodaSyrupBottle or item is CookingOil or item is SauceBottle: return false
+	if item is DirtyDishes or item is PotatoBoxItem or item is OnionBag: return false
+	if item.get("is_customer_deposit_money") == true or str(item.get("item_id")) == "customer_money": return false
+	if item is BreadBottom and item.has_ingredients(): return false # Hambúrguer montado não entra em quick slot!
+
+	# Ingredientes pequenos compatíveis com slots rápidos
+	if item is Patty or item is Cheese or item is Pickle or item is Tomato or item is Lettuce: return true
+	if item is Onion or item is Bacon or item is Egg or item is JuicePulp or item is Potato: return true
+	if item is Bread or (item is BreadBottom and not item.has_ingredients()): return true
+	if "item_type" in item and item.item_type == "ingredient": return true
+
+	return false
+
+func is_holding_large_item() -> bool:
+	return held_item != null and active_quick_slot == -1
+
+func can_take_ingredient(ing_id: String) -> bool:
+	if is_holding_large_item():
+		return false
+	# Cada slot comporta exatamente 1 unidade física (máximo 3 unidades no total)
+	for slot in quick_slots:
+		if slot.is_empty():
+			return true
+	return false
+
+func select_quick_slot(slot_idx: int, show_feedback: bool = true) -> void:
+	if slot_idx < 0 or slot_idx >= quick_slots.size():
+		return
+
+	if is_holding_large_item():
+		if show_feedback and hud and hud.has_method("show_temporary_feedback"):
+			var h_name = held_item.get_display_name() if held_item.has_method("get_display_name") else held_item.name
+			hud.show_temporary_feedback("⚠️ Mãos ocupadas com %s! Solte para selecionar slots rápidos." % h_name)
+		return
+
+	if quick_slots[slot_idx].is_empty():
+		if show_feedback and hud and hud.has_method("show_temporary_feedback"):
+			hud.show_temporary_feedback("Slot [%d] vazio" % (slot_idx + 4))
+		return
+
+	active_quick_slot = slot_idx
+	var s_item_id = quick_slots[slot_idx].get("item_id", "")
+	var is_spatula_compat = (s_item_id.begins_with("patty") or s_item_id == "bacon" or s_item_id == "egg" or s_item_id.begins_with("cheese"))
+
+	if active_tool_slot == ToolSlot.SPATULA and not is_spatula_compat:
+		select_tool_slot(ToolSlot.HANDS, false)
+	elif active_tool_slot == ToolSlot.SPONGE:
+		select_tool_slot(ToolSlot.HANDS, false)
+
+	_spawn_quick_slot_visual()
+	if show_feedback:
+		_play_sound(tool_audio, "tool_hands_equip", -8.0, 0.05)
+		if hud and hud.has_method("show_temporary_feedback"):
+			var s_data = quick_slots[slot_idx]
+			hud.show_temporary_feedback("%s %s [%d] selecionado (x%d)" % [
+				s_data.get("icon", "📦"), s_data.get("display_name", "Item"), slot_idx + 4, s_data.get("count", 1)
+			])
+
+	_notify_hud_quick_slots()
+	_update_interaction_detection()
+
+func cycle_quick_slot(direction: int) -> void:
+	if is_holding_large_item():
+		return
+
+	var occupied: Array[int] = []
+	for i in range(quick_slots.size()):
+		if not quick_slots[i].is_empty():
+			occupied.append(i)
+
+	if occupied.is_empty():
+		return
+
+	if occupied.size() == 1:
+		if active_quick_slot != occupied[0]:
+			select_quick_slot(occupied[0], true)
+		return
+
+	var current_idx_in_occupied = occupied.find(active_quick_slot)
+	var next_idx_in_occupied = 0
+	if current_idx_in_occupied != -1:
+		next_idx_in_occupied = (current_idx_in_occupied + direction) % occupied.size()
+		if next_idx_in_occupied < 0:
+			next_idx_in_occupied = occupied.size() - 1
+	else:
+		next_idx_in_occupied = 0 if direction > 0 else occupied.size() - 1
+
+	select_quick_slot(occupied[next_idx_in_occupied], true)
+
+func _find_first_occupied_quick_slot() -> int:
+	for i in range(quick_slots.size()):
+		if not quick_slots[i].is_empty():
+			return i
+	return -1
+
+func _spawn_quick_slot_visual() -> void:
+	_despawn_quick_slot_visual()
+
+	if active_quick_slot < 0 or active_quick_slot >= quick_slots.size() or quick_slots[active_quick_slot].is_empty():
+		return
+
+	var slot = quick_slots[active_quick_slot]
+	var node = _instantiate_from_slot_data(slot)
+	if not node:
+		return
+
+	held_item = node
+	if not hold_position:
+		hold_position = get_node_or_null("Head/Camera3D/HoldPosition")
+
+	# Se estiver com a Espátula (Slot 1), assenta a carne sobre a lâmina da espátula
+	if active_tool_slot == ToolSlot.SPATULA and tool_holder and tool_holder.get_child_count() > 0:
+		var spatula = tool_holder.get_child(0)
+		var rest_pt = spatula.get_node_or_null("Model/BladeRestPoint")
+		if rest_pt:
+			rest_pt.add_child(node)
+			node.position = Vector3.ZERO
+			node.rotation = Vector3.ZERO
+		elif hold_position:
+			hold_position.add_child(node)
+			node.position = Vector3.ZERO
+			node.rotation = Vector3.ZERO
+		else:
+			add_child(node)
+			node.position = Vector3.ZERO
+			node.rotation = Vector3.ZERO
+	elif hold_position:
+		hold_position.add_child(node)
+		node.position = Vector3.ZERO
+		node.rotation = Vector3.ZERO
+	else:
+		add_child(node)
+		node.position = Vector3.ZERO
+		node.rotation = Vector3.ZERO
+
+	if node.has_method("on_picked_up"):
+		node.on_picked_up()
+	elif node is CollisionObject3D:
+		node.collision_layer = 0
+		node.collision_mask = 0
+
+	if raycast and node is CollisionObject3D:
+		raycast.add_exception(node)
+
+func _despawn_quick_slot_visual() -> void:
+	if held_item != null and active_quick_slot != -1:
+		var item = held_item
+		held_item = null
+		if raycast and item is CollisionObject3D:
+			raycast.remove_exception(item)
+		if item.get_parent():
+			item.get_parent().remove_child(item)
+		item.queue_free()
+
+func _instantiate_from_slot_data(slot: Dictionary) -> Node3D:
+	var item_id: String = slot.get("item_id", "")
+	var scene_path: String = slot.get("scene_path", "")
+	var node: Node3D = null
+
+	if scene_path != "" and ResourceLoader.exists(scene_path):
+		var sc = load(scene_path)
+		if sc:
+			node = sc.instantiate()
+
+	if node == null:
+		node = _create_fallback_ingredient_node(item_id)
+
+	if node is Patty:
+		if item_id == "patty_chicken":
+			node.meat_type = Patty.MeatType.CHICKEN
+		else:
+			node.meat_type = Patty.MeatType.BEEF
+	elif node is Potato:
+		node.state = Potato.State.RAW
+	elif node is JuicePulp:
+		if item_id.begins_with("pulp_"):
+			node.fruit_type = item_id.replace("pulp_", "")
+		elif item_id.begins_with("juice_pulp_"):
+			node.fruit_type = item_id.replace("juice_pulp_", "")
+
+	return node
+
+func _create_fallback_ingredient_node(item_id: String) -> Node3D:
+	var path = _get_default_scene_path(item_id)
+	if path != "" and ResourceLoader.exists(path):
+		var sc = load(path)
+		if sc:
+			return sc.instantiate()
+	var fallback_item = load("res://src/items/item.tscn").instantiate()
+	fallback_item.item_id = item_id
+	return fallback_item
+
+func _get_default_scene_path(item_id: String) -> String:
+	match item_id:
+		"patty_beef", "patty_chicken", "patty_raw", "patty": return "res://src/items/patty.tscn"
+		"cheese": return "res://src/items/cheese.tscn"
+		"pickle": return "res://src/items/pickle.tscn"
+		"tomato": return "res://src/items/tomato.tscn"
+		"lettuce": return "res://src/items/lettuce.tscn"
+		"onion": return "res://src/items/onion.tscn"
+		"bacon": return "res://src/items/bacon.tscn"
+		"egg": return "res://src/items/egg.tscn"
+		"bread", "bread_bottom": return "res://src/items/bread_bottom.tscn"
+		"potato_raw", "potato": return "res://src/items/potato.tscn"
+		_:
+			if item_id.begins_with("pulp_") or item_id.begins_with("juice_pulp"):
+				return "res://src/items/juice_pulp.tscn"
+			return "res://src/items/item.tscn"
+
+func _get_item_canonical_id(item: Node3D) -> String:
+	if item is Patty:
+		return "patty_chicken" if item.meat_type == Patty.MeatType.CHICKEN else "patty_beef"
+	if item is Cheese: return "cheese"
+	if item is Pickle: return "pickle"
+	if item is Tomato: return "tomato"
+	if item is Lettuce: return "lettuce"
+	if item is Onion: return "onion"
+	if item is Bacon: return "bacon"
+	if item is Egg: return "egg"
+	if item is Potato: return "potato_raw"
+	if item is JuicePulp:
+		match item.fruit_type:
+			"orange", "laranja", "pulp_orange": return "pulp_orange"
+			"strawberry", "morango", "pulp_strawberry": return "pulp_strawberry"
+			"grape", "uva", "pulp_grape": return "pulp_grape"
+			"lemon", "limao", "pulp_lemon": return "pulp_lemon"
+		return "pulp_orange"
+	if item is Bread or item is BreadBottom: return "bread"
+	if "item_id" in item and item.item_id != "" and item.item_id != "generic":
+		return item.item_id
+	return item.name.to_lower()
+
+func _get_item_icon(item: Node3D) -> String:
+	if item is Patty: return "🍗" if item.meat_type == Patty.MeatType.CHICKEN else "🥩"
+	if item is Cheese: return "🧀"
+	if item is Pickle: return "🥒"
+	if item is Tomato: return "🍅"
+	if item is Lettuce: return "🥬"
+	if item is Onion: return "🧅"
+	if item is Bacon: return "🥓"
+	if item is Egg: return "🍳"
+	if item is Potato: return "🥔"
+	if item is JuicePulp:
+		match item.fruit_type:
+			"orange", "laranja", "pulp_orange": return "🍊"
+			"strawberry", "morango", "pulp_strawberry": return "🍓"
+			"grape", "uva", "pulp_grape": return "🍇"
+			"lemon", "limao", "pulp_lemon": return "🍋"
+		return "🧃"
+	if item is Bread or item is BreadBottom: return "🍞"
+	if item is ServingTray or item is OrderTray: return "🍱"
+	if item is DeliveryBag: return "🛍️"
+	if item is DrinkCup: return "🥤"
+	if item is BurgerBox or item is DeliveryBox or item is PackagedBurger: return "📦"
+	if item is CustomerMoney: return "💵"
+	return "📦"
+
+func _extract_item_data(item: Node3D) -> Dictionary:
+	var data = {}
+	if item is Patty:
+		data["meat_type"] = item.meat_type
+		data["cooked"] = item.is_cooked if ("is_cooked" in item) else false
+	elif item is JuicePulp:
+		data["fruit_type"] = item.fruit_type
+	return data
+
+func _notify_hud_quick_slots() -> void:
+	if hud and hud.has_method("update_quick_slots_display"):
+		hud.update_quick_slots_display(quick_slots, active_quick_slot, get_active_item_info(), active_tool_slot)
+
+func get_active_item_info() -> Dictionary:
+	if is_holding_large_item():
+		var d_name = held_item.get_display_name() if held_item.has_method("get_display_name") else held_item.name
+		return {
+			"name": d_name,
+			"icon": _get_item_icon(held_item),
+			"count": 1,
+			"is_large_item": true,
+			"slot": -1
+		}
+	elif active_quick_slot >= 0 and active_quick_slot < quick_slots.size() and not quick_slots[active_quick_slot].is_empty():
+		var slot = quick_slots[active_quick_slot]
+		return {
+			"name": slot.get("display_name", ""),
+			"icon": slot.get("icon", "📦"),
+			"count": slot.get("count", 1),
+			"is_large_item": false,
+			"slot": active_quick_slot
+		}
+	return {}
+
+func get_quick_slots_info() -> Array:
+	return quick_slots.duplicate(true)
+
+# ================================================================
+# MANIPULAÇÃO DE ITENS (PICK UP / TAKE / DROP)
+# ================================================================
+
 func pick_up(item: Node3D) -> void:
-	if held_item != null or item == null:
+	if item == null:
 		return
 	if "is_held" in item and item.is_held:
 		return
-	if item == held_item:
+
+	# 1. Se for compatível com Slots Rápidos de Ingredientes (4, 5, 6)
+	if is_quick_slot_compatible(item):
+		if is_holding_large_item():
+			if hud and hud.has_method("show_temporary_feedback"):
+				var h_name = held_item.get_display_name() if held_item.has_method("get_display_name") else held_item.name
+				hud.show_temporary_feedback("⚠️ Mãos ocupadas com %s! Solte antes de pegar ingredientes." % h_name)
+			return
+
+		var ing_id = _get_item_canonical_id(item)
+		var ing_name = item.get_display_name() if item.has_method("get_display_name") else item.name
+		var ing_icon = _get_item_icon(item)
+		var scene_path = item.scene_file_path if item.scene_file_path != "" else _get_default_scene_path(ing_id)
+
+		# Busca o primeiro slot vazio (1 unidade física por slot)
+		var target_slot = -1
+		for i in range(quick_slots.size()):
+			if quick_slots[i].is_empty():
+				target_slot = i
+				break
+
+		# Se todos os 3 slots rápidos estão ocupados
+		if target_slot == -1:
+			if hud and hud.has_method("show_temporary_feedback"):
+				hud.show_temporary_feedback("⚠️ Slots rápidos cheios (3/3)! Guarde ou use os ingredientes atuais.")
+			return
+
+		# Armazena exatamente 1 unidade física no slot
+		quick_slots[target_slot] = {
+			"item_id": ing_id,
+			"display_name": ing_name,
+			"icon": ing_icon,
+			"count": 1,
+			"scene_path": scene_path,
+			"data": _extract_item_data(item)
+		}
+
+		# Ativa o slot correspondente (o ingrediente coletado fica ativo na mão ou espátula se compatível)
+		select_quick_slot(target_slot, false)
+
+		if item.get_parent():
+			item.get_parent().remove_child(item)
+		item.queue_free()
+
+		_play_sound(item_audio, "item_pickup", -7.5, 0.05)
+		_notify_hud_quick_slots()
+		_update_interaction_detection()
 		return
+
+	# 2. Caso contrário: Objeto Grande / Único na Mão Principal
+	if is_holding_large_item():
+		return
+
+	# Se a ferramenta atual for Bucha, ou Espátula com item incompatível, troca automaticamente para a Mão Livre
+	if active_tool_slot == ToolSlot.SPONGE:
+		select_tool_slot(ToolSlot.HANDS, false)
+	elif active_tool_slot == ToolSlot.SPATULA and not can_be_picked_with_spatula(item):
+		select_tool_slot(ToolSlot.HANDS, false)
+
+	_despawn_quick_slot_visual()
+	active_quick_slot = -1
 
 	held_item = item
 	if raycast and item is CollisionObject3D:
@@ -452,7 +910,10 @@ func pick_up(item: Node3D) -> void:
 		item.owner = null
 		previous_parent.remove_child(item)
 
-	# Se estiver com a Espátula (Slot 1), assenta a carne perfeitamente sobre a lâmina da espátula
+	if not hold_position:
+		hold_position = get_node_or_null("Head/Camera3D/HoldPosition")
+
+	# Se estiver com a Espátula (Slot 1), assenta a carne sobre a lâmina
 	if active_tool_slot == ToolSlot.SPATULA and tool_holder and tool_holder.get_child_count() > 0:
 		var spatula = tool_holder.get_child(0)
 		var rest_pt = spatula.get_node_or_null("Model/BladeRestPoint")
@@ -460,12 +921,20 @@ func pick_up(item: Node3D) -> void:
 			rest_pt.add_child(item)
 			item.position = Vector3.ZERO
 			item.rotation = Vector3.ZERO
-		else:
+		elif hold_position:
 			hold_position.add_child(item)
 			item.position = Vector3.ZERO
 			item.rotation = Vector3.ZERO
-	else:
+		else:
+			add_child(item)
+			item.position = Vector3.ZERO
+			item.rotation = Vector3.ZERO
+	elif hold_position:
 		hold_position.add_child(item)
+		item.position = Vector3.ZERO
+		item.rotation = Vector3.ZERO
+	else:
+		add_child(item)
 		item.position = Vector3.ZERO
 		item.rotation = Vector3.ZERO
 
@@ -477,9 +946,39 @@ func pick_up(item: Node3D) -> void:
 		item.collision_layer = 0
 		item.collision_mask = 0
 
+	_notify_hud_quick_slots()
 	_update_interaction_detection()
 
 func take_held_item() -> Node3D:
+	# 1. Se estiver consumindo de um Quick Slot ativo
+	if active_quick_slot >= 0 and active_quick_slot < quick_slots.size() and not quick_slots[active_quick_slot].is_empty():
+		var slot = quick_slots[active_quick_slot]
+		var item_to_return: Node3D = held_item
+		held_item = null
+
+		if item_to_return and item_to_return.get_parent():
+			item_to_return.get_parent().remove_child(item_to_return)
+
+		if item_to_return == null:
+			item_to_return = _instantiate_from_slot_data(slot)
+
+		# Consome a unidade física única do slot
+		quick_slots[active_quick_slot] = {}
+		var next_slot = _find_first_occupied_quick_slot()
+		if next_slot != -1:
+			active_quick_slot = next_slot
+			_spawn_quick_slot_visual()
+		else:
+			active_quick_slot = -1
+
+		if raycast and item_to_return is CollisionObject3D:
+			raycast.remove_exception(item_to_return)
+
+		_notify_hud_quick_slots()
+		_update_interaction_detection()
+		return item_to_return
+
+	# 2. Objeto grande / único normal
 	if not held_item:
 		return null
 
@@ -491,17 +990,31 @@ func take_held_item() -> Node3D:
 	if item.get_parent():
 		item.get_parent().remove_child(item)
 
+	_notify_hud_quick_slots()
 	_update_interaction_detection()
 	return item
 
 func drop_item() -> void:
-	if not held_item:
+	if not held_item and (active_quick_slot == -1 or quick_slots[active_quick_slot].is_empty()):
 		return
 
-	var item := held_item
-	held_item = null
-	if raycast and item is CollisionObject3D:
-		raycast.remove_exception(item)
+	# Proteção estrita: Não pode soltar dinheiro de pagamento no chão ou mesas
+	if held_item != null and (held_item.get("is_customer_deposit_money") == true or str(held_item.get("item_id")) == "customer_money"):
+		if hud and hud.has_method("show_temporary_feedback"):
+			hud.show_temporary_feedback("⚠️ O dinheiro do cliente deve ser depositado na caixa registradora!")
+		return
+
+	var item: Node3D = null
+	if active_quick_slot != -1 and not quick_slots[active_quick_slot].is_empty():
+		item = take_held_item()
+	else:
+		item = held_item
+		held_item = null
+		if raycast and item is CollisionObject3D:
+			raycast.remove_exception(item)
+
+	if not item:
+		return
 
 	var current_item_world_pos: Vector3
 	if item.is_inside_tree():

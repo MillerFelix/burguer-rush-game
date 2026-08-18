@@ -249,37 +249,46 @@ func pick_meat(player: Node3D, meat_id: String) -> void:
 	var d_name = "Hambúrguer de Carne" if meat_id == "patty_beef" else "Hambúrguer de Frango"
 	var icon = "🥩" if meat_id == "patty_beef" else "🍗"
 
-	# Caso 1: Jogador segurando um item -> Devolução ou Caixa de Entrega
-	if player.get("held_item") != null:
+	# Caso 1: Devolução de carne segurada na mão
+	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
 		if held is Patty:
 			var matches = (meat_id == "patty_chicken" and held.meat_type == Patty.MeatType.CHICKEN) or (meat_id == "patty_beef" and held.meat_type == Patty.MeatType.BEEF)
 			if matches:
-				player.take_held_item().queue_free()
+				var ret_p = player.take_held_item()
+				if ret_p:
+					ret_p.queue_free()
 				inv.add_stock(meat_id, 1)
 				_show_feedback(player, "%s Devolveu %s à geladeira" % [icon, d_name])
 				_update_patty_visuals()
 				return
-		elif str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-			var box_item_id = str(held.get("contained_item_id"))
-			var valid_meats = ["patty_beef", "patty_chicken"]
-			if box_item_id == meat_id or (box_item_id == "" and meat_id in valid_meats):
-				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-				player.take_held_item().queue_free()
-				inv.add_stock(meat_id, qty)
-				if door_audio:
-					door_audio.stream = SoundSynthesizer.get_stream("box_place")
-					door_audio.play()
-				_show_feedback(player, "📦 %s armazenado na geladeira (+%d un.)!" % [d_name, qty])
-				_update_patty_visuals()
-				return
-			elif box_item_id in valid_meats:
-				_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
-				return
+		elif player.has_method("is_holding_large_item") and player.is_holding_large_item():
+			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+				var box_item_id = str(held.get("contained_item_id"))
+				var valid_meats = ["patty_beef", "patty_chicken"]
+				if box_item_id == meat_id or (box_item_id == "" and meat_id in valid_meats):
+					var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+					player.take_held_item().queue_free()
+					inv.add_stock(meat_id, qty)
+					if door_audio:
+						door_audio.stream = SoundSynthesizer.get_stream("box_place")
+						door_audio.play()
+					_show_feedback(player, "📦 %s armazenado na geladeira (+%d un.)!" % [d_name, qty])
+					_update_patty_visuals()
+					return
+				elif box_item_id in valid_meats:
+					_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+					return
+				else:
+					_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+					return
 			else:
-				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+				_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
 				return
-		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
+
+	# Caso 2: Retirada de carne para a mão / slots rápidos
+	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(meat_id):
+		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
 		return
 
 	# Caso 2: Jogador com as mãos livres -> Pegar carne

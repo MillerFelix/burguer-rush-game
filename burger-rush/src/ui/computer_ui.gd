@@ -4,6 +4,15 @@ extends CanvasLayer
 const MenuPricingManager = preload("res://src/recipes/menu_pricing_manager.gd")
 const FinanceManager = preload("res://src/economy/finance_manager.gd")
 const WaterManager = preload("res://src/core/water_manager.gd")
+const EmployeeManager = preload("res://src/employees/employee_manager.gd")
+const Employee = preload("res://src/employees/employee.gd")
+const OrderManager = preload("res://src/orders/order_manager.gd")
+const Order = preload("res://src/orders/order.gd")
+const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
+const ReputationManager = preload("res://src/customers/reputation_manager.gd")
+const CustomerReview = preload("res://src/customers/customer_review.gd")
+const NewsManager = preload("res://src/news/news_manager.gd")
+const CalendarManager = preload("res://src/core/calendar_manager.gd")
 
 # =============================================================================
 # BURGER RUSH - SISTEMA ADMINISTRATIVO DO RESTAURANTE (PC v2.0)
@@ -13,9 +22,15 @@ const WaterManager = preload("res://src/core/water_manager.gd")
 # - Sidebar: Menu lateral estruturado para todas as abas do sistema.
 # - Aba 1: ESTOQUE GERAL (Conexão real com InventoryManager, filtros, busca, cards dinâmicos)
 # - Aba 2: CENTRAL DE COMPRAS (Catálogo, mercado volátil, carrinho, fornecedores, entregas)
+# - Aba 3: CARDÁPIO & PREÇOS (Controle de precificação e margens de lucro)
+# - Aba 4: LIVRO DE RECEITAS (Fichas técnicas e montagem livre)
+# - Aba 5: FLUXO FINANCEIRO (Balanço diário, receitas por canal, contas a pagar e histórico)
+# - Aba 6: FUNCIONÁRIO (Contratação de 1 funcionário, status real, tarefa atual e salários)
+# - Aba 7: PEDIDOS & DELIVERY (Fluxo completo de Delivery, aceite, motoboy e histórico)
 # =============================================================================
 
 signal closed()
+signal orders_viewed()
 
 # Elementos do Header
 @onready var header_date_label: Label = $MainPanel/OuterWindow/VBox/Header/HBox/DateLabel
@@ -30,9 +45,6 @@ signal closed()
 @onready var inventory_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab
 @onready var purchases_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PurchasesTab
 @onready var menu_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/MenuTab
-@onready var placeholder_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab
-@onready var placeholder_title: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab/TitleLabel
-@onready var placeholder_desc: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/PlaceholderTab/DescLabel
 
 # Elementos da Aba Estoque
 @onready var stock_search_input: LineEdit = $MainPanel/OuterWindow/VBox/Body/ContentArea/InventoryTab/TopBar/HBox/SearchInput
@@ -95,6 +107,53 @@ signal closed()
 @onready var btn_finances_history: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FilterBar/HBox/BtnFinancesHistory
 @onready var finances_content_vbox: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/FinancesTab/FinancesScroll/Margin/FinancesContentVBox
 
+# Elementos da Aba Funcionário
+@onready var employees_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab
+@onready var employees_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/TopBar/HBox/EmployeesSummaryLabel
+@onready var employees_content_vbox: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/EmployeesScroll/Margin/EmployeesContentVBox
+
+# Elementos da Aba Pedidos & Delivery
+@onready var orders_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab
+@onready var orders_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/TopBar/HBox/OrdersSummaryLabel
+@onready var delivery_kpi_hbox: HBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/DeliveryKPICardsBar/HBox
+@onready var btn_orders_all: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersAll
+@onready var btn_orders_dinein: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersDineIn
+@onready var btn_orders_drivethru: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersDriveThru
+@onready var btn_orders_delivery: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersDelivery
+@onready var orders_content_vbox: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/OrdersScroll/Margin/OrdersContentVBox
+
+# Elementos da Aba Avaliações
+@onready var reviews_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab
+@onready var reviews_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/TopBar/HBox/ReviewsSummaryLabel
+@onready var reviews_header_container: HBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/ReputationHeaderBar/HeaderContainer
+@onready var btn_reviews_all: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox/BtnReviewsAll
+@onready var btn_reviews_dinein: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox/BtnReviewsDineIn
+@onready var btn_reviews_drivethru: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox/BtnReviewsDriveThru
+@onready var btn_reviews_delivery: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox/BtnReviewsDelivery
+@onready var btn_reviews_5stars: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox/BtnReviews5Stars
+@onready var btn_reviews_complaints: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/FilterBar/HBox/BtnReviewsComplaints
+@onready var reviews_content_vbox: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/ReviewsTab/ReviewsScroll/Margin/ReviewsContentVBox
+
+# Elementos da Aba Calendário
+@onready var calendar_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab
+@onready var calendar_summary_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/TopBar/HBox/CalendarSummaryLabel
+@onready var btn_prev_month: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/MonthNavHBox/BtnPrevMonth
+@onready var month_title_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/MonthNavHBox/MonthTitleLabel
+@onready var btn_next_month: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/MonthNavHBox/BtnNextMonth
+@onready var week_header_grid: GridContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/WeekHeaderGrid
+@onready var days_grid: GridContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/MonthPanel/MonthVBox/DaysGrid
+@onready var selected_day_title_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DayHeaderHBox/SelectedDayTitleLabel
+@onready var btn_day_sub_summary: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar/BtnDaySubSummary
+@onready var btn_day_sub_orders: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar/BtnDaySubOrders
+@onready var btn_day_sub_reviews: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar/BtnDaySubReviews
+@onready var btn_day_sub_news: Button = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DaySubNavBar/BtnDaySubNews
+@onready var day_detail_content_vbox: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DayDetailScroll/DayDetailContentVBox
+
+# Elementos da Aba Notícias / Jornal da Cidade
+@onready var news_tab: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab
+@onready var news_date_label: Label = $MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/TopBar/HBox/NewsDateLabel
+@onready var news_content_vbox: VBoxContainer = $MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/NewsScroll/Margin/NewsContentVBox
+
 enum TabID {
 	INVENTORY,
 	PURCHASES,
@@ -103,10 +162,9 @@ enum TabID {
 	FINANCES,
 	EMPLOYEES,
 	ORDERS,
-	ENERGY,
-	NEWS,
-	EQUIPMENT,
-	SETTINGS
+	REVIEWS,
+	CALENDAR,
+	NEWS
 }
 
 var current_tab: TabID = TabID.INVENTORY
@@ -124,10 +182,30 @@ var current_recipe_search: String = ""
 
 var current_finances_section: String = "OVERVIEW" # OVERVIEW, REVENUE, EXPENSES, BILLS, HISTORY
 
+var current_orders_filter: String = "ALL" # ALL, DINE_IN, DRIVE_THRU, DELIVERY
+
+var current_reviews_filter: String = "ALL" # ALL, DINE_IN, DRIVE_THRU, DELIVERY, 5_STARS, COMPLAINTS
+
+var viewing_calendar_year: int = 2026
+var viewing_calendar_month: int = 1
+var selected_calendar_day: int = 1
+var selected_calendar_subtab: String = "SUMMARY" # SUMMARY, ORDERS, REVIEWS, NEWS
+
 # Quantidades temporárias selecionadas nos cards antes de adicionar ao carrinho
 var card_selected_quantities: Dictionary = {}
 
+var unviewed_orders_count: int = 0
+var notified_orders_map: Dictionary = {}
+var notification_toast_panel: PanelContainer = null
+var notification_toast_label: Label = null
+var notification_toast_timer: float = 0.0
+var ui_notification_audio: AudioStreamPlayer = null
+
 var nav_buttons_map: Dictionary = {}
+
+var _employee_poll_timer: float = 0.0
+var _orders_poll_timer: float = 0.0
+var _reviews_poll_timer: float = 0.0
 
 func _ready() -> void:
 	visible = false
@@ -137,6 +215,11 @@ func _ready() -> void:
 	_setup_menu_tab()
 	_setup_recipes_tab()
 	_setup_finances_tab()
+	_setup_employees_tab()
+	_setup_orders_tab()
+	_setup_reviews_tab()
+	_setup_calendar_tab()
+	_setup_news_tab()
 
 func _setup_signals() -> void:
 	if close_btn and not close_btn.pressed.is_connected(close):
@@ -223,17 +306,16 @@ func _setup_navigation_sidebar() -> void:
 	nav_buttons_map.clear()
 
 	var tabs_def = [
-		{"id": TabID.INVENTORY, "icon": "📦", "title": "Estoque Geral", "active": true, "badge": ""},
-		{"id": TabID.PURCHASES, "icon": "🛒", "title": "Central de Compras", "active": true, "badge": ""},
-		{"id": TabID.MENU, "icon": "🍔", "title": "Cardápio & Preços", "active": true, "badge": ""},
-		{"id": TabID.RECIPES, "icon": "📖", "title": "Livro de Receitas", "active": true, "badge": ""},
-		{"id": TabID.FINANCES, "icon": "💵", "title": "Fluxo Financeiro", "active": true, "badge": "NOVO"},
-		{"id": TabID.EMPLOYEES, "icon": "👥", "title": "Funcionários", "active": false, "badge": "Em breve"},
-		{"id": TabID.ORDERS, "icon": "📋", "title": "Histórico de Pedidos", "active": false, "badge": "Em breve"},
-		{"id": TabID.ENERGY, "icon": "⚡", "title": "Rede Elétrica", "active": false, "badge": "Em breve"},
-		{"id": TabID.NEWS, "icon": "📰", "title": "Jornal da Cidade", "active": false, "badge": "Em breve"},
-		{"id": TabID.EQUIPMENT, "icon": "⚙️", "title": "Equipamentos", "active": false, "badge": "Em breve"},
-		{"id": TabID.SETTINGS, "icon": "🛠️", "title": "Configurações", "active": false, "badge": "Em breve"}
+		{"id": TabID.INVENTORY, "icon": "📦", "title": "Estoque", "active": true, "badge": ""},
+		{"id": TabID.PURCHASES, "icon": "🛒", "title": "Compras", "active": true, "badge": ""},
+		{"id": TabID.MENU, "icon": "🍔", "title": "Cardápio", "active": true, "badge": ""},
+		{"id": TabID.RECIPES, "icon": "📖", "title": "Receitas", "active": true, "badge": ""},
+		{"id": TabID.FINANCES, "icon": "💵", "title": "Finanças", "active": true, "badge": ""},
+		{"id": TabID.EMPLOYEES, "icon": "👥", "title": "Funcionários", "active": true, "badge": ""},
+		{"id": TabID.ORDERS, "icon": "📋", "title": "Pedidos", "active": true, "badge": ""},
+		{"id": TabID.REVIEWS, "icon": "⭐", "title": "Avaliações", "active": true, "badge": ""},
+		{"id": TabID.CALENDAR, "icon": "📅", "title": "Calendário", "active": true, "badge": ""},
+		{"id": TabID.NEWS, "icon": "📰", "title": "Notícias / Jornal", "active": true, "badge": ""}
 	]
 
 	for t in tabs_def:
@@ -243,8 +325,6 @@ func _setup_navigation_sidebar() -> void:
 		btn.focus_mode = Control.FOCUS_NONE
 
 		var text = "%s  %s" % [t["icon"], t["title"]]
-		if t["badge"] != "":
-			text += "  [%s]" % t["badge"]
 		btn.text = text
 
 		var tab_id_val: TabID = t["id"]
@@ -257,11 +337,16 @@ func _setup_navigation_sidebar() -> void:
 func open() -> void:
 	visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	var t_title = "Estoque Geral"
-	if current_tab == TabID.PURCHASES: t_title = "Central de Compras"
-	elif current_tab == TabID.MENU: t_title = "Cardápio & Preços"
-	elif current_tab == TabID.RECIPES: t_title = "Livro de Receitas"
-	elif current_tab == TabID.FINANCES: t_title = "Fluxo Financeiro"
+	var t_title = "Estoque"
+	if current_tab == TabID.PURCHASES: t_title = "Compras"
+	elif current_tab == TabID.MENU: t_title = "Cardápio"
+	elif current_tab == TabID.RECIPES: t_title = "Receitas"
+	elif current_tab == TabID.FINANCES: t_title = "Finanças"
+	elif current_tab == TabID.EMPLOYEES: t_title = "Funcionários"
+	elif current_tab == TabID.ORDERS: t_title = "Pedidos"
+	elif current_tab == TabID.REVIEWS: t_title = "Avaliações"
+	elif current_tab == TabID.CALENDAR: t_title = "Calendário"
+	elif current_tab == TabID.NEWS: t_title = "Notícias / Jornal"
 	_switch_tab(current_tab, t_title)
 	_refresh_header_data()
 	if current_tab == TabID.INVENTORY:
@@ -274,6 +359,16 @@ func open() -> void:
 		_refresh_recipes_tab()
 	elif current_tab == TabID.FINANCES:
 		_refresh_finances_tab()
+	elif current_tab == TabID.EMPLOYEES:
+		_refresh_employees_tab()
+	elif current_tab == TabID.ORDERS:
+		_refresh_orders_tab()
+	elif current_tab == TabID.REVIEWS:
+		_refresh_reviews_tab()
+	elif current_tab == TabID.CALENDAR:
+		_refresh_calendar_tab()
+	elif current_tab == TabID.NEWS:
+		_refresh_news_tab()
 
 func close() -> void:
 	visible = false
@@ -284,9 +379,24 @@ func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
 		close()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if visible:
 		_refresh_header_data()
+		if current_tab == TabID.EMPLOYEES:
+			_employee_poll_timer -= delta
+			if _employee_poll_timer <= 0.0:
+				_employee_poll_timer = 0.30
+				_update_employee_live_status()
+		elif current_tab == TabID.ORDERS:
+			_orders_poll_timer -= delta
+			if _orders_poll_timer <= 0.0:
+				_orders_poll_timer = 0.80
+				_refresh_orders_tab()
+		elif current_tab == TabID.REVIEWS:
+			_reviews_poll_timer -= delta
+			if _reviews_poll_timer <= 0.0:
+				_reviews_poll_timer = 1.0
+				_refresh_reviews_tab()
 
 func _refresh_header_data() -> void:
 	var clock = GameClock.get_instance()
@@ -312,21 +422,33 @@ func _switch_tab(tab_id: TabID, tab_title: String = "") -> void:
 	var men_t = menu_tab if menu_tab else _get_tab_node("MenuTab")
 	var rec_t = recipes_tab if recipes_tab else _get_tab_node("RecipesTab")
 	var fin_t = finances_tab if finances_tab else _get_tab_node("FinancesTab")
-	var plc_t = placeholder_tab if placeholder_tab else _get_tab_node("PlaceholderTab")
+	var emp_t = employees_tab if employees_tab else _get_tab_node("EmployeesTab")
+	var ord_t = orders_tab if orders_tab else _get_tab_node("OrdersTab")
+	var rev_t = reviews_tab if reviews_tab else _get_tab_node("ReviewsTab")
+	var cal_t = calendar_tab if calendar_tab else _get_tab_node("CalendarTab")
+	var news_t = news_tab if news_tab else _get_tab_node("NewsTab")
 
 	inventory_tab = inv_t
 	purchases_tab = pur_t
 	menu_tab = men_t
 	recipes_tab = rec_t
 	finances_tab = fin_t
-	placeholder_tab = plc_t
+	employees_tab = emp_t
+	orders_tab = ord_t
+	reviews_tab = rev_t
+	calendar_tab = cal_t
+	news_tab = news_t
 
 	if inv_t: inv_t.visible = (tab_id == TabID.INVENTORY)
 	if pur_t: pur_t.visible = (tab_id == TabID.PURCHASES)
 	if men_t: men_t.visible = (tab_id == TabID.MENU)
 	if rec_t: rec_t.visible = (tab_id == TabID.RECIPES)
 	if fin_t: fin_t.visible = (tab_id == TabID.FINANCES)
-	if plc_t: plc_t.visible = (tab_id != TabID.INVENTORY and tab_id != TabID.PURCHASES and tab_id != TabID.MENU and tab_id != TabID.RECIPES and tab_id != TabID.FINANCES)
+	if emp_t: emp_t.visible = (tab_id == TabID.EMPLOYEES)
+	if ord_t: ord_t.visible = (tab_id == TabID.ORDERS)
+	if rev_t: rev_t.visible = (tab_id == TabID.REVIEWS)
+	if cal_t: cal_t.visible = (tab_id == TabID.CALENDAR)
+	if news_t: news_t.visible = (tab_id == TabID.NEWS)
 
 	if tab_id == TabID.INVENTORY:
 		_refresh_inventory_tab()
@@ -338,14 +460,17 @@ func _switch_tab(tab_id: TabID, tab_title: String = "") -> void:
 		_refresh_recipes_tab()
 	elif tab_id == TabID.FINANCES:
 		_refresh_finances_tab()
-	else:
-		if plc_t:
-			var p_title = placeholder_title if placeholder_title else plc_t.get_node_or_null("TitleLabel") as Label
-			var p_desc = placeholder_desc if placeholder_desc else plc_t.get_node_or_null("DescLabel") as Label
-			if p_title:
-				p_title.text = "Módulo: %s" % tab_title
-			if p_desc:
-				p_desc.text = "Este módulo será integrado nas próximas etapas do Burger Rush OS.\nTodos os dados e sistemas de gameplay continuam funcionando normalmente."
+	elif tab_id == TabID.EMPLOYEES:
+		_refresh_employees_tab()
+	elif tab_id == TabID.ORDERS:
+		_mark_orders_as_viewed()
+		_refresh_orders_tab()
+	elif tab_id == TabID.REVIEWS:
+		_refresh_reviews_tab()
+	elif tab_id == TabID.CALENDAR:
+		_refresh_calendar_tab()
+	elif tab_id == TabID.NEWS:
+		_refresh_news_tab()
 
 func _update_nav_button_styles() -> void:
 	for t_id in nav_buttons_map.keys():
@@ -2536,7 +2661,7 @@ func _create_bill_card(bill: Dictionary, fin: FinanceManager, expanded: bool = f
 	card.add_child(vbox)
 	return card
 
-func _create_breakdown_card(title: String, icon: String, total_amount: float, items: Array[Dictionary], is_expense: bool = false) -> PanelContainer:
+func _create_breakdown_card(title: String, icon: String, total_amount: float, items: Array, is_expense: bool = false) -> PanelContainer:
 	var card = PanelContainer.new()
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.12, 0.16, 0.22, 0.92) if not is_expense else Color(0.18, 0.12, 0.14, 0.92)
@@ -2598,8 +2723,2414 @@ func _on_pay_bill_clicked(bill_id: String, fin: FinanceManager) -> void:
 	var res = fin.pay_bill(bill_id)
 	_refresh_header_data()
 	_refresh_finances_tab()
+	if current_tab == TabID.EMPLOYEES:
+		_refresh_employees_tab()
 
 	var p = get_parent()
 	if p and p.has_node("HUD") and p.get_node("HUD").has_method("show_temporary_feedback"):
 		var icon = "💳" if res.get("success", false) else "⚠️"
 		p.get_node("HUD").show_temporary_feedback("%s %s" % [icon, res.get("message", "")])
+
+# =============================================================================
+# ABA 6: GESTÃO DE FUNCIONÁRIO DO RESTAURANTE (EMPLOYEES TAB)
+# =============================================================================
+
+var _live_task_label: Label = null
+var _live_status_label: Label = null
+var _live_state_label: Label = null
+
+func _setup_employees_tab() -> void:
+	if not employees_tab:
+		employees_tab = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab")
+	if not employees_summary_label:
+		employees_summary_label = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/TopBar/HBox/EmployeesSummaryLabel")
+	if not employees_content_vbox:
+		employees_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/EmployeesScroll/Margin/EmployeesContentVBox")
+
+	var emp_mgr = EmployeeManager.get_instance()
+	if not emp_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		emp_mgr = get_tree().root.find_child("EmployeeManager", true, false)
+	if emp_mgr:
+		if not emp_mgr.employee_hired.is_connected(_on_employee_manager_updated):
+			emp_mgr.employee_hired.connect(_on_employee_manager_updated)
+		if not emp_mgr.employee_fired.is_connected(_on_employee_manager_updated):
+			emp_mgr.employee_fired.connect(_on_employee_manager_updated)
+
+func _on_employee_manager_updated(_arg = null) -> void:
+	if visible and current_tab == TabID.EMPLOYEES:
+		_refresh_employees_tab()
+
+func _update_employee_live_status() -> void:
+	var emp_mgr = EmployeeManager.get_instance()
+	if not emp_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		emp_mgr = get_tree().root.find_child("EmployeeManager", true, false)
+	if not emp_mgr:
+		return
+
+	var emp = emp_mgr.get_hired_employee()
+	if not emp:
+		if _live_task_label != null:
+			_refresh_employees_tab()
+		return
+
+	var curr_task_text = emp.get_current_task_text() if emp.has_method("get_current_task_text") else "Aguardando tarefa"
+	var curr_status_text = emp.get_current_status_text() if emp.has_method("get_current_status_text") else "Aguardando tarefa"
+	var curr_state_text = emp.get_work_state_text() if emp.has_method("get_work_state_text") else "Aguardando"
+
+	if _live_task_label and is_instance_valid(_live_task_label):
+		_live_task_label.text = "⚡ %s" % curr_task_text
+	if _live_status_label and is_instance_valid(_live_status_label):
+		_live_status_label.text = "📋 Status atual: %s" % curr_status_text
+	if _live_state_label and is_instance_valid(_live_state_label):
+		_live_state_label.text = "Estado: %s" % curr_state_text
+		if curr_state_text == "Trabalhando":
+			_live_state_label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45, 1.0))
+		else:
+			_live_state_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3, 1.0))
+
+func _refresh_employees_tab() -> void:
+	_live_task_label = null
+	_live_status_label = null
+	_live_state_label = null
+
+	if not employees_tab:
+		employees_tab = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab")
+	if not employees_summary_label:
+		employees_summary_label = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/TopBar/HBox/EmployeesSummaryLabel")
+	if not employees_content_vbox:
+		employees_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/EmployeesTab/EmployeesScroll/Margin/EmployeesContentVBox")
+
+	if not employees_content_vbox:
+		return
+
+	# Limpa o container de conteúdo
+	for child in employees_content_vbox.get_children():
+		employees_content_vbox.remove_child(child)
+		child.queue_free()
+
+	var emp_mgr = EmployeeManager.get_instance()
+	if not emp_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		emp_mgr = get_tree().root.find_child("EmployeeManager", true, false)
+
+	var econ = EconomyManager.get_instance()
+	if not econ and is_inside_tree() and get_tree() and get_tree().root:
+		econ = get_tree().root.find_child("EconomyManager", true, false)
+
+	var fin = FinanceManager.get_instance()
+	if not fin and is_inside_tree() and get_tree() and get_tree().root:
+		fin = get_tree().root.find_child("FinanceManager", true, false)
+
+	var clock = GameClock.get_instance()
+
+	if not emp_mgr:
+		var err_lbl = Label.new()
+		err_lbl.text = "⚠️ Sistema de funcionários indisponível no momento."
+		err_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		employees_content_vbox.add_child(err_lbl)
+		return
+
+	if not emp_mgr.has_hired_employee():
+		_render_not_hired_employee_view(emp_mgr, econ, clock)
+	else:
+		var emp = emp_mgr.get_hired_employee()
+		_render_hired_employee_view(emp, emp_mgr, fin, econ, clock)
+
+# -----------------------------------------------------------------------------
+# TELA 1: NENHUM FUNCIONÁRIO CONTRATADO (APRESENTAÇÃO & CONTRATAÇÃO)
+# -----------------------------------------------------------------------------
+
+func _render_not_hired_employee_view(emp_mgr: EmployeeManager, econ: EconomyManager, _clock: GameClock) -> void:
+	if employees_summary_label:
+		employees_summary_label.text = "Nenhum funcionário contratado • 1 Vaga Disponível"
+
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	style.border_color = Color(0.25, 0.45, 0.7, 0.7)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(10)
+	style.set_content_margin_all(18)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 14)
+
+	# 1. Top Header com Avatar e Apresentação
+	var header_hbox = HBoxContainer.new()
+	header_hbox.add_theme_constant_override("separation", 16)
+
+	var avatar_box = PanelContainer.new()
+	var av_style = StyleBoxFlat.new()
+	av_style.bg_color = Color(0.15, 0.20, 0.30, 0.9)
+	av_style.border_color = Color(0.3, 0.5, 0.8, 0.8)
+	av_style.set_border_width_all(1)
+	av_style.set_corner_radius_all(8)
+	av_style.set_content_margin_all(12)
+	avatar_box.add_theme_stylebox_override("panel", av_style)
+
+	var avatar_lbl = Label.new()
+	avatar_lbl.text = "👤"
+	avatar_lbl.add_theme_font_size_override("font_size", 36)
+	avatar_box.add_child(avatar_lbl)
+	header_hbox.add_child(avatar_box)
+
+	var candidate_info = VBoxContainer.new()
+	candidate_info.add_theme_constant_override("separation", 4)
+	candidate_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var name_lbl = Label.new()
+	name_lbl.text = "Carlos  •  Atendente & Auxiliar Geral"
+	name_lbl.add_theme_font_size_override("font_size", 16)
+	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	candidate_info.add_child(name_lbl)
+
+	var desc_lbl = Label.new()
+	desc_lbl.text = "Candidato experiente e polivalente, pronto para assumir tarefas operacionais no restaurante."
+	desc_lbl.add_theme_font_size_override("font_size", 12)
+	desc_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	candidate_info.add_child(desc_lbl)
+
+	var status_badge = Label.new()
+	status_badge.text = "⚪ DISPONÍVEL PARA CONTRATAÇÃO (LIMITE: 1 FUNCIONÁRIO)"
+	status_badge.add_theme_font_size_override("font_size", 11)
+	status_badge.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+	candidate_info.add_child(status_badge)
+
+	header_hbox.add_child(candidate_info)
+	vbox.add_child(header_hbox)
+
+	vbox.add_child(HSeparator.new())
+
+	# 2. Termos Financeiros de Contratação e Salário
+	var terms_hbox = HBoxContainer.new()
+	terms_hbox.add_theme_constant_override("separation", 14)
+	terms_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var hiring_cost_box = _create_mini_info_box("💵 TAXA DE CONTRATAÇÃO", "R$ %.2f" % emp_mgr.hiring_cost, "Taxa única descontada do caixa ao contratar", Color(0.35, 0.9, 0.5, 1.0))
+	hiring_cost_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	terms_hbox.add_child(hiring_cost_box)
+
+	var salary_box = _create_mini_info_box("👥 SALÁRIO DIÁRIO", "R$ %.2f / dia" % emp_mgr.daily_salary, "Cobrado no final do expediente via Finanças", Color(0.4, 0.8, 1.0, 1.0))
+	salary_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	terms_hbox.add_child(salary_box)
+
+	vbox.add_child(terms_hbox)
+
+	vbox.add_child(HSeparator.new())
+
+	# 3. Principais Funções Operacionais do Funcionário
+	var duties_title = Label.new()
+	duties_title.text = "📋 PRINCIPAIS FUNÇÕES E ATRIBUIÇÕES AUTÔNOMAS:"
+	duties_title.add_theme_font_size_override("font_size", 13)
+	duties_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+	vbox.add_child(duties_title)
+
+	var duties_grid = GridContainer.new()
+	duties_grid.columns = 2
+	duties_grid.add_theme_constant_override("h_separation", 16)
+	duties_grid.add_theme_constant_override("v_separation", 6)
+
+	var duties = [
+		"🧹 Limpar mesas do salão após refeição",
+		"🧼 Limpar poças e sujeiras no chão",
+		"🧽 Higienizar bancadas, chapa e fritadeira",
+		"🚿 Lavar e desinfetar a bucha na pia",
+		"📝 Atender clientes e anotar pedidos no salão",
+		"🚗 Atender veículos na janela do Drive-Thru",
+		"💵 Atender o caixa e processar pagamentos",
+		"📦 Guardar mercadorias recebidas no armazém",
+		"🧍 Aguardar tarefas em seu posto de prontidão"
+	]
+
+	for d in duties:
+		var d_lbl = Label.new()
+		d_lbl.text = d
+		d_lbl.add_theme_font_size_override("font_size", 12)
+		d_lbl.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 1.0))
+		duties_grid.add_child(d_lbl)
+
+	vbox.add_child(duties_grid)
+
+	vbox.add_child(HSeparator.new())
+
+	# 4. Botão de Ação / Contratação
+	var bottom_action_hbox = HBoxContainer.new()
+	bottom_action_hbox.add_theme_constant_override("separation", 16)
+
+	var hint_lbl = Label.new()
+	hint_lbl.text = "Ao contratar, o funcionário chegará de fora do restaurante e assumirá suas tarefas imediatamente."
+	hint_lbl.add_theme_font_size_override("font_size", 11)
+	hint_lbl.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8, 1.0))
+	hint_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	bottom_action_hbox.add_child(hint_lbl)
+
+	var hire_btn = Button.new()
+	hire_btn.custom_minimum_size = Vector2(250, 42)
+	hire_btn.text = "✍️ CONTRATAR FUNCIONÁRIO"
+	hire_btn.focus_mode = Control.FOCUS_NONE
+	hire_btn.add_theme_font_size_override("font_size", 13)
+
+	var current_money = econ.get_money() if econ else 0.0
+	var can_afford = current_money >= emp_mgr.hiring_cost
+
+	var btn_style = StyleBoxFlat.new()
+	if can_afford:
+		btn_style.bg_color = Color(0.12, 0.55, 0.3, 1.0)
+		btn_style.border_color = Color(0.25, 0.8, 0.45, 1.0)
+	else:
+		btn_style.bg_color = Color(0.25, 0.25, 0.3, 0.7)
+		btn_style.border_color = Color(0.4, 0.4, 0.45, 0.7)
+		hire_btn.tooltip_text = "Saldo insuficiente (R$ %.2f necessário)" % emp_mgr.hiring_cost
+
+	btn_style.set_border_width_all(1)
+	btn_style.set_corner_radius_all(6)
+	hire_btn.add_theme_stylebox_override("normal", btn_style)
+	hire_btn.add_theme_stylebox_override("hover", btn_style)
+	hire_btn.add_theme_stylebox_override("pressed", btn_style)
+
+	hire_btn.pressed.connect(func(): _on_hire_employee_clicked(emp_mgr))
+	bottom_action_hbox.add_child(hire_btn)
+
+	vbox.add_child(bottom_action_hbox)
+	card.add_child(vbox)
+	employees_content_vbox.add_child(card)
+
+# -----------------------------------------------------------------------------
+# TELA 2: FUNCIONÁRIO CONTRATADO (DASHBOARD & STATUS EM TEMPO REAL)
+# -----------------------------------------------------------------------------
+
+func _render_hired_employee_view(emp: Employee, emp_mgr: EmployeeManager, fin: FinanceManager, _econ: EconomyManager, _clock: GameClock) -> void:
+	if employees_summary_label:
+		employees_summary_label.text = "Funcionário Contratado • %s (%s)" % [emp.employee_name, emp.get_role_name()]
+
+	# 1. Header Card com Identidade do Funcionário
+	var id_card = PanelContainer.new()
+	var id_style = StyleBoxFlat.new()
+	id_style.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	id_style.border_color = Color(0.25, 0.45, 0.7, 0.7)
+	id_style.set_border_width_all(1)
+	id_style.set_corner_radius_all(8)
+	id_style.set_content_margin_all(14)
+	id_card.add_theme_stylebox_override("panel", id_style)
+
+	var id_hbox = HBoxContainer.new()
+	id_hbox.add_theme_constant_override("separation", 14)
+
+	var av_lbl = Label.new()
+	av_lbl.text = "🧑‍🍳"
+	av_lbl.add_theme_font_size_override("font_size", 32)
+	id_hbox.add_child(av_lbl)
+
+	var info_vbox = VBoxContainer.new()
+	info_vbox.add_theme_constant_override("separation", 2)
+	info_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var name_lbl = Label.new()
+	name_lbl.text = "%s  •  %s" % [emp.employee_name, emp.get_role_name()]
+	name_lbl.add_theme_font_size_override("font_size", 15)
+	name_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	info_vbox.add_child(name_lbl)
+
+	var meta_lbl = Label.new()
+	meta_lbl.text = "📅 Contratado no Dia %d  │  🏆 Tarefas Concluídas: %d" % [emp.hired_day, emp.tasks_completed]
+	meta_lbl.add_theme_font_size_override("font_size", 11)
+	meta_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	info_vbox.add_child(meta_lbl)
+
+	id_hbox.add_child(info_vbox)
+
+	var badge_lbl = Label.new()
+	badge_lbl.text = "🟢 CONTRATADO"
+	badge_lbl.add_theme_font_size_override("font_size", 12)
+	badge_lbl.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45, 1.0))
+	badge_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	id_hbox.add_child(badge_lbl)
+
+	id_card.add_child(id_hbox)
+	employees_content_vbox.add_child(id_card)
+
+	# 2. ÁREA DE DESTAQUE - TAREFA ATUAL & STATUS DO NPC
+	var task_card = PanelContainer.new()
+	var task_style = StyleBoxFlat.new()
+	task_style.bg_color = Color(0.08, 0.16, 0.22, 0.95)
+	task_style.border_color = Color(0.3, 0.65, 0.95, 0.9)
+	task_style.border_width_left = 3
+	task_style.border_width_top = 1
+	task_style.border_width_right = 1
+	task_style.border_width_bottom = 1
+	task_style.set_corner_radius_all(8)
+	task_style.set_content_margin_all(14)
+	task_card.add_theme_stylebox_override("panel", task_style)
+
+	var task_vbox = VBoxContainer.new()
+	task_vbox.add_theme_constant_override("separation", 6)
+
+	var task_header_lbl = Label.new()
+	task_header_lbl.text = "⚡ TAREFA ATUAL DO FUNCIONÁRIO"
+	task_header_lbl.add_theme_font_size_override("font_size", 12)
+	task_header_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+	task_vbox.add_child(task_header_lbl)
+
+	var task_name = emp.get_current_task_text() if emp.has_method("get_current_task_text") else "Aguardando tarefa"
+	_live_task_label = Label.new()
+	_live_task_label.text = "⚡ %s" % task_name
+	_live_task_label.add_theme_font_size_override("font_size", 17)
+	_live_task_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	task_vbox.add_child(_live_task_label)
+
+	var sub_row = HBoxContainer.new()
+	sub_row.add_theme_constant_override("separation", 16)
+
+	var status_name = emp.get_current_status_text() if emp.has_method("get_current_status_text") else "Aguardando tarefa"
+	_live_status_label = Label.new()
+	_live_status_label.text = "📋 Status atual: %s" % status_name
+	_live_status_label.add_theme_font_size_override("font_size", 12)
+	_live_status_label.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+	sub_row.add_child(_live_status_label)
+
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sub_row.add_child(spacer)
+
+	var state_name = emp.get_work_state_text() if emp.has_method("get_work_state_text") else "Aguardando"
+	_live_state_label = Label.new()
+	_live_state_label.text = "Estado: %s" % state_name
+	_live_state_label.add_theme_font_size_override("font_size", 12)
+	if state_name == "Trabalhando":
+		_live_state_label.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45, 1.0))
+	else:
+		_live_state_label.add_theme_color_override("font_color", Color(1.0, 0.8, 0.3, 1.0))
+	sub_row.add_child(_live_state_label)
+
+	task_vbox.add_child(sub_row)
+	task_card.add_child(task_vbox)
+	employees_content_vbox.add_child(task_card)
+
+	# 3. Cards Financeiros (Salário Diário e Salário Pendente)
+	var fin_hbox = HBoxContainer.new()
+	fin_hbox.add_theme_constant_override("separation", 12)
+	fin_hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	# Card A: Salário Diário
+	var salary_daily_card = _create_mini_info_box("👥 SALÁRIO DIÁRIO", "R$ %.2f / dia" % emp.daily_salary, "Gerado no final do dia como conta a pagar", Color(0.4, 0.8, 1.0, 1.0))
+	salary_daily_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	fin_hbox.add_child(salary_daily_card)
+
+	# Card B: Salário Pendente
+	var pending_salary: float = 0.0
+	var is_salary_paid: bool = true
+	if fin:
+		var bills = fin.get_active_bills()
+		if bills.has("salaries"):
+			var b = bills["salaries"]
+			pending_salary = b.get("amount", 0.0)
+			is_salary_paid = b.get("is_paid", true)
+
+	var salary_pending_card = PanelContainer.new()
+	var p_style = StyleBoxFlat.new()
+	if not is_salary_paid and pending_salary > 0.0:
+		p_style.bg_color = Color(0.18, 0.12, 0.08, 0.95)
+		p_style.border_color = Color(0.85, 0.55, 0.2, 0.8)
+	else:
+		p_style.bg_color = Color(0.08, 0.16, 0.12, 0.95)
+		p_style.border_color = Color(0.2, 0.6, 0.35, 0.8)
+
+	p_style.set_border_width_all(1)
+	p_style.set_corner_radius_all(8)
+	p_style.set_content_margin_all(12)
+	salary_pending_card.add_theme_stylebox_override("panel", p_style)
+	salary_pending_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var p_vbox = VBoxContainer.new()
+	p_vbox.add_theme_constant_override("separation", 4)
+
+	var p_top_hbox = HBoxContainer.new()
+	var p_title_lbl = Label.new()
+	p_title_lbl.text = "📑 SALÁRIO PENDENTE"
+	p_title_lbl.add_theme_font_size_override("font_size", 11)
+	p_title_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	p_top_hbox.add_child(p_title_lbl)
+
+	var p_spacer = Control.new()
+	p_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	p_top_hbox.add_child(p_spacer)
+
+	var p_badge = Label.new()
+	if not is_salary_paid and pending_salary > 0.0:
+		p_badge.text = "⚠️ PENDENTE"
+		p_badge.add_theme_color_override("font_color", Color(1.0, 0.65, 0.2, 1.0))
+	else:
+		p_badge.text = "✔ EM DIA"
+		p_badge.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45, 1.0))
+	p_badge.add_theme_font_size_override("font_size", 10)
+	p_top_hbox.add_child(p_badge)
+	p_vbox.add_child(p_top_hbox)
+
+	var p_val_hbox = HBoxContainer.new()
+	var p_val_lbl = Label.new()
+	p_val_lbl.text = "R$ %.2f" % pending_salary
+	p_val_lbl.add_theme_font_size_override("font_size", 17)
+	p_val_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0) if not is_salary_paid and pending_salary > 0.0 else Color(0.3, 0.9, 0.45, 1.0))
+	p_val_hbox.add_child(p_val_lbl)
+
+	var p_val_spacer = Control.new()
+	p_val_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	p_val_hbox.add_child(p_val_spacer)
+
+	if not is_salary_paid and pending_salary > 0.0:
+		var pay_salary_btn = Button.new()
+		pay_salary_btn.text = "💳 PAGAR SALÁRIO"
+		pay_salary_btn.focus_mode = Control.FOCUS_NONE
+		pay_salary_btn.add_theme_font_size_override("font_size", 11)
+		var p_btn_style = StyleBoxFlat.new()
+		p_btn_style.bg_color = Color(0.15, 0.55, 0.25, 0.95)
+		p_btn_style.set_corner_radius_all(6)
+		pay_salary_btn.add_theme_stylebox_override("normal", p_btn_style)
+		pay_salary_btn.pressed.connect(func(): _on_pay_bill_clicked("salaries", fin))
+		p_val_hbox.add_child(pay_salary_btn)
+
+	p_vbox.add_child(p_val_hbox)
+	salary_pending_card.add_child(p_vbox)
+	fin_hbox.add_child(salary_pending_card)
+
+	employees_content_vbox.add_child(fin_hbox)
+
+	# 4. Painel de Atribuições e Status de Operação
+	var duties_card = PanelContainer.new()
+	var d_style = StyleBoxFlat.new()
+	d_style.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	d_style.border_color = Color(0.2, 0.3, 0.45, 0.7)
+	d_style.set_border_width_all(1)
+	d_style.set_corner_radius_all(8)
+	d_style.set_content_margin_all(14)
+	duties_card.add_theme_stylebox_override("panel", d_style)
+
+	var d_vbox = VBoxContainer.new()
+	d_vbox.add_theme_constant_override("separation", 8)
+
+	var d_title = Label.new()
+	d_title.text = "🛠️ FUNÇÕES ATIVAS DO FUNCIONÁRIO (AUTÔNOMO)"
+	d_title.add_theme_font_size_override("font_size", 13)
+	d_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+	d_vbox.add_child(d_title)
+
+	var d_grid = GridContainer.new()
+	d_grid.columns = 3
+	d_grid.add_theme_constant_override("h_separation", 14)
+	d_grid.add_theme_constant_override("v_separation", 6)
+
+	var active_functions = [
+		"✔ Limpar mesas sujas",
+		"✔ Limpar poças no chão",
+		"✔ Limpar bancadas & chapa",
+		"✔ Lavar bucha na pia",
+		"✔ Atender mesas do salão",
+		"✔ Atender Drive-Thru",
+		"✔ Operar o caixa",
+		"✔ Guardar mercadorias",
+		"✔ Aguardar no posto"
+	]
+
+	for f in active_functions:
+		var f_lbl = Label.new()
+		f_lbl.text = f
+		f_lbl.add_theme_font_size_override("font_size", 11)
+		f_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.95, 1.0))
+		d_grid.add_child(f_lbl)
+
+	d_vbox.add_child(d_grid)
+
+	d_vbox.add_child(HSeparator.new())
+
+	# 5. Barra Inferior de Administração (Demissão / Controle)
+	var admin_hbox = HBoxContainer.new()
+	admin_hbox.add_theme_constant_override("separation", 14)
+
+	var limit_lbl = Label.new()
+	limit_lbl.text = "O Burger Rush permite 1 funcionário por restaurante. Para trocar ou cancelar a folha, utilize a demissão."
+	limit_lbl.add_theme_font_size_override("font_size", 11)
+	limit_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1.0))
+	limit_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	limit_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	admin_hbox.add_child(limit_lbl)
+
+	var fire_btn = Button.new()
+	fire_btn.custom_minimum_size = Vector2(160, 32)
+	fire_btn.text = "❌ DEMITIR FUNCIONÁRIO"
+	fire_btn.focus_mode = Control.FOCUS_NONE
+	fire_btn.add_theme_font_size_override("font_size", 11)
+	var fire_style = StyleBoxFlat.new()
+	fire_style.bg_color = Color(0.55, 0.15, 0.15, 0.9)
+	fire_style.border_color = Color(0.8, 0.3, 0.3, 0.8)
+	fire_style.set_border_width_all(1)
+	fire_style.set_corner_radius_all(6)
+	fire_btn.add_theme_stylebox_override("normal", fire_style)
+	fire_btn.pressed.connect(func(): _on_fire_employee_clicked(emp.employee_id, emp_mgr))
+	admin_hbox.add_child(fire_btn)
+
+	d_vbox.add_child(admin_hbox)
+	duties_card.add_child(d_vbox)
+	employees_content_vbox.add_child(duties_card)
+
+func _create_mini_info_box(title: String, value: String, details: String, value_color: Color) -> PanelContainer:
+	var box = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.12, 0.16, 0.22, 0.92)
+	style.border_color = Color(0.25, 0.45, 0.7, 0.7)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	box.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+
+	var title_lbl = Label.new()
+	title_lbl.text = title
+	title_lbl.add_theme_font_size_override("font_size", 11)
+	title_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	vbox.add_child(title_lbl)
+
+	var val_lbl = Label.new()
+	val_lbl.text = value
+	val_lbl.add_theme_font_size_override("font_size", 17)
+	val_lbl.add_theme_color_override("font_color", value_color)
+	vbox.add_child(val_lbl)
+
+	var det_lbl = Label.new()
+	det_lbl.text = details
+	det_lbl.add_theme_font_size_override("font_size", 10)
+	det_lbl.add_theme_color_override("font_color", Color(0.55, 0.6, 0.7, 1.0))
+	vbox.add_child(det_lbl)
+
+	box.add_child(vbox)
+	return box
+
+func _on_hire_employee_clicked(emp_mgr: EmployeeManager) -> void:
+	if not emp_mgr:
+		return
+
+	var res = emp_mgr.hire_employee("Carlos", Employee.Role.GENERAL)
+	_refresh_header_data()
+	_refresh_employees_tab()
+
+	var fin = FinanceManager.get_instance()
+	if not fin and is_inside_tree() and get_tree() and get_tree().root:
+		fin = get_tree().root.find_child("FinanceManager", true, false)
+	if fin:
+		fin._ensure_daily_bills()
+
+	var p = get_parent()
+	if p and p.has_node("HUD") and p.get_node("HUD").has_method("show_temporary_feedback"):
+		var icon = "🧑‍🍳" if res.get("success", false) else "⚠️"
+		p.get_node("HUD").show_temporary_feedback("%s %s" % [icon, res.get("message", "")])
+
+func _on_fire_employee_clicked(emp_id: int, emp_mgr: EmployeeManager) -> void:
+	if not emp_mgr:
+		return
+
+	var ok = emp_mgr.fire_employee(emp_id)
+	_refresh_header_data()
+	_refresh_employees_tab()
+
+	var p = get_parent()
+	if p and p.has_node("HUD") and p.get_node("HUD").has_method("show_temporary_feedback"):
+		if ok:
+			p.get_node("HUD").show_temporary_feedback("👋 Funcionário demitido. Vaga liberada no PC.")
+		else:
+			p.get_node("HUD").show_temporary_feedback("⚠️ Falha ao demitir funcionário.")
+
+# =============================================================================
+# ABA 7: GESTÃO DE PEDIDOS & DELIVERY (ORDERS TAB)
+# =============================================================================
+
+func _setup_orders_tab() -> void:
+	if not orders_tab:
+		orders_tab = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab")
+	if not orders_summary_label:
+		orders_summary_label = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/TopBar/HBox/OrdersSummaryLabel")
+	if not delivery_kpi_hbox:
+		delivery_kpi_hbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/DeliveryKPICardsBar/HBox")
+	if not btn_orders_all:
+		btn_orders_all = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersAll")
+	if not btn_orders_dinein:
+		btn_orders_dinein = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersDineIn")
+	if not btn_orders_drivethru:
+		btn_orders_drivethru = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersDriveThru")
+	if not btn_orders_delivery:
+		btn_orders_delivery = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/FilterBar/HBox/BtnOrdersDelivery")
+	if not orders_content_vbox:
+		orders_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/OrdersScroll/Margin/OrdersContentVBox")
+
+	if btn_orders_all and not btn_orders_all.pressed.is_connected(_on_orders_filter_all_pressed):
+		btn_orders_all.pressed.connect(_on_orders_filter_all_pressed)
+	if btn_orders_dinein and not btn_orders_dinein.pressed.is_connected(_on_orders_filter_dinein_pressed):
+		btn_orders_dinein.pressed.connect(_on_orders_filter_dinein_pressed)
+	if btn_orders_drivethru and not btn_orders_drivethru.pressed.is_connected(_on_orders_filter_drivethru_pressed):
+		btn_orders_drivethru.pressed.connect(_on_orders_filter_drivethru_pressed)
+	if btn_orders_delivery and not btn_orders_delivery.pressed.is_connected(_on_orders_filter_delivery_pressed):
+		btn_orders_delivery.pressed.connect(_on_orders_filter_delivery_pressed)
+
+	var om = OrderManager.get_instance()
+	if not om and is_inside_tree() and get_tree() and get_tree().root:
+		om = get_tree().root.find_child("OrderManager", true, false)
+
+	if om:
+		if not om.order_created.is_connected(_on_order_manager_updated):
+			om.order_created.connect(_on_order_manager_updated)
+		if not om.order_updated.is_connected(_on_order_manager_updated):
+			om.order_updated.connect(_on_order_manager_updated)
+		if not om.order_completed.is_connected(_on_order_manager_updated):
+			om.order_completed.connect(_on_order_manager_updated)
+		if not om.order_cancelled.is_connected(_on_order_manager_updated):
+			om.order_cancelled.connect(_on_order_manager_updated)
+		if not om.delivery_order_arrived.is_connected(_on_delivery_order_arrived):
+			om.delivery_order_arrived.connect(_on_delivery_order_arrived)
+
+func _on_orders_filter_all_pressed() -> void: _set_orders_filter("ALL")
+func _on_orders_filter_dinein_pressed() -> void: _set_orders_filter("DINE_IN")
+func _on_orders_filter_drivethru_pressed() -> void: _set_orders_filter("DRIVE_THRU")
+func _on_orders_filter_delivery_pressed() -> void: _set_orders_filter("DELIVERY")
+
+func _set_orders_filter(filter_type: String) -> void:
+	current_orders_filter = filter_type
+	_update_orders_filter_button_styles()
+	_refresh_orders_tab()
+
+func _update_orders_filter_button_styles() -> void:
+	var buttons = [
+		{"btn": btn_orders_all, "key": "ALL"},
+		{"btn": btn_orders_dinein, "key": "DINE_IN"},
+		{"btn": btn_orders_drivethru, "key": "DRIVE_THRU"},
+		{"btn": btn_orders_delivery, "key": "DELIVERY"}
+	]
+
+	for b in buttons:
+		var btn: Button = b["btn"]
+		if not btn or not is_instance_valid(btn):
+			continue
+		var is_active = (current_orders_filter == b["key"])
+		var style = StyleBoxFlat.new()
+		style.set_corner_radius_all(6)
+		style.set_content_margin_all(6)
+		if is_active:
+			style.bg_color = Color(0.2, 0.4, 0.65, 1.0)
+			style.border_color = Color(1.0, 0.85, 0.2, 1.0)
+			style.set_border_width_all(2)
+			btn.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0, 1.0))
+		else:
+			style.bg_color = Color(0.12, 0.16, 0.22, 0.9)
+			style.border_color = Color(0.25, 0.35, 0.5, 0.5)
+			style.set_border_width_all(1)
+			btn.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
+
+func _on_order_manager_updated(_order: Order = null) -> void:
+	if visible and current_tab == TabID.ORDERS:
+		_refresh_orders_tab()
+
+func _on_delivery_order_arrived(_order: Order) -> void:
+	if visible and current_tab == TabID.ORDERS:
+		_refresh_orders_tab()
+
+func _refresh_orders_tab() -> void:
+	if not orders_tab:
+		orders_tab = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab")
+	if not orders_summary_label:
+		orders_summary_label = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/TopBar/HBox/OrdersSummaryLabel")
+	if not delivery_kpi_hbox:
+		delivery_kpi_hbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/DeliveryKPICardsBar/HBox")
+	if not orders_content_vbox:
+		orders_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/OrdersTab/OrdersScroll/Margin/OrdersContentVBox")
+
+	if not orders_content_vbox:
+		return
+
+	_update_orders_filter_button_styles()
+
+	var om = OrderManager.get_instance()
+	if not om and is_inside_tree() and get_tree() and get_tree().root:
+		om = get_tree().root.find_child("OrderManager", true, false)
+
+	if not om:
+		return
+
+	var active_list = om.get_active_orders()
+	var delivery_count = 0
+	for o in active_list:
+		if o.source_type == "DELIVERY":
+			delivery_count += 1
+
+	if orders_summary_label:
+		orders_summary_label.text = "%d Pedidos Ativos  │  %d Delivery em Aberto" % [active_list.size(), delivery_count]
+
+	# 1. Renderiza os KPIs de Delivery no topo
+	_render_delivery_kpis(om)
+
+	# Limpa o container de conteúdo
+	for child in orders_content_vbox.get_children():
+		orders_content_vbox.remove_child(child)
+		child.queue_free()
+
+	# 2. Renderiza a Seção de Pedidos Ativos
+	_render_active_orders_section(om)
+
+	# 3. Renderiza a Seção de Histórico do Dia
+	_render_orders_history_section(om)
+
+func _render_delivery_kpis(om: OrderManager) -> void:
+	if not delivery_kpi_hbox:
+		return
+
+	for child in delivery_kpi_hbox.get_children():
+		delivery_kpi_hbox.remove_child(child)
+		child.queue_free()
+
+	var stats = om.get_delivery_summary_stats()
+
+	var cards_data = [
+		{"icon": "📱", "title": "NOVOS (APP)", "val": str(stats["new"]), "color": Color(1.0, 0.85, 0.2, 1.0) if stats["new"] > 0 else Color(0.7, 0.75, 0.85, 1.0)},
+		{"icon": "🍳", "title": "EM PREPARO", "val": str(stats["preparing"]), "color": Color(0.4, 0.8, 1.0, 1.0)},
+		{"icon": "🛵", "title": "AG. RETIRADA", "val": str(stats["waiting_courier"]), "color": Color(1.0, 0.65, 0.2, 1.0) if stats["waiting_courier"] > 0 else Color(0.7, 0.75, 0.85, 1.0)},
+		{"icon": "💨", "title": "EM ENTREGA", "val": str(stats["in_delivery"]), "color": Color(0.65, 0.5, 1.0, 1.0)},
+		{"icon": "✔", "title": "FINALIZADOS", "val": str(stats["completed"]), "color": Color(0.35, 0.9, 0.5, 1.0)}
+	]
+
+	for c in cards_data:
+		var kpi_card = _create_kpi_mini_card(c["icon"], c["title"], c["val"], c["color"])
+		kpi_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		delivery_kpi_hbox.add_child(kpi_card)
+
+func _create_kpi_mini_card(icon: String, title: String, val: String, val_color: Color) -> PanelContainer:
+	var panel = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	style.border_color = Color(0.25, 0.40, 0.60, 0.7)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	panel.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 2)
+
+	var title_lbl = Label.new()
+	title_lbl.text = "%s %s" % [icon, title]
+	title_lbl.add_theme_font_size_override("font_size", 10)
+	title_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	vbox.add_child(title_lbl)
+
+	var val_lbl = Label.new()
+	val_lbl.text = val
+	val_lbl.add_theme_font_size_override("font_size", 16)
+	val_lbl.add_theme_color_override("font_color", val_color)
+	vbox.add_child(val_lbl)
+
+	panel.add_child(vbox)
+	return panel
+
+func _render_active_orders_section(om: OrderManager) -> void:
+	var header_hbox = HBoxContainer.new()
+	header_hbox.add_theme_constant_override("separation", 10)
+
+	var title_lbl = Label.new()
+	title_lbl.text = "⚡ PEDIDOS ATIVOS EM ANDAMENTO"
+	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	header_hbox.add_child(title_lbl)
+	orders_content_vbox.add_child(header_hbox)
+
+	var filtered_orders = om.get_filtered_active_orders(current_orders_filter)
+
+	if filtered_orders.is_empty():
+		var empty_panel = PanelContainer.new()
+		var e_style = StyleBoxFlat.new()
+		e_style.bg_color = Color(0.10, 0.13, 0.18, 0.8)
+		e_style.set_corner_radius_all(6)
+		e_style.set_content_margin_all(14)
+		empty_panel.add_theme_stylebox_override("panel", e_style)
+
+		var empty_lbl = Label.new()
+		empty_lbl.text = "Nenhum pedido ativo no momento nesta categoria."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1.0))
+		empty_lbl.add_theme_font_size_override("font_size", 12)
+		empty_panel.add_child(empty_lbl)
+		orders_content_vbox.add_child(empty_panel)
+		return
+
+	# Grid de cards de pedidos ativos
+	var grid = GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 14)
+	grid.add_theme_constant_override("v_separation", 12)
+
+	for order in filtered_orders:
+		var order_card = _create_active_order_card(order, om)
+		order_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		grid.add_child(order_card)
+
+	orders_content_vbox.add_child(grid)
+
+func _create_active_order_card(order: Order, om: OrderManager) -> PanelContainer:
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+
+	var is_new_delivery = (order.source_type == "DELIVERY" and order.delivery_stage == "NEW_RECEIVED")
+	if is_new_delivery:
+		style.bg_color = Color(0.16, 0.14, 0.08, 0.95)
+		style.border_color = Color(1.0, 0.8, 0.2, 0.9)
+		style.border_width_left = 3
+		style.border_width_top = 1
+		style.border_width_right = 1
+		style.border_width_bottom = 1
+	else:
+		style.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+		style.border_color = Color(0.25, 0.45, 0.7, 0.7)
+		style.set_border_width_all(1)
+
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+
+	# 1. Header do Pedido
+	var top_hbox = HBoxContainer.new()
+	top_hbox.add_theme_constant_override("separation", 10)
+
+	var id_lbl = Label.new()
+	id_lbl.text = "PEDIDO #%03d" % order.id
+	id_lbl.add_theme_font_size_override("font_size", 14)
+	id_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	top_hbox.add_child(id_lbl)
+
+	var src_lbl = Label.new()
+	src_lbl.text = "[ %s ]" % order.get_source_display_name()
+	src_lbl.add_theme_font_size_override("font_size", 11)
+	src_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+	top_hbox.add_child(src_lbl)
+
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top_hbox.add_child(spacer)
+
+	var time_lbl = Label.new()
+	time_lbl.text = "⏰ %s (⏳ %s)" % [order.created_clock_time, order.get_formatted_wait_time()]
+	time_lbl.add_theme_font_size_override("font_size", 11)
+	time_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	top_hbox.add_child(time_lbl)
+
+	vbox.add_child(top_hbox)
+	vbox.add_child(HSeparator.new())
+
+	# 2. Lista de Itens do Pedido
+	var items_vbox = VBoxContainer.new()
+	items_vbox.add_theme_constant_override("separation", 3)
+
+	for it in order.items:
+		var it_hbox = HBoxContainer.new()
+		var qty = it.get("quantity", 1)
+		var name_str = it.get("product_name", "Item")
+		var price = it.get("unit_price", 0.0) * qty
+
+		var item_lbl = Label.new()
+		item_lbl.text = "• %dx %s" % [qty, name_str]
+		item_lbl.add_theme_font_size_override("font_size", 12)
+		item_lbl.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 1.0))
+		item_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		it_hbox.add_child(item_lbl)
+
+		var price_lbl = Label.new()
+		price_lbl.text = "R$ %.2f" % price
+		price_lbl.add_theme_font_size_override("font_size", 12)
+		price_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+		it_hbox.add_child(price_lbl)
+
+		items_vbox.add_child(it_hbox)
+
+	vbox.add_child(items_vbox)
+	vbox.add_child(HSeparator.new())
+
+	# 3. Rodapé com Status e Ações
+	var bottom_hbox = HBoxContainer.new()
+	bottom_hbox.add_theme_constant_override("separation", 10)
+
+	var total_lbl = Label.new()
+	total_lbl.text = "Total: R$ %.2f" % order.total_price
+	total_lbl.add_theme_font_size_override("font_size", 13)
+	total_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1.0))
+	bottom_hbox.add_child(total_lbl)
+
+	var b_spacer = Control.new()
+	b_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bottom_hbox.add_child(b_spacer)
+
+	if is_new_delivery:
+		var accept_btn = Button.new()
+		accept_btn.text = "✍️ ACEITAR PEDIDO"
+		accept_btn.focus_mode = Control.FOCUS_NONE
+		accept_btn.add_theme_font_size_override("font_size", 11)
+		var btn_style = StyleBoxFlat.new()
+		btn_style.bg_color = Color(0.12, 0.55, 0.3, 1.0)
+		btn_style.border_color = Color(0.25, 0.8, 0.45, 1.0)
+		btn_style.set_border_width_all(1)
+		btn_style.set_corner_radius_all(6)
+		accept_btn.add_theme_stylebox_override("normal", btn_style)
+		accept_btn.pressed.connect(func(): _on_accept_delivery_clicked(order.id, om))
+		bottom_hbox.add_child(accept_btn)
+	else:
+		var status_badge = Label.new()
+		status_badge.text = order.get_state_string()
+		status_badge.add_theme_font_size_override("font_size", 11)
+		if order.delivery_stage == "WAITING_COURIER":
+			status_badge.add_theme_color_override("font_color", Color(1.0, 0.65, 0.2, 1.0))
+		elif order.delivery_stage == "IN_DELIVERY":
+			status_badge.add_theme_color_override("font_color", Color(0.65, 0.5, 1.0, 1.0))
+		else:
+			status_badge.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+		bottom_hbox.add_child(status_badge)
+
+	vbox.add_child(bottom_hbox)
+	card.add_child(vbox)
+	return card
+
+func _render_orders_history_section(om: OrderManager) -> void:
+	orders_content_vbox.add_child(HSeparator.new())
+
+	var header_hbox = HBoxContainer.new()
+	header_hbox.add_theme_constant_override("separation", 10)
+
+	var title_lbl = Label.new()
+	title_lbl.text = "📑 HISTÓRICO DO DIA (TODOS OS PEDIDOS FINALIZADOS)"
+	title_lbl.add_theme_font_size_override("font_size", 14)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	header_hbox.add_child(title_lbl)
+	orders_content_vbox.add_child(header_hbox)
+
+	var history = om.get_order_history()
+
+	if history.is_empty():
+		var empty_panel = PanelContainer.new()
+		var e_style = StyleBoxFlat.new()
+		e_style.bg_color = Color(0.10, 0.13, 0.18, 0.8)
+		e_style.set_corner_radius_all(6)
+		e_style.set_content_margin_all(14)
+		empty_panel.add_theme_stylebox_override("panel", e_style)
+
+		var empty_lbl = Label.new()
+		empty_lbl.text = "Nenhum pedido concluído ou cancelado no histórico de hoje."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.add_theme_color_override("font_color", Color(0.6, 0.65, 0.75, 1.0))
+		empty_lbl.add_theme_font_size_override("font_size", 12)
+		empty_panel.add_child(empty_lbl)
+		orders_content_vbox.add_child(empty_panel)
+		return
+
+	# Tabela/Lista de Pedidos no Histórico
+	var history_card = PanelContainer.new()
+	var h_style = StyleBoxFlat.new()
+	h_style.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	h_style.border_color = Color(0.2, 0.3, 0.45, 0.7)
+	h_style.set_border_width_all(1)
+	h_style.set_corner_radius_all(8)
+	h_style.set_content_margin_all(12)
+	history_card.add_theme_stylebox_override("panel", h_style)
+
+	var h_vbox = VBoxContainer.new()
+	h_vbox.add_theme_constant_override("separation", 8)
+
+	# Itera sobre o histórico em ordem cronológica reversa (mais recentes primeiro)
+	for i in range(history.size() - 1, -1, -1):
+		var h = history[i]
+		var row_panel = _create_history_row(h)
+		h_vbox.add_child(row_panel)
+
+	history_card.add_child(h_vbox)
+	orders_content_vbox.add_child(history_card)
+
+func _create_history_row(h: Dictionary) -> PanelContainer:
+	var row = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	var is_wrong = h.get("is_wrong", false)
+	var is_paid = h.get("is_paid", false)
+	var status_str = h.get("status", "Concluído")
+	var is_unaccepted = ("Não aceito" in status_str or "Nao aceito" in status_str)
+
+	if is_unaccepted:
+		style.bg_color = Color(0.16, 0.12, 0.08, 0.85)
+		style.border_color = Color(0.85, 0.55, 0.20, 0.70)
+	elif is_wrong:
+		style.bg_color = Color(0.18, 0.10, 0.10, 0.80)
+		style.border_color = Color(0.80, 0.25, 0.25, 0.70)
+	else:
+		style.bg_color = Color(0.12, 0.16, 0.22, 0.80)
+		style.border_color = Color(0.25, 0.35, 0.50, 0.60)
+
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	row.add_theme_stylebox_override("panel", style)
+
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 12)
+
+	var id_lbl = Label.new()
+	id_lbl.text = "#%03d" % h.get("id", 0)
+	id_lbl.add_theme_font_size_override("font_size", 12)
+	id_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
+	hbox.add_child(id_lbl)
+
+	var src_lbl = Label.new()
+	src_lbl.text = h.get("source_name", "Origem")
+	src_lbl.add_theme_font_size_override("font_size", 11)
+	src_lbl.add_theme_color_override("font_color", Color(0.4, 0.8, 1.0, 1.0))
+	hbox.add_child(src_lbl)
+
+	# Resumo compacto de itens
+	var items_summary: Array[String] = []
+	for it in h.get("items", []):
+		items_summary.append("%dx %s" % [it.get("quantity", 1), it.get("product_name", "Item")])
+	var items_lbl = Label.new()
+	items_lbl.text = ", ".join(items_summary)
+	items_lbl.add_theme_font_size_override("font_size", 11)
+	items_lbl.add_theme_color_override("font_color", Color(0.85, 0.88, 0.95, 1.0))
+	items_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	items_lbl.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	hbox.add_child(items_lbl)
+
+	var time_lbl = Label.new()
+	time_lbl.text = "%s ➔ %s" % [h.get("created_clock_time", "12:00"), h.get("completed_clock_time", "12:00")]
+	time_lbl.add_theme_font_size_override("font_size", 10)
+	time_lbl.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8, 1.0))
+	hbox.add_child(time_lbl)
+
+	var total_lbl = Label.new()
+	var amt = h.get("total_price", 0.0)
+	total_lbl.text = "R$ %.2f" % amt
+	total_lbl.add_theme_font_size_override("font_size", 12)
+	if is_paid:
+		total_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1.0))
+	elif is_unaccepted:
+		total_lbl.add_theme_color_override("font_color", Color(0.75, 0.75, 0.80, 1.0))
+	else:
+		total_lbl.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4, 1.0))
+	hbox.add_child(total_lbl)
+
+	var status_lbl = Label.new()
+	status_lbl.text = status_str
+	status_lbl.add_theme_font_size_override("font_size", 11)
+	if is_paid:
+		status_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1.0))
+	elif is_unaccepted:
+		status_lbl.add_theme_color_override("font_color", Color(0.95, 0.65, 0.30, 1.0))
+	elif is_wrong:
+		status_lbl.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4, 1.0))
+	else:
+		status_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	hbox.add_child(status_lbl)
+
+	row.add_child(hbox)
+	return row
+
+func _on_accept_delivery_clicked(order_id: int, om: OrderManager) -> void:
+	if not om:
+		return
+
+	var ok = om.accept_delivery_order(order_id)
+	_refresh_orders_tab()
+
+	var p = get_parent()
+	if p and p.has_node("HUD") and p.get_node("HUD").has_method("show_temporary_feedback"):
+		if ok:
+			p.get_node("HUD").show_temporary_feedback("✍️ Pedido Delivery #%03d aceito! Inicie o preparo." % order_id)
+		else:
+			p.get_node("HUD").show_temporary_feedback("⚠️ Falha ao aceitar pedido.")
+
+# =============================================================================
+# SISTEMA DE NOTIFICAÇÃO DE NOVOS PEDIDOS NO PC
+# =============================================================================
+
+func _setup_order_notifications() -> void:
+	if not ui_notification_audio:
+		ui_notification_audio = AudioStreamPlayer.new()
+		ui_notification_audio.name = "UINotificationAudio"
+		ui_notification_audio.bus = "Master"
+		add_child(ui_notification_audio)
+		var stream = SoundSynthesizer.get_stream("pc_notification")
+		if stream:
+			ui_notification_audio.stream = stream
+
+	_setup_notification_toast_ui()
+
+	var om = OrderManager.get_instance()
+	if not om and is_inside_tree() and get_tree() and get_tree().root:
+		om = get_tree().root.find_child("OrderManager", true, false)
+	if om:
+		if not om.order_created.is_connected(_on_new_order_created):
+			om.order_created.connect(_on_new_order_created)
+
+func _setup_notification_toast_ui() -> void:
+	if notification_toast_panel and is_instance_valid(notification_toast_panel):
+		return
+
+	var outer_window = get_node_or_null("MainPanel/OuterWindow")
+	if not outer_window:
+		outer_window = get_node_or_null("MainPanel")
+	if not outer_window:
+		outer_window = self
+
+	notification_toast_panel = PanelContainer.new()
+	notification_toast_panel.name = "OrderNotificationToast"
+	notification_toast_panel.visible = false
+	notification_toast_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.12, 0.18, 0.95)
+	style.border_color = Color(1.0, 0.80, 0.20, 0.85)
+	style.set_border_width_all(1)
+	style.border_width_left = 3
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(8)
+	notification_toast_panel.add_theme_stylebox_override("panel", style)
+
+	var hbox = HBoxContainer.new()
+	hbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	hbox.add_theme_constant_override("separation", 8)
+
+	notification_toast_label = Label.new()
+	notification_toast_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	notification_toast_label.text = "🔔 Novo pedido recebido"
+	notification_toast_label.add_theme_font_size_override("font_size", 12)
+	notification_toast_label.add_theme_color_override("font_color", Color(1.0, 0.90, 0.40, 1.0))
+	hbox.add_child(notification_toast_label)
+
+	notification_toast_panel.add_child(hbox)
+	outer_window.add_child(notification_toast_panel)
+
+	# Posiciona de forma discreta na parte superior da interface, sem bloquear cliques
+	notification_toast_panel.position = Vector2(340, 16)
+
+func _on_new_order_created(order: Order) -> void:
+	if not order or notified_orders_map.has(order.id):
+		return
+
+	notified_orders_map[order.id] = true
+
+	if current_tab != TabID.ORDERS or not visible:
+		unviewed_orders_count += 1
+		_update_sidebar_orders_badge()
+		_show_notification_toast(order)
+
+	_play_ui_notification_sound()
+
+func _play_ui_notification_sound() -> void:
+	if ui_notification_audio and ui_notification_audio.is_inside_tree():
+		var stream = SoundSynthesizer.get_stream("pc_notification")
+		if stream:
+			ui_notification_audio.stream = stream
+			ui_notification_audio.volume_db = -4.0
+			ui_notification_audio.play()
+
+func _show_notification_toast(order: Order) -> void:
+	if not notification_toast_panel:
+		_setup_notification_toast_ui()
+
+	if notification_toast_panel and notification_toast_label:
+		var src = "Delivery" if order.source_type == "DELIVERY" else ("Drive-Thru" if order.source_type == "DRIVE_THRU" else "Salão")
+		notification_toast_label.text = "🔔 Novo pedido recebido (#%03d - %s)" % [order.id, src]
+		notification_toast_panel.visible = true
+		notification_toast_timer = 4.0
+
+func _hide_notification_toast() -> void:
+	if notification_toast_panel:
+		notification_toast_panel.visible = false
+	notification_toast_timer = 0.0
+
+func _update_sidebar_orders_badge() -> void:
+	if nav_buttons_map.has(TabID.ORDERS):
+		var btn: Button = nav_buttons_map[TabID.ORDERS]
+		if unviewed_orders_count > 0:
+			btn.text = "📋  Pedidos & Delivery  [🔔 %d]" % unviewed_orders_count
+		else:
+			btn.text = "📋  Pedidos & Delivery"
+
+func _mark_orders_as_viewed() -> void:
+	unviewed_orders_count = 0
+	_update_sidebar_orders_badge()
+	_hide_notification_toast()
+	orders_viewed.emit()
+
+func notify_new_orders_arrived() -> void:
+	_update_sidebar_orders_badge()
+	if unviewed_orders_count > 0:
+		if notification_toast_panel:
+			notification_toast_panel.visible = true
+			notification_toast_timer = 5.0
+
+# =============================================================================
+# ABA 8: CENTRAL DE AVALIAÇÕES E REPUTAÇÃO DO RESTAURANTE
+# =============================================================================
+
+func _setup_reviews_tab() -> void:
+	if btn_reviews_all and not btn_reviews_all.pressed.is_connected(_on_reviews_filter_all_pressed):
+		btn_reviews_all.pressed.connect(_on_reviews_filter_all_pressed)
+	if btn_reviews_dinein and not btn_reviews_dinein.pressed.is_connected(_on_reviews_filter_dinein_pressed):
+		btn_reviews_dinein.pressed.connect(_on_reviews_filter_dinein_pressed)
+	if btn_reviews_drivethru and not btn_reviews_drivethru.pressed.is_connected(_on_reviews_filter_drivethru_pressed):
+		btn_reviews_drivethru.pressed.connect(_on_reviews_filter_drivethru_pressed)
+	if btn_reviews_delivery and not btn_reviews_delivery.pressed.is_connected(_on_reviews_filter_delivery_pressed):
+		btn_reviews_delivery.pressed.connect(_on_reviews_filter_delivery_pressed)
+	if btn_reviews_5stars and not btn_reviews_5stars.pressed.is_connected(_on_reviews_filter_5stars_pressed):
+		btn_reviews_5stars.pressed.connect(_on_reviews_filter_5stars_pressed)
+	if btn_reviews_complaints and not btn_reviews_complaints.pressed.is_connected(_on_reviews_filter_complaints_pressed):
+		btn_reviews_complaints.pressed.connect(_on_reviews_filter_complaints_pressed)
+
+	var rep = ReputationManager.get_instance()
+	if not rep and is_inside_tree() and get_tree() and get_tree().root:
+		rep = get_tree().root.find_child("ReputationManager", true, false)
+	if rep:
+		if not rep.review_added.is_connected(_on_new_review_received):
+			rep.review_added.connect(_on_new_review_received)
+
+func _on_new_review_received(_review: CustomerReview) -> void:
+	if current_tab == TabID.REVIEWS and visible:
+		_refresh_reviews_tab()
+
+func _on_reviews_filter_all_pressed() -> void: _set_reviews_filter("ALL")
+func _on_reviews_filter_dinein_pressed() -> void: _set_reviews_filter("DINE_IN")
+func _on_reviews_filter_drivethru_pressed() -> void: _set_reviews_filter("DRIVE_THRU")
+func _on_reviews_filter_delivery_pressed() -> void: _set_reviews_filter("DELIVERY")
+func _on_reviews_filter_5stars_pressed() -> void: _set_reviews_filter("5_STARS")
+func _on_reviews_filter_complaints_pressed() -> void: _set_reviews_filter("COMPLAINTS")
+
+func _set_reviews_filter(filter_name: String) -> void:
+	current_reviews_filter = filter_name
+	_update_reviews_filter_button_styles()
+	_refresh_reviews_tab()
+
+func _update_reviews_filter_button_styles() -> void:
+	var filter_btns = {
+		"ALL": btn_reviews_all,
+		"DINE_IN": btn_reviews_dinein,
+		"DRIVE_THRU": btn_reviews_drivethru,
+		"DELIVERY": btn_reviews_delivery,
+		"5_STARS": btn_reviews_5stars,
+		"COMPLAINTS": btn_reviews_complaints
+	}
+
+	for k in filter_btns.keys():
+		var btn = filter_btns[k]
+		if not btn:
+			continue
+		var is_sel = (k == current_reviews_filter)
+		var style = StyleBoxFlat.new()
+		style.corner_radius_top_left = 6
+		style.corner_radius_top_right = 6
+		style.corner_radius_bottom_right = 6
+		style.corner_radius_bottom_left = 6
+		style.content_margin_left = 12
+		style.content_margin_right = 12
+		style.content_margin_top = 4
+		style.content_margin_bottom = 4
+
+		if is_sel:
+			style.bg_color = Color(0.24, 0.32, 0.46, 1.0)
+			style.border_color = Color(1.0, 0.80, 0.20, 1.0)
+			style.border_width_bottom = 3
+			btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		else:
+			style.bg_color = Color(0.12, 0.15, 0.20, 1.0)
+			btn.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1))
+
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
+
+func _refresh_reviews_tab() -> void:
+	var rep = ReputationManager.get_instance()
+	if not rep and is_inside_tree() and get_tree() and get_tree().root:
+		rep = get_tree().root.find_child("ReputationManager", true, false)
+
+	_update_reviews_filter_button_styles()
+
+	if reviews_summary_label and rep:
+		var tot = rep.get_total_reviews()
+		reviews_summary_label.text = "⭐ Média %.1f/5.0 (%d avaliações)" % [rep.get_average_rating(), tot]
+
+	# 1. Renderiza o Destaque Superior / Painel de Reputação
+	_build_reputation_header(rep)
+
+	# 2. Renderiza o Feed de Avaliações
+	if not reviews_content_vbox:
+		return
+
+	for child in reviews_content_vbox.get_children():
+		child.queue_free()
+
+	if not rep:
+		var empty_lbl = Label.new()
+		empty_lbl.text = "Nenhuma avaliação disponível no momento."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		reviews_content_vbox.add_child(empty_lbl)
+		return
+
+	var feed = rep.get_filtered_feed(current_reviews_filter)
+	if feed.is_empty():
+		var empty_panel = PanelContainer.new()
+		var pstyle = StyleBoxFlat.new()
+		pstyle.bg_color = Color(0.10, 0.13, 0.18, 0.80)
+		pstyle.set_corner_radius_all(8)
+		pstyle.set_content_margin_all(24)
+		empty_panel.add_theme_stylebox_override("panel", pstyle)
+
+		var elbl = Label.new()
+		elbl.text = "Nenhuma avaliação encontrada nesta categoria.\nAtenda mais clientes no restaurante, drive-thru ou delivery!"
+		elbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		elbl.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8, 1.0))
+		empty_panel.add_child(elbl)
+		reviews_content_vbox.add_child(empty_panel)
+		return
+
+	for review in feed:
+		var card = _create_review_card(review)
+		reviews_content_vbox.add_child(card)
+
+func _build_reputation_header(rep: ReputationManager) -> void:
+	if not reviews_header_container:
+		return
+
+	for child in reviews_header_container.get_children():
+		child.queue_free()
+
+	var avg = rep.get_average_rating() if rep else 5.0
+	var total_rev = rep.get_total_reviews() if rep else 0
+	var dist = rep.get_rating_distribution() if rep else {5:0, 4:0, 3:0, 2:0, 1:0}
+	var pcts = rep.get_rating_percentages() if rep else {5:100.0, 4:0.0, 3:0.0, 2:0.0, 1:0.0}
+	var sentiments = rep.get_sentiment_summary() if rep else {"positive": 0, "neutral": 0, "negative": 0}
+	var rep_color = rep.get_reputation_color() if rep else Color(0.25, 0.85, 0.45, 1.0)
+	var tier_name = rep.get_reputation_tier_name() if rep else "Excelente"
+
+	# CARD 1: Nota Global em Destaque
+	var main_card = PanelContainer.new()
+	main_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_card.size_flags_stretch_ratio = 1.1
+	var mstyle = StyleBoxFlat.new()
+	mstyle.bg_color = Color(0.11, 0.15, 0.22, 0.95)
+	mstyle.border_color = rep_color
+	mstyle.border_width_left = 4
+	mstyle.set_corner_radius_all(8)
+	mstyle.set_content_margin_all(14)
+	main_card.add_theme_stylebox_override("panel", mstyle)
+
+	var mvbox = VBoxContainer.new()
+	mvbox.add_theme_constant_override("separation", 4)
+
+	var title_lbl = Label.new()
+	title_lbl.text = "AVALIAÇÃO DO RESTAURANTE"
+	title_lbl.add_theme_font_size_override("font_size", 11)
+	title_lbl.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	mvbox.add_child(title_lbl)
+
+	var score_hbox = HBoxContainer.new()
+	score_hbox.add_theme_constant_override("separation", 10)
+
+	var score_lbl = Label.new()
+	score_lbl.text = "%.1f" % avg
+	score_lbl.add_theme_font_size_override("font_size", 34)
+	score_lbl.add_theme_color_override("font_color", rep_color)
+	score_hbox.add_child(score_lbl)
+
+	var stars_vbox = VBoxContainer.new()
+	stars_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var stars_lbl = Label.new()
+	stars_lbl.text = rep.get_stars_string() if rep else "★★★★★"
+	stars_lbl.add_theme_font_size_override("font_size", 18)
+	stars_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.20, 1.0))
+	stars_vbox.add_child(stars_lbl)
+
+	var count_lbl = Label.new()
+	count_lbl.text = "%d avaliações registradas • %s" % [total_rev, tier_name]
+	count_lbl.add_theme_font_size_override("font_size", 11)
+	count_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.95, 1.0))
+	stars_vbox.add_child(count_lbl)
+
+	score_hbox.add_child(stars_vbox)
+	mvbox.add_child(score_hbox)
+
+	var rep_hint = Label.new()
+	rep_hint.text = "Tolerância de Preço: %s" % ("+25% (Alta Aceitação)" if avg >= 4.5 else ("Normal (Padrão)" if avg >= 3.8 else "-20% (Preço Sensível)"))
+	rep_hint.add_theme_font_size_override("font_size", 11)
+	rep_hint.add_theme_color_override("font_color", Color(0.65, 0.85, 0.70, 1.0) if avg >= 4.0 else Color(0.95, 0.65, 0.40, 1.0))
+	mvbox.add_child(rep_hint)
+
+	main_card.add_child(mvbox)
+	reviews_header_container.add_child(main_card)
+
+	# CARD 2: Distribuição de Estrelas (Barras Gráficas 5★ a 1★)
+	var dist_card = PanelContainer.new()
+	dist_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dist_card.size_flags_stretch_ratio = 1.3
+	var dstyle = StyleBoxFlat.new()
+	dstyle.bg_color = Color(0.10, 0.13, 0.19, 0.95)
+	dstyle.set_corner_radius_all(8)
+	dstyle.set_content_margin_all(12)
+	dist_card.add_theme_stylebox_override("panel", dstyle)
+
+	var dvbox = VBoxContainer.new()
+	dvbox.add_theme_constant_override("separation", 3)
+
+	for star_idx in range(5, 0, -1):
+		var star_row = _create_rating_distribution_bar(star_idx, dist.get(star_idx, 0), pcts.get(star_idx, 0.0))
+		dvbox.add_child(star_row)
+
+	dist_card.add_child(dvbox)
+	reviews_header_container.add_child(dist_card)
+
+	# CARD 3: Resumo de Sentimento & Canais
+	var sent_card = PanelContainer.new()
+	sent_card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	sent_card.size_flags_stretch_ratio = 0.9
+	var sstyle = StyleBoxFlat.new()
+	sstyle.bg_color = Color(0.10, 0.13, 0.19, 0.95)
+	sstyle.set_corner_radius_all(8)
+	sstyle.set_content_margin_all(12)
+	sent_card.add_theme_stylebox_override("panel", sstyle)
+
+	var svbox = VBoxContainer.new()
+	svbox.add_theme_constant_override("separation", 6)
+
+	var stitle = Label.new()
+	stitle.text = "RESUMO DE EXPERIÊNCIA"
+	stitle.add_theme_font_size_override("font_size", 11)
+	stitle.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
+	svbox.add_child(stitle)
+
+	var pos_lbl = Label.new()
+	pos_lbl.text = "😊 Positivas: %d" % sentiments.get("positive", 0)
+	pos_lbl.add_theme_font_size_override("font_size", 12)
+	pos_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1.0))
+	svbox.add_child(pos_lbl)
+
+	var neu_lbl = Label.new()
+	neu_lbl.text = "😐 Neutras: %d" % sentiments.get("neutral", 0)
+	neu_lbl.add_theme_font_size_override("font_size", 12)
+	neu_lbl.add_theme_color_override("font_color", Color(1.0, 0.80, 0.25, 1.0))
+	svbox.add_child(neu_lbl)
+
+	var neg_lbl = Label.new()
+	neg_lbl.text = "😟 Reclamações: %d" % sentiments.get("negative", 0)
+	neg_lbl.add_theme_font_size_override("font_size", 12)
+	neg_lbl.add_theme_color_override("font_color", Color(1.0, 0.40, 0.40, 1.0))
+	svbox.add_child(neg_lbl)
+
+	sent_card.add_child(svbox)
+	reviews_header_container.add_child(sent_card)
+
+func _create_rating_distribution_bar(stars: int, count: int, pct: float) -> HBoxContainer:
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 8)
+
+	var star_lbl = Label.new()
+	star_lbl.custom_minimum_size = Vector2(48, 0)
+	star_lbl.text = "%d ★" % stars
+	star_lbl.add_theme_font_size_override("font_size", 11)
+	star_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.30, 1.0))
+	hbox.add_child(star_lbl)
+
+	var bar_bg = ProgressBar.new()
+	bar_bg.custom_minimum_size = Vector2(110, 10)
+	bar_bg.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar_bg.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar_bg.show_percentage = false
+	bar_bg.max_value = 100.0
+	bar_bg.value = pct
+
+	var p_style = StyleBoxFlat.new()
+	p_style.bg_color = Color(1.0, 0.75, 0.15, 0.90) if stars >= 4 else (Color(0.95, 0.55, 0.20, 0.90) if stars == 3 else Color(0.95, 0.30, 0.30, 0.90))
+	p_style.set_corner_radius_all(4)
+	bar_bg.add_theme_stylebox_override("fill", p_style)
+
+	var bg_style = StyleBoxFlat.new()
+	bg_style.bg_color = Color(0.18, 0.22, 0.30, 0.80)
+	bg_style.set_corner_radius_all(4)
+	bar_bg.add_theme_stylebox_override("background", bg_style)
+
+	hbox.add_child(bar_bg)
+
+	var pct_lbl = Label.new()
+	pct_lbl.custom_minimum_size = Vector2(60, 0)
+	pct_lbl.text = "%.0f%% (%d)" % [pct, count]
+	pct_lbl.add_theme_font_size_override("font_size", 10)
+	pct_lbl.add_theme_color_override("font_color", Color(0.70, 0.75, 0.85, 1.0))
+	pct_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	hbox.add_child(pct_lbl)
+
+	return hbox
+
+func _create_review_card(review: CustomerReview) -> PanelContainer:
+	var card = PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.09, 0.12, 0.17, 0.95)
+	var is_bad = (review.stars <= 2.0 or review.abandoned)
+	var is_great = (review.stars >= 4.8)
+
+	if is_great:
+		style.border_color = Color(0.25, 0.85, 0.45, 0.70)
+		style.border_width_left = 3
+	elif is_bad:
+		style.border_color = Color(0.95, 0.35, 0.35, 0.70)
+		style.border_width_left = 3
+	else:
+		style.border_color = Color(0.20, 0.26, 0.36, 0.70)
+		style.set_border_width_all(1)
+
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(12)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+
+	# 1. Header do Card (Avatar, Nome, Estrelas, Data/Hora e Badge de Origem)
+	var header_hbox = HBoxContainer.new()
+	header_hbox.add_theme_constant_override("separation", 10)
+
+	# Avatar Inicial (ex: MS)
+	var avatar_panel = PanelContainer.new()
+	avatar_panel.custom_minimum_size = Vector2(36, 36)
+	var a_style = StyleBoxFlat.new()
+	a_style.bg_color = review.avatar_color
+	a_style.set_corner_radius_all(18)
+	avatar_panel.add_theme_stylebox_override("panel", a_style)
+
+	var initials = ""
+	var parts = review.customer_name.split(" ")
+	for p in parts:
+		if p.length() > 0:
+			initials += p[0].to_upper()
+		if initials.length() >= 2:
+			break
+	if initials == "": initials = "CL"
+
+	var a_lbl = Label.new()
+	a_lbl.text = initials
+	a_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	a_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	a_lbl.add_theme_font_size_override("font_size", 13)
+	a_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	avatar_panel.add_child(a_lbl)
+	header_hbox.add_child(avatar_panel)
+
+	var name_stars_vbox = VBoxContainer.new()
+	name_stars_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var name_lbl = Label.new()
+	name_lbl.text = review.customer_name
+	name_lbl.add_theme_font_size_override("font_size", 14)
+	name_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	name_stars_vbox.add_child(name_lbl)
+
+	var stars_lbl = Label.new()
+	stars_lbl.text = review.get_formatted_stars()
+	stars_lbl.add_theme_font_size_override("font_size", 13)
+	stars_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.20, 1.0))
+	name_stars_vbox.add_child(stars_lbl)
+
+	header_hbox.add_child(name_stars_vbox)
+
+	# Origem Badge + Data/Hora
+	var meta_vbox = VBoxContainer.new()
+	meta_vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+
+	var badge_panel = PanelContainer.new()
+	var b_style = StyleBoxFlat.new()
+	match review.channel_type:
+		"DELIVERY":
+			b_style.bg_color = Color(0.18, 0.40, 0.60, 0.85)
+		"DRIVE_THRU":
+			b_style.bg_color = Color(0.60, 0.35, 0.15, 0.85)
+		_:
+			b_style.bg_color = Color(0.20, 0.50, 0.30, 0.85)
+	b_style.set_corner_radius_all(4)
+	b_style.set_content_margin_all(4)
+	badge_panel.add_theme_stylebox_override("panel", b_style)
+
+	var badge_lbl = Label.new()
+	badge_lbl.text = review.get_channel_badge_text()
+	badge_lbl.add_theme_font_size_override("font_size", 11)
+	badge_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	badge_panel.add_child(badge_lbl)
+	meta_vbox.add_child(badge_panel)
+
+	var time_lbl = Label.new()
+	time_lbl.text = "%s — %s" % [review.date_string, review.time_string]
+	time_lbl.add_theme_font_size_override("font_size", 11)
+	time_lbl.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 1.0))
+	time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	meta_vbox.add_child(time_lbl)
+
+	header_hbox.add_child(meta_vbox)
+	vbox.add_child(header_hbox)
+
+	# 2. Comentário em Destaque
+	var comment_panel = PanelContainer.new()
+	var c_style = StyleBoxFlat.new()
+	c_style.bg_color = Color(0.06, 0.08, 0.12, 0.80)
+	c_style.set_corner_radius_all(6)
+	c_style.set_content_margin_all(10)
+	comment_panel.add_theme_stylebox_override("panel", c_style)
+
+	var comment_lbl = Label.new()
+	comment_lbl.text = "“%s”" % review.comment
+	comment_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	comment_lbl.add_theme_font_size_override("font_size", 13)
+	comment_lbl.add_theme_color_override("font_color", Color(0.92, 0.94, 0.98, 1.0))
+	comment_panel.add_child(comment_lbl)
+	vbox.add_child(comment_panel)
+
+	# 3. Tags / Detalhes do Pedido
+	var footer_hbox = HBoxContainer.new()
+	footer_hbox.add_theme_constant_override("separation", 6)
+
+	if review.order_summary != "":
+		var ord_tag = Label.new()
+		ord_tag.text = "🍔 %s" % review.order_summary
+		ord_tag.add_theme_font_size_override("font_size", 11)
+		ord_tag.add_theme_color_override("font_color", Color(0.70, 0.75, 0.85, 1.0))
+		ord_tag.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ord_tag.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		footer_hbox.add_child(ord_tag)
+
+	for tag in review.tags:
+		var tag_p = PanelContainer.new()
+		var t_style = StyleBoxFlat.new()
+		t_style.bg_color = Color(0.15, 0.19, 0.26, 0.90)
+		t_style.set_corner_radius_all(4)
+		t_style.content_margin_left = 6
+		t_style.content_margin_right = 6
+		t_style.content_margin_top = 2
+		t_style.content_margin_bottom = 2
+		tag_p.add_theme_stylebox_override("panel", t_style)
+
+		var tag_l = Label.new()
+		tag_l.text = tag
+		tag_l.add_theme_font_size_override("font_size", 10)
+		if tag in ["Comida Excelente", "Atendimento Rápido", "Entrega Rápida", "Ambiente Agradável", "Bom Preço"]:
+			tag_l.add_theme_color_override("font_color", Color(0.35, 0.90, 0.50, 1.0))
+		elif tag in ["Demora", "Pedido Incorreto", "Abandono", "Mesa Suja", "Restaurante Quente", "Preço Alto"]:
+			tag_l.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45, 1.0))
+		else:
+			tag_l.add_theme_color_override("font_color", Color(0.75, 0.80, 0.90, 1.0))
+		tag_p.add_child(tag_l)
+		footer_hbox.add_child(tag_p)
+
+	vbox.add_child(footer_hbox)
+	card.add_child(vbox)
+	return card
+
+# =============================================================================
+# ABA 9: CALENDÁRIO VIVO & HISTÓRICO DE DIAS
+# =============================================================================
+
+func _setup_calendar_tab() -> void:
+	if btn_prev_month and not btn_prev_month.pressed.is_connected(_on_prev_month_pressed):
+		btn_prev_month.pressed.connect(_on_prev_month_pressed)
+	if btn_next_month and not btn_next_month.pressed.is_connected(_on_next_month_pressed):
+		btn_next_month.pressed.connect(_on_next_month_pressed)
+
+	if btn_day_sub_summary and not btn_day_sub_summary.pressed.is_connected(func(): _set_calendar_subtab("SUMMARY")):
+		btn_day_sub_summary.pressed.connect(func(): _set_calendar_subtab("SUMMARY"))
+	if btn_day_sub_orders and not btn_day_sub_orders.pressed.is_connected(func(): _set_calendar_subtab("ORDERS")):
+		btn_day_sub_orders.pressed.connect(func(): _set_calendar_subtab("ORDERS"))
+	if btn_day_sub_reviews and not btn_day_sub_reviews.pressed.is_connected(func(): _set_calendar_subtab("REVIEWS")):
+		btn_day_sub_reviews.pressed.connect(func(): _set_calendar_subtab("REVIEWS"))
+	if btn_day_sub_news and not btn_day_sub_news.pressed.is_connected(func(): _set_calendar_subtab("NEWS")):
+		btn_day_sub_news.pressed.connect(func(): _set_calendar_subtab("NEWS"))
+
+	var cal = CalendarManager.get_instance()
+	if cal:
+		viewing_calendar_year = cal.current_year
+		viewing_calendar_month = cal.current_month
+		selected_calendar_day = cal.day_number
+
+func _on_prev_month_pressed() -> void:
+	viewing_calendar_month -= 1
+	if viewing_calendar_month < 1:
+		viewing_calendar_month = 12
+		viewing_calendar_year -= 1
+	if viewing_calendar_year < 2026:
+		viewing_calendar_year = 2026
+		viewing_calendar_month = 1
+	_refresh_calendar_tab()
+
+func _on_next_month_pressed() -> void:
+	viewing_calendar_month += 1
+	if viewing_calendar_month > 12:
+		viewing_calendar_month = 1
+		viewing_calendar_year += 1
+	_refresh_calendar_tab()
+
+func _set_calendar_subtab(subtab_name: String) -> void:
+	selected_calendar_subtab = subtab_name
+	_update_calendar_subtab_button_styles()
+	_refresh_calendar_day_details()
+
+func _update_calendar_subtab_button_styles() -> void:
+	var sub_btns = {
+		"SUMMARY": btn_day_sub_summary,
+		"ORDERS": btn_day_sub_orders,
+		"REVIEWS": btn_day_sub_reviews,
+		"NEWS": btn_day_sub_news
+	}
+
+	for k in sub_btns.keys():
+		var btn: Button = sub_btns[k]
+		if not btn:
+			continue
+		var is_sel = (k == selected_calendar_subtab)
+		var style = StyleBoxFlat.new()
+		style.set_corner_radius_all(4)
+		style.content_margin_left = 8
+		style.content_margin_right = 8
+		style.content_margin_top = 4
+		style.content_margin_bottom = 4
+
+		if is_sel:
+			style.bg_color = Color(0.24, 0.32, 0.46, 1.0)
+			style.border_color = Color(1.0, 0.80, 0.20, 1.0)
+			style.border_width_bottom = 2
+			btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+		else:
+			style.bg_color = Color(0.12, 0.15, 0.20, 1.0)
+			btn.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1))
+
+		btn.add_theme_stylebox_override("normal", style)
+		btn.add_theme_stylebox_override("hover", style)
+		btn.add_theme_stylebox_override("pressed", style)
+
+func _select_calendar_day(day_num: int) -> void:
+	selected_calendar_day = day_num
+	_build_calendar_month_grid()
+	_refresh_calendar_day_details()
+
+func _refresh_calendar_tab() -> void:
+	var cal = CalendarManager.get_instance()
+	if calendar_summary_label and cal:
+		calendar_summary_label.text = "%s — Dia %d (Hoje)" % [cal.get_formatted_date(), cal.day_number]
+
+	if month_title_label and cal:
+		var m_name = cal.MONTH_NAMES[clamp(viewing_calendar_month - 1, 0, 11)].capitalize()
+		month_title_label.text = "%s %d" % [m_name, viewing_calendar_year]
+
+	_update_calendar_subtab_button_styles()
+	_build_calendar_month_grid()
+	_refresh_calendar_day_details()
+
+func _build_calendar_month_grid() -> void:
+	var cal = CalendarManager.get_instance()
+	if not cal or not days_grid or not week_header_grid:
+		return
+
+	# 1. Cabeçalho dos dias da semana
+	if week_header_grid.get_child_count() == 0:
+		var short_weekdays = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"]
+		for sw in short_weekdays:
+			var wlbl = Label.new()
+			wlbl.text = sw
+			wlbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			wlbl.add_theme_font_size_override("font_size", 11)
+			wlbl.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 1.0))
+			wlbl.custom_minimum_size = Vector2(40, 20)
+			week_header_grid.add_child(wlbl)
+
+	# 2. Grid de Dias
+	for child in days_grid.get_children():
+		child.queue_free()
+
+	var matrix = cal.get_month_matrix(viewing_calendar_year, viewing_calendar_month)
+
+	for week in matrix:
+		for day_cell in week:
+			var day_val = day_cell.get("day", 0)
+			var d_num = day_cell.get("day_number", 0)
+			var is_cur_month = day_cell.get("is_current_month", false)
+			var is_today = day_cell.get("is_today", false)
+			var is_past = day_cell.get("is_past", false)
+			var is_future = day_cell.get("is_future", false)
+
+			var btn = Button.new()
+			btn.custom_minimum_size = Vector2(40, 36)
+			btn.focus_mode = Control.FOCUS_NONE
+
+			if not is_cur_month or day_val == 0:
+				btn.text = ""
+				btn.disabled = true
+				var empty_style = StyleBoxFlat.new()
+				empty_style.bg_color = Color(0, 0, 0, 0)
+				btn.add_theme_stylebox_override("disabled", empty_style)
+			else:
+				btn.text = str(day_val)
+				var is_selected = (d_num == selected_calendar_day)
+
+				var style = StyleBoxFlat.new()
+				style.set_corner_radius_all(4)
+
+				if is_selected:
+					style.bg_color = Color(0.28, 0.40, 0.58, 1.0)
+					style.border_color = Color(1.0, 0.85, 0.20, 1.0)
+					style.set_border_width_all(2)
+					btn.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+				elif is_today:
+					style.bg_color = Color(0.20, 0.30, 0.42, 1.0)
+					style.border_color = Color(1.0, 0.80, 0.20, 0.90)
+					style.set_border_width_all(2)
+					btn.add_theme_color_override("font_color", Color(1.0, 0.90, 0.30, 1.0))
+				elif is_past:
+					style.bg_color = Color(0.12, 0.16, 0.22, 0.90)
+					style.border_color = Color(0.20, 0.26, 0.36, 0.60)
+					style.set_border_width_all(1)
+					btn.add_theme_color_override("font_color", Color(0.85, 0.90, 0.95, 1.0))
+				elif is_future:
+					style.bg_color = Color(0.08, 0.10, 0.14, 0.60)
+					btn.add_theme_color_override("font_color", Color(0.45, 0.50, 0.60, 1.0))
+					btn.disabled = true
+
+				btn.add_theme_stylebox_override("normal", style)
+				btn.add_theme_stylebox_override("hover", style)
+				btn.add_theme_stylebox_override("pressed", style)
+				btn.add_theme_stylebox_override("disabled", style)
+
+				if not is_future:
+					var target_d = d_num
+					btn.pressed.connect(func(): _select_calendar_day(target_d))
+
+			days_grid.add_child(btn)
+
+func _refresh_calendar_day_details() -> void:
+	var cal = CalendarManager.get_instance()
+	if not day_detail_content_vbox:
+		day_detail_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/CalendarTab/CalendarBodyMargin/SplitHBox/DayDetailPanel/DayDetailVBox/DayDetailScroll/DayDetailContentVBox")
+	if not day_detail_content_vbox:
+		return
+
+	var day_num = selected_calendar_day
+	var is_today = (cal and day_num == cal.day_number)
+	var date_info = cal.get_date_for_day_number(day_num) if cal else {}
+	var d_title = "%s — Dia %d%s" % [date_info.get("formatted_date", "01/01/2026"), day_num, " (Hoje)" if is_today else ""]
+
+	if selected_day_title_label:
+		selected_day_title_label.text = d_title
+
+	for child in day_detail_content_vbox.get_children():
+		day_detail_content_vbox.remove_child(child)
+		child.queue_free()
+
+	var day_rec = cal.get_day_record(day_num) if cal else {}
+
+	match selected_calendar_subtab:
+		"ORDERS":
+			_build_day_orders_view(day_rec)
+		"REVIEWS":
+			_build_day_reviews_view(day_rec)
+		"NEWS":
+			_build_day_news_view(day_rec)
+		_:
+			_build_day_summary_view(day_rec)
+
+func _build_day_summary_view(day_rec: Dictionary) -> void:
+	var fin_data = day_rec.get("financial", {})
+	var ord_data = day_rec.get("orders", {})
+	var rep_data = day_rec.get("reputation", {})
+	var evt_data = day_rec.get("event", {})
+	var wea_data = day_rec.get("weather", {})
+
+	var rev = fin_data.get("revenue", 0.0)
+	var exp = fin_data.get("expenses", 0.0)
+	var prof = fin_data.get("profit", 0.0)
+
+	# 1. Painel Financeiro
+	var fin_card = PanelContainer.new()
+	var fstyle = StyleBoxFlat.new()
+	fstyle.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	fstyle.set_corner_radius_all(6)
+	fstyle.set_content_margin_all(10)
+	fin_card.add_theme_stylebox_override("panel", fstyle)
+
+	var fvbox = VBoxContainer.new()
+	fvbox.add_theme_constant_override("separation", 6)
+
+	var ftitle = Label.new()
+	ftitle.text = "💵 BALANÇO FINANCEIRO"
+	ftitle.add_theme_font_size_override("font_size", 12)
+	ftitle.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+	fvbox.add_child(ftitle)
+
+	var fhbox = HBoxContainer.new()
+	fhbox.add_theme_constant_override("separation", 14)
+
+	var r_lbl = Label.new()
+	r_lbl.text = "Receita: R$ %.2f" % rev
+	r_lbl.add_theme_font_size_override("font_size", 12)
+	r_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1))
+	fhbox.add_child(r_lbl)
+
+	var e_lbl = Label.new()
+	e_lbl.text = "Despesas: R$ %.2f" % exp
+	e_lbl.add_theme_font_size_override("font_size", 12)
+	e_lbl.add_theme_color_override("font_color", Color(1.0, 0.45, 0.45, 1))
+	fhbox.add_child(e_lbl)
+
+	var p_lbl = Label.new()
+	p_lbl.text = "Lucro Líquido: R$ %.2f" % prof
+	p_lbl.add_theme_font_size_override("font_size", 12)
+	p_lbl.add_theme_color_override("font_color", Color(0.35, 0.9, 0.5, 1) if prof >= 0 else Color(1.0, 0.4, 0.4, 1))
+	fhbox.add_child(p_lbl)
+
+	fvbox.add_child(fhbox)
+	fin_card.add_child(fvbox)
+	day_detail_content_vbox.add_child(fin_card)
+
+	# 2. Painel de Pedidos & Operação
+	var ord_card = PanelContainer.new()
+	var ostyle = StyleBoxFlat.new()
+	ostyle.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	ostyle.set_corner_radius_all(6)
+	ostyle.set_content_margin_all(10)
+	ord_card.add_theme_stylebox_override("panel", ostyle)
+
+	var ovbox = VBoxContainer.new()
+	ovbox.add_theme_constant_override("separation", 6)
+
+	var otitle = Label.new()
+	otitle.text = "📋 PEDIDOS & CANAIS DE VENDA"
+	otitle.add_theme_font_size_override("font_size", 12)
+	otitle.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+	ovbox.add_child(otitle)
+
+	var ohbox = HBoxContainer.new()
+	ohbox.add_theme_constant_override("separation", 14)
+
+	var tot_lbl = Label.new()
+	tot_lbl.text = "Total: %d" % ord_data.get("total", 0)
+	tot_lbl.add_theme_font_size_override("font_size", 12)
+	ohbox.add_child(tot_lbl)
+
+	var din_lbl = Label.new()
+	din_lbl.text = "🍽️ Salão: %d" % ord_data.get("dine_in", 0)
+	din_lbl.add_theme_font_size_override("font_size", 12)
+	ohbox.add_child(din_lbl)
+
+	var dt_lbl = Label.new()
+	dt_lbl.text = "🚗 Drive-thru: %d" % ord_data.get("drive_thru", 0)
+	dt_lbl.add_theme_font_size_override("font_size", 12)
+	ohbox.add_child(dt_lbl)
+
+	var del_lbl = Label.new()
+	del_lbl.text = "🛵 Delivery: %d" % ord_data.get("delivery", 0)
+	del_lbl.add_theme_font_size_override("font_size", 12)
+	ohbox.add_child(del_lbl)
+
+	ovbox.add_child(ohbox)
+	ord_card.add_child(ovbox)
+	day_detail_content_vbox.add_child(ord_card)
+
+	# 3. Painel de Reputação, Eventos e Clima
+	var info_card = PanelContainer.new()
+	var istyle = StyleBoxFlat.new()
+	istyle.bg_color = Color(0.10, 0.14, 0.20, 0.95)
+	istyle.set_corner_radius_all(6)
+	istyle.set_content_margin_all(10)
+	info_card.add_theme_stylebox_override("panel", istyle)
+
+	var ivbox = VBoxContainer.new()
+	ivbox.add_theme_constant_override("separation", 6)
+
+	var ititle = Label.new()
+	ititle.text = "⭐ SATISFAÇÃO & ACONTECIMENTOS"
+	ititle.add_theme_font_size_override("font_size", 12)
+	ititle.add_theme_color_override("font_color", Color(1, 0.85, 0.2, 1))
+	ivbox.add_child(ititle)
+
+	var ihbox = HBoxContainer.new()
+	ihbox.add_theme_constant_override("separation", 14)
+
+	var r_stars_lbl = Label.new()
+	r_stars_lbl.text = "⭐ Avaliação Média: %.1f★ (%d avaliações)" % [rep_data.get("average_rating", 5.0), rep_data.get("reviews_count", 0)]
+	r_stars_lbl.add_theme_font_size_override("font_size", 12)
+	r_stars_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.20, 1))
+	ihbox.add_child(r_stars_lbl)
+
+	var wea_lbl = Label.new()
+	wea_lbl.text = "Clima: %s %s" % [wea_data.get("icon", "☀️"), wea_data.get("name", "Ensolarado")]
+	wea_lbl.add_theme_font_size_override("font_size", 12)
+	ihbox.add_child(wea_lbl)
+
+	ivbox.add_child(ihbox)
+
+	var evt_title_lbl = Label.new()
+	evt_title_lbl.text = "Evento: %s" % evt_data.get("title", "Operação Normal")
+	evt_title_lbl.add_theme_font_size_override("font_size", 12)
+	evt_title_lbl.add_theme_color_override("font_color", Color(0.8, 0.85, 0.95, 1))
+	ivbox.add_child(evt_title_lbl)
+
+	info_card.add_child(ivbox)
+	day_detail_content_vbox.add_child(info_card)
+
+func _build_day_orders_view(day_rec: Dictionary) -> void:
+	var ord_data = day_rec.get("orders", {})
+	var history: Array = ord_data.get("history", [])
+
+	if history.is_empty():
+		var empty_lbl = Label.new()
+		empty_lbl.text = "Nenhum pedido registrado para este dia."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8, 1))
+		day_detail_content_vbox.add_child(empty_lbl)
+		return
+
+	for ord in history:
+		var row = _create_history_row(ord)
+		day_detail_content_vbox.add_child(row)
+
+func _build_day_reviews_view(day_rec: Dictionary) -> void:
+	var rep_data = day_rec.get("reputation", {})
+	var reviews_list: Array = rep_data.get("reviews", [])
+
+	if reviews_list.is_empty():
+		var empty_lbl = Label.new()
+		empty_lbl.text = "Nenhuma avaliação recebida neste dia."
+		empty_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		empty_lbl.add_theme_color_override("font_color", Color(0.65, 0.7, 0.8, 1))
+		day_detail_content_vbox.add_child(empty_lbl)
+		return
+
+	for rev in reviews_list:
+		var card = _create_review_card(rev)
+		day_detail_content_vbox.add_child(card)
+
+func _build_day_news_view(day_rec: Dictionary) -> void:
+	var target_day = day_rec.get("day_number", selected_calendar_day)
+	var news_list: Array = day_rec.get("news", [])
+
+	if news_list.is_empty():
+		var nm = NewsManager.get_instance()
+		if not nm and is_inside_tree() and get_tree() and get_tree().root:
+			nm = get_tree().root.find_child("NewsManager", true, false)
+		if nm:
+			news_list = nm.get_news_for_day(target_day)
+
+	if news_list.is_empty():
+		var empty_card = _create_no_news_editorial_card()
+		day_detail_content_vbox.add_child(empty_card)
+		return
+
+	for art in news_list:
+		if art.get("is_main", false):
+			day_detail_content_vbox.add_child(_create_main_news_card(art))
+		else:
+			day_detail_content_vbox.add_child(_create_secondary_news_card(art))
+
+# =============================================================================
+# ABA 10: JORNAL DA CIDADE & NOTÍCIAS DIGITAIS
+# =============================================================================
+
+func _setup_news_tab() -> void:
+	var nm = NewsManager.get_instance()
+	if nm and not nm.news_updated.is_connected(_on_news_updated_from_manager):
+		nm.news_updated.connect(_on_news_updated_from_manager)
+
+func _on_news_updated_from_manager(_arts: Array) -> void:
+	if visible and current_tab == TabID.NEWS:
+		_refresh_news_tab()
+
+func _refresh_news_tab() -> void:
+	var cal = CalendarManager.get_instance()
+	if news_date_label and cal:
+		news_date_label.text = "%s — Dia %d" % [cal.get_full_date_string(), cal.day_number]
+
+	if not news_content_vbox:
+		news_content_vbox = get_node_or_null("MainPanel/OuterWindow/VBox/Body/ContentArea/NewsTab/NewsScroll/Margin/NewsContentVBox")
+	if not news_content_vbox:
+		return
+
+	for child in news_content_vbox.get_children():
+		news_content_vbox.remove_child(child)
+		child.queue_free()
+
+	var nm = NewsManager.get_instance()
+	if not nm and is_inside_tree() and get_tree() and get_tree().root:
+		nm = get_tree().root.find_child("NewsManager", true, false)
+	if not nm:
+		return
+
+	var articles = nm.get_today_news()
+	if articles.is_empty():
+		var empty_card = _create_no_news_editorial_card()
+		news_content_vbox.add_child(empty_card)
+		return
+
+	for art in articles:
+		if art.get("is_main", false):
+			var main_card = _create_main_news_card(art)
+			news_content_vbox.add_child(main_card)
+		else:
+			var sec_card = _create_secondary_news_card(art)
+			news_content_vbox.add_child(sec_card)
+
+func _create_no_news_editorial_card() -> PanelContainer:
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.10, 0.14, 0.21, 0.95)
+	style.border_color = Color(0.28, 0.42, 0.60, 0.85)
+	style.border_width_left = 4
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(16)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+
+	# 1. Header Jornalístico
+	var hhbox = HBoxContainer.new()
+	hhbox.add_theme_constant_override("separation", 10)
+
+	var badge_panel = PanelContainer.new()
+	var bstyle = StyleBoxFlat.new()
+	bstyle.bg_color = Color(0.20, 0.35, 0.55, 0.90)
+	bstyle.set_corner_radius_all(4)
+	bstyle.set_content_margin_all(4)
+	badge_panel.add_theme_stylebox_override("panel", bstyle)
+
+	var badge_lbl = Label.new()
+	badge_lbl.text = "📰 INFORMATIVO DIÁRIO"
+	badge_lbl.add_theme_font_size_override("font_size", 10)
+	badge_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	badge_panel.add_child(badge_lbl)
+	hhbox.add_child(badge_panel)
+
+	var src_lbl = Label.new()
+	src_lbl.text = "Portal Central de Notícias • Edição Regular"
+	src_lbl.add_theme_font_size_override("font_size", 11)
+	src_lbl.add_theme_color_override("font_color", Color(0.75, 0.80, 0.90, 1))
+	hhbox.add_child(src_lbl)
+
+	vbox.add_child(hhbox)
+
+	# 2. Título / Manchete Integrada
+	var title_lbl = Label.new()
+	title_lbl.text = "📅 Dia Sem Ocorrências Relevantes"
+	title_lbl.add_theme_font_size_override("font_size", 15)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.90, 0.40, 1.0))
+	vbox.add_child(title_lbl)
+
+	# 3. Mensagem Principal Conforme Especificação do Usuário
+	var body_lbl = Label.new()
+	body_lbl.text = "“Nenhuma notícia nova hoje. Não há eventos ou acontecimentos relevantes para o dia. O restaurante segue normalmente.”"
+	body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body_lbl.add_theme_font_size_override("font_size", 13)
+	body_lbl.add_theme_color_override("font_color", Color(0.88, 0.92, 0.98, 1.0))
+	vbox.add_child(body_lbl)
+
+	# 4. Box de Situação Operacional
+	var imp_panel = PanelContainer.new()
+	var istyle = StyleBoxFlat.new()
+	istyle.bg_color = Color(0.06, 0.08, 0.12, 0.90)
+	istyle.border_color = Color(0.25, 0.35, 0.50, 0.60)
+	istyle.set_border_width_all(1)
+	istyle.set_corner_radius_all(6)
+	istyle.set_content_margin_all(10)
+	imp_panel.add_theme_stylebox_override("panel", istyle)
+
+	var imp_vbox = VBoxContainer.new()
+	imp_vbox.add_theme_constant_override("separation", 4)
+
+	var imp_title = Label.new()
+	imp_title.text = "⚡ Situação Operacional:"
+	imp_title.add_theme_font_size_override("font_size", 12)
+	imp_title.add_theme_color_override("font_color", Color(0.40, 0.85, 1.0, 1.0))
+	imp_vbox.add_child(imp_title)
+
+	var imp1 = Label.new()
+	imp1.text = "• Todos os canais de atendimento operando com normalidade (Salão, Drive-Thru e Delivery)."
+	imp1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	imp1.add_theme_font_size_override("font_size", 11)
+	imp1.add_theme_color_override("font_color", Color(0.85, 0.88, 0.94, 1.0))
+	imp_vbox.add_child(imp1)
+
+	var imp2 = Label.new()
+	imp2.text = "• Nenhuma alteração climática brusca ou interrupção de serviços prevista."
+	imp2.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	imp2.add_theme_font_size_override("font_size", 11)
+	imp2.add_theme_color_override("font_color", Color(0.85, 0.88, 0.94, 1.0))
+	imp_vbox.add_child(imp2)
+
+	imp_panel.add_child(imp_vbox)
+	vbox.add_child(imp_panel)
+
+	card.add_child(vbox)
+	return card
+
+func _create_main_news_card(art: Dictionary) -> PanelContainer:
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.10, 0.14, 0.21, 0.95)
+	style.border_color = Color(1.0, 0.80, 0.20, 0.90)
+	style.border_width_left = 4
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(14)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 8)
+
+	# 1. Header com Fonte, Categoria e Horário
+	var hhbox = HBoxContainer.new()
+	hhbox.add_theme_constant_override("separation", 10)
+
+	var badge_panel = PanelContainer.new()
+	var bstyle = StyleBoxFlat.new()
+	bstyle.bg_color = Color(0.85, 0.25, 0.25, 0.90) if art.get("occurred", false) else Color(0.18, 0.35, 0.60, 0.90)
+	bstyle.set_corner_radius_all(4)
+	bstyle.set_content_margin_all(4)
+	badge_panel.add_theme_stylebox_override("panel", bstyle)
+
+	var badge_lbl = Label.new()
+	badge_lbl.text = art.get("status_badge", "📢 ALERTA")
+	badge_lbl.add_theme_font_size_override("font_size", 10)
+	badge_lbl.add_theme_color_override("font_color", Color(1, 1, 1, 1))
+	badge_panel.add_child(badge_lbl)
+	hhbox.add_child(badge_panel)
+
+	var src_lbl = Label.new()
+	src_lbl.text = "📰 %s • %s" % [art.get("source", "Portal Central"), art.get("category", "CIDADE")]
+	src_lbl.add_theme_font_size_override("font_size", 11)
+	src_lbl.add_theme_color_override("font_color", Color(0.75, 0.80, 0.90, 1))
+	hhbox.add_child(src_lbl)
+
+	var time_lbl = Label.new()
+	time_lbl.text = "⏰ %s" % art.get("published_time", "08:30")
+	time_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	time_lbl.add_theme_font_size_override("font_size", 11)
+	time_lbl.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 1))
+	hhbox.add_child(time_lbl)
+
+	vbox.add_child(hhbox)
+
+	# 2. Título da Manchete
+	var title_lbl = Label.new()
+	title_lbl.text = "%s %s" % [art.get("icon", "📰"), art.get("title", "Manchete do Dia")]
+	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_lbl.add_theme_font_size_override("font_size", 16)
+	title_lbl.add_theme_color_override("font_color", Color(1.0, 0.90, 0.35, 1.0))
+	vbox.add_child(title_lbl)
+
+	# 3. Subtítulo / Linha fina
+	if art.get("subtitle", "") != "":
+		var sub_lbl = Label.new()
+		sub_lbl.text = art.get("subtitle", "")
+		sub_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		sub_lbl.add_theme_font_size_override("font_size", 12)
+		sub_lbl.add_theme_color_override("font_color", Color(0.85, 0.90, 0.95, 1))
+		vbox.add_child(sub_lbl)
+
+	# 4. Corpo da Notícia
+	var body_lbl = Label.new()
+	body_lbl.text = art.get("body", "")
+	body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body_lbl.add_theme_font_size_override("font_size", 12)
+	body_lbl.add_theme_color_override("font_color", Color(0.75, 0.80, 0.88, 1))
+	vbox.add_child(body_lbl)
+
+	# 5. Box de Influência no dia (Gameplay Impacts)
+	var impacts: Array = art.get("impacts", [])
+	if impacts.is_empty() and art.get("impact", "") != "":
+		impacts = [art.get("impact", "")]
+
+	if not impacts.is_empty():
+		var imp_panel = PanelContainer.new()
+		var istyle = StyleBoxFlat.new()
+		istyle.bg_color = Color(0.06, 0.08, 0.12, 0.90)
+		istyle.border_color = Color(0.95, 0.70, 0.20, 0.60)
+		istyle.set_border_width_all(1)
+		istyle.set_corner_radius_all(6)
+		istyle.set_content_margin_all(10)
+		imp_panel.add_theme_stylebox_override("panel", istyle)
+
+		var imp_vbox = VBoxContainer.new()
+		imp_vbox.add_theme_constant_override("separation", 4)
+
+		var imp_title = Label.new()
+		imp_title.text = "⚡ Impacto no restaurante:"
+		imp_title.add_theme_font_size_override("font_size", 12)
+		imp_title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.35, 1))
+		imp_vbox.add_child(imp_title)
+
+		for imp_item in impacts:
+			var imp_item_lbl = Label.new()
+			imp_item_lbl.text = "• %s" % imp_item
+			imp_item_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			imp_item_lbl.add_theme_font_size_override("font_size", 11)
+			imp_item_lbl.add_theme_color_override("font_color", Color(0.90, 0.92, 0.96, 1))
+			imp_vbox.add_child(imp_item_lbl)
+
+		imp_panel.add_child(imp_vbox)
+		vbox.add_child(imp_panel)
+
+	card.add_child(vbox)
+	return card
+
+func _create_secondary_news_card(art: Dictionary) -> PanelContainer:
+	var card = PanelContainer.new()
+	var style = StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.11, 0.16, 0.90)
+	style.border_color = Color(0.18, 0.24, 0.34, 0.70)
+	style.set_border_width_all(1)
+	style.set_corner_radius_all(6)
+	style.set_content_margin_all(10)
+	card.add_theme_stylebox_override("panel", style)
+
+	var vbox = VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 6)
+
+	var htop = HBoxContainer.new()
+	var src_lbl = Label.new()
+	src_lbl.text = "%s %s • %s" % [art.get("icon", "🗞️"), art.get("source", "Diário Regional"), art.get("category", "GERAL")]
+	src_lbl.add_theme_font_size_override("font_size", 10)
+	src_lbl.add_theme_color_override("font_color", Color(0.65, 0.70, 0.80, 1))
+	htop.add_child(src_lbl)
+
+	var time_lbl = Label.new()
+	time_lbl.text = art.get("time", "10:00")
+	time_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	time_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	time_lbl.add_theme_font_size_override("font_size", 10)
+	time_lbl.add_theme_color_override("font_color", Color(0.55, 0.60, 0.70, 1))
+	htop.add_child(time_lbl)
+	vbox.add_child(htop)
+
+	var title_lbl = Label.new()
+	title_lbl.text = art.get("title", "")
+	title_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	title_lbl.add_theme_font_size_override("font_size", 13)
+	title_lbl.add_theme_color_override("font_color", Color(0.92, 0.95, 1.0, 1))
+	vbox.add_child(title_lbl)
+
+	var body_lbl = Label.new()
+	body_lbl.text = art.get("body", "")
+	body_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body_lbl.add_theme_font_size_override("font_size", 11)
+	body_lbl.add_theme_color_override("font_color", Color(0.70, 0.75, 0.85, 1))
+	vbox.add_child(body_lbl)
+
+	card.add_child(vbox)
+	return card

@@ -22,9 +22,14 @@ roughness = 0.38
 albedo_color = Color(0.12, 0.12, 0.14, 1)
 roughness = 0.85
 
-[sub_resource type="StandardMaterial3D" id="Material_BadgeWhite"]
-albedo_color = Color(0.96, 0.96, 0.94, 1)
-roughness = 0.50
+[sub_resource type="StandardMaterial3D" id="Material_PlateBodyDark"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="Material_PlateBorderRed"]
+albedo_color = Color(0.85, 0.18, 0.18, 1)
+roughness = 0.4
+metallic = 0.3
 
 ; ================================================================
 ; MESHES DA ESTRUTURA ELEVADA
@@ -61,10 +66,14 @@ top_radius = 0.14
 bottom_radius = 0.14
 height = 0.015
 
-; Placa de Identificação Física Branca na Base Frontal
-[sub_resource type="BoxMesh" id="BoxMesh_BadgePlate"]
-material = SubResource("Material_BadgeWhite")
-size = Vector3(1.10, 0.06, 0.006)
+; Placa de Identificação Física Padrão Burger Rush (Fixada na parede acima dos cilindros)
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBorder"]
+material = SubResource("Material_PlateBorderRed")
+size = Vector3(1.10, 0.12, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBody"]
+material = SubResource("Material_PlateBodyDark")
+size = Vector3(1.06, 0.10, 0.016)
 
 ; ================================================================
 ; HIERARQUIA
@@ -92,7 +101,7 @@ mesh = SubResource("BoxMesh_StandLeg")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0, 0.08, 0)
 mesh = SubResource("BoxMesh_StandLeg")
 
-; Painel inferior/frontal de base (estrutura para identificação)
+; Painel inferior/frontal de base (estrutura metálica)
 [node name="FrontBasePanel" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0.22)
 mesh = SubResource("BoxMesh_FrontBasePanel")
@@ -132,18 +141,26 @@ mesh = SubResource("CylinderMesh_Cradle")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.54, 0.165, 0)
 mesh = SubResource("CylinderMesh_Cradle")
 
-; Área de identificação física na base frontal
-[node name="FrontBadge" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, 0.232)
-mesh = SubResource("BoxMesh_BadgePlate")
+; Área de identificação física padrão fixada diretamente na parede atrás dos cilindros
+[node name="PhysicalSign" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, -0.25)
 
-[node name="Label" type="Label3D" parent="Model/FrontBadge"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.004)
+[node name="PlateBorder" type="MeshInstance3D" parent="Model/PhysicalSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBorder")
+
+[node name="PlateBody" type="MeshInstance3D" parent="Model/PhysicalSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.003)
+mesh = SubResource("BoxMesh_SignPlateBody")
+
+[node name="SignLabel" type="Label3D" parent="Model/PhysicalSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.014)
 double_sided = false
-text = "INSUMOS DE REFRIGERANTE"
-font_size = 14
-modulate = Color(0.12, 0.12, 0.12, 1)
-outline_size = 0
+text = "REFIL REFRIGERANTES"
+font_size = 18
+outline_size = 4
+modulate = Color(1, 0.88, 0.25, 1)
+outline_modulate = Color(0.12, 0.12, 0.12, 1)
 
 ; Nós de Slot para os 4 refis
 [node name="Slots" type="Node3D" parent="Model"]

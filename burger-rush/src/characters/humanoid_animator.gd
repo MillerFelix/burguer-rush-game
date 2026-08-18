@@ -82,7 +82,7 @@ func setup(p_model: Node3D) -> void:
 	next_blink_interval = randf_range(3.0, 5.0)
 	next_glance_interval = randf_range(3.5, 6.0)
 
-func update_animation(delta: float, velocity: Vector3, is_seated: bool, is_eating: bool, is_carrying: bool, raising_hand: bool = false) -> void:
+func update_animation(delta: float, velocity: Vector3, is_seated: bool, is_eating: bool, is_carrying: bool, raising_hand: bool = false, extending_hand: bool = false) -> void:
 	var horiz_speed = Vector2(velocity.x, velocity.z).length()
 
 	if is_seated:
@@ -100,9 +100,9 @@ func update_animation(delta: float, velocity: Vector3, is_seated: bool, is_eatin
 		AnimState.CARRY_WALK:
 			_animate_walk(delta, horiz_speed, true)
 		AnimState.IDLE:
-			_animate_idle(delta, false)
+			_animate_idle(delta, false, extending_hand)
 		AnimState.CARRY_IDLE:
-			_animate_idle(delta, true)
+			_animate_idle(delta, true, extending_hand)
 		AnimState.SIT:
 			_animate_sit(delta, false, raising_hand)
 		AnimState.EAT:
@@ -212,18 +212,17 @@ func _animate_walk(delta: float, speed: float, carrying: bool) -> void:
 			arm_right.rotation.y = 0.0
 			arm_right.rotation.z = deg_to_rad(-3.0)
 
-func _animate_idle(delta: float, carrying: bool) -> void:
-	idle_timer += delta * 2.2
-	var breath = sin(idle_timer) * 0.015
-	var sway = cos(idle_timer * 0.6) * 0.015
+func _animate_idle(delta: float, carrying: bool, extending_hand: bool = false) -> void:
+	idle_timer += delta * 1.8
+	var breath = sin(idle_timer) * 0.005
 
 	if torso:
-		torso.position = orig_torso_pos + Vector3(sway * 0.2, breath, 0)
-		torso.rotation = Vector3(0, 0, sway * 0.2)
+		torso.position = orig_torso_pos + Vector3(0, breath, 0)
+		torso.rotation = Vector3.ZERO
 	if head:
-		head.position = orig_head_pos + Vector3(sway * 0.15, breath * 0.7, 0)
+		head.position = orig_head_pos + Vector3(0, breath * 0.5, 0)
 		head.rotation.y = current_head_yaw
-		head.rotation.x = sin(idle_timer * 0.5) * 0.02
+		head.rotation.x = 0.0
 		head.rotation.z = 0.0
 
 	if leg_left:
@@ -233,7 +232,19 @@ func _animate_idle(delta: float, carrying: bool) -> void:
 		leg_right.position = orig_leg_r_pos
 		leg_right.rotation = Vector3(0, 0, deg_to_rad(1.0))
 
-	if carrying:
+	if extending_hand:
+		# Mão direita estendida para frente oferecendo o dinheiro ao caixa
+		if arm_left:
+			arm_left.position = orig_arm_l_pos
+			arm_left.rotation.x = deg_to_rad(-12.0) + breath
+			arm_left.rotation.y = deg_to_rad(6.0)
+			arm_left.rotation.z = deg_to_rad(-4.0)
+		if arm_right:
+			arm_right.position = orig_arm_r_pos + Vector3(0, 0.02, 0.04)
+			arm_right.rotation.x = deg_to_rad(-85.0) + sin(idle_timer * 2.0) * 0.02
+			arm_right.rotation.y = deg_to_rad(-8.0)
+			arm_right.rotation.z = deg_to_rad(6.0)
+	elif carrying:
 		if arm_left:
 			arm_left.position = orig_arm_l_pos
 			arm_left.rotation.x = deg_to_rad(-40.0) + breath

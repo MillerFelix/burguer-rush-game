@@ -29,9 +29,14 @@ rim = 0.20
 albedo_color = Color(0.18, 0.18, 0.20, 1)
 roughness = 0.70
 
-[sub_resource type="StandardMaterial3D" id="Material_BadgeWhite"]
-albedo_color = Color(0.96, 0.96, 0.94, 1)
-roughness = 0.50
+[sub_resource type="StandardMaterial3D" id="Material_SignPlateBorder"]
+albedo_color = Color(0.85, 0.18, 0.18, 1)
+roughness = 0.4
+metallic = 0.3
+
+[sub_resource type="StandardMaterial3D" id="Material_SignPlateBody"]
+albedo_color = Color(0.12, 0.12, 0.14, 1)
+roughness = 0.6
 
 ; ================================================================
 ; MESHES DA PILHA
@@ -41,9 +46,13 @@ roughness = 0.50
 material = SubResource("Material_StackMatBlack")
 size = Vector3(0.64, 0.006, 0.46)
 
-[sub_resource type="BoxMesh" id="BoxMesh_CounterBadge"]
-material = SubResource("Material_BadgeWhite")
-size = Vector3(0.36, 0.024, 0.004)
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBorder"]
+material = SubResource("Material_SignPlateBorder")
+size = Vector3(0.54, 0.10, 0.012)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBody"]
+material = SubResource("Material_SignPlateBody")
+size = Vector3(0.50, 0.08, 0.016)
 
 [sub_resource type="BoxMesh" id="BoxMesh_TrayCenter"]
 material = SubResource("Material_TrayYellow")
@@ -74,17 +83,47 @@ shape = SubResource("BoxShape3D_Stack")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.003, 0)
 mesh = SubResource("BoxMesh_MatBase")
 
-[node name="CounterFrontBadge" type="MeshInstance3D" parent="Model"]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, -0.03, -0.342)
-mesh = SubResource("BoxMesh_CounterBadge")
+; Placa Física Padrão (Voltada para as mesas/restaurante)
+[node name="PhysicalSign" type="Node3D" parent="Model"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.22, 0.32)
 
-[node name="Label" type="Label3D" parent="Model/CounterFrontBadge"]
+[node name="PlateBorder" type="MeshInstance3D" parent="Model/PhysicalSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBorder")
+
+[node name="PlateBody" type="MeshInstance3D" parent="Model/PhysicalSign"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.003)
+mesh = SubResource("BoxMesh_SignPlateBody")
+
+[node name="SignLabel" type="Label3D" parent="Model/PhysicalSign"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.014)
 double_sided = false
-text = "BANDEJAS PARA ENTREGA"
-font_size = 14
-modulate = Color(0.12, 0.12, 0.12, 1)
-outline_size = 0
+text = "BANDEJAS"
+font_size = 18
+outline_size = 4
+modulate = Color(1, 0.88, 0.25, 1)
+outline_modulate = Color(0.12, 0.12, 0.12, 1)
+
+; Placa Física Padrão (Voltada para a cozinha)
+[node name="PhysicalSignKitchen" type="Node3D" parent="Model"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, -0.22, -0.32)
+
+[node name="PlateBorder" type="MeshInstance3D" parent="Model/PhysicalSignKitchen"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBorder")
+
+[node name="PlateBody" type="MeshInstance3D" parent="Model/PhysicalSignKitchen"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.003)
+mesh = SubResource("BoxMesh_SignPlateBody")
+
+[node name="SignLabel" type="Label3D" parent="Model/PhysicalSignKitchen"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.014)
+double_sided = false
+text = "BANDEJAS"
+font_size = 18
+outline_size = 4
+modulate = Color(1, 0.88, 0.25, 1)
+outline_modulate = Color(0.12, 0.12, 0.12, 1)
 
 [node name="Trays" type="Node3D" parent="Model"]
 

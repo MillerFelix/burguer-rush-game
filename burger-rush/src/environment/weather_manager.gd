@@ -174,7 +174,7 @@ func _synthesize_rain_stream(is_interior_muffled: bool) -> AudioStreamWAV:
 	for i in range(num_samples):
 		var white = randf_range(-1.0, 1.0)
 		last_val = (last_val * filter_coeff) + (white * (1.0 - filter_coeff))
-		var sample = clampf(last_val * (0.45 if not is_interior_muffled else 0.60), -1.0, 1.0)
+		var sample = clampf(last_val * (0.22 if not is_interior_muffled else 0.30), -1.0, 1.0)
 		var s16 = int(sample * 32767.0)
 		pcm.encode_s16(i * 2, s16)
 
@@ -356,14 +356,14 @@ func _process_spatial_audio(p_pos: Vector3) -> void:
 		dist_to_openings = minf(dist_front, minf(dist_sides, dist_back))
 
 	if not is_indoor:
-		# Totalmente no exterior (rua, doca, pallet de entrega)
-		if rain_audio_ext: rain_audio_ext.volume_db = lerpf(-30.0, -6.0, rain_intensity)
+		# Totalmente no exterior (rua, doca, pallet de entrega) — Reduzido para som ambiente confortável
+		if rain_audio_ext: rain_audio_ext.volume_db = lerpf(-38.0, -18.0, rain_intensity)
 		if rain_audio_int: rain_audio_int.volume_db = -80.0
 	else:
-		# No interior do restaurante (abafado no telhado, mais aberto perto de janelas e portas)
+		# No interior do restaurante (abafado e relaxante no telhado, sem sobrepor a jogabilidade)
 		var openness_factor = clampf(1.0 - (dist_to_openings / 4.0), 0.0, 1.0)
-		var ext_vol = lerpf(-22.0, -9.0, openness_factor) * rain_intensity
-		var int_vol = lerpf(-10.0, -14.0, openness_factor) * rain_intensity
+		var ext_vol = lerpf(-34.0, -22.0, openness_factor) - (1.0 - rain_intensity) * 12.0
+		var int_vol = lerpf(-24.0, -28.0, openness_factor) - (1.0 - rain_intensity) * 12.0
 
 		if rain_audio_ext: rain_audio_ext.volume_db = ext_vol
 		if rain_audio_int: rain_audio_int.volume_db = int_vol

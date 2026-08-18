@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://c6vx2aa4dkmqw"]
+
+[ext_resource type="Script" path="res://src/stations/delivery_pickup_station.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Station"]
+size = Vector3(0.7, 0.2, 0.55)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Mat"]
+albedo_color = Color(0.12, 0.14, 0.18, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_Mat"]
+material = SubResource("StandardMaterial3D_Mat")
+size = Vector3(0.65, 0.02, 0.45)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_Border"]
+albedo_color = Color(1, 0.8, 0.15, 1)
+emission_enabled = true
+emission = Color(1, 0.8, 0.15, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_Border"]
+material = SubResource("StandardMaterial3D_Border")
+size = Vector3(0.67, 0.022, 0.47)
+
+[node name="DeliveryPickupStation" type="StaticBody3D" groups=["interactable", "delivery_stations"]]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+shape = SubResource("BoxShape3D_Station")
+
+[node name="PickupMatBorder" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("BoxMesh_Border")
+
+[node name="PickupMat" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0)
+mesh = SubResource("BoxMesh_Mat")
+
+[node name="BagSlot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.025, 0)
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+billboard = 1
+double_sided = false
+modulate = Color(1, 0.85, 0.3, 1)
+outline_modulate = Color(0.15, 0.15, 0.2, 1)
+text = "🛵 EXPEDIÇÃO DELIVERY
+[Coloque o Saco Pronto]"
+font_size = 18
+outline_size = 5

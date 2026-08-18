@@ -17,6 +17,14 @@ const RecipeDatabase = preload("res://src/recipes/recipe_database.gd")
 # =============================================================================
 
 static var _custom_prices: Dictionary = {}
+static var on_prices_updated_callbacks: Array[Callable] = []
+
+static func register_price_listener(callback: Callable) -> void:
+	if not on_prices_updated_callbacks.has(callback):
+		on_prices_updated_callbacks.append(callback)
+
+static func unregister_price_listener(callback: Callable) -> void:
+	on_prices_updated_callbacks.erase(callback)
 
 static func get_purchase_manager() -> PurchaseManager:
 	var pm = PurchaseManager.get_instance()
@@ -166,12 +174,51 @@ static func get_min_price(recipe_id: String) -> float:
 	# Margem bruta de 20% significa Preço >= Custo / 0.80 = Custo * 1.25
 	return snappedf(cost * 1.20, 0.10)
 
-## Preço máximo permitido (~150% do recomendado / mercado)
+const ReputationManager = preload("res://src/customers/reputation_manager.gd")
+
+## Multiplicador de tolerância de preços baseado na reputação do restaurante
+static func get_reputation_tolerance_multiplier() -> float:
+	var rep_mgr = ReputationManager.get_instance()
+	if not rep_mgr:
+		var ml = Engine.get_main_loop()
+		if ml and ml is SceneTree:
+			var tree = ml as SceneTree
+			if tree.root:
+				rep_mgr = tree.root.find_child("ReputationManager", true, false)
+	if not rep_mgr:
+		return 1.0
+
+	var avg = rep_mgr.get_average_rating()
+	# Reputação 5.0 -> +25% de tolerância (1.25x)
+	# Reputação 4.0 -> Padrão (1.0x)
+	# Reputação 3.0 -> -15% de tolerância (0.85x)
+	# Reputação 1.0 -> -35% de tolerância (0.65x)
+	var mult = 1.0 + ((avg - 4.0) * 0.25)
+	return clampf(mult, 0.65, 1.35)
+
+## Preço máximo permitido (~150% do recomendado / mercado, ajustado pela reputação)
 static func get_max_price(recipe_id: String) -> float:
 	var rec = get_recommended_price(recipe_id)
 	var market = get_market_reference_price(recipe_id)
 	var base_ref = maxf(rec, market)
-	return snappedf(base_ref * 1.50, 0.50)
+	var rep_mult = get_reputation_tolerance_multiplier()
+	return snappedf(base_ref * 1.50 * rep_mult, 0.50)
+
+## Avalia a aceitação do preço cobrado pelo cliente considerando mercado e reputação
+static func evaluate_price_perception(recipe_id: String, price: float) -> Dictionary:
+	var market_ref = get_market_reference_price(recipe_id)
+	var rep_mult = get_reputation_tolerance_multiplier()
+	var fair_threshold = market_ref * 1.15 * rep_mult
+	var expensive_threshold = market_ref * 1.30 * rep_mult
+
+	if price > expensive_threshold:
+		return {"status": "EXPENSIVE", "score": 2.0, "reason": "Preço muito salgado para a experiência oferecida."}
+	elif price > fair_threshold:
+		return {"status": "SLIGHTLY_HIGH", "score": 3.8, "reason": "Preço um pouco acima do esperado, mas aceitável."}
+	elif price <= (market_ref * 0.90):
+		return {"status": "BARGAIN", "score": 5.0, "reason": "Excelente custo-benefício!"}
+	else:
+		return {"status": "FAIR", "score": 5.0, "reason": "Preço justo e dentro do padrão."}
 
 ## Retorna o preço de venda atual praticado pelo jogador
 static func get_selling_price(recipe_id: String) -> float:
@@ -197,6 +244,11 @@ static func set_selling_price(recipe_id: String, new_price: float) -> bool:
 	var recipe = RecipeDatabase.get_recipe_by_id(recipe_id)
 	if recipe:
 		recipe.base_price = final_price
+
+	# Notifica observadores (ex: quadro físico do restaurante)
+	for cb in on_prices_updated_callbacks:
+		if cb.is_valid():
+			cb.call()
 
 	return true
 

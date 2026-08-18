@@ -34,6 +34,9 @@ var consumption_by_source: Dictionary = {
 	"other": 0.0
 }
 
+func _init() -> void:
+	instance = self
+
 func _enter_tree() -> void:
 	instance = self
 

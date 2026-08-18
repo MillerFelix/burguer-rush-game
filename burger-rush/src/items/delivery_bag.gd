@@ -92,8 +92,13 @@ func add_contained_item(item: Node3D) -> bool:
 	var rec_id = ""
 	if item is PackagedBurger and item.get("recipe_id") != null:
 		rec_id = str(item.recipe_id)
+	elif item is DrinkCup and item.get("flavor") != null and item.flavor != "":
+		rec_id = str(item.flavor)
 
 	var itm_id = item.get("item_id") if "item_id" in item else item.name
+	if item is DrinkCup and item.get("flavor") != null and item.flavor != "":
+		itm_id = str(item.flavor)
+
 	var itm_name = item.get_display_name() if item.has_method("get_display_name") else item.name
 
 	var item_dict = {
@@ -110,6 +115,11 @@ func add_contained_item(item: Node3D) -> bool:
 	display_name = get_display_name()
 	_update_bag_visuals()
 	return true
+
+func add_item_data(data: Dictionary) -> void:
+	contained_items.append(data)
+	display_name = get_display_name()
+	_update_bag_visuals()
 
 func get_products() -> Array:
 	return contained_items

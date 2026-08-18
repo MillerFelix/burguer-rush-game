@@ -14,12 +14,37 @@ corner_radius_top_right = 12
 corner_radius_bottom_right = 12
 corner_radius_bottom_left = 12
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_DiscreetPill"]
-bg_color = Color(0.05, 0.06, 0.08, 0.45)
-corner_radius_top_left = 12
-corner_radius_top_right = 12
-corner_radius_bottom_right = 12
-corner_radius_bottom_left = 12
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_SlotInactive"]
+bg_color = Color(0.06, 0.08, 0.12, 0.65)
+border_color = Color(0.20, 0.26, 0.36, 0.50)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 8
+content_margin_top = 3
+content_margin_right = 8
+content_margin_bottom = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_SlotActive"]
+bg_color = Color(0.16, 0.22, 0.32, 0.95)
+border_color = Color(1.0, 0.85, 0.20, 1.0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+content_margin_left = 8
+content_margin_top = 3
+content_margin_right = 8
+content_margin_bottom = 3
 
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
@@ -134,43 +159,102 @@ vertical_alignment = 1
 [node name="FeedbackTimer" type="Timer" parent="."]
 one_shot = true
 
-; HUD MINIMALISTA E DISCRETO DE FERRAMENTAS
-[node name="ToolHotbar" type="PanelContainer" parent="."]
+; HUD DE FERRAMENTAS E SLOTS RÁPIDOS DE INGREDIENTES
+[node name="BottomInventoryBar" type="VBoxContainer" parent="."]
 anchors_preset = 7
 anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -95.0
-offset_top = -36.0
-offset_right = 95.0
-offset_bottom = -12.0
+offset_left = -260.0
+offset_top = -84.0
+offset_right = 260.0
+offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_DiscreetPill")
+theme_override_constants/separation = 4
+alignment = 2
 
-[node name="HBox" type="HBoxContainer" parent="ToolHotbar"]
+[node name="TopRowHBox" type="HBoxContainer" parent="BottomInventoryBar"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/separation = 10
 alignment = 1
 
-[node name="Slot1Label" type="Label" parent="ToolHotbar/HBox"]
+[node name="ToolHotbar" type="PanelContainer" parent="BottomInventoryBar/TopRowHBox"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_SlotInactive")
+
+[node name="HBox" type="HBoxContainer" parent="BottomInventoryBar/TopRowHBox/ToolHotbar"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Slot1Label" type="Label" parent="BottomInventoryBar/TopRowHBox/ToolHotbar/HBox"]
 modulate = Color(0.65, 0.68, 0.75, 0.5)
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "1 🍳"
+theme_override_font_sizes/font_size = 12
+text = "[1] 🍳 Espátula"
 
-[node name="Slot2Label" type="Label" parent="ToolHotbar/HBox"]
+[node name="Slot2Label" type="Label" parent="BottomInventoryBar/TopRowHBox/ToolHotbar/HBox"]
 modulate = Color(0.65, 0.68, 0.75, 0.5)
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "2 🧽"
+theme_override_font_sizes/font_size = 12
+text = "[2] 🧽 Bucha"
 
-[node name="Slot3Label" type="Label" parent="ToolHotbar/HBox"]
+[node name="Slot3Label" type="Label" parent="BottomInventoryBar/TopRowHBox/ToolHotbar/HBox"]
 modulate = Color(1, 0.9, 0.35, 1)
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
-text = "3 ✋"
+theme_override_font_sizes/font_size = 12
+text = "[3] ✋ Mão"
+
+[node name="ActiveItemBadge" type="PanelContainer" parent="BottomInventoryBar/TopRowHBox"]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_SlotActive")
+
+[node name="ActiveItemLabel" type="Label" parent="BottomInventoryBar/TopRowHBox/ActiveItemBadge"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+text = "Ativo: 🥩 Carne x1"
+
+[node name="QuickSlotsHBox" type="HBoxContainer" parent="BottomInventoryBar"]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="QuickSlot4" type="PanelContainer" parent="BottomInventoryBar/QuickSlotsHBox"]
+custom_minimum_size = Vector2(130, 28)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_SlotInactive")
+
+[node name="Label4" type="Label" parent="BottomInventoryBar/QuickSlotsHBox/QuickSlot4"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[4] 📦 Vazio"
+horizontal_alignment = 1
+
+[node name="QuickSlot5" type="PanelContainer" parent="BottomInventoryBar/QuickSlotsHBox"]
+custom_minimum_size = Vector2(130, 28)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_SlotInactive")
+
+[node name="Label5" type="Label" parent="BottomInventoryBar/QuickSlotsHBox/QuickSlot5"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[5] 📦 Vazio"
+horizontal_alignment = 1
+
+[node name="QuickSlot6" type="PanelContainer" parent="BottomInventoryBar/QuickSlotsHBox"]
+custom_minimum_size = Vector2(130, 28)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_SlotInactive")
+
+[node name="Label6" type="Label" parent="BottomInventoryBar/QuickSlotsHBox/QuickSlot6"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[6] 📦 Vazio"
+horizontal_alignment = 1
 
 [node name="DayReportModal" type="PanelContainer" parent="."]
 visible = false

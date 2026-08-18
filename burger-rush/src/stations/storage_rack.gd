@@ -140,11 +140,15 @@ func interact_item(player: Node3D) -> void:
 				_update_all_visual_stocks()
 				return
 
-		_show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
+		_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
 		return
 
-	# 2. Pegar pão com clique esquerdo (Mãos Livres)
-	if held == null:
+	# 2. Pegar pão com clique esquerdo para mãos / slots rápidos
+	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(item_id):
+		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
+		return
+
+	if true:
 		var has_it = inv.has_stock(item_id, 1) or (item_id.begins_with("bread") and inv.has_stock("bread", 1))
 		if not has_it:
 			_show_feedback(player, "❌ Sem estoque de %s! Compre no computador." % itm["name"])

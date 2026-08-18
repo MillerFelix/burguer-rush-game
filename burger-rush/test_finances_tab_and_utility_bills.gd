@@ -4,15 +4,6 @@ extends SceneTree
 # TESTE COMPLETO: CENTRO FINANCEIRO (ABA FINANÇAS DO PC), ENERGIA, ÁGUA E CONTAS
 # =============================================================================
 
-const EconomyManager = preload("res://src/economy/economy_manager.gd")
-const PowerManager = preload("res://src/core/power_manager.gd")
-const WaterManager = preload("res://src/core/water_manager.gd")
-const FinanceManager = preload("res://src/economy/finance_manager.gd")
-const DailyEventManager = preload("res://src/core/daily_event_manager.gd")
-const EmployeeManager = preload("res://src/employees/employee_manager.gd")
-const PurchaseManager = preload("res://src/purchasing/purchase_manager.gd")
-const ComputerUI = preload("res://src/ui/computer_ui.gd")
-
 var pass_count: int = 0
 var fail_count: int = 0
 
@@ -35,6 +26,7 @@ func _init() -> void:
 	test_employee_salaries()
 	test_bills_generation_and_payment_system()
 	test_pc_finances_ui_and_history()
+	test_complete_day_financial_lifecycle_and_next_day()
 
 	print("\n===========================================================================")
 	print("RESULTADO FINAL: %d PASSOU | %d FALHOU" % [pass_count, fail_count])
@@ -195,11 +187,11 @@ func test_employee_salaries() -> void:
 	assert_test(fin.calculate_daily_salaries_cost() == 0.0, "Sem funcionários: custo de salários = R$ 0.00")
 
 	# Simula 2 funcionários contratados
-	var emp1 = EmployeeManager.Employee.new()
+	var emp1 = Employee.new()
 	emp1.employee_name = "Carlos"
 	em.employees.append(emp1)
 
-	var emp2 = EmployeeManager.Employee.new()
+	var emp2 = Employee.new()
 	emp2.employee_name = "Mariana"
 	em.employees.append(emp2)
 
@@ -307,5 +299,124 @@ func test_pc_finances_ui_and_history() -> void:
 	assert_test(ui.current_finances_section == "HISTORY", "Sub-seção 'Relatório dos Dias' exibe o histórico persistido")
 
 	ui.free()
+	fin.free()
+	econ.free()
+
+# -----------------------------------------------------------------------------
+# 7. TESTE DO FLUXO COMPLETO DE PONTA A PONTA:
+#    Vendas → Despesas → Consumo → Fechamento → Contas → PC → Pagamento → Próximo Dia
+# -----------------------------------------------------------------------------
+func test_complete_day_financial_lifecycle_and_next_day() -> void:
+	print("\n--- TESTE 7: Fluxo Completo de Ponta a Ponta (Ciclo Diário e Transição de Dias) ---")
+
+	# 1. Setup inicial de todos os componentes centrais
+	var econ = EconomyManager.new()
+	econ.name = "EconomyManager"
+	econ.starting_money = 200.0
+	get_root().add_child(econ)
+	econ.current_money = 200.0
+
+	var pm = PowerManager.new()
+	pm.name = "PowerManager"
+	get_root().add_child(pm)
+	pm.set_main_power(true)
+
+	var wm = WaterManager.new()
+	wm.name = "WaterManager"
+	get_root().add_child(wm)
+	wm.water_tariff_per_liter = 0.02
+
+	var em = EmployeeManager.new()
+	em.name = "EmployeeManager"
+	get_root().add_child(em)
+
+	var emp = Employee.new()
+	emp.employee_name = "Carlos"
+	em.employees.append(emp)
+
+	var fin = FinanceManager.new()
+	fin.name = "FinanceManager"
+	get_root().add_child(fin)
+	fin.electricity_tariff_kwh = 0.85
+	fin.daily_salary_per_employee = 50.0
+
+	# 2. VENDAS REALIZADAS (Salão: 50.00, Drive-thru: 75.00, Delivery: 40.00)
+	fin.record_sale(50.00, "dine_in", "Venda Salão #1")
+	fin.record_sale(75.00, "drive_thru", "Venda Drive-Thru #1")
+	fin.record_sale(40.00, "delivery", "Venda App #1")
+
+	# Pedido com erro ou cancelado: NÃO deve entrar como receita
+	# (Verifica que o total permanece 165.00)
+	assert_test(is_equal_approx(fin.get_total_daily_revenue(), 165.00), "Vendas válidas registradas: R$ 165.00 (Salão + DT + App)")
+	assert_test(is_equal_approx(econ.get_money(), 365.00), "Saldo atualizado com as receitas: R$ 365.00 (200 + 165)")
+
+	# 3. DESPESAS E COMPRAS DE INSUMOS
+	# Gasta 60.00 em compras de insumos
+	var spent_ok = econ.spend_money(60.00, "Compra: Saco de Batatas e Pães")
+	assert_test(spent_ok == true, "Compra de insumos descontou saldo com sucesso!")
+	assert_test(is_equal_approx(econ.get_money(), 305.00), "Saldo após compras: R$ 305.00 (365 - 60)")
+
+	# 4. CONSUMO DE UTILIDADES (Energia e Água)
+	# Aparelho elétrico de 2.0 kW ligado por 2 horas (4.0 kWh)
+	var dummy_grill = Node.new()
+	pm.register_appliance(dummy_grill, "grill", "Chapa", 2.0, true)
+	pm._process(7200.0) # 2 horas
+	assert_test(is_equal_approx(pm.get_daily_energy_consumption_kwh(), 4.0), "Consumo de energia registrado: 4.00 kWh")
+
+	# Consumo de água: pia (1.0 L) + refrigerante (2.0 L) = 3.0 L
+	wm.consume_water(1.0, "sink")
+	wm.consume_water(2.0, "drink_machine")
+	assert_test(is_equal_approx(wm.get_daily_consumption_liters(), 3.0), "Consumo de água registrado: 3.00 Litros")
+
+	# Custos calculados:
+	# Energia: 4.0 * 0.85 = R$ 3.40
+	# Água: 3.0 * 0.02 = R$ 0.06
+	# Salários: 1 funcionário = R$ 50.00
+	# Compras: R$ 60.00
+	# Total Despesas: 60.00 + 3.40 + 0.06 + 50.00 = R$ 113.46
+	# Lucro Bruto: 165.00 - 60.00 = R$ 105.00
+	# Lucro Líquido: 165.00 - 113.46 = R$ 51.54
+	assert_test(is_equal_approx(fin.get_daily_gross_profit(), 105.00), "Lucro Bruto diário calculado: R$ 105.00")
+	assert_test(is_equal_approx(fin.get_daily_net_profit(), 51.54), "Lucro Líquido diário calculado: R$ 51.54")
+
+	# 5. FECHAMENTO DO DIA E GERAÇÃO DAS CONTAS
+	var report = fin.close_current_day()
+	assert_test(report.has("net_profit") and is_equal_approx(report["net_profit"], 51.54), "Relatório diário fechado com Lucro Líquido de R$ 51.54")
+
+	var active_bills = fin.get_active_bills()
+	assert_test(active_bills.has("electricity") and is_equal_approx(active_bills["electricity"]["amount"], 3.40), "Conta de Luz gerada: R$ 3.40")
+	assert_test(active_bills.has("water") and is_equal_approx(active_bills["water"]["amount"], 0.06), "Conta de Água gerada: R$ 0.06")
+	assert_test(active_bills.has("salaries") and is_equal_approx(active_bills["salaries"]["amount"], 50.00), "Conta de Salários gerada: R$ 50.00")
+
+	# 6. PAGAMENTO DAS CONTAS NO PC
+	var pay_elec = fin.pay_bill("electricity")
+	var pay_water = fin.pay_bill("water")
+	var pay_sal = fin.pay_bill("salaries")
+
+	assert_test(pay_elec["success"] and active_bills["electricity"]["is_paid"], "Conta de Energia paga com sucesso no PC")
+	assert_test(pay_water["success"] and active_bills["water"]["is_paid"], "Conta de Água paga com sucesso no PC")
+	assert_test(pay_sal["success"] and active_bills["salaries"]["is_paid"], "Folha de Salários paga com sucesso no PC")
+
+	# Saldo após pagar as contas: 305.00 - (3.40 + 0.06 + 50.00) = R$ 251.54
+	assert_test(is_equal_approx(econ.get_money(), 251.54), "Saldo final do dia após quitação de contas: R$ 251.54")
+
+	# 7. TRANSIÇÃO PARA O PRÓXIMO DIA
+	fin.start_new_day()
+	econ.start_new_day()
+	pm.start_new_day()
+	wm.start_new_day()
+
+	assert_test(fin.get_total_daily_revenue() == 0.0, "Novo dia iniciado: Receitas diárias zeradas")
+	assert_test(fin.get_daily_purchases_cost() == 0.0, "Novo dia iniciado: Compras diárias zeradas")
+	assert_test(fin.get_daily_electricity_kwh() == 0.0, "Novo dia iniciado: Consumo elétrico zerado")
+	assert_test(fin.get_daily_water_liters() == 0.0, "Novo dia iniciado: Consumo de água zerado")
+	assert_test(is_equal_approx(econ.get_money(), 251.54), "Novo dia mantém o saldo acumulado: R$ 251.54")
+	assert_test(fin.get_reports_history().size() == 1, "Histórico financeiro preserva relatórios dos dias anteriores")
+
+	dummy_grill.free()
+	emp.free()
+	em.free()
+	wm.free()
+	pm.free()
 	fin.free()
 	econ.free()

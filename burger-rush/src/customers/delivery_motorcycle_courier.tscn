@@ -1,0 +1,139 @@
+[gd_scene format=3 uid="uid://delivery_motorcycle_uid"]
+
+[ext_resource type="Script" path="res://src/customers/delivery_motorcycle_courier.gd" id="1_courier"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_Moto"]
+size = Vector3(0.8, 1.6, 1.8)
+
+[sub_resource type="StandardMaterial3D" id="Material_MotoChassis"]
+albedo_color = Color(0.9, 0.15, 0.15, 1)
+metallic = 0.6
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_MotoMetal"]
+albedo_color = Color(0.18, 0.20, 0.24, 1)
+metallic = 0.8
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_Tire"]
+albedo_color = Color(0.1, 0.1, 0.12, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_CargoBox"]
+albedo_color = Color(1, 0.82, 0.15, 1)
+roughness = 0.5
+
+[sub_resource type="StandardMaterial3D" id="Material_Helmet"]
+albedo_color = Color(0.95, 0.2, 0.15, 1)
+metallic = 0.3
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_Visor"]
+albedo_color = Color(0.08, 0.10, 0.14, 0.9)
+metallic = 0.8
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Material_Jacket"]
+albedo_color = Color(0.12, 0.55, 0.32, 1)
+roughness = 0.75
+
+[sub_resource type="StandardMaterial3D" id="Material_Pants"]
+albedo_color = Color(0.15, 0.18, 0.24, 1)
+roughness = 0.85
+
+[sub_resource type="BoxMesh" id="BoxMesh_Chassis"]
+material = SubResource("Material_MotoChassis")
+size = Vector3(0.38, 0.45, 1.2)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_Wheel"]
+material = SubResource("Material_Tire")
+top_radius = 0.28
+bottom_radius = 0.28
+height = 0.14
+
+[sub_resource type="BoxMesh" id="BoxMesh_Cargo"]
+material = SubResource("Material_CargoBox")
+size = Vector3(0.55, 0.48, 0.50)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Torso"]
+material = SubResource("Material_Jacket")
+size = Vector3(0.44, 0.54, 0.26)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Head"]
+material = SubResource("Material_Helmet")
+size = Vector3(0.32, 0.32, 0.32)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Visor"]
+material = SubResource("Material_Visor")
+size = Vector3(0.28, 0.10, 0.08)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Arm"]
+material = SubResource("Material_Jacket")
+size = Vector3(0.11, 0.38, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_Leg"]
+material = SubResource("Material_Pants")
+size = Vector3(0.16, 0.45, 0.16)
+
+[node name="DeliveryMotorcycleCourier" type="CharacterBody3D" groups=["couriers", "npcs"]]
+collision_layer = 2
+collision_mask = 3
+script = ExtResource("1_courier")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_Moto")
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="Motorcycle" type="Node3D" parent="Visuals"]
+
+[node name="Chassis" type="MeshInstance3D" parent="Visuals/Motorcycle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.48, 0)
+mesh = SubResource("BoxMesh_Chassis")
+
+[node name="WheelFront" type="MeshInstance3D" parent="Visuals/Motorcycle"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0.28, 0.65)
+mesh = SubResource("CylinderMesh_Wheel")
+
+[node name="WheelRear" type="MeshInstance3D" parent="Visuals/Motorcycle"]
+transform = Transform3D(-4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0, 1, 0, 0.28, -0.65)
+mesh = SubResource("CylinderMesh_Wheel")
+
+[node name="CargoBox" type="MeshInstance3D" parent="Visuals/Motorcycle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.80, -0.55)
+mesh = SubResource("BoxMesh_Cargo")
+
+[node name="CargoSlot" type="Node3D" parent="Visuals/Motorcycle/CargoBox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, 0)
+
+[node name="Rider" type="Node3D" parent="Visuals"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.72, 0.05)
+
+[node name="Torso" type="MeshInstance3D" parent="Visuals/Rider"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.24, -0.05)
+mesh = SubResource("BoxMesh_Torso")
+
+[node name="Head" type="MeshInstance3D" parent="Visuals/Rider"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.62, -0.02)
+mesh = SubResource("BoxMesh_Head")
+
+[node name="Visor" type="MeshInstance3D" parent="Visuals/Rider/Head"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0.16)
+mesh = SubResource("BoxMesh_Visor")
+
+[node name="ArmL" type="MeshInstance3D" parent="Visuals/Rider"]
+transform = Transform3D(0.965926, 0, -0.258819, 0.183013, 0.707107, 0.683013, 0.183013, -0.707107, 0.683013, -0.25, 0.22, 0.15)
+mesh = SubResource("BoxMesh_Arm")
+
+[node name="ArmR" type="MeshInstance3D" parent="Visuals/Rider"]
+transform = Transform3D(0.965926, 0, 0.258819, -0.183013, 0.707107, 0.683013, -0.183013, -0.707107, 0.683013, 0.25, 0.22, 0.15)
+mesh = SubResource("BoxMesh_Arm")
+
+[node name="LegL" type="MeshInstance3D" parent="Visuals/Rider"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, -0.18, -0.12, 0.08)
+mesh = SubResource("BoxMesh_Leg")
+
+[node name="LegR" type="MeshInstance3D" parent="Visuals/Rider"]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0.18, -0.12, 0.08)
+mesh = SubResource("BoxMesh_Leg")

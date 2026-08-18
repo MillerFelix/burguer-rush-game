@@ -40,7 +40,7 @@ var sauce_visuals: Array[Node3D] = []
 var matched_recipe: Recipe = null
 var is_valid_recipe: bool = false
 
-var current_stack_height: float = 0.038
+var current_stack_height: float = 0.040
 const PACKAGED_BURGER_SCENE = preload("res://src/items/packaged_burger.tscn")
 
 @onready var status_label: Label3D = get_node_or_null("StatusLabel")
@@ -69,8 +69,18 @@ func add_ingredient(item: Item, hit_pos: Vector3 = Vector3.ZERO, player_rot_y: f
 	item.owner = null
 
 	var local_hit = to_local(hit_pos) if is_inside_tree() else (hit_pos - position)
-	var offset_x = clampf(local_hit.x, -0.07, 0.07)
-	var offset_z = clampf(local_hit.z, -0.07, 0.07)
+	var ing_base = ing_key.split(":")[0]
+
+	# Centralização precisa e elegante: queijos e carnes perfeitamente centralizados, micro-variação sutil em vegetais
+	var offset_x: float = 0.0
+	var offset_z: float = 0.0
+	if ing_base.begins_with("cheese") or ing_base.begins_with("patty"):
+		offset_x = 0.0
+		offset_z = 0.0
+	else:
+		offset_x = clampf(local_hit.x * 0.12, -0.006, 0.006)
+		offset_z = clampf(local_hit.z * 0.12, -0.006, 0.006)
+
 	var base_rot = (base_bun.global_rotation.y if base_bun.is_inside_tree() else base_bun.rotation.y) if base_bun else 0.0
 	item.position = Vector3(offset_x, current_stack_height, offset_z)
 	item.rotation = Vector3(0, player_rot_y - base_rot, 0)
@@ -210,8 +220,8 @@ func close_burger(bun_top_item: Item, hit_pos: Vector3, player_rot_y: float = 0.
 	bun_top_item.owner = null
 
 	var local_hit = to_local(hit_pos) if is_inside_tree() else (hit_pos - position)
-	var offset_x = clampf(local_hit.x, -0.06, 0.06)
-	var offset_z = clampf(local_hit.z, -0.06, 0.06)
+	var offset_x = clampf(local_hit.x * 0.08, -0.004, 0.004)
+	var offset_z = clampf(local_hit.z * 0.08, -0.004, 0.004)
 	var base_rot = (base_bun.global_rotation.y if base_bun.is_inside_tree() else base_bun.rotation.y) if base_bun else 0.0
 	bun_top_item.position = Vector3(offset_x, current_stack_height, offset_z)
 	bun_top_item.rotation = Vector3(0, player_rot_y - base_rot, 0)
@@ -371,13 +381,15 @@ func _extract_ingredient_key(item: Item) -> String:
 	if item.has_method("get_ingredient_key"):
 		return item.get_ingredient_key()
 	var raw_id = item.item_id
-	if "state" in item and raw_id in ["patty", "bacon", "egg"]:
+	if "state" in item:
 		var st = item.get("state")
-		if raw_id == "patty":
+		if raw_id.begins_with("patty_chicken") or raw_id == "patty_chicken":
+			return "patty_chicken:cooked" if st == 2 else "patty_chicken:raw"
+		elif raw_id.begins_with("patty") or raw_id == "patty_beef":
 			return "patty_beef:cooked" if st == 2 else "patty_beef:raw"
-		elif raw_id == "bacon":
+		elif raw_id.begins_with("bacon"):
 			return "bacon" if st == 2 else "bacon:raw"
-		elif raw_id == "egg":
+		elif raw_id.begins_with("egg"):
 			return "egg" if st == 3 else "egg:raw"
 	return raw_id
 
@@ -385,39 +397,52 @@ func _get_ingredient_thickness(ing_key: String) -> float:
 	var base = ing_key.split(":")[0]
 	match base:
 		"patty", "patty_beef", "patty_chicken":
-			return 0.024
+			return 0.032
 		"cheese", "cheese_cheddar", "cheese_prato", "cheese_mozzarella":
-			return 0.008
+			return 0.007
 		"lettuce":
-			return 0.016
+			return 0.013
 		"tomato":
-			return 0.015
-		"onion", "red_onion":
-			return 0.012
+			return 0.013
+		"onion", "white_onion", "red_onion":
+			return 0.010
 		"pickle":
-			return 0.008
+			return 0.007
 		"bacon":
-			return 0.008
+			return 0.007
 		"egg":
-			return 0.018
+			return 0.016
 		"bread_top":
 			return 0.035
 		_:
-			return 0.014
+			return 0.012
 
 func _check_recipe_match() -> void:
 	var all_keys: Array[String] = ["bread"]
-	all_keys.append_array(ingredient_keys)
+	for k in ingredient_keys:
+		if not all_keys.has(k):
+			all_keys.append(k)
+
+	# Adiciona todos os molhos com aplicação efetiva
+	for s_type in applied_sauces.keys():
+		if applied_sauces[s_type] >= 5.0 and not all_keys.has(s_type):
+			all_keys.append(s_type)
 
 	matched_recipe = null
 	is_valid_recipe = false
 
 	var recipes = RecipeDatabase.get_all_recipes()
+	# 1. Procura correspondência exata (independente da ordem dos ingredientes)
 	for r in recipes:
 		if r.category == "burger" and r.matches(all_keys):
 			matched_recipe = r
 			is_valid_recipe = true
 			break
+
+	# 2. Se não encontrou correspondência exata, busca a melhor receita mais próxima
+	if not matched_recipe:
+		matched_recipe = RecipeDatabase.find_matching_recipe(all_keys)
+		is_valid_recipe = false
 
 func _update_status() -> void:
 	if not status_label:

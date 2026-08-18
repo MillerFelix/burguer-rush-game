@@ -22,9 +22,19 @@ const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
 @onready var vent_particles: CPUParticles3D = get_node_or_null("Model/Body/AirVentParticles")
 @onready var audio_player: AudioStreamPlayer3D = get_node_or_null("AudioStreamPlayer3D")
 
+static var instance: AirConditioner = null
 var is_running: bool = false
 
+static func is_ac_running() -> bool:
+	if instance and is_instance_valid(instance):
+		return instance.is_running
+	return false
+
+func _enter_tree() -> void:
+	instance = self
+
 func _ready() -> void:
+	instance = self
 	_setup_audio()
 	var pm = PowerManager.get_instance()
 	if pm:

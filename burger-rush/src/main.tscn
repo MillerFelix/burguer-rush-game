@@ -76,6 +76,8 @@
 [ext_resource type="Script" path="res://src/utils/screen_manager.gd" id="87_screen_mgr"]
 [ext_resource type="Script" path="res://src/core/water_manager.gd" id="88_water_mgr"]
 [ext_resource type="Script" path="res://src/economy/finance_manager.gd" id="89_finance_mgr"]
+[ext_resource type="PackedScene" path="res://src/stations/delivery_window_station.tscn" id="90_delivery_window"]
+[ext_resource type="Texture2D" path="res://assets/textures/light_red_tiles.png" id="91_light_red_tiles"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.35, 0.62, 0.9, 1)
@@ -97,9 +99,9 @@ glow_intensity = 0.35
 glow_bloom = 0.1
 
 [sub_resource type="StandardMaterial3D" id="Material_FloorDining"]
-albedo_texture = ExtResource("33_wood_tex")
-roughness = 0.65
-uv1_scale = Vector3(6, 3, 1)
+albedo_texture = ExtResource("91_light_red_tiles")
+roughness = 0.45
+uv1_scale = Vector3(18, 9, 1)
 
 [sub_resource type="StandardMaterial3D" id="Material_FloorKitchen"]
 albedo_texture = ExtResource("34_slate_tex")
@@ -143,6 +145,23 @@ roughness = 0.9
 [sub_resource type="StandardMaterial3D" id="Material_AlleyWallWhite"]
 albedo_color = Color(0.92, 0.92, 0.93, 1)
 roughness = 0.85
+
+[sub_resource type="StandardMaterial3D" id="Material_RoofEavesRed"]
+albedo_color = Color(0.80, 0.14, 0.14, 1)
+metallic = 0.3
+roughness = 0.45
+
+[sub_resource type="BoxMesh" id="BoxMesh_RoofFascia"]
+material = SubResource("Material_RoofEavesRed")
+size = Vector3(6.6, 0.22, 0.48)
+
+[sub_resource type="BoxMesh" id="BoxMesh_RoofFasciaZ"]
+material = SubResource("Material_RoofEavesRed")
+size = Vector3(0.48, 0.22, 9.2)
+
+[sub_resource type="StandardMaterial3D" id="Material_WallDiningEntranceRed"]
+albedo_color = Color(0.85, 0.36, 0.36, 1)
+roughness = 0.82
 
 [sub_resource type="StandardMaterial3D" id="Material_SecurityLampBulb"]
 albedo_color = Color(1, 0.95, 0.75, 1)
@@ -210,9 +229,8 @@ material = SubResource("Material_DoorFrameWood")
 size = Vector3(0.34, 0.08, 1.68)
 
 [sub_resource type="StandardMaterial3D" id="Material_WallExterior"]
-albedo_texture = ExtResource("38_brick_tex")
-roughness = 0.75
-uv1_scale = Vector3(4, 2, 1)
+albedo_color = Color(0.96, 0.78, 0.16, 1)
+roughness = 0.65
 
 [sub_resource type="StandardMaterial3D" id="Material_DoorRedFrame"]
 albedo_color = Color(0.82, 0.16, 0.16, 1)
@@ -250,6 +268,32 @@ size = Vector3(1.6, 0.45, 0.45)
 material = SubResource("Material_PlantGreen")
 radius = 0.24
 height = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Material_SignPlateCharcoal"]
+albedo_color = Color(0.12, 0.14, 0.18, 1)
+metallic = 0.8
+roughness = 0.25
+
+[sub_resource type="StandardMaterial3D" id="Material_SignBorderGold"]
+albedo_color = Color(0.96, 0.80, 0.20, 1)
+metallic = 0.85
+roughness = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBorderX"]
+material = SubResource("Material_SignBorderGold")
+size = Vector3(0.90, 0.20, 0.035)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBodyX"]
+material = SubResource("Material_SignPlateCharcoal")
+size = Vector3(0.88, 0.18, 0.04)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBorderZ"]
+material = SubResource("Material_SignBorderGold")
+size = Vector3(0.035, 0.20, 1.20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_SignPlateBodyZ"]
+material = SubResource("Material_SignPlateCharcoal")
+size = Vector3(0.04, 0.18, 1.18)
 
 [sub_resource type="StandardMaterial3D" id="Material_CounterDivider"]
 albedo_texture = ExtResource("33_wood_tex")
@@ -557,13 +601,19 @@ material = SubResource("Material_FloorStreet")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.25, 1.75, -9)
 use_collision = true
 size = Vector3(6.5, 3.5, 0.4)
-material = SubResource("Material_AlleyWallWhite")
+material = SubResource("Material_WallExterior")
 
 [node name="AlleyWallSouth" type="CSGBox3D" parent="Room" unique_id=1018158856]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.25, 1.75, 0)
 use_collision = true
 size = Vector3(6.5, 3.5, 0.4)
-material = SubResource("Material_AlleyWallWhite")
+material = SubResource("Material_WallExterior")
+
+[node name="WallPowerPanelExteriorSkin" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.26, 1.75, -7)
+use_collision = true
+size = Vector3(0.02, 3.5, 4)
+material = SubResource("Material_WallExterior")
 
 [node name="DockSecurityLamp" type="MeshInstance3D" parent="Room" unique_id=865611799]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.25, 2.8, -3.5)
@@ -611,56 +661,103 @@ material = SubResource("Material_WallBacksplash")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.45, 3, -9)
 use_collision = true
 size = Vector3(2.2, 1, 0.5)
-material = SubResource("Material_WallBacksplash")
+material = SubResource("Material_WallExterior")
 
 [node name="WallNorthWindowSill" type="CSGBox3D" parent="Room" unique_id=2087244154]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.45, 0.45, -9)
 use_collision = true
 size = Vector3(2.2, 0.9, 0.5)
-material = SubResource("Material_WallBacksplash")
+material = SubResource("Material_WallExterior")
 
 [node name="WallNorthRightCorner" type="CSGBox3D" parent="Room" unique_id=1709456437]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.275, 1.75, -9)
 use_collision = true
 size = Vector3(1.45, 3.5, 0.5)
-material = SubResource("Material_WallBacksplash")
+material = SubResource("Material_WallExterior")
 
 [node name="DeliveryWindowAwning" type="MeshInstance3D" parent="Room" unique_id=1191172828]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 6.45, 2.75, -9.5)
 mesh = SubResource("BoxMesh_DeliveryAwning")
 
-[node name="DeliveryWindowSign" type="Label3D" parent="Room" unique_id=1560507194]
-transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 6.45, 2.9, -9.6)
+; Placa Física Integrada de Drive-Thru (Fixada na parede ACIMA da janela)
+[node name="DriveThruSignGroup" type="Node3D" parent="Room" unique_id=1560507194]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.45, 2.85, -9)
+
+[node name="PlateBorderKitchen" type="MeshInstance3D" parent="Room/DriveThruSignGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.26)
+mesh = SubResource("BoxMesh_SignPlateBorderX")
+
+[node name="PlateKitchen" type="MeshInstance3D" parent="Room/DriveThruSignGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.262)
+mesh = SubResource("BoxMesh_SignPlateBodyX")
+
+[node name="SignKitchen" type="Label3D" parent="Room/DriveThruSignGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.285)
 double_sided = false
 modulate = Color(1, 0.88, 0.22, 1)
-outline_modulate = Color(0.75, 0.12, 0.12, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
 text = "🚗 DRIVE-THRU"
-font_size = 24
-outline_size = 6
+font_size = 20
+outline_size = 5
 
-[node name="WallEastKitchenSill" type="CSGBox3D" parent="Room" unique_id=598764870]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.775, -4.5)
+[node name="PlateBorderExterior" type="MeshInstance3D" parent="Room/DriveThruSignGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.56)
+mesh = SubResource("BoxMesh_SignPlateBorderX")
+
+[node name="PlateExterior" type="MeshInstance3D" parent="Room/DriveThruSignGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.562)
+mesh = SubResource("BoxMesh_SignPlateBodyX")
+
+[node name="SignExterior" type="Label3D" parent="Room/DriveThruSignGroup"]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 0, -0.585)
+double_sided = false
+modulate = Color(1, 0.88, 0.22, 1)
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+text = "🚗 DRIVE-THRU"
+font_size = 20
+outline_size = 5
+
+[node name="WallEastKitchenNorthSill" type="CSGBox3D" parent="Room" unique_id=598764870]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.775, -5.55)
 use_collision = true
-size = Vector3(0.5, 1.55, 9)
-material = SubResource("Material_WallKitchen")
+size = Vector3(0.5, 1.55, 6.9)
+material = SubResource("Material_WallExterior")
 
-[node name="WallEastKitchenLintel" type="CSGBox3D" parent="Room" unique_id=401411133]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.225, -4.5)
+[node name="WallEastKitchenNorthLintel" type="CSGBox3D" parent="Room" unique_id=401411133]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.225, -5.55)
 use_collision = true
-size = Vector3(0.5, 0.55, 9)
-material = SubResource("Material_WallKitchen")
+size = Vector3(0.5, 0.55, 6.9)
+material = SubResource("Material_WallExterior")
 
-[node name="WallEastKitchenNorth" type="CSGBox3D" parent="Room" unique_id=1643012905]
+[node name="WallEastKitchenNorthSolid" type="CSGBox3D" parent="Room" unique_id=1643012905]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.25, -7.35)
 use_collision = true
 size = Vector3(0.5, 1.4, 3.3)
-material = SubResource("Material_WallKitchen")
+material = SubResource("Material_WallExterior")
 
-[node name="WallEastKitchenSouth" type="CSGBox3D" parent="Room" unique_id=1552381354]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.25, -1.35)
+[node name="WallEastKitchenMidPillar" type="CSGBox3D" parent="Room" unique_id=1552381354]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.25, -2.35)
 use_collision = true
-size = Vector3(0.5, 1.4, 2.7)
-material = SubResource("Material_WallKitchen")
+size = Vector3(0.5, 1.4, 0.5)
+material = SubResource("Material_WallExterior")
+
+[node name="WallEastDeliverySill" type="CSGBox3D" parent="Room" unique_id=1289381944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.44, -1.2)
+use_collision = true
+size = Vector3(0.5, 0.88, 1.8)
+material = SubResource("Material_WallExterior")
+
+[node name="WallEastDeliveryLintel" type="CSGBox3D" parent="Room" unique_id=1498234812]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 3.225, -1.2)
+use_collision = true
+size = Vector3(0.5, 0.55, 1.8)
+material = SubResource("Material_WallExterior")
+
+[node name="WallEastKitchenSouthPillar" type="CSGBox3D" parent="Room" unique_id=1984271893]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.75, -0.15)
+use_collision = true
+size = Vector3(0.5, 3.5, 0.3)
+material = SubResource("Material_WallExterior")
 
 [node name="KitchenDriveThruWindowFrame" type="CSGBox3D" parent="Room" unique_id=1458895619]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.25, -4.1)
@@ -682,43 +779,43 @@ material = SubResource("Material_Glass")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.425, 2.5)
 use_collision = true
 size = Vector3(0.5, 0.85, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallEastLintel1" type="CSGBox3D" parent="Room" unique_id=767763253]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.95, 2.5)
 use_collision = true
 size = Vector3(0.5, 1.1, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallEastSill2" type="CSGBox3D" parent="Room" unique_id=2006127658]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0.425, 6.5)
 use_collision = true
 size = Vector3(0.5, 0.85, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallEastLintel2" type="CSGBox3D" parent="Room" unique_id=1847536257]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 2.95, 6.5)
 use_collision = true
 size = Vector3(0.5, 1.1, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallEastPillarNorth" type="CSGBox3D" parent="Room" unique_id=861993832]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.75, 0.5)
 use_collision = true
 size = Vector3(0.5, 3.5, 1)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallEastPillarMid" type="CSGBox3D" parent="Room" unique_id=673960935]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.75, 4.5)
 use_collision = true
 size = Vector3(0.5, 3.5, 1)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallEastPillarSouth" type="CSGBox3D" parent="Room" unique_id=1540599150]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.75, 8.5)
 use_collision = true
 size = Vector3(0.5, 3.5, 1)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WindowEast1" parent="Room" unique_id=415165023 instance=ExtResource("55_window")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.65, 2.5)
@@ -730,61 +827,61 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.65, 6.5)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.75, -7)
 use_collision = true
 size = Vector3(0.5, 3.5, 4)
-material = SubResource("Material_WallStorage")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestDockLintel" type="CSGBox3D" parent="Room" unique_id=2002310563]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 3, -3.5)
 use_collision = true
 size = Vector3(0.5, 1, 3)
-material = SubResource("Material_WallStorage")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestSouthStorage" type="CSGBox3D" parent="Room" unique_id=1649403125]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.75, -1)
 use_collision = true
 size = Vector3(0.5, 3.5, 2)
-material = SubResource("Material_WallStorage")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestSouthSill1" type="CSGBox3D" parent="Room" unique_id=1436385440]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.425, 2.5)
 use_collision = true
 size = Vector3(0.5, 0.85, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestSouthLintel1" type="CSGBox3D" parent="Room" unique_id=850796617]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 2.95, 2.5)
 use_collision = true
 size = Vector3(0.5, 1.1, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestSouthSill2" type="CSGBox3D" parent="Room" unique_id=594151422]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0.425, 6.5)
 use_collision = true
 size = Vector3(0.5, 0.85, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestSouthLintel2" type="CSGBox3D" parent="Room" unique_id=1791899330]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 2.95, 6.5)
 use_collision = true
 size = Vector3(0.5, 1.1, 3)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestPillarNorth" type="CSGBox3D" parent="Room" unique_id=1746886811]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.75, 0.5)
 use_collision = true
 size = Vector3(0.5, 3.5, 1)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestPillarMid" type="CSGBox3D" parent="Room" unique_id=1453179974]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.75, 4.5)
 use_collision = true
 size = Vector3(0.5, 3.5, 1)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WallWestPillarSouth" type="CSGBox3D" parent="Room" unique_id=1248799140]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.75, 8.5)
 use_collision = true
 size = Vector3(0.5, 3.5, 1)
-material = SubResource("Material_WallDiningWarm")
+material = SubResource("Material_WallExterior")
 
 [node name="WindowWest1" parent="Room" unique_id=1526597549 instance=ExtResource("55_window")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.65, 2.5)
@@ -828,14 +925,26 @@ mesh = SubResource("BoxMesh_DoorPost")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 2.4, -3.75)
 mesh = SubResource("BoxMesh_DoorLintel")
 
-[node name="StorageSign" type="Label3D" parent="Room" unique_id=2122007886]
-transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, -2.82, 2.7, -3.75)
+; Placa Física de Identificação da Porta do Armazém / Estoque
+[node name="StorageDoorSignGroup" type="Node3D" parent="Room" unique_id=2122007886]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.84, 2.75, -3.75)
+
+[node name="PlateBorderKitchen" type="MeshInstance3D" parent="Room/StorageDoorSignGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBorderZ")
+
+[node name="PlateKitchen" type="MeshInstance3D" parent="Room/StorageDoorSignGroup"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.002, 0, 0)
+mesh = SubResource("BoxMesh_SignPlateBodyZ")
+
+[node name="SignTextKitchen" type="Label3D" parent="Room/StorageDoorSignGroup"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0.025, 0, 0)
 double_sided = false
 modulate = Color(1, 0.88, 0.22, 1)
-outline_modulate = Color(0.18, 0.18, 0.2, 1)
-text = "📦 ESTOQUE / ARMAZÉM"
-font_size = 22
-outline_size = 6
+outline_modulate = Color(0.1, 0.1, 0.1, 1)
+text = "ARMAZÉM / ESTOQUE"
+font_size = 18
+outline_size = 4
 
 [node name="DockSign" type="Label3D" parent="Room" unique_id=915168642]
 transform = Transform3D(0, 0, -1, 0, 1, 0, 1, 0, 0, -8.75, 2.65, -3.5)
@@ -863,6 +972,24 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.95, 9)
 use_collision = true
 size = Vector3(4, 1.1, 0.5)
 material = SubResource("Material_WallExterior")
+
+[node name="EntranceInteriorWallLeft" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.5, 1.75, 8.74)
+use_collision = false
+size = Vector3(7.0, 3.5, 0.02)
+material = SubResource("Material_WallDiningWarm")
+
+[node name="EntranceInteriorWallRight" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 1.75, 8.74)
+use_collision = false
+size = Vector3(7.0, 3.5, 0.02)
+material = SubResource("Material_WallDiningWarm")
+
+[node name="EntranceInteriorWallLintel" type="CSGBox3D" parent="Room"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.95, 8.74)
+use_collision = false
+size = Vector3(4.0, 1.1, 0.02)
+material = SubResource("Material_WallDiningWarm")
 
 [node name="EntranceFrameHeader" type="CSGBox3D" parent="Room" unique_id=427566974]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.44, 9.02)
@@ -1149,6 +1276,9 @@ transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 1.8, 0
 
 [node name="ServingTrayStack" parent="." unique_id=50939422 instance=ExtResource("79_tray_stack")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.6, 0.96, 0)
+
+[node name="DeliveryWindowStation" parent="." unique_id=987123470 instance=ExtResource("90_delivery_window")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 0, -1.2)
 
 [node name="Table9" parent="." unique_id=1205590562 instance=ExtResource("20_table")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 5.2)

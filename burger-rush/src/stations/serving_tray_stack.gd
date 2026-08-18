@@ -40,7 +40,9 @@ func get_interaction_prompt(player: Node = null) -> String:
 		return ""
 
 	var held = player.get("held_item")
-	if held != null:
+	var is_large = player.has_method("is_holding_large_item") and player.is_holding_large_item()
+
+	if is_large and held != null:
 		if (held is ServingTray or held is OrderTray) and held.get("carried_items") != null and held.carried_items.is_empty():
 			if current_tray_count < MAX_TRAYS:
 				return "🍽️ 🖱️ Devolver Bandeja à Pilha"
@@ -56,9 +58,24 @@ func interact_item(player: Node3D) -> void:
 		return
 
 	var held = player.get("held_item")
+	var is_large = player.has_method("is_holding_large_item") and player.is_holding_large_item()
 
-	# Se o jogador estiver de mãos livres: PEGA 1 BANDEJA
-	if held == null:
+	# Se o jogador estiver segurando uma bandeja vazia/limpa: DEVOLVE À PILHA
+	if is_large and (held is ServingTray or held is OrderTray) and held.get("carried_items") != null and held.carried_items.is_empty():
+		if current_tray_count >= MAX_TRAYS:
+			_show_feedback(player, "A pilha de bandejas já está completa (8/8)!")
+			return
+
+		var returned_tray = player.take_held_item()
+		if returned_tray:
+			returned_tray.queue_free()
+			current_tray_count += 1
+			_update_stack_visuals()
+			_show_feedback(player, "🍽️ Bandeja devolvida à pilha")
+		return
+
+	# Se não estiver segurando um objeto grande (mãos livres ou com ingrediente em slot rápido): PEGA 1 BANDEJA
+	if not is_large:
 		if current_tray_count <= 0:
 			_show_feedback(player, "Não há mais bandejas disponíveis na pilha!")
 			return
@@ -70,20 +87,6 @@ func interact_item(player: Node3D) -> void:
 		get_tree().root.add_child(new_tray)
 		player.pick_up(new_tray)
 		_show_feedback(player, "🍽️ Pegou uma Bandeja de Serviço")
-		return
-
-	# Se o jogador estiver segurando uma bandeja vazia/limpa: DEVOLVE À PILHA
-	if (held is ServingTray or held is OrderTray) and held.get("carried_items") != null and held.carried_items.is_empty():
-		if current_tray_count >= MAX_TRAYS:
-			_show_feedback(player, "A pilha de bandejas já está completa (8/8)!")
-			return
-
-		var returned_tray = player.take_held_item()
-		if returned_tray:
-			returned_tray.queue_free()
-			current_tray_count += 1
-			_update_stack_visuals()
-			_show_feedback(player, "🍽️ Bandeja devolvida à pilha")
 		return
 
 	_show_feedback(player, "Mãos ocupadas!")

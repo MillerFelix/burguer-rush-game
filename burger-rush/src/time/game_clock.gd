@@ -62,12 +62,21 @@ func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
-static func get_instance():
+static func get_instance() -> GameClock:
 	if instance and is_instance_valid(instance):
 		return instance
+	var ml = Engine.get_main_loop()
+	if ml and ml is SceneTree:
+		var tree = ml as SceneTree
+		if tree.root:
+			var found = tree.root.find_child("GameClock", true, false) as GameClock
+			if found:
+				instance = found
+				return instance
 	return null
 
 func _ready() -> void:
+	instance = self
 	current_hour = start_hour
 	current_minute = start_minute
 	state = State.PREPARATION
@@ -83,9 +92,6 @@ func _ready() -> void:
 	var economy = EconomyManager.get_instance()
 	if economy:
 		starting_day_money = economy.get_money()
-
-static func get_instance() -> GameClock:
-	return instance
 
 func get_weekday_name() -> String:
 	var cal = CalendarManager.get_instance()
@@ -213,6 +219,12 @@ func close_day() -> DaySummary:
 	day_history.append(summary)
 	day_ended.emit(summary)
 
+	# Arquiva o snapshot completo do dia no CalendarManager
+	var cal_inst = CalendarManager.get_instance()
+	if cal_inst:
+		var day_rec = cal_inst.get_day_record(day_number)
+		cal_inst.archive_day_record(day_number, day_rec)
+
 	# Registra estatísticas no WeeklyReportManager
 	var weekly_mgr = WeeklyReportManager.get_instance()
 	if weekly_mgr:
@@ -276,6 +288,9 @@ func start_next_day() -> void:
 	set_state(State.PREPARATION)
 	day_started.emit(day_number)
 	time_tick.emit(current_hour, current_minute)
+
+func is_restaurant_open() -> bool:
+	return state == State.OPEN
 
 func get_formatted_time() -> String:
 	return "%02d:%02d" % [current_hour, current_minute]

@@ -59,7 +59,7 @@ func advance_cooking(delta_pct: float) -> void:
 		return
 
 	if current_side_cooking == 1:
-		side_a_cooked = minf(120.0, side_a_cooked + delta_pct)
+		side_a_cooked = clampf(side_a_cooked + delta_pct, 0.0, 100.0)
 		if side_a_cooked >= 100.0 and side_b_cooked < 100.0:
 			state = State.READY_SIDE_1
 		elif side_a_cooked >= 100.0 and side_b_cooked >= 100.0:
@@ -67,7 +67,7 @@ func advance_cooking(delta_pct: float) -> void:
 		else:
 			state = State.COOKING_SIDE_1
 	else:
-		side_b_cooked = minf(120.0, side_b_cooked + delta_pct)
+		side_b_cooked = clampf(side_b_cooked + delta_pct, 0.0, 100.0)
 		if side_a_cooked >= 100.0 and side_b_cooked >= 100.0:
 			state = State.COOKED
 		else:
@@ -212,25 +212,25 @@ func _apply_side_visual(mesh_inst: MeshInstance3D, cooked_pct: float) -> void:
 	mat.normal_enabled = true
 	mat.uv1_scale = Vector3(2.0, 2.0, 2.0)
 
-	if state == State.BURNT or cooked_pct > 115.0:
-		# Estado queimado
+	if state == State.BURNT:
+		# Estado queimado (somente quando queimou)
 		mat.albedo_texture = TEX_BURNT
 		mat.albedo_color = Color(0.85, 0.85, 0.85, 1.0)
 		mat.normal_texture = TEX_NORMAL_COOKED
 		mat.normal_scale = 0.85
 		mat.roughness = 0.95
-	elif cooked_pct >= 100.0:
-		# Estado perfeitamente grelhado / dourado com marcas de chapa
+	elif cooked_pct >= 100.0 or state == State.COOKED:
+		# Estado perfeitamente grelhado / dourado cozido normal (permanece assim enquanto pronto)
 		mat.albedo_texture = cooked_tex
 		mat.albedo_color = Color(1.0, 1.0, 1.0, 1.0)
 		mat.normal_texture = TEX_NORMAL_COOKED
 		mat.normal_scale = 0.80
 		mat.roughness = 0.40
-	elif cooked_pct >= 40.0:
+	elif cooked_pct >= 30.0:
 		# Em processo de cocção / selamento
-		var t = (cooked_pct - 40.0) / 60.0
+		var t = (cooked_pct - 30.0) / 70.0
 		mat.albedo_texture = cooked_tex
-		mat.albedo_color = Color(0.88, 0.65, 0.55, 1.0) if is_chick else Color(0.82, 0.52, 0.42, 1.0)
+		mat.albedo_color = Color(0.92, 0.75, 0.65, 1.0) if is_chick else Color(0.88, 0.62, 0.52, 1.0)
 		mat.normal_texture = TEX_NORMAL_COOKED
 		mat.normal_scale = lerpf(0.55, 0.75, t)
 		mat.roughness = lerpf(0.60, 0.45, t)

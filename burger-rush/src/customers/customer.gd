@@ -77,6 +77,8 @@ var has_submitted_review: bool = false
 var group_members: Array[Customer] = []
 var designated_payer: Customer = null
 var is_group_payer: bool = false
+var has_money_to_give: bool = true
+var hand_money_mesh: Node3D = null
 
 var target_position: Vector3 = Vector3.ZERO
 var exit_position: Vector3 = Vector3(0.0, 0, 10.5)
@@ -158,57 +160,72 @@ func _play_customer_sound(sound_id: String, vol_db: float = 0.0, pitch_var: floa
 
 func _setup_archetype() -> void:
 	if is_child:
-		archetype = Archetype.CHILD
-		archetype_name = "Criança"
-		patience_max = 65.0
-		tolerance_order_wait = 65.0
-		tolerance_food_wait = 80.0
-		tolerance_checkout_wait = 60.0
+		apply_archetype(Archetype.CHILD)
 		return
 
 	var rand_val = randf()
 	if rand_val < 0.20:
-		archetype = Archetype.IMPATIENT
-		archetype_name = "Apressado"
-		patience_max = 55.0
-		tolerance_order_wait = 55.0
-		tolerance_food_wait = 85.0
-		tolerance_checkout_wait = 55.0
+		apply_archetype(Archetype.IMPATIENT)
 	elif rand_val < 0.40:
-		archetype = Archetype.PATIENT
-		archetype_name = "Tranquilo"
-		patience_max = 120.0
-		tolerance_order_wait = 140.0
-		tolerance_food_wait = 180.0
-		tolerance_checkout_wait = 120.0
+		apply_archetype(Archetype.PATIENT)
 	elif rand_val < 0.50:
-		archetype = Archetype.CRITIC
-		archetype_name = "Crítico Gastronômico"
-		patience_max = 70.0
-		tolerance_order_wait = 70.0
-		tolerance_food_wait = 100.0
-		tolerance_checkout_wait = 70.0
+		apply_archetype(Archetype.CRITIC)
 	elif rand_val < 0.65:
-		archetype = Archetype.ELDER
-		archetype_name = "Idoso"
-		patience_max = 110.0
-		tolerance_order_wait = 110.0
-		tolerance_food_wait = 150.0
-		tolerance_checkout_wait = 90.0
+		apply_archetype(Archetype.ELDER)
 	elif rand_val < 0.75:
-		archetype = Archetype.VIP
-		archetype_name = "VIP"
-		patience_max = 60.0
-		tolerance_order_wait = 60.0
-		tolerance_food_wait = 95.0
-		tolerance_checkout_wait = 65.0
+		apply_archetype(Archetype.VIP)
 	else:
-		archetype = Archetype.REGULAR
-		archetype_name = "Padrão"
-		patience_max = 80.0
-		tolerance_order_wait = 80.0
-		tolerance_food_wait = 120.0
-		tolerance_checkout_wait = 80.0
+		apply_archetype(Archetype.REGULAR)
+
+func apply_archetype(arch: Archetype) -> void:
+	archetype = arch
+	match arch:
+		Archetype.CHILD:
+			archetype_name = "Criança"
+			patience_max = 130.0
+			tolerance_order_wait = 130.0
+			tolerance_food_wait = 160.0
+			tolerance_checkout_wait = 120.0
+		Archetype.IMPATIENT:
+			archetype_name = "Apressado"
+			patience_max = 110.0
+			tolerance_order_wait = 110.0
+			tolerance_food_wait = 170.0
+			tolerance_checkout_wait = 110.0
+		Archetype.PATIENT:
+			archetype_name = "Tranquilo"
+			patience_max = 240.0
+			tolerance_order_wait = 280.0
+			tolerance_food_wait = 360.0
+			tolerance_checkout_wait = 240.0
+		Archetype.CRITIC:
+			archetype_name = "Crítico Gastronômico"
+			patience_max = 140.0
+			tolerance_order_wait = 140.0
+			tolerance_food_wait = 200.0
+			tolerance_checkout_wait = 140.0
+		Archetype.ELDER:
+			archetype_name = "Idoso"
+			patience_max = 220.0
+			tolerance_order_wait = 220.0
+			tolerance_food_wait = 300.0
+			tolerance_checkout_wait = 180.0
+		Archetype.VIP:
+			archetype_name = "VIP"
+			patience_max = 120.0
+			tolerance_order_wait = 120.0
+			tolerance_food_wait = 190.0
+			tolerance_checkout_wait = 130.0
+		_:
+			archetype_name = "Padrão"
+			patience_max = 160.0
+			tolerance_order_wait = 160.0
+			tolerance_food_wait = 240.0
+			tolerance_checkout_wait = 160.0
+
+	patience_remaining = patience_max
+	if mood:
+		mood.decay_multiplier = _get_decay_multiplier_for_archetype()
 
 func _get_decay_multiplier_for_archetype() -> float:
 	match archetype:
@@ -324,7 +341,8 @@ func _physics_process(delta: float) -> void:
 		var is_seated = can_sit_anim and (state in [State.SITTING, State.SEATED_WAITING_TO_ORDER, State.WAITING_FOR_FOOD, State.EATING])
 		var is_eating = (state == State.EATING)
 		var is_raising_hand = (state == State.SEATED_WAITING_TO_ORDER)
-		animator.update_animation(delta, velocity, is_seated, is_eating, false, is_raising_hand)
+		var is_extending_hand = (state == State.PAYING and has_money_to_give)
+		animator.update_animation(delta, velocity, is_seated, is_eating, false, is_raising_hand, is_extending_hand)
 
 	if experience:
 		experience.total_time_in_restaurant += delta
@@ -332,9 +350,6 @@ func _physics_process(delta: float) -> void:
 	# Processamento de Humor Progressivo e Tolerância por Etapa
 	match state:
 		State.ARRIVING, State.GOING_TO_ENTRANCE, State.ENTERING_RESTAURANT, State.GOING_TO_SEAT:
-			if not _has_played_arrival_sound and position.z <= 8.5:
-				_has_played_arrival_sound = true
-				_play_customer_sound("customer_arrive", -10.0, 0.08)
 			_follow_path_to_destination(delta, true)
 
 		State.WAITING_FOR_TABLE:
@@ -489,17 +504,8 @@ func _complete_sitting_transition() -> void:
 
 func _call_attention_to_order() -> void:
 	_call_attention_timer = randf_range(8.0, 14.0)
-	var call_options = ["customer_call_hey", "customer_call_hello", "customer_call_whistle", "customer_call_excuse"]
-	var choice = call_options[randi() % call_options.size()]
-	match archetype:
-		Archetype.IMPATIENT:
-			_play_customer_sound("customer_call_hey", 0.0, 0.06)
-		Archetype.CHILD:
-			_play_customer_sound("customer_call_hello", 0.0, 0.08)
-		Archetype.ELDER:
-			_play_customer_sound("customer_call_excuse", 0.0, 0.05)
-		_:
-			_play_customer_sound(choice, 0.0, 0.06)
+	# Solicitação do cliente: exclusivamente o assovio existente no jogo
+	_play_customer_sound("customer_call_whistle", 0.0, 0.04)
 
 func _head_to_checkout_queue() -> void:
 	if assigned_table and is_instance_valid(assigned_table):
@@ -582,9 +588,14 @@ func _reach_queue_slot() -> void:
 	velocity = Vector3.ZERO
 	position = target_position
 	if state == State.GOING_TO_QUEUE:
-		state = State.IN_QUEUE
+		var reg = CashRegister.get_instance()
+		if reg and reg.get_first_in_queue() == self:
+			state = State.PAYING
+			_show_hand_money()
+		else:
+			state = State.IN_QUEUE
 		if is_inside_tree():
-			look_at(Vector3(1.8, position.y, 0.0), Vector3.UP)
+			look_at(Vector3(position.x, position.y, 0.0), Vector3.UP)
 	_update_visual_status()
 
 func update_queue_slot(new_slot_pos: Vector3, is_first: bool) -> void:
@@ -593,18 +604,107 @@ func update_queue_slot(new_slot_pos: Vector3, is_first: bool) -> void:
 		path_waypoints.clear()
 		path_waypoints.append(new_slot_pos)
 		state = State.GOING_TO_QUEUE
+		_hide_hand_money()
 	else:
 		velocity = Vector3.ZERO
 		position = new_slot_pos
-		state = State.IN_QUEUE
+		if is_first:
+			state = State.PAYING
+			_show_hand_money()
+		else:
+			state = State.IN_QUEUE
+			_hide_hand_money()
+		if is_inside_tree():
+			look_at(Vector3(position.x, position.y, 0.0), Vector3.UP)
 	_update_visual_status()
 
+func _show_hand_money() -> void:
+	if not has_money_to_give:
+		return
+	if hand_money_mesh != null and is_instance_valid(hand_money_mesh):
+		return
+	var money_scene = load("res://src/items/customer_money.tscn")
+	if money_scene:
+		hand_money_mesh = money_scene.instantiate()
+		if hand_money_mesh is CollisionObject3D:
+			hand_money_mesh.collision_layer = 0
+			hand_money_mesh.collision_mask = 0
+		add_child(hand_money_mesh)
+		hand_money_mesh.position = Vector3(0.26, 0.96, -0.42)
+		hand_money_mesh.rotation = Vector3(0, 0, 0)
+
+func _hide_hand_money() -> void:
+	if hand_money_mesh != null and is_instance_valid(hand_money_mesh):
+		hand_money_mesh.queue_free()
+		hand_money_mesh = null
+
+func get_interaction_prompt(player: Node = null) -> String:
+	match state:
+		State.SEATED_WAITING_TO_ORDER:
+			var tbl_id = assigned_table.table_id if (assigned_table and is_instance_valid(assigned_table)) else 1
+			return "E / 🖱️ — Atender Mesa #%d" % tbl_id
+		State.WAITING_FOR_FOOD:
+			if assigned_table and is_instance_valid(assigned_table):
+				return assigned_table.get_interaction_prompt(player)
+			return "Aguardando refeição..."
+		State.PAYING:
+			if has_money_to_give:
+				var price = current_order.total_price if current_order else 15.0
+				return "E / 🖱️ — Pegar Dinheiro do Cliente (R$ %.2f)" % price
+	return ""
+
+func interact_item(player: Node3D) -> void:
+	interact(player)
+
+func interact(player: Node3D) -> void:
+	if not player:
+		return
+
+	match state:
+		State.SEATED_WAITING_TO_ORDER:
+			place_order(player)
+			if assigned_table:
+				assigned_table._update_visual_status()
+
+		State.WAITING_FOR_FOOD:
+			if assigned_table:
+				assigned_table.interact(player)
+
+		State.PAYING:
+			if has_money_to_give:
+				if player.get("held_item") != null:
+					var hud = player.get_node_or_null("HUD")
+					if hud and hud.has_method("show_temporary_feedback"):
+						hud.show_temporary_feedback("⚠️ Libere as mãos para pegar o dinheiro do cliente!")
+					return
+
+				var money_scene = load("res://src/items/customer_money.tscn")
+				if money_scene:
+					var money_item = money_scene.instantiate()
+					var price = current_order.total_price if current_order else 15.0
+					money_item.setup(price, self)
+					var root_scene: Node = null
+					if is_inside_tree() and get_tree():
+						root_scene = get_tree().current_scene if get_tree().current_scene else get_tree().root
+					if not root_scene and get_parent():
+						root_scene = get_parent()
+					if root_scene:
+						root_scene.add_child(money_item)
+					player.pick_up(money_item)
+					has_money_to_give = false
+					_hide_hand_money()
+
+					var hud = player.get_node_or_null("HUD")
+					if hud and hud.has_method("show_temporary_feedback"):
+						hud.show_temporary_feedback("💵 Você pegou R$ %.2f do cliente. Deposite na gaveta do caixa!" % price)
+
 func on_payment_completed() -> void:
+	_hide_hand_money()
+	has_money_to_give = false
 	if mood:
 		mood.boost(15.0)
 	_submit_review()
 
-	_play_customer_sound("customer_leave", -12.0, 0.06)
 	state = State.LEAVING
 	_build_exit_path()
 	_update_visual_status()
@@ -627,7 +727,8 @@ func on_order_wrong(reason: String = "Pedido incorreto entregue!") -> void:
 		experience.abandon_reason = reason
 		experience.food_quality = 0.0
 
-	_play_customer_sound("customer_wrong_order", -4.0, 0.04)
+	# Som negativo do cliente
+	_play_customer_sound("customer_wrong_order", -3.0, 0.04)
 
 	# Cancela o pedido no OrderManager se existir para não cobrar no caixa
 	var order_mgr = _get_order_manager()
@@ -659,7 +760,8 @@ func abandon_restaurant(reason: String) -> void:
 			if order_mgr.has_signal("order_cancelled"):
 				order_mgr.order_cancelled.emit(current_order)
 
-	_play_customer_sound("customer_leave", -12.0, 0.06)
+	# Som negativo do cliente ao desistir/abandonar
+	_play_customer_sound("customer_wrong_order", -3.0, 0.04)
 
 	# Libera a mesa imediatamente sem sujar (cliente não comeu)
 	if assigned_table and is_instance_valid(assigned_table):
@@ -726,24 +828,6 @@ func _get_order_manager() -> OrderManager:
 	if not order_mgr and is_inside_tree() and get_tree() and get_tree().root:
 		order_mgr = get_tree().root.find_child("OrderManager", true, false)
 	return order_mgr
-
-func interact(player: Node3D = null) -> void:
-	match state:
-		State.SEATED_WAITING_TO_ORDER:
-			place_order(player)
-			if assigned_table:
-				assigned_table._update_visual_status()
-
-		State.WAITING_FOR_FOOD:
-			if assigned_table:
-				assigned_table.interact(player)
-
-		State.IN_QUEUE, State.PAYING:
-			var reg = CashRegister.get_instance()
-			if not reg and is_inside_tree():
-				reg = get_tree().root.find_child("CashRegister", true, false) as CashRegister
-			if reg:
-				reg.process_checkout(player)
 
 func place_order(player: Node = null) -> void:
 	if state != State.SEATED_WAITING_TO_ORDER:
@@ -815,23 +899,20 @@ func receive_food() -> void:
 			experience.order_summary = ", ".join(items_str)
 			experience.food_quality = 1.0
 			experience.order_correct = true
+			if current_order.items.size() > 0:
+				var f_item = current_order.items[0]
+				experience.primary_product_id = f_item.get("product_id", f_item.get("recipe_id", "burger_classic"))
+				experience.charged_price = f_item.get("unit_price", current_order.total_price)
+			else:
+				experience.charged_price = current_order.total_price
 
 		_update_visual_status()
 
-func get_interaction_prompt(player: Node = null) -> String:
-	match state:
-		State.SEATED_WAITING_TO_ORDER:
-			return "E — Atender Cliente (Mesa #%d)" % (assigned_table.table_id if assigned_table else 1)
-		State.WAITING_FOR_FOOD:
-			return "Aguardando refeição..."
-		State.EATING:
-			return "Saboreando a refeição..."
-		State.IN_QUEUE, State.PAYING:
-			var price = current_order.total_price if current_order else 15.0
-			return "E — Receber Pagamento (R$ %.2f)" % price
-	return ""
-
 func _update_visual_status() -> void:
+	if not label_3d:
+		label_3d = get_node_or_null("Label3D") as Label3D
+		if not label_3d:
+			label_3d = find_child("Label3D", true, false) as Label3D
 	if not label_3d:
 		return
 
