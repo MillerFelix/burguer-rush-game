@@ -115,12 +115,18 @@ func update_quick_slots_display(slots_info: Array, active_slot_idx: int, active_
 	if active_badge and active_lbl:
 		if not active_item_info.is_empty() and active_item_info.get("name", "") != "":
 			active_badge.visible = true
-			var count_txt = " (x%d)" % active_item_info.get("count", 1) if active_item_info.get("count", 1) > 1 else ""
-			active_lbl.text = "Ativo: %s %s%s" % [
-				active_item_info.get("icon", "📦"),
-				active_item_info.get("name", ""),
-				count_txt
-			]
+			if active_item_info.get("is_large_item", false):
+				active_lbl.text = "Mão: %s %s" % [
+					active_item_info.get("icon", "📦"),
+					active_item_info.get("name", "")
+				]
+			else:
+				var slot_num = active_item_info.get("slot", 0) + 4
+				active_lbl.text = "Ativo [%d]: %s %s" % [
+					slot_num,
+					active_item_info.get("icon", "📦"),
+					active_item_info.get("name", "")
+				]
 		else:
 			active_badge.visible = false
 
@@ -140,7 +146,7 @@ func update_quick_slots_display(slots_info: Array, active_slot_idx: int, active_
 		if not panel or not label:
 			continue
 
-		var is_active = (i == active_slot_idx and tool_slot == 3)
+		var is_active = (i == active_slot_idx)
 		var s_data = slots_info[i] if (i < slots_info.size()) else {}
 
 		if s_data.is_empty():

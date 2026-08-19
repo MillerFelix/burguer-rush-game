@@ -102,20 +102,23 @@ func get_interaction_prompt(player: Node = null) -> String:
 	var f_name = f_info.name
 	var icon = f_info.icon
 
-	# Devolução / Reabastecimento com mãos ocupadas
 	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
-		if held is JuicePulp and held.fruit_type == f_info.id:
-			return "%s 🖱️ Devolver Polpa de %s" % [icon, f_name]
-		elif held.get("ingredient_id") == f_info.item_id or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+		if held.get("ingredient_id") == f_info.item_id or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			return "📦 🖱️ Armazenar Polpa de %s (+%d un.)" % [f_name, qty]
-		return ""
+			return "📦 🖱️ [Esq] Armazenar Polpa de %s (+%d un.)" % [f_name, qty]
 
 	var count = get_stock(idx)
+	var prompt = ""
 	if count <= 0:
-		return "🔴 Polpa de %s Esgotada" % f_name
-	return "%s 🖱️ Pegar Polpa de %s" % [icon, f_name]
+		prompt = "🔴 Polpa de %s Esgotada" % f_name
+	else:
+		prompt = "%s 🖱️ [Esq] Pegar Polpa de %s (%d un.)" % [icon, f_name, count]
+
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(f_info.item_id):
+		prompt += " | 🖱️ [Dir] Devolver 1x"
+
+	return prompt
 
 # Regra Burger Rush: E é estritamente para máquinas, portas e equipamentos
 func interact(player: Node3D) -> void:
@@ -139,32 +142,18 @@ func interact(player: Node3D) -> void:
 
 	_show_feedback(player, "ℹ️ Use [Clique Esquerdo] para pegar a pedra de polpa de %s." % f_info.name)
 
-# Clique Esquerdo: manipula pedras de polpa (Pegar / Devolver)
+# Clique Esquerdo (LMB) — APENAS PEGAR / ARMAZENAR CAIXA (NUNCA DEVOLVER)
 func interact_item(player: Node3D) -> void:
 	if not player:
 		return
 
 	var idx = _get_aimed_flavor_index(player)
 	var f_info = FLAVORS[idx]
-	var held = player.get("held_item")
+	var count = get_stock(idx)
 
-	# Devolução de pedra de polpa
-	if held != null:
-		if held is JuicePulp and (held.fruit_type == f_info.id or held.fruit_type == f_info.item_id or held.get_fruit_id() == f_info.item_id or str(held.get("item_id")) == f_info.item_id):
-			if player.has_method("take_held_item"):
-				var returned_pulp = player.take_held_item()
-				var inv = InventoryManager.get_instance()
-				if inv:
-					inv.add_stock(f_info.item_id, 1)
-				else:
-					set_stock(idx, get_stock(idx) + 1)
-				_show_feedback(player, "%s Polpa de %s devolvida à mesa" % [f_info.icon, f_info.name])
-				if returned_pulp:
-					returned_pulp.queue_free()
-				_update_all_visuals()
-				return
-	# 1. Reabastecimento com Caixa de Entrega
-	if player and held != null and (player.has_method("is_holding_large_item") and player.is_holding_large_item()):
+	# 1. Mão ocupada com objeto grande (caixa)
+	if player and player.has_method("is_holding_large_item") and player.is_holding_large_item():
+		var held = player.get("held_item")
 		if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var box_id = str(held.get("contained_item_id"))
 			var target_flavor_id = f_info.item_id
@@ -185,10 +174,44 @@ func interact_item(player: Node3D) -> void:
 			else:
 				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
 				return
-		_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
+		_show_feedback(player, "⚠️ Mãos ocupadas com %s! Solte antes de pegar ingredientes." % (held.get_display_name() if held.has_method("get_display_name") else held.name))
+		return
+
+	# 2. Pegar polpa para os slots rápidos
+	if player.has_method("has_empty_quick_slot") and not player.has_empty_quick_slot():
+		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
+		return
+
+	if count <= 0:
+		_show_feedback(player, "🔴 Polpa de %s esgotada no cesto!" % f_info.name)
 		return
 
 	take_pulp(player, idx)
+
+# Clique Direito (RMB) — DEVOLVER 1 UNIDADE
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	if not player:
+		return
+
+	var idx = _get_aimed_flavor_index(player)
+	var f_info = FLAVORS[idx]
+
+	if player.has_method("has_matching_ingredient") and player.has_matching_ingredient(f_info.item_id):
+		var returned = player.return_one_matching_ingredient(f_info.item_id)
+		if returned:
+			var inv = InventoryManager.get_instance()
+			if inv:
+				inv.add_stock(f_info.item_id, 1)
+			else:
+				set_stock(idx, get_stock(idx) + 1)
+			_show_feedback(player, "%s Devolveu 1x Polpa de %s à mesa" % [f_info.icon, f_info.name])
+			_update_all_visuals()
+			return
+
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Este local armazena Polpa de %s." % f_info.name)
 
 func take_pulp(player: Node3D, target_flavor_idx: int = -1) -> JuicePulp:
 	if not player:

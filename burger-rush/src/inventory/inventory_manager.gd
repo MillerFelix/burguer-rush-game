@@ -83,6 +83,11 @@ func _initialize_default_inventory() -> void:
 	_register_item("pulp_grape", "Polpa de Uva", "beverages", 10, 10, 15.0, 3, load("res://src/items/juice_pulp.tscn"))
 	_register_item("pulp_strawberry", "Polpa de Morango", "beverages", 10, 10, 15.0, 3, load("res://src/items/juice_pulp.tscn"))
 
+	# =========================================================================
+	# 10. COZINHA & SUPRIMENTOS (KITCHEN SUPPLIES)
+	# =========================================================================
+	_register_item("cooking_oil", "Óleo de Cozinha", "supplies", 5, 20, 10.0, 2, load("res://src/items/cooking_oil.tscn"))
+
 func _register_item(
 	id: String,
 	display_name: String,

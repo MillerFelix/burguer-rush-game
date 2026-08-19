@@ -43,7 +43,7 @@ func get_display_name() -> String:
 	return burger_name
 
 func get_interaction_prompt(player: Node = null) -> String:
-	if location != ItemLocation.WORLD:
+	if location != ItemLocation.WORLD and location != ItemLocation.TRAY and location != ItemLocation.TABLE and location != ItemLocation.STATION:
 		return ""
 	if player and player.get("held_item") != null:
 		return ""

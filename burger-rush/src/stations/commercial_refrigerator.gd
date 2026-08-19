@@ -239,85 +239,96 @@ func _apply_state_instant(open_state: bool) -> void:
 # ─── Retirada de Alimentos (Clique do Mouse) ───────────────────
 func pick_meat(player: Node3D, meat_id: String) -> void:
 	if not is_open:
-		_show_feedback(player, "Abra a porta da geladeira primeiro com [E]!")
 		return
 
 	var inv = InventoryManager.get_instance()
 	if not inv:
 		return
 
-	var d_name = "Hambúrguer de Carne" if meat_id == "patty_beef" else "Hambúrguer de Frango"
+	var d_name = "Carne Bovina" if meat_id == "patty_beef" else "Hambúrguer de Frango"
 	var icon = "🥩" if meat_id == "patty_beef" else "🍗"
+	var held = player.get("held_item") if player else null
 
-	# Caso 1: Devolução de carne segurada na mão
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held is Patty:
-			var matches = (meat_id == "patty_chicken" and held.meat_type == Patty.MeatType.CHICKEN) or (meat_id == "patty_beef" and held.meat_type == Patty.MeatType.BEEF)
-			if matches:
-				var ret_p = player.take_held_item()
-				if ret_p:
-					ret_p.queue_free()
-				inv.add_stock(meat_id, 1)
-				_show_feedback(player, "%s Devolveu %s à geladeira" % [icon, d_name])
-				_update_patty_visuals()
-				return
-		elif player.has_method("is_holding_large_item") and player.is_holding_large_item():
-			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-				var box_item_id = str(held.get("contained_item_id"))
-				var valid_meats = ["patty_beef", "patty_chicken"]
-				if box_item_id == meat_id or (box_item_id == "" and meat_id in valid_meats):
-					var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-					player.take_held_item().queue_free()
-					inv.add_stock(meat_id, qty)
-					if door_audio:
-						door_audio.stream = SoundSynthesizer.get_stream("box_place")
-						door_audio.play()
-					_show_feedback(player, "📦 %s armazenado na geladeira (+%d un.)!" % [d_name, qty])
-					_update_patty_visuals()
-					return
-				elif box_item_id in valid_meats:
-					_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
-					return
-				else:
-					_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
-					return
-			else:
-				_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
-				return
+	# Caso 1: Reabastecimento com caixa/engradado
+	if held != null and str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+		var box_item_id = str(held.get("contained_item_id"))
+		var valid_meats = ["patty_beef", "patty_chicken"]
+		if box_item_id == meat_id or (box_item_id == "" and meat_id in valid_meats):
+			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+			var taken_box = player.take_held_item()
+			if taken_box:
+				taken_box.queue_free()
+			inv.add_stock(meat_id, qty)
+			if door_audio:
+				door_audio.stream = SoundSynthesizer.get_stream("box_place")
+				door_audio.play()
+			_show_feedback(player, "📦 %s armazenado na geladeira (+%d un.)!" % [d_name, qty])
+			_update_patty_visuals()
+			return
+		elif box_item_id in valid_meats:
+			_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+			return
+		else:
+			_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+			return
 
-	# Caso 2: Retirada de carne para a mão / slots rápidos
-	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(meat_id):
+	# Caso 2: Se o jogador possui espaço nos slots rápidos e há estoque -> PEGAR NOVA UNIDADE
+	if player.has_method("has_empty_quick_slot") and player.has_empty_quick_slot() and inv.has_stock(meat_id, 1):
+		inv.consume_stock(meat_id, 1)
+
+		var patty_scene: PackedScene = load("res://src/items/patty.tscn")
+		var patty = patty_scene.instantiate() as Patty
+		if meat_id == "patty_chicken":
+			patty.meat_type = Patty.MeatType.CHICKEN
+		else:
+			patty.meat_type = Patty.MeatType.BEEF
+
+		if is_inside_tree() and get_tree().root:
+			get_tree().root.add_child(patty)
+		elif player.get_parent():
+			player.get_parent().add_child(patty)
+		else:
+			add_child(patty)
+		patty._ready()
+		player.pick_up(patty)
+
+		_show_feedback(player, "%s Pegou %s" % [icon, d_name])
+		_update_patty_visuals()
+		return
+
+	if not inv.has_stock(meat_id, 1):
+		_show_feedback(player, "❌ Sem estoque de %s! Compre no computador." % d_name)
+		return
+
+	if player.has_method("has_empty_quick_slot") and not player.has_empty_quick_slot():
 		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
 		return
 
-	# Caso 2: Jogador com as mãos livres -> Pegar carne
-	if not inv.has_stock(meat_id, 1):
-		_show_feedback(player, "❌ Sem %s! Compre no Computador." % d_name)
+# Clique Direito (RMB) — Devolver carne na geladeira
+func interact_return(player: Node3D) -> void:
+	if not is_open:
+		return
+	var inv = InventoryManager.get_instance()
+	if not inv:
 		return
 
-	inv.consume_stock(meat_id, 1)
+	if player and player.has_method("has_matching_ingredient"):
+		if player.has_matching_ingredient("patty_beef"):
+			var returned = player.return_one_matching_ingredient("patty_beef")
+			if returned:
+				inv.add_stock("patty_beef", 1)
+				_show_feedback(player, "🥩 Devolveu 1x Carne Bovina ao freezer")
+				_update_patty_visuals()
+				return
+		elif player.has_matching_ingredient("patty_chicken"):
+			var returned = player.return_one_matching_ingredient("patty_chicken")
+			if returned:
+				inv.add_stock("patty_chicken", 1)
+				_show_feedback(player, "🍗 Devolveu 1x Frango ao freezer")
+				_update_patty_visuals()
+				return
 
-	# Instancia o patty com o tipo correto antes do add_child
-	var patty_scene: PackedScene = load("res://src/items/patty.tscn")
-	var patty = patty_scene.instantiate() as Patty
-	if meat_id == "patty_chicken":
-		patty.meat_type = Patty.MeatType.CHICKEN
-	else:
-		patty.meat_type = Patty.MeatType.BEEF
-
-	# Adiciona no topo da cena e entrega para o jogador
-	if is_inside_tree() and get_tree().root:
-		get_tree().root.add_child(patty)
-	elif player.get_parent():
-		player.get_parent().add_child(patty)
-	else:
-		add_child(patty)
-	patty._ready()
-	player.pick_up(patty)
-
-	_show_feedback(player, "%s Pegou %s" % [icon, d_name])
-	_update_patty_visuals()
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Esta geladeira aceita apenas carnes e hambúrgueres.")
 
 # ─── Helpers e Atualizações ────────────────────────────────────
 func _set_slots_enabled(enabled: bool) -> void:

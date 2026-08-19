@@ -48,19 +48,54 @@ func get_interaction_prompt(player: Node = null) -> String:
 				return "🍽️ 🖱️ Devolver Bandeja à Pilha"
 		return ""
 
+	var prompt = ""
 	if current_tray_count > 0:
-		return "🍽️ 🖱️ Pegar Bandeja"
-	return "🔴 Pilha Vazia"
+		prompt = "🍽️ 🖱️ [Esq] Pegar Bandeja (%d/%d)" % [current_tray_count, MAX_TRAYS]
+	else:
+		prompt = "🔴 Pilha Vazia"
 
-# Clique Esquerdo — Regra global de manipulação de itens
+	if is_large and held != null and (held is ServingTray or held is OrderTray) and held.get("carried_items") != null and held.carried_items.is_empty():
+		prompt += " | 🖱️ [Dir] Devolver 1x"
+
+	return prompt
+
+# Clique Esquerdo (LMB) — Apenas Pegar Bandeja (NUNCA Devolver)
 func interact_item(player: Node3D) -> void:
+	if not player:
+		return
+
+	var is_large = player.has_method("is_holding_large_item") and player.is_holding_large_item()
+
+	if not is_large:
+		if current_tray_count <= 0:
+			_show_feedback(player, "Não há mais bandejas disponíveis na pilha!")
+			return
+
+		current_tray_count -= 1
+		_update_stack_visuals()
+
+		var new_tray = SERVING_TRAY_SCENE.instantiate() as ServingTray
+		if is_inside_tree() and get_tree().root:
+			get_tree().root.add_child(new_tray)
+		else:
+			add_child(new_tray)
+		player.pick_up(new_tray)
+		_show_feedback(player, "🍽️ Pegou uma Bandeja de Serviço")
+		return
+
+	_show_feedback(player, "Mãos ocupadas!")
+
+# Clique Direito (RMB) — DEVOLVER 1 BANDEJA
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
 	if not player:
 		return
 
 	var held = player.get("held_item")
 	var is_large = player.has_method("is_holding_large_item") and player.is_holding_large_item()
 
-	# Se o jogador estiver segurando uma bandeja vazia/limpa: DEVOLVE À PILHA
 	if is_large and (held is ServingTray or held is OrderTray) and held.get("carried_items") != null and held.carried_items.is_empty():
 		if current_tray_count >= MAX_TRAYS:
 			_show_feedback(player, "A pilha de bandejas já está completa (8/8)!")
@@ -74,22 +109,7 @@ func interact_item(player: Node3D) -> void:
 			_show_feedback(player, "🍽️ Bandeja devolvida à pilha")
 		return
 
-	# Se não estiver segurando um objeto grande (mãos livres ou com ingrediente em slot rápido): PEGA 1 BANDEJA
-	if not is_large:
-		if current_tray_count <= 0:
-			_show_feedback(player, "Não há mais bandejas disponíveis na pilha!")
-			return
-
-		current_tray_count -= 1
-		_update_stack_visuals()
-
-		var new_tray = SERVING_TRAY_SCENE.instantiate() as ServingTray
-		get_tree().root.add_child(new_tray)
-		player.pick_up(new_tray)
-		_show_feedback(player, "🍽️ Pegou uma Bandeja de Serviço")
-		return
-
-	_show_feedback(player, "Mãos ocupadas!")
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Apenas bandejas vazias podem ser devolvidas à pilha.")
 
 # Tecla E — Ações de ambiente / orientação
 func interact(player: Node3D) -> void:

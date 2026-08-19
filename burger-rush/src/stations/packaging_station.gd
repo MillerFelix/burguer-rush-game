@@ -107,7 +107,7 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if packaged_item != null:
 		var d_name = packaged_item.get_display_name() if packaged_item.has_method("get_display_name") else packaged_item.name
 		if held == null:
-			return "🖱️ Pegar %s Embalado" % d_name
+			return "🖱️ [Esq] Pegar %s Embalado" % d_name
 		return ""
 
 	# 2. Devolução de embalagem vazia ao estoque da mesa
@@ -116,10 +116,10 @@ func get_interaction_prompt(player: Node = null) -> String:
 		if return_id != "":
 			var inv = InventoryManager.get_instance()
 			var current_stock = inv.get_stock(return_id) if inv else 50
+			var itm_cfg = items_config.get(return_id, {})
+			var itm_name = itm_cfg.get("name", "Item")
 			if current_stock < MAX_STOCK_PER_ITEM:
-				var itm_cfg = items_config.get(return_id, {})
-				var itm_name = itm_cfg.get("name", "Item")
-				return "🖱️ Devolver %s ao Estoque" % itm_name
+				return "🖱️ [Dir] Devolver %s ao Estoque (%d/%d)" % [itm_name, current_stock, MAX_STOCK_PER_ITEM]
 			else:
 				return "⚠️ Estoque Cheio (%d/%d)" % [current_stock, MAX_STOCK_PER_ITEM]
 
@@ -143,11 +143,40 @@ func get_interaction_prompt(player: Node = null) -> String:
 		var itm_icon = itm_cfg.get("icon", "📦")
 
 		if stock > 0:
-			return "🖱️ Pegar %s %s" % [itm_icon, itm_name]
+			return "🖱️ [Esq] Pegar %s %s (%d un.)" % [itm_icon, itm_name, stock]
 		else:
 			return "⚠️ %s Esgotado" % itm_name
 
 	return ""
+
+# [Clique Direito do Mouse] — DEVOLVER EMBALAGEM AO ESTOQUE
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	if not player:
+		return
+	var held = player.get("held_item")
+	if held != null:
+		var return_id = _get_matching_stock_id_from_item(held)
+		if return_id != "":
+			var inv = InventoryManager.get_instance()
+			var current_stock = inv.get_stock(return_id) if inv else 50
+			if current_stock < MAX_STOCK_PER_ITEM:
+				if player.has_method("take_held_item"):
+					var removed_item = player.take_held_item()
+					if removed_item:
+						removed_item.queue_free()
+				if inv:
+					inv.add_stock(return_id, 1)
+				_update_all_visual_stocks()
+				_show_feedback(player, "📥 Devolveu %s ao estoque (%d/%d)" % [items_config[return_id]["name"], current_stock + 1, MAX_STOCK_PER_ITEM])
+				return
+			else:
+				_show_feedback(player, "⚠️ Estoque de %s já está no limite máximo (%d/%d)!" % [items_config[return_id]["name"], MAX_STOCK_PER_ITEM, MAX_STOCK_PER_ITEM])
+				return
+
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Esta bancada aceita apenas devoluções de embalagens vazias.")
 
 # [Clique Esquerdo do Mouse] — Manipulação de Itens / Embalagens
 func interact_item(player: Node3D) -> void:
@@ -177,26 +206,8 @@ func _handle_left_click(player: Node3D) -> void:
 		_show_feedback(player, "📦 Pegou %s embalado!" % (item.get_display_name() if item.has_method("get_display_name") else item.name))
 		return
 
-	# 2. Devolução de embalagem vazia ou Armazenamento de Caixa de Entrega
+	# 2. Armazenamento de Caixa de Entrega
 	if held != null:
-		var return_id = _get_matching_stock_id_from_item(held)
-		if return_id != "":
-			var inv = InventoryManager.get_instance()
-			var current_stock = inv.get_stock(return_id) if inv else 50
-			if current_stock < MAX_STOCK_PER_ITEM:
-				if player.has_method("take_held_item"):
-					var removed_item = player.take_held_item()
-					if removed_item:
-						removed_item.queue_free()
-				if inv:
-					inv.add_stock(return_id, 1)
-				_update_all_visual_stocks()
-				_show_feedback(player, "📥 Devolveu %s ao estoque (%d/%d)" % [items_config[return_id]["name"], current_stock + 1, MAX_STOCK_PER_ITEM])
-				return
-			else:
-				_show_feedback(player, "⚠️ Estoque de %s já está no limite máximo (%d/%d)!" % [items_config[return_id]["name"], MAX_STOCK_PER_ITEM, MAX_STOCK_PER_ITEM])
-				return
-
 		if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var box_item_id = str(held.get("contained_item_id"))
 			if items_config.has(box_item_id):

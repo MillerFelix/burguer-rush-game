@@ -24,19 +24,44 @@ func get_interaction_prompt(player: Node = null) -> String:
 	var max_cap = inv.get_max_capacity(ingredient_id)
 	var item_name = _get_ingredient_display_name()
 
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		# Se jogador estiver segurando a caixa de ingredientes para reabastecimento
-		if held.get("ingredient_id") == ingredient_id or str(held.get("item_type")) == "crate":
-			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			return "E — Reabastecer %s (+%d unidades)" % [item_name, qty]
-		# Se jogador estiver com as mãos ocupadas
-		return ""
+	var held = player.get("held_item") if player else null
+	if held != null and (held.get("ingredient_id") == ingredient_id or str(held.get("item_type")) == "crate"):
+		var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+		return "🖱️ [Esq] Reabastecer %s (+%d un.)" % [item_name, qty]
 
+	var prompt = ""
 	if stock <= 0:
-		return "🔴 %s Esgotado! Compre no Computador" % item_name
+		prompt = "🔴 %s Esgotado" % item_name
+	else:
+		prompt = "🖱️ [Esq] Pegar %s (%d/%d)" % [item_name, stock, max_cap]
 
-	return "E — Pegar %s (%d/%d)" % [item_name, stock, max_cap]
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(ingredient_id):
+		prompt += " | 🖱️ [Dir] Devolver 1x"
+
+	return prompt
+
+# Clique Direito (RMB) — APENAS DEVOLVER 1 UNIDADE
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		return
+
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(ingredient_id):
+		var returned = player.return_one_matching_ingredient(ingredient_id)
+		if returned:
+			inv.add_stock(ingredient_id, 1)
+			_show_feedback(player, "📦 Devolveu 1x %s ao dispenser!" % _get_ingredient_display_name())
+			_update_visual_label()
+			return
+
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Este dispenser armazena apenas %s." % _get_ingredient_display_name())
+
+# Clique Esquerdo (LMB) — APENAS PEGAR / REABASTECER (NUNCA DEVOLVER)
+func interact_item(player: Node3D) -> void:
+	interact(player)
 
 func interact(player: Node3D) -> void:
 	var prog = ProgressionManager.get_instance()
@@ -48,8 +73,8 @@ func interact(player: Node3D) -> void:
 	if not inv:
 		return
 
-	# 1. Reabastecimento com Caixa de Ingredientes na mão
-	var held = player.get("held_item")
+	# Reabastecimento com Caixa de Ingredientes na mão
+	var held = player.get("held_item") if player else null
 	if held != null and (held.get("ingredient_id") == ingredient_id or str(held.get("item_type")) == "crate"):
 		if player.has_method("take_held_item"):
 			var crate = player.take_held_item()
@@ -60,35 +85,42 @@ func interact(player: Node3D) -> void:
 			_update_visual_label()
 			return
 
-	# 2. Pegar ingrediente se mão estiver livre
-	if held == null:
-		if not inv.has_stock(ingredient_id, 1):
-			_show_feedback(player, "❌ Sem estoque de %s! Compre no computador." % _get_ingredient_display_name())
-			return
+	# Pegar ingrediente se houver espaço nos slots rápidos
+	if player.has_method("has_empty_quick_slot") and not player.has_empty_quick_slot():
+		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
+		return
 
-		var item_data = inv.get_item_data(ingredient_id)
-		var item_scene: PackedScene = item_data.get("scene", null)
-		if not item_scene:
-			# Fallback padrão
-			match ingredient_id:
-				"patty": item_scene = load("res://src/items/patty.tscn")
-				"bread": item_scene = load("res://src/items/bread.tscn")
-				"cheese": item_scene = load("res://src/items/cheese.tscn")
-				"lettuce": item_scene = load("res://src/items/lettuce.tscn")
-				"tomato": item_scene = load("res://src/items/tomato.tscn")
-				"onion": item_scene = load("res://src/items/onion.tscn")
-				"bacon": item_scene = load("res://src/items/bacon.tscn")
-				"sauce": item_scene = load("res://src/items/sauce.tscn")
-				"potato_raw": item_scene = load("res://src/items/potato.tscn")
+	if not inv.has_stock(ingredient_id, 1):
+		_show_feedback(player, "❌ Sem estoque de %s! Compre no computador." % _get_ingredient_display_name())
+		return
 
-		if item_scene:
-			inv.consume_stock(ingredient_id, 1)
-			var item = item_scene.instantiate()
-			player.get_tree().root.add_child(item)
-			if player.has_method("pick_up"):
-				player.pick_up(item)
-			_show_feedback(player, "📦 Pegou %s (Restam %d)" % [_get_ingredient_display_name(), inv.get_stock(ingredient_id)])
-			_update_visual_label()
+	var item_data = inv.get_item_data(ingredient_id)
+	var item_scene: PackedScene = item_data.get("scene", null)
+	if not item_scene:
+		# Fallback padrão
+		match ingredient_id:
+			"patty": item_scene = load("res://src/items/patty.tscn")
+			"bread": item_scene = load("res://src/items/bread.tscn")
+			"cheese": item_scene = load("res://src/items/cheese.tscn")
+			"lettuce": item_scene = load("res://src/items/lettuce.tscn")
+			"tomato": item_scene = load("res://src/items/tomato.tscn")
+			"onion": item_scene = load("res://src/items/onion.tscn")
+			"bacon": item_scene = load("res://src/items/bacon.tscn")
+			"sauce": item_scene = load("res://src/items/sauce.tscn")
+			"potato_raw": item_scene = load("res://src/items/potato.tscn")
+
+	if item_scene:
+		inv.consume_stock(ingredient_id, 1)
+		var item = item_scene.instantiate()
+		var tree = player.get_tree() if (player and player.is_inside_tree()) else get_tree()
+		if tree and tree.root:
+			tree.root.add_child(item)
+		elif get_parent():
+			get_parent().add_child(item)
+		if player.has_method("pick_up"):
+			player.pick_up(item)
+		_show_feedback(player, "📦 Pegou %s (Restam %d)" % [_get_ingredient_display_name(), inv.get_stock(ingredient_id)])
+		_update_visual_label()
 
 func _on_stock_changed(changed_id: String, _new_qty: int) -> void:
 	if changed_id == ingredient_id:

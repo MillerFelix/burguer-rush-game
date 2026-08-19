@@ -383,32 +383,37 @@ func interact_item(player: Node3D) -> void:
 	var tool_slot = player.get("active_tool_slot") if player else 3
 	var held = player.get("held_item")
 
-	# CASO 1: Jogador segurando um item (Tentando colocar na chapa)
-	if held != null:
-		if can_cook_item(held):
-			if is_dirty():
-				_play_reject_sound()
-				_show_feedback(player, "⚠️ A chapa está suja! Limpe a chapa antes de colocar ingredientes.")
-				return
-			if active_items.size() >= max_capacity:
-				_show_feedback(player, "⚠️ A grelha está cheia (%d/%d itens)!" % [active_items.size(), max_capacity])
-				return
-			var item = player.take_held_item()
-			if item:
-				var placed = place_item(item)
-				if not placed:
-					if player.has_method("pick_up"):
-						player.pick_up(item)
-				else:
-					_show_feedback(player, "♨️ %s colocado na chapa" % item.get_display_name())
-			return
-		else:
-			# ITEM INVÁLIDO: chapa rejeita e mantém na mão do jogador
+	# CASO 1: Jogador com ingrediente segurado na mão ou ativo nos slots
+	if (held != null and can_cook_item(held)) or (player.has_method("has_active_ingredient") and player.has_active_ingredient()):
+		if is_dirty():
 			_play_reject_sound()
-			_show_feedback(player, "⚠️ Este item não pode ser colocado na chapa!")
+			_show_feedback(player, "⚠️ A chapa está suja! Limpe a chapa antes de colocar ingredientes.")
 			return
+		if active_items.size() >= max_capacity:
+			_show_feedback(player, "⚠️ A grelha está cheia (%d/%d itens)!" % [active_items.size(), max_capacity])
+			return
+		var item: Node3D = null
+		if player.has_method("take_held_item"):
+			item = player.take_held_item()
+		elif held != null:
+			item = held
+			player.held_item = null
+		elif player.has_method("consume_active_ingredient"):
+			item = player.consume_active_ingredient()
 
-	# CASO 2: Jogador com ESPÁTULA (Slot 1) ou MÃO LIVRE (Slot 3)
+		if item:
+			var placed = place_item(item)
+			if not placed:
+				if player.has_method("pick_up"):
+					player.pick_up(item)
+			else:
+				_show_feedback(player, "♨️ %s colocado na chapa" % item.get_display_name())
+		return
+	elif held != null:
+		_show_feedback(player, "⚠️ Mãos ocupadas com %s! Solte para interagir com a chapa." % (held.get_display_name() if held.has_method("get_display_name") else held.name))
+		return
+
+	# CASO 3: Jogador com ESPÁTULA (Slot 1) ou MÃO LIVRE (Slot 3) sem ingrediente ativo
 	if tool_slot in [1, 3]:
 		if active_items.is_empty():
 			if tool_slot == 1:
@@ -702,13 +707,20 @@ func get_interaction_prompt(player: Node = null) -> String:
 					return "🍳 Ovo Fritando (%d%%)" % int(e.cooking_progress)
 		return "🍳 Espátula — Nenhum alimento na chapa"
 
-	# Se estiver com a mão livre e segurando alimento fritável
-	if tool_slot == 3 and held != null:
-		if can_cook_item(held):
-			return "✋ [Clique] Colocar %s na Chapa" % held.get_display_name()
+	# Se estiver com ingrediente fritável na mão ou ativo nos slots rápidos
+	if held != null and can_cook_item(held):
+		return "♨️ [Clique] Colocar %s na Chapa" % (held.get_display_name() if held.has_method("get_display_name") else held.name)
+	elif player.has_method("has_active_ingredient") and player.has_active_ingredient():
+		var act_ing = player.get_active_ingredient()
+		var ing_id = str(act_ing.get("item_id", ""))
+		var is_cookable = (ing_id.begins_with("patty") or ing_id == "bacon" or ing_id == "egg" or ing_id.begins_with("cheese"))
+		if is_cookable:
+			return "♨️ [Clique] Colocar %s na Chapa" % act_ing.get("display_name", "Ingrediente")
+	elif held != null:
+		return ""
 
 	# Se estiver com a mão livre olhando para os alimentos
-	if tool_slot == 3 and held == null and not active_items.is_empty():
+	if held == null and not active_items.is_empty():
 		var target = _get_aimed_item(player)
 		if not target.is_empty():
 			var node = target["item"]
@@ -733,12 +745,12 @@ func get_interaction_prompt(player: Node = null) -> String:
 			elif node is Patty:
 				var p = node as Patty
 				if p.is_fully_cooked():
-					return "⚠️ [1] Equipe a Espátula para retirar o hambúrguer pronto!"
+					return "🍳 [Clique] Pegar Hambúrguer Pronto"
 				elif p.state == Patty.State.READY_SIDE_1:
 					return "⚠️ [1] Equipe a Espátula para virar o hambúrguer!"
 				else:
 					var p_pct = int(p.side_a_cooked) if not p.is_flipped else int(p.side_b_cooked)
-					return "🍔 Hambúrguer Grelhando (%d%%)" % p_pct
+					return "🥩 Hambúrguer Grelhando (%d%%)" % p_pct
 
 	# Interação com botão de ligar/desligar
 	if not is_on:

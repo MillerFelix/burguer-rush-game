@@ -275,7 +275,6 @@ func _set_slots_enabled(enabled: bool) -> void:
 	if col_white_onion: col_white_onion.disabled = not enabled
 	if col_pickle: col_pickle.disabled = not enabled
 
-# ─── Manipulação de Ingredientes (Clique do Mouse) ─────────────
 func get_ingredient_prompt(player: Node3D, ing_id: String) -> String:
 	if not is_open:
 		return ""
@@ -288,15 +287,21 @@ func get_ingredient_prompt(player: Node3D, ing_id: String) -> String:
 		if player.has_method("is_holding_large_item") and player.is_holding_large_item():
 			var held = player.get("held_item")
 			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-				return "📦 🖱️ Armazenar %s na geladeira" % ing_name
-			return ""
+				return "📦 🖱️ [Esq] Armazenar %s na geladeira" % ing_name
 
 	var stock = inv.get_stock(ing_id) if inv else 0
+	var prompt = ""
 	if stock <= 0:
-		return "🔴 %s Esgotado" % ing_name
+		prompt = "🔴 %s Esgotado" % ing_name
+	else:
+		prompt = "%s 🖱️ [Esq] Pegar %s (%d un.)" % [icon, ing_name, stock]
 
-	return "%s 🖱️ Pegar %s" % [icon, ing_name]
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(ing_id):
+		prompt += " | 🖱️ [Dir] Devolver 1x"
 
+	return prompt
+
+# Clique Esquerdo (LMB) — APENAS PEGAR / ARMAZENAR CAIXA (NUNCA DEVOLVER)
 func handle_ingredient_interaction(player: Node3D, ing_id: String) -> void:
 	if not is_open:
 		_show_feedback(player, "Abra a porta da geladeira primeiro com [E]!")
@@ -310,43 +315,34 @@ func handle_ingredient_interaction(player: Node3D, ing_id: String) -> void:
 	var ing_name = ing_info.name
 	var icon = ing_info.icon
 
-	# Caso 1: Devolução de ingrediente segurado na mão
-	if player and player.get("held_item") != null:
+	# Caso 1: Mão ocupada com objeto grande (caixa de entrega)
+	if player and player.has_method("is_holding_large_item") and player.is_holding_large_item():
 		var held = player.get("held_item")
-		if _is_matching_ingredient(held, ing_id):
-			var ret_item = player.take_held_item()
-			if ret_item:
-				ret_item.queue_free()
-			inv.add_stock(ing_id, 1)
-			_show_feedback(player, "%s Devolveu %s à geladeira" % [icon, ing_name])
-			_update_all_visual_stocks()
-			return
-		elif player.has_method("is_holding_large_item") and player.is_holding_large_item():
-			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-				var box_item_id = str(held.get("contained_item_id"))
-				var valid_fridge_items = ["lettuce", "tomato", "onion", "red_onion", "pickle", "potato_raw", "onion_rings_raw"]
-				if box_item_id == ing_id or (box_item_id == "" and ing_id in valid_fridge_items):
-					var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-					player.take_held_item().queue_free()
-					inv.add_stock(ing_id, qty)
-					if door_audio:
-						door_audio.stream = SoundSynthesizer.get_stream("box_place")
-						door_audio.play()
-					_show_feedback(player, "📦 %s armazenado (+%d un.)!" % [ing_name, qty])
-					_update_all_visual_stocks()
-					return
-				elif box_item_id in valid_fridge_items:
-					_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
-					return
-				else:
-					_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
-					return
-			else:
-				_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
+		if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			var box_item_id = str(held.get("contained_item_id"))
+			var valid_fridge_items = ["lettuce", "tomato", "onion", "red_onion", "pickle", "potato_raw", "onion_rings_raw"]
+			if box_item_id == ing_id or (box_item_id == "" and ing_id in valid_fridge_items):
+				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+				player.take_held_item().queue_free()
+				inv.add_stock(ing_id, qty)
+				if door_audio:
+					door_audio.stream = SoundSynthesizer.get_stream("box_place")
+					door_audio.play()
+				_show_feedback(player, "📦 %s armazenado (+%d un.)!" % [ing_name, qty])
+				_update_all_visual_stocks()
 				return
+			elif box_item_id in valid_fridge_items:
+				_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+				return
+			else:
+				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+				return
+		else:
+			_show_feedback(player, "⚠️ Mãos ocupadas com %s! Solte antes de pegar ingredientes." % (held.get_display_name() if held.has_method("get_display_name") else held.name))
+			return
 
-	# Caso 2: Retirada de ingrediente para a mão / slots rápidos
-	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(ing_id):
+	# Caso 2: Retirada de ingrediente para os slots rápidos
+	if player.has_method("has_empty_quick_slot") and not player.has_empty_quick_slot():
 		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
 		return
 
@@ -372,6 +368,28 @@ func handle_ingredient_interaction(player: Node3D, ing_id: String) -> void:
 
 	_show_feedback(player, "%s Pegou %s" % [icon, ing_name])
 	_update_all_visual_stocks()
+
+# Clique Direito (RMB) — DEVOLVER 1 UNIDADE
+func handle_ingredient_return(player: Node3D, ing_id: String) -> void:
+	if not is_open:
+		return
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		return
+
+	var ing_info = _get_ingredient_info(ing_id)
+	var ing_name = ing_info.name
+	var icon = ing_info.icon
+
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(ing_id):
+		var returned = player.return_one_matching_ingredient(ing_id)
+		if returned:
+			inv.add_stock(ing_id, 1)
+			_show_feedback(player, "%s Devolveu 1x %s à geladeira" % [icon, ing_name])
+			_update_all_visual_stocks()
+			return
+
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Este compartimento aceita apenas %s." % ing_name)
 
 func _instantiate_ingredient_item(ing_id: String) -> Node3D:
 	match ing_id:

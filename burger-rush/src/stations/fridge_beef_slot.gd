@@ -8,18 +8,21 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if not fridge or not fridge.is_open:
 		return ""
 
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held is Patty and held.meat_type == Patty.MeatType.BEEF and held.state == Patty.State.RAW:
-			return "🥩 🖱️ Devolver Carne Bovina"
-		return ""
-
 	var inv = InventoryManager.get_instance()
 	var stock = inv.get_stock("patty_beef") if inv else 0
-	if stock <= 0:
-		return "🔴 Carne Bovina Esgotada"
-	return "🥩 🖱️ Pegar Carne Bovina"
+	var prompt = ""
 
+	if stock > 0:
+		prompt = "🥩 🖱️ [Esq] Pegar Carne Bovina (%d un.)" % stock
+	else:
+		prompt = "🔴 Carne Bovina Esgotada"
+
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient("patty_beef"):
+		prompt += " | 🖱️ [Dir] Devolver 1x"
+
+	return prompt
+
+# Clique Esquerdo (LMB) — APENAS PEGAR / REABASTECER CAIXA (NUNCA DEVOLVER)
 func interact_item(player: Node3D) -> void:
 	var fridge = _get_fridge()
 	if not fridge or not fridge.is_open:
@@ -29,20 +32,43 @@ func interact_item(player: Node3D) -> void:
 	if not inv:
 		return
 
-	# Devolução de item
-	if player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held is Patty and held.meat_type == Patty.MeatType.BEEF and held.state == Patty.State.RAW:
-			player.take_held_item().queue_free()
-			inv.add_stock("patty_beef", 1)
-			fridge._show_feedback(player, "🥩 Devolveu Carne Bovina ao freezer")
-			fridge._update_patty_visuals()
-		else:
-			fridge._show_feedback(player, "Mãos ocupadas! Devolva o item atual antes de pegar outro.")
+	var held = player.get("held_item") if player else null
+	if held != null and str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+		fridge.pick_meat(player, "patty_beef")
 		return
 
-	# Retirada de item com mãos livres
+	if player.has_method("has_empty_quick_slot") and not player.has_empty_quick_slot():
+		fridge._show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
+		return
+
+	if not inv.has_stock("patty_beef", 1):
+		fridge._show_feedback(player, "❌ Sem estoque de Carne Bovina! Compre no computador.")
+		return
+
 	fridge.pick_meat(player, "patty_beef")
+
+# Clique Direito (RMB) — APENAS DEVOLVER 1 UNIDADE
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	var fridge = _get_fridge()
+	if not fridge or not fridge.is_open:
+		return
+
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		return
+
+	if player.has_method("has_matching_ingredient") and player.has_matching_ingredient("patty_beef"):
+		var returned = player.return_one_matching_ingredient("patty_beef")
+		if returned:
+			inv.add_stock("patty_beef", 1)
+			fridge._show_feedback(player, "🥩 Devolveu 1x Carne Bovina ao freezer")
+			fridge._update_patty_visuals()
+			return
+
+	fridge._show_feedback(player, "⚠️ Armazenamento incompatível! Este compartimento aceita apenas Carne Bovina.")
 
 func _get_fridge() -> MeatRefrigerator:
 	var parent = get_parent()

@@ -21,6 +21,10 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if held != null:
 		var d_name = held.get_display_name() if held.has_method("get_display_name") else held.name
 		return "🖱️ Colocar %s na Bancada de Molhos" % d_name
+	elif player.has_method("has_active_ingredient") and player.has_active_ingredient():
+		var act = player.get_active_ingredient()
+		var d_name = act.get("display_name", "Ingrediente")
+		return "🖱️ Colocar %s na Bancada de Molhos" % d_name
 
 	return ""
 

@@ -60,7 +60,11 @@ func _physics_process(delta: float) -> void:
 		var ray_start = global_position + Vector3.UP * 0.1
 		var ray_end = global_position + Vector3.DOWN * 10.0
 		var query = PhysicsRayQueryParameters3D.create(ray_start, ray_end)
-		query.exclude = [get_rid()]
+		var excludes = [get_rid()]
+		for child in find_children("*", "CollisionObject3D", true, false):
+			if child is CollisionObject3D:
+				excludes.append(child.get_rid())
+		query.exclude = excludes
 
 		var result = space_state.intersect_ray(query)
 		if result:
@@ -78,18 +82,16 @@ func _physics_process(delta: float) -> void:
 				_is_falling = false
 
 func get_interaction_prompt(player: Node = null) -> String:
-	if location != ItemLocation.WORLD:
+	if location != ItemLocation.WORLD and location != ItemLocation.TRAY and location != ItemLocation.TABLE and location != ItemLocation.STATION:
 		return ""
 
 	if player and player.get("held_item") != null:
 		return ""
 
-	if prompt_text != "":
-		return prompt_text
-	return "E — Pegar %s" % get_display_name()
+	return "🖱️ Pegar %s" % get_display_name()
 
 func interact(player: Node3D) -> void:
-	if location == ItemLocation.WORLD and player.has_method("pick_up"):
+	if (location == ItemLocation.WORLD or location == ItemLocation.TRAY or location == ItemLocation.TABLE or location == ItemLocation.STATION) and player.has_method("pick_up"):
 		player.pick_up(self)
 
 func on_picked_up() -> void:

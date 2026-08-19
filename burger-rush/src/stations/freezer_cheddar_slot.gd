@@ -13,6 +13,14 @@ func interact_item(player: Node3D) -> void:
 	if freezer:
 		freezer.handle_slot_item_interaction(player, Cheese.CheeseType.CHEDDAR)
 
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	var freezer = _get_freezer()
+	if freezer:
+		freezer.handle_slot_item_return(player, Cheese.CheeseType.CHEDDAR)
+
 func _get_freezer() -> CommercialChestFreezer:
 	var parent = get_parent()
 	if parent and parent is CommercialChestFreezer:

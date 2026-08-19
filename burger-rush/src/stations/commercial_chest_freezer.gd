@@ -293,47 +293,37 @@ func handle_slot_item_interaction(player: Node3D, cheese_type: Cheese.CheeseType
 			item_id = "cheese_prato"
 			cheese_name = "Queijo Prato"
 
-	# Caso 1: Devolução de queijo segurado na mão
-	if player and player.get("held_item") != null:
+	# Caso 1: Mão ocupada com objeto grande
+	if player and player.has_method("is_holding_large_item") and player.is_holding_large_item():
 		var held = player.get("held_item")
-		if held is Cheese and held.cheese_type == cheese_type:
-			var ret_c = player.take_held_item()
-			if ret_c:
-				ret_c.queue_free()
-			inv.add_stock(item_id, 1)
-			_show_feedback(player, "%s Devolveu %s ao freezer" % [icon, cheese_name])
-			_update_all_visual_stocks()
-			return
-		elif player.has_method("is_holding_large_item") and player.is_holding_large_item():
-			if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-				var box_item_id = str(held.get("contained_item_id"))
-				var valid_cheeses = ["cheese_mozzarella", "cheese_cheddar", "cheese_prato"]
-				if box_item_id == item_id or (box_item_id == "" and item_id in valid_cheeses):
-					var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-					player.take_held_item().queue_free()
-					inv.add_stock(item_id, qty)
-					if door_audio:
-						door_audio.stream = SoundSynthesizer.get_stream("box_place")
-						door_audio.play()
-					_show_feedback(player, "📦 %s armazenado no freezer (+%d un.)!" % [cheese_name, qty])
-					_update_all_visual_stocks()
-					return
-				elif box_item_id in valid_cheeses:
-					_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
-					return
-				else:
-					_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
-					return
-			else:
-				_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
+		if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			var box_item_id = str(held.get("contained_item_id"))
+			var valid_cheeses = ["cheese_mozzarella", "cheese_cheddar", "cheese_prato"]
+			if box_item_id == item_id or (box_item_id == "" and item_id in valid_cheeses):
+				var qty: int = held.get("quantity") if held.get("quantity") != null else 10
+				player.take_held_item().queue_free()
+				inv.add_stock(item_id, qty)
+				if door_audio:
+					door_audio.stream = SoundSynthesizer.get_stream("box_place")
+					door_audio.play()
+				_show_feedback(player, "📦 %s armazenado no freezer (+%d un.)!" % [cheese_name, qty])
+				_update_all_visual_stocks()
 				return
+			elif box_item_id in valid_cheeses:
+				_show_feedback(player, "⚠️ Coloque esta caixa no compartimento de %s!" % str(held.get("contained_item_name")))
+				return
+			else:
+				_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
+				return
+		else:
+			_show_feedback(player, "⚠️ Mãos ocupadas com %s! Solte antes de pegar ingredientes." % (held.get_display_name() if held.has_method("get_display_name") else held.name))
+			return
 
-	# Caso 2: Retirada de queijo para a mão / slots rápidos
-	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(item_id):
+	# Caso 2: Retirada de queijo para os slots rápidos
+	if player.has_method("has_empty_quick_slot") and not player.has_empty_quick_slot():
 		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
 		return
 
-	# Caso 2: Jogador com as mãos livres -> Pegar queijo
 	if not inv.has_stock(item_id, 1):
 		_show_feedback(player, "❌ Sem estoque de %s! Compre no computador." % cheese_name)
 		return
@@ -352,6 +342,40 @@ func handle_slot_item_interaction(player: Node3D, cheese_type: Cheese.CheeseType
 		player.pick_up(cheese)
 	_show_feedback(player, "%s Pegou %s" % [icon, cheese_name])
 	_update_all_visual_stocks()
+
+# Clique Direito (RMB) — DEVOLVER 1 UNIDADE
+func handle_slot_item_return(player: Node3D, cheese_type: Cheese.CheeseType) -> void:
+	if current_state != State.OPEN:
+		return
+
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		return
+
+	var item_id = "cheese_cheddar"
+	var cheese_name = "Queijo Cheddar"
+	var icon = "🧀"
+
+	match cheese_type:
+		Cheese.CheeseType.MOZZARELLA:
+			item_id = "cheese_mozzarella"
+			cheese_name = "Queijo Muçarela"
+		Cheese.CheeseType.CHEDDAR:
+			item_id = "cheese_cheddar"
+			cheese_name = "Queijo Cheddar"
+		Cheese.CheeseType.PRATO:
+			item_id = "cheese_prato"
+			cheese_name = "Queijo Prato"
+
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(item_id):
+		var returned = player.return_one_matching_ingredient(item_id)
+		if returned:
+			inv.add_stock(item_id, 1)
+			_show_feedback(player, "%s Devolveu 1x %s ao freezer" % [icon, cheese_name])
+			_update_all_visual_stocks()
+			return
+
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Este compartimento aceita apenas %s." % cheese_name)
 
 # ─── Prompts e Atualizações ────────────────────────────────────
 func get_slot_prompt(player: Node, cheese_type: Cheese.CheeseType) -> String:
@@ -373,20 +397,18 @@ func get_slot_prompt(player: Node, cheese_type: Cheese.CheeseType) -> String:
 			item_id = "cheese_prato"
 			cheese_name = "Queijo Prato"
 
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held is Cheese and held.cheese_type == cheese_type:
-			return "%s 🖱️ Devolver %s" % [icon, cheese_name]
-		elif str(held.get("item_type")) == "crate" or str(held.get("item_type")) == "storage_box":
-			return "📦 🖱️ Armazenar %s" % cheese_name
-		return ""
-
 	var inv = InventoryManager.get_instance()
 	var stock = inv.get_stock(item_id) if inv else 0
+	var prompt = ""
 	if stock <= 0:
-		return "🔴 %s Esgotado" % cheese_name
+		prompt = "🔴 %s Esgotado" % cheese_name
+	else:
+		prompt = "%s 🖱️ [Esq] Pegar %s (%d un.)" % [icon, cheese_name, stock]
 
-	return "%s 🖱️ Pegar %s" % [icon, cheese_name]
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(item_id):
+		prompt += " | 🖱️ [Dir] Devolver 1x"
+
+	return prompt
 
 func _on_stock_changed(_changed_id: String, _new_qty: int) -> void:
 	_update_all_visual_stocks()

@@ -31,7 +31,7 @@ func _ensure_assembly() -> void:
 func has_ingredients() -> bool:
 	_ensure_assembly()
 	if assembly:
-		return assembly.stacked_items.size() > 0 or assembly.state != BurgerAssembly.State.EMPTY
+		return assembly.ingredients.size() > 0 or assembly.state != BurgerAssembly.State.EMPTY
 	return false
 
 func get_interaction_prompt(player: Node = null) -> String:
@@ -39,17 +39,8 @@ func get_interaction_prompt(player: Node = null) -> String:
 		return ""
 
 	_ensure_assembly()
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held != self:
-			return assembly.get_interaction_prompt(player)
-
 	if assembly:
-		if assembly.state == BurgerAssembly.State.CLOSED:
-			var b_name = assembly.matched_recipe.display_name if assembly.matched_recipe else "Burger"
-			return "🍔 %s — [Clique] Pegar Lanche" % b_name
-		elif assembly.state == BurgerAssembly.State.ASSEMBLING:
-			return "🥪 [Clique] Pegar Lanche"
+		return assembly.get_interaction_prompt(player)
 
 	return "🖱️ Pegar Base do Pão"
 
@@ -63,12 +54,9 @@ func interact_item(player: Node3D) -> void:
 		return
 
 	_ensure_assembly()
-
-	# Se o jogador está segurando outro item (ingrediente, caixa, etc.), encaminha para a montagem
-	if held != null:
+	if assembly:
 		assembly.interact_item(player)
 		return
 
-	# Se está de mãos livres, pega o lanche inteiro
 	if player.has_method("pick_up"):
 		player.pick_up(self)

@@ -13,6 +13,14 @@ func interact_item(player: Node3D) -> void:
 	if fridge:
 		fridge.handle_ingredient_interaction(player, "tomato")
 
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	var fridge = _get_fridge()
+	if fridge:
+		fridge.handle_ingredient_return(player, "tomato")
+
 func _get_fridge() -> IngredientRefrigerator:
 	var parent = get_parent()
 	if parent and parent is IngredientRefrigerator:

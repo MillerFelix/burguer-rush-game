@@ -143,13 +143,22 @@ func add_product(item: Node3D) -> bool:
 	item.position = target_pos
 	item.rotation = Vector3.ZERO
 
+	if item is CollisionObject3D:
+		item.collision_layer = 1
+		item.collision_mask = 1
+
+	for child in item.find_children("*", "CollisionObject3D", true, false):
+		if child is CollisionObject3D:
+			child.collision_layer = 1
+			child.collision_mask = 1
+
 	if item.has_method("on_placed_in_tray"):
 		item.on_placed_in_tray()
-	elif item.has_method("on_picked_up"):
-		item.on_picked_up()
-	elif item is CollisionObject3D:
-		item.collision_layer = 0
-		item.collision_mask = 0
+
+	if item is Item:
+		item.is_held = false
+		item.location = Item.ItemLocation.TRAY
+		item._is_falling = false
 
 	carried_items.append(item)
 	tray_state = TrayState.IN_USE
@@ -193,57 +202,48 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if location != ItemLocation.WORLD and location != ItemLocation.TABLE and location != ItemLocation.STATION:
 		return ""
 
-	if player and player.get("held_item") != null:
-		var held = player.get("held_item")
-		if held != self:
-			var h_name = held.get_display_name() if held.has_method("get_display_name") else held.name
-			if carried_items.size() < max_capacity:
-				return "🖱️ Colocar %s na Bandeja" % h_name
-		return ""
+	var held = player.get("held_item") if player else null
+	var has_act = player.has_active_ingredient() if (player and player.has_method("has_active_ingredient")) else false
+
+	if (held != null and held != self) or has_act:
+		if carried_items.size() < max_capacity:
+			return "🖱️ [Dir] Colocar na Bandeja  │  [E] Pegar Bandeja"
+		else:
+			return "⚠️ Bandeja Cheia  │  [E] Pegar Bandeja"
 
 	if tray_state == TrayState.USED:
-		return "🖱️ Recolher Bandeja Usada"
+		return "[E] Recolher Bandeja Usada"
 	elif carried_items.size() > 0:
-		return "🖱️ Pegar Bandeja com Pedido (%d itens)" % carried_items.size()
-	return "🖱️ Pegar Bandeja"
+		return "[E] Pegar Bandeja com Pedido (%d itens)" % carried_items.size()
+	return "[E] Pegar Bandeja"
 
-# Clique Esquerdo — manipulação exclusiva de itens
+# Clique Esquerdo — NÃO pega a bandeja inteira (para pegar a bandeja inteira usa-se E)
 func interact_item(player: Node3D) -> void:
 	if not player:
 		return
+	_show_feedback(player, "ℹ️ Pressione [E] para pegar a bandeja.")
 
-	var held = player.get("held_item")
-
-	# Se o jogador estiver segurando um alimento/embalagem: coloca sobre a bandeja
-	if held != null and held != self:
-		if carried_items.size() < max_capacity:
-			var taken = player.take_held_item()
-			if taken:
-				add_product(taken)
-				_show_feedback(player, "🍱 %s colocado na bandeja" % taken.display_name)
-		else:
-			_show_feedback(player, "Bandeja cheia!")
+# Tecla E — PEGAR A BANDEJA INTEIRA COM TODOS OS PRODUTOS DENTRO
+func interact(player: Node3D) -> void:
+	if not player:
 		return
 
-	# Se o jogador estiver de mãos livres: pega a bandeja física com tudo o que estiver em cima
-	if held == null:
-		if player.has_method("pick_up"):
-			player.pick_up(self)
-			if tray_state == TrayState.USED:
-				_show_feedback(player, "🍽️ Bandeja usada recolhida")
-			elif carried_items.size() > 0:
-				_show_feedback(player, "🍱 Pegou bandeja com %d itens" % carried_items.size())
-			else:
-				_show_feedback(player, "🍽️ Pegou bandeja")
-
-func interact(player: Node3D) -> void:
-	# Tecla E solta se segurada ou orienta
 	if player.get("held_item") == self:
 		player.drop_item()
-	elif player.get("held_item") == null:
-		_show_feedback(player, "ℹ️ Use o [Clique Esquerdo] para pegar a bandeja.")
-	else:
-		_show_feedback(player, "ℹ️ Use o [Clique Esquerdo] para colocar o item na bandeja.")
+		return
+
+	if player.has_method("is_holding_large_item") and player.is_holding_large_item():
+		_show_feedback(player, "⚠️ Mãos ocupadas! Solte o item atual antes de pegar a bandeja.")
+		return
+
+	if player.has_method("pick_up"):
+		player.pick_up(self)
+		if tray_state == TrayState.USED:
+			_show_feedback(player, "🍽️ Bandeja usada recolhida")
+		elif carried_items.size() > 0:
+			_show_feedback(player, "🍱 Pegou bandeja com %d itens" % carried_items.size())
+		else:
+			_show_feedback(player, "🍽️ Pegou bandeja")
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	if player and player.has_node("HUD"):

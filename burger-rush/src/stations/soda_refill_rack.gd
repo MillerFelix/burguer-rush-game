@@ -51,7 +51,7 @@ func _init_default_reserves() -> void:
 			new_can.current_amount = 25.0
 			slot_node.add_child(new_can)
 			new_can.position = Vector3.ZERO
-			new_can.rotation = Vector3.ZERO
+			new_can.rotation = Vector3(0, PI, 0)
 			if new_can is CollisionObject3D:
 				new_can.collision_layer = 1
 				new_can.collision_mask = 1
@@ -113,43 +113,29 @@ func get_interaction_prompt(player: Node = null) -> String:
 			if has_reserve(slot_for_held):
 				return "Refil de %s já em estoque (Máx. 1)" % SLOTS_CONFIG[slot_for_held].name
 			else:
-				return "🖱️ [Clique Esquerdo] Guardar Refil de %s" % SLOTS_CONFIG[slot_for_held].name
+				return "🛢️ 🖱️ [Dir] Devolver Refil de %s ao suporte" % SLOTS_CONFIG[slot_for_held].name
 		return ""
+
+	if held != null and str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+		return "📦 🖱️ [Esq] Armazenar Refil no suporte"
 
 	if held == null:
 		if has_reserve(target_slot):
-			return "🖱️ [Clique Esquerdo] Pegar Refil de %s" % SLOTS_CONFIG[target_slot].name
+			return "🛢️ 🖱️ [Esq] Pegar Refil de %s" % SLOTS_CONFIG[target_slot].name
 		else:
 			return "Espaço de %s Vazio" % SLOTS_CONFIG[target_slot].name
 
 	return ""
 
-# [Clique Esquerdo] — Pegar ou Colocar Refil no Suporte
+# [Clique Esquerdo] — Pegar Refil ou Armazenar Caixa de Entrega (NUNCA Devolver Refil solto)
 func interact_item(player: Node3D) -> void:
 	if not player:
 		return
 
 	var held = player.get("held_item")
 
-	# 1. Jogador segurando um barril de refil ou caixa de entrega: tenta guardar no suporte
-	if held is SyrupCanister:
-		var slot_idx = get_slot_for_canister(held)
-		if slot_idx == -1:
-			_show_feedback(player, "Refil incompatível com este suporte.")
-			return
-
-		if has_reserve(slot_idx):
-			_show_feedback(player, "⚠️ Já existe 1 refil de %s na reserva! (Limite máximo atingido)" % SLOTS_CONFIG[slot_idx].name)
-			return
-
-		# Coloca no suporte
-		var taken = player.take_held_item() as SyrupCanister
-		if taken:
-			place_canister(slot_idx, taken)
-			_show_feedback(player, "📦 Refil de %s armazenado no suporte." % SLOTS_CONFIG[slot_idx].name)
-		return
-
-	if str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+	# 1. Jogador segurando caixa de entrega: armazena no suporte
+	if held != null and str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 		var box_item_id = str(held.get("contained_item_id"))
 		var slot_idx = -1
 		match box_item_id:
@@ -176,6 +162,11 @@ func interact_item(player: Node3D) -> void:
 			_show_feedback(player, "⚠️ Local incorreto! Esta caixa contém %s. Leve até a estação correta." % str(held.get("contained_item_name")))
 			return
 
+	# Se está segurando o refil solto, LMB não devolve!
+	if held is SyrupCanister:
+		_show_feedback(player, "ℹ️ Use o [Clique Direito] para devolver o refil ao suporte.")
+		return
+
 	# 2. Jogador de mãos livres: pega o refil do slot apontado
 	if held == null:
 		var slot_idx = get_slot_index_from_raycast(player)
@@ -186,6 +177,33 @@ func interact_item(player: Node3D) -> void:
 				_show_feedback(player, "🛢️ Pegou refil de %s" % SLOTS_CONFIG[slot_idx].name)
 		else:
 			_show_feedback(player, "O espaço de %s está vazio." % SLOTS_CONFIG[slot_idx].name)
+
+# [Clique Direito] — DEVOLVER Refil ao Suporte
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	if not player:
+		return
+
+	var held = player.get("held_item")
+	if held is SyrupCanister:
+		var slot_idx = get_slot_for_canister(held)
+		if slot_idx == -1:
+			_show_feedback(player, "⚠️ Refil incompatível com este suporte.")
+			return
+
+		if has_reserve(slot_idx):
+			_show_feedback(player, "⚠️ Já existe 1 refil de %s na reserva! (Limite máximo atingido)" % SLOTS_CONFIG[slot_idx].name)
+			return
+
+		var taken = player.take_held_item() as SyrupCanister
+		if taken:
+			place_canister(slot_idx, taken)
+			_show_feedback(player, "🛢️ Devolveu 1x Refil de %s ao suporte" % SLOTS_CONFIG[slot_idx].name)
+		return
+
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Segure um refil de refrigerante para devolver.")
 
 func interact(player: Node3D) -> void:
 	interact_item(player)
@@ -222,7 +240,7 @@ func place_canister(slot_idx: int, can: SyrupCanister) -> bool:
 
 	slot_node.add_child(can)
 	can.position = Vector3.ZERO
-	can.rotation = Vector3.ZERO
+	can.rotation = Vector3(0, PI, 0)
 	can.is_held = false
 	can.location = Item.ItemLocation.STATION
 	if can is CollisionObject3D:

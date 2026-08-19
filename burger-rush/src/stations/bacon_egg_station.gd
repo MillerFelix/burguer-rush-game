@@ -66,34 +66,26 @@ func get_interaction_prompt(player: Node = null) -> String:
 	var itm = items_data[aimed_idx]
 	var item_id = itm["id"]
 
-	# 1. Se o jogador estiver segurando item para devolução ou caixa para reabastecimento
+	# Reabastecimento com caixa/entrega
 	if player and player.get("held_item") != null:
 		var held = player.get("held_item")
-		var held_id = str(held.get("item_id"))
-
-		# Devolução de item cru individual
-		if held is Bacon and held.state == Bacon.State.RAW:
-			return "🥓 🖱️ Devolver Tirinha de Bacon ao Estoque"
-		elif held is Egg and held.state == Egg.State.RAW:
-			return "🥚 🖱️ Devolver Ovo ao Cesto"
-		elif held_id == item_id and held.get("state") == 0:
-			return "%s 🖱️ Devolver %s ao Estoque" % [itm["icon"], itm["name"]]
-
-		# Reabastecimento com caixa/entrega
 		if held.get("ingredient_id") == item_id or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
 			var qty: int = held.get("quantity") if held.get("quantity") != null else 10
-			return "📦 🖱️ Armazenar %s (+%d un.)" % [itm["name"], qty]
+			return "📦 🖱️ [Esq] Armazenar %s (+%d un.)" % [itm["name"], qty]
 
-		return ""
-
-	# 2. Jogador de mãos vazias -> pegar ingrediente (EXCLUSIVAMENTE clique esquerdo)
 	var stock = inv.get_stock(item_id)
+	var prompt = ""
 	if stock <= 0:
-		return "🔴 %s Esgotado" % itm["name"]
+		prompt = "🔴 %s Esgotado" % itm["name"]
+	else:
+		prompt = "%s 🖱️ [Esq] Pegar %s (%d un.)" % [itm["icon"], itm["name"], stock]
 
-	return "%s 🖱️ Pegar %s" % [itm["icon"], itm["name"]]
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(item_id):
+		prompt += " | 🖱️ [Dir] Devolver 1x"
 
-# [Clique Esquerdo do Mouse] — Manipulação de Itens (Pegar / Devolver)
+	return prompt
+
+# [Clique Esquerdo do Mouse] — Apenas Pegar / Reabastecer (NUNCA Devolver)
 func interact_item(player: Node3D) -> void:
 	var inv = InventoryManager.get_instance()
 	if not inv:
@@ -104,34 +96,23 @@ func interact_item(player: Node3D) -> void:
 	var itm = items_data[aimed_idx]
 	var item_id = itm["id"]
 
-	var held = player.get("held_item")
+	# 1. Mão ocupada com objeto grande
+	if player and player.has_method("is_holding_large_item") and player.is_holding_large_item():
+		var held = player.get("held_item")
+		if held.get("ingredient_id") == item_id or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
+			if player.has_method("take_held_item"):
+				var crate = player.take_held_item()
+				var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
+				inv.add_stock(item_id, qty)
+				_show_feedback(player, "📦 %s armazenado na bancada (+%d un.)!" % [itm["name"], qty])
+				crate.queue_free()
+				_update_all_visual_stocks()
+				return
+		_show_feedback(player, "⚠️ Mãos ocupadas com %s! Solte antes de pegar ingredientes." % (held.get_display_name() if held.has_method("get_display_name") else held.name))
+		return
 
-	# 1. Devolução de ingrediente individual ou Reabastecimento com Caixa
-	if player and player.get("held_item") != null:
-		var held_id = str(held.get("item_id"))
-		if (held is Bacon and held.state == Bacon.State.RAW) or (held is Egg and held.state == Egg.State.RAW) or (held_id == item_id and held.get("state") == 0):
-			var ret_be = player.take_held_item()
-			if ret_be:
-				ret_be.queue_free()
-			inv.add_stock(item_id, 1)
-			_show_feedback(player, "%s %s devolvido à bancada" % [itm["icon"], itm["name"]])
-			_update_all_visual_stocks()
-			return
-		elif player.has_method("is_holding_large_item") and player.is_holding_large_item():
-			if held.get("ingredient_id") == item_id or str(held.get("item_type")) in ["crate", "storage_box", "delivery_box"]:
-				if player.has_method("take_held_item"):
-					var crate = player.take_held_item()
-					var qty: int = crate.get("quantity") if crate.get("quantity") != null else 10
-					inv.add_stock(item_id, qty)
-					_show_feedback(player, "📦 %s armazenado na bancada (+%d un.)!" % [itm["name"], qty])
-					crate.queue_free()
-					_update_all_visual_stocks()
-					return
-			_show_feedback(player, "Mãos ocupadas com objeto grande! Solte antes de pegar ingredientes.")
-			return
-
-	# 2. Pegar ingrediente para a mão / slots rápidos
-	if player.has_method("can_take_ingredient") and not player.can_take_ingredient(item_id):
+	# 2. Pegar ingrediente para os slots rápidos
+	if player.has_method("has_empty_quick_slot") and not player.has_empty_quick_slot():
 		_show_feedback(player, "⚠️ Slots rápidos cheios (3/3)! Use os ingredientes atuais antes de pegar outros.")
 		return
 
@@ -153,6 +134,29 @@ func interact_item(player: Node3D) -> void:
 			player.pick_up(item)
 		_show_feedback(player, "%s Pegou %s" % [itm["icon"], itm["name"]])
 		_update_all_visual_stocks()
+
+# [Clique Direito do Mouse] — DEVOLVER 1 UNIDADE
+func interact_return(player: Node3D) -> void:
+	return_item(player)
+
+func return_item(player: Node3D) -> void:
+	var inv = InventoryManager.get_instance()
+	if not inv:
+		return
+
+	var aimed_idx = get_aimed_item_index(player)
+	var itm = items_data[aimed_idx]
+	var item_id = itm["id"]
+
+	if player and player.has_method("has_matching_ingredient") and player.has_matching_ingredient(item_id):
+		var returned = player.return_one_matching_ingredient(item_id)
+		if returned:
+			inv.add_stock(item_id, 1)
+			_show_feedback(player, "%s Devolveu 1x %s ao estoque" % [itm["icon"], itm["name"]])
+			_update_all_visual_stocks()
+			return
+
+	_show_feedback(player, "⚠️ Armazenamento incompatível! Este local armazena %s." % itm["name"])
 
 # [E] — Interação com Equipamento (NÃO pega ingrediente; apenas reabastecimento com caixa)
 func interact(player: Node3D) -> void:

@@ -304,7 +304,6 @@ func package_burger(box_item: Item, player: Node3D = null) -> PackagedBurger:
 func get_interaction_prompt(player: Node = null) -> String:
 	if not player:
 		return ""
-
 	var held = player.get("held_item")
 	if held != null:
 		var held_id = str(held.get("item_id"))
@@ -318,14 +317,30 @@ func get_interaction_prompt(player: Node = null) -> String:
 				var b_name = matched_recipe.display_name if matched_recipe else "Burger Artesanal"
 				return "🖱️ Embalar %s na Caixa" % b_name
 			else:
-				return "⚠️ Feche o lanche com a tampa do pão antes de embalar"
+				return "⚠️ Feche o lanche antes de embalar"
 
-		if held_id == "bread_top" or (held_id == "bread" and state == State.ASSEMBLING):
-			return "🖱️ Fechar Lanche com Tampa do Pão"
+		if held is ServingTray:
+			if state == State.CLOSED or state == State.ASSEMBLING:
+				return "🍱 Colocar Burger na Bandeja"
 
-		if str(held.get("item_type")) == "ingredient" or held.has_method("get_ingredient_key"):
+		if held is Item and (held is Patty or held is Cheese or held is Pickle or held is Tomato or held is Lettuce or held is Onion or held is Bacon or held is Egg or held is JuicePulp or held is Potato or held is Bread or str(held.get("item_type")) == "ingredient"):
 			var d_name = held.get_display_name() if held.has_method("get_display_name") else held.name
-			return "🖱️ Adicionar %s ao Lanche" % d_name
+			if (held_id == "bread_top" or held_id == "bread") and state == State.ASSEMBLING:
+				return "🍔 Fechar Lanche com %s" % d_name
+			elif state != State.CLOSED and state != State.PACKAGED:
+				return "🖱️ Adicionar %s ao Lanche" % d_name
+
+		var h_name = held.get_display_name() if held.has_method("get_display_name") else held.name
+		return "⚠️ Mãos ocupadas com %s" % h_name
+
+	if player.has_method("has_active_ingredient") and player.has_active_ingredient():
+		var act = player.get_active_ingredient()
+		var ing_name = act.get("display_name", "Ingrediente")
+		var ing_id = act.get("item_id", "")
+		if (ing_id == "bread_top" or ing_id == "bread") and state == State.ASSEMBLING:
+			return "🍔 Fechar Lanche com %s" % ing_name
+		elif state != State.CLOSED and state != State.PACKAGED:
+			return "🖱️ Adicionar %s ao Lanche" % ing_name
 
 	if state == State.CLOSED:
 		var b_name = matched_recipe.display_name if matched_recipe else "Burger"
@@ -340,40 +355,69 @@ func interact_item(player: Node3D) -> void:
 		return
 
 	var held = player.get("held_item")
-	if held == null or held == base_bun or held == self:
-		# Mãos livres -> pega o lanche inteiro
-		if base_bun and is_instance_valid(base_bun) and player.has_method("pick_up"):
-			player.pick_up(base_bun)
-		return
-
-	var held_id = str(held.get("item_id"))
 	var ray = player.get_node_or_null("Head/Camera3D/RayCast3D")
 	var hit_pos = ray.get_collision_point() if (ray and ray is RayCast3D and ray.is_colliding()) else (global_position if is_inside_tree() else Vector3.ZERO)
 
-	if held is SauceBottle or str(held.get("item_type")) == "sauce_bottle":
+	if held != null:
+		var held_id = str(held.get("item_id"))
+		if held is SauceBottle or str(held.get("item_type")) == "sauce_bottle":
+			return
+
+		if held is BurgerBox or held_id == "burger_box" or str(held.get("item_type")) == "packaging":
+			if state == State.CLOSED:
+				var box = player.take_held_item()
+				package_burger(box, player)
+			else:
+				_show_player_feedback(player, "⚠️ Coloque o pão superior para fechar o lanche antes de embalar.")
+			return
+
+		if held is ServingTray:
+			if (state == State.CLOSED or state == State.ASSEMBLING) and base_bun:
+				if held.add_product(base_bun):
+					_show_player_feedback(player, "🍱 Burger colocado na bandeja!")
+			return
+
+		if held is Item and (held is Patty or held is Cheese or held is Pickle or held is Tomato or held is Lettuce or held is Onion or held is Bacon or held is Egg or held is JuicePulp or held is Potato or held is Bread or str(held.get("item_type")) == "ingredient"):
+			if held_id == "bread_top" or (held_id == "bread" and state == State.ASSEMBLING):
+				var bun_top = player.take_held_item()
+				if bun_top:
+					close_burger(bun_top as Item, hit_pos, player.rotation.y)
+					var b_name = matched_recipe.display_name if matched_recipe else "Burger Artesanal"
+					_show_player_feedback(player, "🍔 %s finalizado! Pronto para embalar." % b_name)
+				return
+			elif state != State.CLOSED and state != State.PACKAGED:
+				var ing = player.take_held_item()
+				if ing:
+					add_ingredient(ing as Item, hit_pos, player.rotation.y)
+					var d_name = ing.get_display_name() if ing.has_method("get_display_name") else ing.name
+					_show_player_feedback(player, "+ %s adicionado ao lanche" % d_name)
+				return
+
+		_show_player_feedback(player, "⚠️ Mãos ocupadas com %s! Solte para interagir com o lanche." % (held.get_display_name() if held.has_method("get_display_name") else held.name))
 		return
 
-	if held is BurgerBox or held_id == "burger_box" or str(held.get("item_type")) == "packaging":
-		if state == State.CLOSED:
-			var box = player.take_held_item()
-			package_burger(box, player)
-		else:
-			_show_player_feedback(player, "⚠️ Coloque o pão superior para fechar o lanche antes de embalar.")
-		return
+	# Mãos livres (fallback se tiver slot sem held_item):
+	if player.has_method("has_active_ingredient") and player.has_active_ingredient():
+		var act_ing = player.get_active_ingredient()
+		var ing_id = str(act_ing.get("item_id", ""))
+		if ing_id == "bread_top" or (ing_id == "bread" and state == State.ASSEMBLING):
+			var bun_top = player.consume_active_ingredient()
+			if bun_top:
+				close_burger(bun_top as Item, hit_pos, player.rotation.y)
+				var b_name = matched_recipe.display_name if matched_recipe else "Burger Artesanal"
+				_show_player_feedback(player, "🍔 %s finalizado! Pronto para embalar." % b_name)
+			return
+		elif state != State.CLOSED and state != State.PACKAGED:
+			var ing = player.consume_active_ingredient()
+			if ing:
+				add_ingredient(ing as Item, hit_pos, player.rotation.y)
+				var d_name = ing.get_display_name() if ing.has_method("get_display_name") else ing.name
+				_show_player_feedback(player, "+ %s adicionado ao lanche" % d_name)
+			return
 
-	if held_id == "bread_top" or (held_id == "bread" and state == State.ASSEMBLING):
-		var bun_top = player.take_held_item()
-		close_burger(bun_top, hit_pos, player.rotation.y)
-		var b_name = matched_recipe.display_name if matched_recipe else "Burger Artesanal"
-		_show_player_feedback(player, "🍔 %s finalizado! Pronto para embalar." % b_name)
-		return
-
-	if str(held.get("item_type")) == "ingredient" or held.has_method("get_ingredient_key"):
-		var ing = player.take_held_item()
-		add_ingredient(ing, hit_pos, player.rotation.y)
-		var d_name = ing.get_display_name() if ing.has_method("get_display_name") else ing.name
-		_show_player_feedback(player, "+ %s adicionado ao lanche" % d_name)
-		return
+	# Mão livre e sem ingrediente ativo -> pega o lanche inteiro
+	if base_bun and is_instance_valid(base_bun) and player.has_method("pick_up"):
+		player.pick_up(base_bun)
 
 func _extract_ingredient_key(item: Item) -> String:
 	if not item:
