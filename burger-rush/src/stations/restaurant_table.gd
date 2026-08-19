@@ -104,42 +104,41 @@ func on_customer_seated(customer: Customer) -> void:
 func release(had_meal: bool = true) -> void:
 	seated_customers.clear()
 
-	if had_meal:
-		# Alimentos consumidos desaparecem, mas bandejas físicas permanecem usadas sobre a mesa
-		var remaining_trays: Array[Node3D] = []
-		for item in served_items:
-			if is_instance_valid(item):
-				if item is ServingTray or item is OrderTray or item.name.contains("Tray") or item.name.contains("Bandeja"):
-					if item.has_method("consume_food_items"):
-						item.consume_food_items()
-					item.set("is_held", false)
-					item.location = Item.ItemLocation.TABLE
+	# Alimentos consumidos ou recusados deixam a bandeja, mas as bandejas físicas NUNCA desaparecem: permanecem sobre a mesa
+	var remaining_trays: Array[Node3D] = []
+	for item in served_items:
+		if is_instance_valid(item):
+			if item is ServingTray or item is OrderTray or item.name.contains("Tray") or item.name.contains("Bandeja"):
+				if item.has_method("consume_food_items"):
+					item.consume_food_items()
+				elif item.has_method("clear_items"):
+					item.clear_items()
+				elif item.has_method("clear_tray"):
+					item.clear_tray()
+				for ch in item.get_children():
+					if ch is Item and not (ch is ServingTray or ch is OrderTray):
+						ch.queue_free()
+				item.set("is_held", false)
+				item.set("location", Item.ItemLocation.TABLE)
+				if item is CollisionObject3D:
 					item.collision_layer = 1
 					item.collision_mask = 1
-					remaining_trays.append(item)
-				else:
-					item.queue_free()
-		served_items = remaining_trays
+				remaining_trays.append(item)
+			else:
+				item.queue_free()
+	served_items = remaining_trays
 
-		if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
-			dirty_dish_instance.queue_free()
-			dirty_dish_instance = null
+	if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
+		dirty_dish_instance.queue_free()
+		dirty_dish_instance = null
 
+	if had_meal:
 		# Mesa fica suja SOMENTE após o cliente realmente realizar a refeição
 		table_state = TableState.DIRTY
 		dirt_amount = 1.0
 		_update_visual_status()
 	else:
-		# Cliente foi embora sem comer: mesa permanece LIMPA e livre para outros clientes
-		for item in served_items:
-			if is_instance_valid(item):
-				item.queue_free()
-		served_items.clear()
-
-		if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
-			dirty_dish_instance.queue_free()
-			dirty_dish_instance = null
-
+		# Cliente foi embora sem comer (ex: pedido errado): mesa permanece LIMPA
 		table_state = TableState.AVAILABLE
 		dirt_amount = 0.0
 		_update_visual_status()
@@ -149,12 +148,12 @@ func is_dirty() -> bool:
 
 func has_tray_on_table() -> bool:
 	for item in served_items:
-		if is_instance_valid(item) and (item is ServingTray or item is OrderTray or item.name.contains("Tray")):
+		if is_instance_valid(item) and (item is ServingTray or item is OrderTray or item.name.contains("Tray") or item.name.contains("Bandeja")):
 			return true
-	var plate_slot = get_node_or_null("PlateSlot")
-	if plate_slot:
-		for c in plate_slot.get_children():
-			if c is ServingTray or c is OrderTray or c.name.contains("Tray"):
+	var p_slot = get_node_or_null("PlateSlot")
+	if p_slot:
+		for c in p_slot.get_children():
+			if is_instance_valid(c) and (c is ServingTray or c is OrderTray or c.name.contains("Tray") or c.name.contains("Bandeja")):
 				return true
 	return false
 
@@ -167,12 +166,12 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 			_show_player_feedback(player, "⚠️ Recolha a bandeja antes de limpar a mesa!")
 		return false
 
-	dirt_amount = maxf(0.0, dirt_amount - (delta / 5.0))
+	dirt_amount = maxf(0.0, dirt_amount - (delta / 1.8))
 
 	var dirt_mesh = get_node_or_null("Model/TableTop/TableTopDirt")
 	if dirt_mesh:
 		dirt_mesh.visible = (dirt_amount > 0.0)
-		var sc = lerpf(0.20, 1.0, dirt_amount) if dirt_amount > 0.001 else 0.0
+		var sc = lerpf(0.15, 1.0, dirt_amount) if dirt_amount > 0.001 else 0.0
 		dirt_mesh.scale = Vector3(sc, sc, sc)
 		for child in dirt_mesh.get_children():
 			if child is MeshInstance3D:
@@ -185,6 +184,12 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 		_update_visual_status()
 		if player:
 			_show_player_feedback(player, "✨ Mesa #%d limpa e higienizada com sucesso!" % table_id)
+			var th = player.get_node_or_null("Head/Camera3D/ToolHolder") if player.has_node("Head/Camera3D/ToolHolder") else null
+			var sp = th.get_node_or_null("Sponge") if th else null
+			if sp and sp.has_method("set_dirty"):
+				sp.set_dirty()
+			elif "sponge_is_dirty" in player:
+				player.set("sponge_is_dirty", true)
 		return true
 
 	return false
@@ -193,45 +198,43 @@ func get_dirt_level() -> float:
 	return dirt_amount if table_state == TableState.DIRTY else 0.0
 
 func clean_table(player: Node3D) -> void:
-	if table_state != TableState.DIRTY:
-		return
-
-	# Se tiver bandeja na mesa, recolhe a bandeja primeiro (mantendo a mesa DIRTY para ser esfregada com a bucha)
+	# Se tiver bandeja na mesa, recolhe a bandeja para a mão do jogador (se tiver mão livre) sem destruir a instância
 	if has_tray_on_table():
+		var found_tray: Node3D = null
 		for item in served_items:
-			if is_instance_valid(item):
-				if item.get_parent():
-					item.get_parent().remove_child(item)
-				item.queue_free()
-		served_items.clear()
+			if is_instance_valid(item) and (item is ServingTray or item is OrderTray or item.name.contains("Tray") or item.name.contains("Bandeja")):
+				found_tray = item
+				break
+		if not found_tray:
+			var p_slot = get_node_or_null("PlateSlot")
+			if p_slot:
+				for c in p_slot.get_children():
+					if is_instance_valid(c) and (c is ServingTray or c is OrderTray or c.name.contains("Tray") or c.name.contains("Bandeja")):
+						found_tray = c
+						break
 
-		var plate_slot = get_node_or_null("PlateSlot")
-		if plate_slot:
-			for c in plate_slot.get_children():
-				if is_instance_valid(c):
-					c.queue_free()
-
-		if dirty_dish_instance and is_instance_valid(dirty_dish_instance):
-			dirty_dish_instance.queue_free()
-			dirty_dish_instance = null
-
-		dirt_amount = 1.0
-		_update_visual_status()
-		if player:
-			_show_player_feedback(player, "🗑️ Bandeja recolhida! Agora higienize a mesa com a bucha.")
+		if found_tray:
+			if player and player.get("held_item") == null:
+				if found_tray.get_parent():
+					found_tray.get_parent().remove_child(found_tray)
+				served_items.erase(found_tray)
+				if player.has_method("pick_up"):
+					player.pick_up(found_tray)
+				else:
+					player.set("held_item", found_tray)
+				if table_state == TableState.DIRTY:
+					_show_player_feedback(player, "🍱 Bandeja recolhida para a mão! Agora higienize a mesa com a bucha.")
+				else:
+					_show_player_feedback(player, "🍱 Bandeja recolhida para a mão!")
+			else:
+				_show_player_feedback(player, "⚠️ Libere as mãos para recolher a bandeja da mesa!")
 		return
-
-	# Se não tiver bandeja, higieniza completamente a mesa
-	dirt_amount = 0.0
-	table_state = TableState.AVAILABLE
-	_update_visual_status()
-	if player:
-		_show_player_feedback(player, "✨ Mesa #%d limpa e higienizada!" % table_id)
 
 func get_interaction_prompt(player: Node = null) -> String:
+	if has_tray_on_table():
+		return "[E] Recolher Bandeja"
+
 	if table_state == TableState.DIRTY:
-		if has_tray_on_table():
-			return "🖱️ [Clique Esquerdo] Recolher Bandeja Usada"
 		var tool_holder = player.get_node_or_null("Head/Camera3D/ToolHolder") if player else null
 		var sponge = tool_holder.get_node_or_null("Sponge") if tool_holder else null
 		if sponge:
@@ -270,6 +273,10 @@ func interact_item(player: Node3D) -> void:
 	interact(player)
 
 func interact(player: Node3D) -> void:
+	if has_tray_on_table():
+		clean_table(player)
+		return
+
 	if table_state == TableState.DIRTY:
 		clean_table(player)
 		return
@@ -312,6 +319,10 @@ func _resolve_product_ids(item: Node3D) -> Array[String]:
 	if item is PackagedBurger or (item.get("item_id") != null and str(item.get("item_id")) == "packaged_burger"):
 		if not ids.has("burger"): ids.append("burger")
 		if not ids.has("cheeseburger"): ids.append("cheeseburger")
+	if item is DrinkCup or (item.get("item_id") != null and str(item.get("item_id")).contains("cup")):
+		if not ids.has("drink"): ids.append("drink")
+		if not ids.has("soda"): ids.append("soda")
+		if not ids.has("juice"): ids.append("juice")
 	if item.get("item_type") != null:
 		var itype = str(item.get("item_type"))
 		if itype != "" and not ids.has(itype): ids.append(itype)
@@ -370,16 +381,19 @@ func _serve_single_item(player: Node3D, item: Node3D) -> void:
 	_update_visual_status()
 
 func _serve_tray(player: Node3D, tray: Node3D) -> void:
-	var primary_cust = seated_customers[0]
-	var order = primary_cust.current_order
+	var primary_cust = seated_customers[0] if not seated_customers.is_empty() else null
+	var order = primary_cust.current_order if primary_cust else null
 	if not order:
 		return
 
 	# Transfere a bandeja da mão do jogador para a mesa
-	if player.has_method("take_held_item"):
+	if player and player.has_method("take_held_item"):
 		player.take_held_item()
-	else:
+	elif player:
 		player.set("held_item", null)
+
+	if tray.get_parent():
+		tray.get_parent().remove_child(tray)
 
 	if not plate_slot:
 		plate_slot = get_node_or_null("PlateSlot")

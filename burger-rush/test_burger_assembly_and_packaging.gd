@@ -1,9 +1,20 @@
 extends SceneTree
 
+var passed_tests: int = 0
+var total_tests: int = 0
+
+func assert_test(condition: bool, test_name: String) -> void:
+	total_tests += 1
+	if condition:
+		passed_tests += 1
+		print("  [PASS] %s" % test_name)
+	else:
+		print("  [FAIL] %s" % test_name)
+
 func _init() -> void:
-	print("============================================================")
-	print("BURGER RUSH - TESTE DE MONTAGEM TOTALMENTE LIVRE E EMBALAGEM")
-	print("============================================================")
+	print("\n=================================================================")
+	print("=== TESTE DE MONTAGEM, COLETA (TECLA E) E EMBALAGEM DE BURGERS ===")
+	print("=================================================================\n")
 
 	var inv = InventoryManager.new()
 	root.add_child(inv)
@@ -13,132 +24,168 @@ func _init() -> void:
 	root.add_child(prog)
 	prog._enter_tree()
 
-	var world = Node3D.new()
-	root.add_child(world)
-
 	var player_scene = load("res://src/player/player.tscn")
-	var player = player_scene.instantiate() as Player
-	world.add_child(player)
+	var player: Player = player_scene.instantiate() as Player
+	root.add_child(player)
 	player._ready()
 
-	# =========================================================================
-	# TESTE 1: BASE DO PÃO COLOCADA EM QUALQUER SUPERFÍCIE (NÃO DESAPARECE)
-	# =========================================================================
-	print("\n--- Teste 1: Base do Pão Física no Mundo (Permanece Visível) ---")
-	var bread_bot_scene = load("res://src/items/bread_bottom.tscn")
-	var bread_bot = bread_bot_scene.instantiate() as BreadBottom
-	world.add_child(bread_bot)
-	bread_bot._ready()
-	var free_table_pos = Vector3(4.5, 0.90, 2.0)
-	bread_bot.position = free_table_pos
-	bread_bot.location = Item.ItemLocation.WORLD
+	# 1. Base do Pão no balcão
+	var bb_scene = load("res://src/items/bread_bottom.tscn")
+	var bread_bottom: BreadBottom = bb_scene.instantiate() as BreadBottom
+	root.add_child(bread_bottom)
+	bread_bottom._ready()
+	bread_bottom.location = Item.ItemLocation.WORLD
 
-	assert(bread_bot.get_parent() == world, "Pão base deve estar presente e visível na árvore de nós")
-	assert(bread_bot.assembly != null, "Pão base deve inicializar seu componente de montagem interno")
-	assert(bread_bot.assembly.state == BurgerAssembly.State.EMPTY, "Montagem inicializada no estado EMPTY")
-	print("  [PASS] Base do pão permanece visível e funcional em qualquer superfície do mundo.")
+	var assembly = bread_bottom.assembly
+	assert_test(assembly != null, "BurgerAssembly inicializado na Base do Pão")
+	assert_test(assembly.ingredients.size() == 0, "Burger inicialmente vazio (0 ingredientes)")
 
 	# =========================================================================
-	# TESTE 2: ADIÇÃO FÍSICA COMO FILHO DA MONTAGEM (HIERARQUIA UNIFICADA)
+	# TESTE 1: CARNE NA MÃO + LMB NO PÃO -> CARNE ADICIONADA
 	# =========================================================================
-	print("\n--- Teste 2: Adição Sequencial de Ingredientes como Filhos da Montagem ---")
-	var ingredients_to_add = [
-		{"id": "patty", "scene": "res://src/items/patty.tscn", "state": Patty.State.COOKED, "name": "Carne Grelhada"},
-		{"id": "cheese", "scene": "res://src/items/cheese.tscn", "state": 0, "name": "Queijo Cheddar"},
-		{"id": "lettuce", "scene": "res://src/items/lettuce.tscn", "state": 0, "name": "Alface"},
-		{"id": "tomato", "scene": "res://src/items/tomato.tscn", "state": 0, "name": "Tomate"},
-		{"id": "onion", "scene": "res://src/items/onion.tscn", "state": 0, "name": "Cebola"}
-	]
+	print("\n--- TESTE 1: Carne na mão + LMB no pão ---")
+	_clear_player(player)
 
-	var prev_height = bread_bot.assembly.current_stack_height
+	var patty_scene = load("res://src/items/patty.tscn")
+	var patty: Patty = patty_scene.instantiate() as Patty
+	patty.state = 2 # Grelhado
+	root.add_child(patty)
+	player.pick_up(patty)
 
-	for ing_info in ingredients_to_add:
-		var ing_item = load(ing_info["scene"]).instantiate() as Item
-		if "state" in ing_item and ing_info.has("state"):
-			ing_item.set("state", ing_info["state"])
-		world.add_child(ing_item)
-		player.pick_up(ing_item)
+	# Simula clique LMB mirando no pão
+	bread_bottom.interact_item(player)
 
-		var hit_coord = (bread_bot.global_position if bread_bot.is_inside_tree() else bread_bot.position) + Vector3(0.01, 0.0, -0.01)
-		var ok = bread_bot.assembly.add_ingredient(player.take_held_item(), hit_coord, 0.0)
-		assert(ok, "Ingrediente %s adicionado" % ing_info["name"])
-		assert(ing_item.get_parent() == bread_bot.assembly, "Ingrediente deve ser filho de BurgerAssembly")
-		assert(bread_bot.assembly.current_stack_height > prev_height, "Altura da pilha avançou")
-		prev_height = bread_bot.assembly.current_stack_height
-		print("  [PASS] %s empilhado na hierarquia da montagem. Altura: %.3fm." % [ing_info["name"], prev_height])
-
-	# Aplica molhos físicos que passam a ser filhos da montagem
-	var bot_pos = bread_bot.global_position if bread_bot.is_inside_tree() else bread_bot.position
-	bread_bot.assembly.apply_sauce("ketchup", Color(0.85, 0.1, 0.1), bot_pos, 2.0)
-	bread_bot.assembly.apply_sauce("mustard", Color(0.9, 0.7, 0.1), bot_pos, 2.0)
-	assert(bread_bot.assembly.applied_sauces.has("ketchup") and bread_bot.assembly.applied_sauces.has("mustard"), "Ketchup e Mostarda aplicados")
-	assert(bread_bot.assembly.sauce_visuals.size() > 0, "Visual de molho instanciado")
-	assert(bread_bot.assembly.sauce_visuals[0].get_parent() == bread_bot.assembly, "Molho deve ser filho de BurgerAssembly")
-	print("  [PASS] Molhos aplicados e vinculados à montagem do lanche.")
+	assert_test(assembly.ingredients.size() == 1, "LMB colocou a Carne sobre o pão (1 ingrediente)")
+	assert_test(assembly.ingredients[0] == patty, "Carne é filha do BurgerAssembly")
+	assert_test(player.quick_slots[0].is_empty() and player.held_item == null, "Slot/Mão do jogador liberada após colocar a carne")
 
 	# =========================================================================
-	# TESTE 3: INTERAÇÃO NO INGREDIENTE PEGA O LANCHE INTEIRO
+	# TESTE 2: QUEIJO NA MÃO + LMB NO LANCHE -> QUEIJO ADICIONADO
 	# =========================================================================
-	print("\n--- Teste 3: Clicar no Ingrediente Seleciona e Pega o Lanche Inteiro ---")
-	var target_patty = bread_bot.assembly.ingredients[0]
-	var target_burger = player._get_target_interactable(target_patty)
-	assert(target_burger == bread_bot, "Mirar na carne resolve para a base do pão inteira")
+	print("\n--- TESTE 2: Queijo na mão + LMB no lanche ---")
+	_clear_player(player)
 
-	player.pick_up(target_burger as Item)
-	assert(player.held_item == bread_bot, "Jogador segurando o lanche completo")
-	assert(target_patty.get_parent() == bread_bot.assembly, "Carne continua filha da montagem nas mãos do jogador")
-	print("  [PASS] Lanche completo pego na mão do jogador (nenhum ingrediente se perdeu).")
+	var cheese_scene = load("res://src/items/cheese.tscn")
+	var cheese: Cheese = cheese_scene.instantiate() as Cheese
+	cheese.cheese_type = Cheese.CheeseType.CHEDDAR
+	root.add_child(cheese)
+	player.pick_up(cheese)
 
-	# Solta o lanche em outra posição com drop_item (tecla E)
+	# Simula clique LMB no lanche
+	bread_bottom.interact_item(player)
+
+	assert_test(assembly.ingredients.size() == 2, "LMB colocou o Queijo sobre a carne (2 ingredientes)")
+	assert_test(assembly.ingredients[1] == cheese, "Queijo é o segundo ingrediente na montagem")
+	assert_test(player.quick_slots[0].is_empty() and player.held_item == null, "Mão liberada após colocar o queijo")
+
+	# =========================================================================
+	# TESTE 3: ADICIONAR MÚLTIPLOS INGREDIENTES CONSECUTIVOS COM LMB
+	# =========================================================================
+	print("\n--- TESTE 3: Múltiplos ingredientes com LMB (Alface, Tomate, Cebola) ---")
+	var lettuce_scene = load("res://src/items/lettuce.tscn")
+	var lettuce = lettuce_scene.instantiate()
+	root.add_child(lettuce)
+	player.pick_up(lettuce)
+	bread_bottom.interact_item(player)
+
+	var tomato_scene = load("res://src/items/tomato.tscn")
+	var tomato = tomato_scene.instantiate()
+	root.add_child(tomato)
+	player.pick_up(tomato)
+	bread_bottom.interact_item(player)
+
+	var onion_scene = load("res://src/items/onion.tscn")
+	var onion = onion_scene.instantiate()
+	root.add_child(onion)
+	player.pick_up(onion)
+	bread_bottom.interact_item(player)
+
+	assert_test(assembly.ingredients.size() == 5, "Montagem contém 5 ingredientes (Carne, Queijo, Alface, Tomate, Cebola)")
+	assert_test(assembly.state == BurgerAssembly.State.ASSEMBLING, "Estado da montagem é ASSEMBLING")
+
+	# =========================================================================
+	# TESTE 4: LANCHE INCOMPLETO + PRESSIONAR TECLA E -> PEGA O LANCHE INTEIRO
+	# =========================================================================
+	print("\n--- TESTE 4: Lanche incompleto + Tecla E -> Pega o lanche inteiro ---")
+	_clear_player(player)
+
+	# Jogador pressiona E olhando para o lanche
+	bread_bottom.interact(player)
+
+	assert_test(player.held_item == bread_bottom, "Tecla E pegou o lanche incompleto inteiro para a mão")
+	assert_test(assembly.ingredients.size() == 5, "Todos os 5 ingredientes continuam perfeitamente preservados na mão")
+	assert_test(bread_bottom.is_held == true, "Base do pão em estado is_held")
+
+	# Solta de volta no balcão
 	player.drop_item()
-	assert(player.held_item == null, "Jogador soltou o lanche")
-	assert(bread_bot.location == Item.ItemLocation.WORLD, "Lanche voltou ao estado WORLD")
-	assert(target_patty.get_parent() == bread_bot.assembly, "Carne continua presa ao lanche após drop")
-	print("  [PASS] Lanche solto com sucesso com todos os ingredientes e molhos acompanhando.")
+	assert_test(player.held_item == null, "Lanche solto de volta no balcão")
+	assert_test(bread_bottom.location == Item.ItemLocation.WORLD, "Lanche voltou ao estado WORLD")
+	assert_test(assembly.ingredients.size() == 5, "Todos os 5 ingredientes permanecem juntos na bancada")
 
 	# =========================================================================
-	# TESTE 4: FECHAMENTO COM TAMPA DO PÃO E RECONHECIMENTO DE RECEITA
+	# TESTE 5: FECHAR LANCHE (BREAD_TOP COM LMB) + LANCHE COMPLETO + TECLA E
 	# =========================================================================
-	print("\n--- Teste 4: Fechamento com Tampa do Pão e Validação da Receita ---")
-	var bread_top_scene = load("res://src/items/bread_top.tscn")
-	var bread_top = bread_top_scene.instantiate() as Item
-	world.add_child(bread_top)
+	print("\n--- TESTE 5: Fechar lanche com LMB + Tecla E pega lanche completo ---")
+	_clear_player(player)
+
+	var bt_scene = load("res://src/items/bread_top.tscn")
+	var bread_top = bt_scene.instantiate()
+	root.add_child(bread_top)
 	player.pick_up(bread_top)
 
-	bread_bot.assembly.close_burger(player.take_held_item(), bot_pos, 0.0)
-	assert(bread_bot.assembly.state == BurgerAssembly.State.CLOSED, "Lanche fechado com sucesso")
-	assert(bread_bot.assembly.matched_recipe != null, "Receita reconhecida com sucesso")
-	print("  [PASS] Lanche fechado! Receita identificada: '%s'." % bread_bot.assembly.matched_recipe.display_name)
+	# LMB fecha o lanche com a tampa do pão
+	bread_bottom.interact_item(player)
+
+	assert_test(assembly.state == BurgerAssembly.State.CLOSED, "LMB fechou o lanche com o pão superior (Estado CLOSED)")
+	assert_test(assembly.top_bun == bread_top, "Pão superior associado ao lanche")
+	assert_test(assembly.can_package() == true, "Lanche pronto para ser embalado (can_package = true)")
+
+	# Tecla E pega o lanche completo
+	bread_bottom.interact(player)
+	assert_test(player.held_item == bread_bottom, "Tecla E pegou o lanche completo inteiro para a mão")
+	assert_test(assembly.ingredients.size() == 5 and assembly.top_bun == bread_top, "Composição completa preservada na mão")
+
+	# Solta no balcão
+	player.drop_item()
 
 	# =========================================================================
-	# TESTE 5: EMBALAGEM DIRETA COM CAIXA FECHADA
+	# TESTE 6: EMBALAGEM NA MÃO + MIRAR NO LANCHE + LMB -> LANCHE EMBALADO
 	# =========================================================================
-	print("\n--- Teste 5: Embalagem Direta do Burger Montado ---")
+	print("\n--- TESTE 6: Caixinha na mão + Mirar no lanche + LMB -> Embala o lanche ---")
+	_clear_player(player)
+
 	var box_scene = load("res://src/items/burger_box.tscn")
-	var box = box_scene.instantiate() as Item
-	world.add_child(box)
-	box._ready()
+	var box: BurgerBox = box_scene.instantiate() as BurgerBox
+	root.add_child(box)
 	player.pick_up(box)
 
-	var packaged_burger = bread_bot.assembly.package_burger(player.take_held_item(), player)
-	assert(packaged_burger != null and packaged_burger is PackagedBurger, "PackagedBurger criado com sucesso")
-	print("  [PASS] Lanche embalado com sucesso contendo receita e ingredientes.")
+	assert_test(player.held_item == box, "Jogador segurando Caixinha de Hambúrguer na mão")
 
-	# =========================================================================
-	# TESTE 6: RETIRADA COM CLIQUE ESQUERDO
-	# =========================================================================
-	print("\n--- Teste 6: Retirada do Lanche Embalado com Clique Esquerdo ---")
-	player.pick_up(packaged_burger)
-	assert(player.held_item == packaged_burger, "Jogador segurando o Burger Clássico Embalado")
-	player.take_held_item().queue_free()
-	print("  [PASS] Produto final pego pelo jogador com sucesso.")
+	# LMB na montagem fechada
+	bread_bottom.interact_item(player)
 
-	# Limpeza
-	player.queue_free()
-	prog.queue_free()
-	inv.queue_free()
+	assert_test(player.held_item == null, "Caixinha consumida da mão do jogador")
+	assert_test(assembly.state == BurgerAssembly.State.PACKAGED, "Montagem convertida para PACKAGED")
 
-	print("\n============================================================")
-	print("TODOS OS TESTES DE MONTAGEM LIVRE FORAM CONCLUÍDOS COM SUCESSO!")
-	print("============================================================")
-	quit(0)
+	print("\n=================================================================")
+	print("RESULTADO FINAL: %d/%d APROVADOS" % [passed_tests, total_tests])
+	print("=================================================================\n")
+
+	if passed_tests == total_tests:
+		print(">>> SUCESSO TOTAL: MONTAGEM (LMB), COLETA (TECLA E) E EMBALAGEM 100% VALIDADAS! <<<\n")
+		quit(0)
+	else:
+		print(">>> FALHA NOS TESTES! <<<\n")
+		quit(1)
+
+func _clear_player(player: Player) -> void:
+	player.quick_slots.clear()
+	player.quick_slots.append({})
+	player.quick_slots.append({})
+	player.quick_slots.append({})
+	player.active_quick_slot = -1
+	player.active_tool_slot = Player.ToolSlot.HANDS
+	if player.held_item != null:
+		if is_instance_valid(player.held_item) and player.held_item.get_parent():
+			player.held_item.get_parent().remove_child(player.held_item)
+		player.held_item = null

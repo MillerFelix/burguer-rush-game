@@ -77,17 +77,49 @@ albedo_color = Color(1, 1, 1, 0.95)
 roughness = 0.70
 
 [sub_resource type="StandardMaterial3D" id="Material_TableCrumb"]
-albedo_color = Color(0.78, 0.62, 0.38, 1.0)
+albedo_color = Color(0.82, 0.60, 0.35, 1.0)
 roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Material_TableCrumbDark"]
+albedo_color = Color(0.55, 0.38, 0.22, 1.0)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="Material_KetchupDrop"]
+transparency = 1
+albedo_color = Color(0.75, 0.12, 0.10, 0.95)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Material_MustardDrop"]
+transparency = 1
+albedo_color = Color(0.86, 0.68, 0.15, 0.95)
+roughness = 0.35
 
 [sub_resource type="QuadMesh" id="QuadMesh_TableStain"]
 material = SubResource("Material_TableDirtStain")
-size = Vector2(0.36, 0.36)
+size = Vector2(0.38, 0.38)
 orientation = 1
 
 [sub_resource type="BoxMesh" id="BoxMesh_TableCrumb"]
 material = SubResource("Material_TableCrumb")
-size = Vector3(0.015, 0.006, 0.015)
+size = Vector3(0.024, 0.008, 0.024)
+
+[sub_resource type="BoxMesh" id="BoxMesh_TableCrumbSmall"]
+material = SubResource("Material_TableCrumbDark")
+size = Vector3(0.016, 0.006, 0.016)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_SauceKetchup"]
+material = SubResource("Material_KetchupDrop")
+top_radius = 0.018
+bottom_radius = 0.022
+height = 0.006
+radial_segments = 12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_SauceMustard"]
+material = SubResource("Material_MustardDrop")
+top_radius = 0.015
+bottom_radius = 0.018
+height = 0.005
+radial_segments = 12
 
 [sub_resource type="BoxMesh" id="BoxMesh_StandBase"]
 material = SubResource("Material_WhiteStand")
@@ -145,17 +177,41 @@ mesh = SubResource("QuadMesh_TableStain")
 transform = Transform3D(-0.35, 0, 0.35, 0, 0.5, 0, -0.35, 0, -0.35, -0.06, 0.026, 0.20)
 mesh = SubResource("QuadMesh_TableStain")
 
+[node name="Stain4" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(0.40, 0, -0.40, 0, 0.55, 0, 0.40, 0, 0.40, 0.20, 0.026, -0.16)
+mesh = SubResource("QuadMesh_TableStain")
+
 [node name="Crumb1" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.027, 0.22)
 mesh = SubResource("BoxMesh_TableCrumb")
 
 [node name="Crumb2" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14, 0.027, 0.18)
+transform = Transform3D(0.866, 0, 0.5, 0, 1, 0, -0.5, 0, 0.866, -0.14, 0.027, 0.18)
 mesh = SubResource("BoxMesh_TableCrumb")
 
 [node name="Crumb3" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.24, 0.027, -0.08)
+transform = Transform3D(0.707, 0, -0.707, 0, 1, 0, 0.707, 0, 0.707, 0.24, 0.027, -0.08)
+mesh = SubResource("BoxMesh_TableCrumbSmall")
+
+[node name="Crumb4" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.027, -0.22)
 mesh = SubResource("BoxMesh_TableCrumb")
+
+[node name="Crumb5" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(0.5, 0, 0.866, 0, 1, 0, -0.866, 0, 0.5, 0.15, 0.027, -0.25)
+mesh = SubResource("BoxMesh_TableCrumbSmall")
+
+[node name="SauceDrop1" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22, 0.028, 0.14)
+mesh = SubResource("CylinderMesh_SauceKetchup")
+
+[node name="SauceDrop2" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.20, 0.028, -0.08)
+mesh = SubResource("CylinderMesh_SauceMustard")
+
+[node name="SauceDrop3" type="MeshInstance3D" parent="Model/TableTop/TableTopDirt"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.12, 0.028, 0.24)
+mesh = SubResource("CylinderMesh_SauceKetchup")
 
 ; Suporte Físico Branco de Mesa (Porta-papel / Display de Mesa com Número)
 [node name="TableNumberHolder" type="Node3D" parent="Model/TableTop"]

@@ -51,6 +51,12 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 			var hud = player.get_node_or_null("HUD")
 			if hud and hud.has_method("show_temporary_feedback"):
 				hud.show_temporary_feedback("✨ Chão limpo com sucesso!")
+			var th = player.get_node_or_null("Head/Camera3D/ToolHolder") if player.has_node("Head/Camera3D/ToolHolder") else null
+			var sp = th.get_node_or_null("Sponge") if th else null
+			if sp and sp.has_method("set_dirty"):
+				sp.set_dirty()
+			elif "sponge_is_dirty" in player:
+				player.set("sponge_is_dirty", true)
 		queue_free()
 		return true
 

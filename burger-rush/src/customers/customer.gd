@@ -408,7 +408,9 @@ func _physics_process(delta: float) -> void:
 			if mood:
 				mood.decay_progressively(experience.wait_time_checkout, tolerance_checkout_wait, delta * 0.5)
 			if is_inside_tree():
-				look_at(Vector3(1.8, position.y, 0.0), Vector3.UP)
+				var look_target = Vector3(1.8, position.y, 0.0)
+				if (look_target - position).length_squared() > 0.001:
+					look_at(look_target, Vector3.UP)
 			_update_visual_status()
 
 		State.WAITING_FOR_GROUP_PAYMENT:
@@ -487,7 +489,9 @@ func _complete_sitting_transition() -> void:
 	if assigned_table:
 		if is_inside_tree():
 			var center = assigned_table.position
-			look_at(Vector3(center.x, position.y, center.z), Vector3.UP)
+			var look_target = Vector3(center.x, position.y, center.z)
+			if (look_target - position).length_squared() > 0.001:
+				look_at(look_target, Vector3.UP)
 		assigned_table.on_customer_seated(self)
 
 		# Avalia limpeza da mesa no momento em que senta
@@ -589,13 +593,19 @@ func _reach_queue_slot() -> void:
 	position = target_position
 	if state == State.GOING_TO_QUEUE:
 		var reg = CashRegister.get_instance()
+		if not reg and is_inside_tree() and get_tree() and get_tree().root:
+			reg = get_tree().root.find_child("CashRegister", true, false)
+		if not reg and get_parent():
+			reg = get_parent().get_node_or_null("CashRegister")
 		if reg and reg.get_first_in_queue() == self:
 			state = State.PAYING
 			_show_hand_money()
 		else:
 			state = State.IN_QUEUE
 		if is_inside_tree():
-			look_at(Vector3(position.x, position.y, 0.0), Vector3.UP)
+			var look_target = Vector3(position.x, position.y, -1.0)
+			if (look_target - position).length_squared() > 0.001:
+				look_at(look_target, Vector3.UP)
 	_update_visual_status()
 
 func update_queue_slot(new_slot_pos: Vector3, is_first: bool) -> void:
@@ -615,7 +625,9 @@ func update_queue_slot(new_slot_pos: Vector3, is_first: bool) -> void:
 			state = State.IN_QUEUE
 			_hide_hand_money()
 		if is_inside_tree():
-			look_at(Vector3(position.x, position.y, 0.0), Vector3.UP)
+			var look_target = Vector3(position.x, position.y, -1.0)
+			if (look_target - position).length_squared() > 0.001:
+				look_at(look_target, Vector3.UP)
 	_update_visual_status()
 
 func _show_hand_money() -> void:
@@ -626,12 +638,21 @@ func _show_hand_money() -> void:
 	var money_scene = load("res://src/items/customer_money.tscn")
 	if money_scene:
 		hand_money_mesh = money_scene.instantiate()
+		var price = current_order.total_price if current_order else 15.0
+		if hand_money_mesh.has_method("setup"):
+			hand_money_mesh.setup(price, self)
 		if hand_money_mesh is CollisionObject3D:
-			hand_money_mesh.collision_layer = 0
-			hand_money_mesh.collision_mask = 0
+			hand_money_mesh.collision_layer = 1
+			hand_money_mesh.collision_mask = 1
 		add_child(hand_money_mesh)
-		hand_money_mesh.position = Vector3(0.26, 0.96, -0.42)
+		# Mão direita estendida para frente na direção do balcão/jogador
+		hand_money_mesh.position = Vector3(0.25, 0.96, -0.48)
 		hand_money_mesh.rotation = Vector3(0, 0, 0)
+
+func on_money_picked_by_player() -> void:
+	has_money_to_give = false
+	hand_money_mesh = null
+	_update_visual_status()
 
 func _hide_hand_money() -> void:
 	if hand_money_mesh != null and is_instance_valid(hand_money_mesh):

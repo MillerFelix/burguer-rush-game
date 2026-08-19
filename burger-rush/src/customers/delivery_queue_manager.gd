@@ -7,13 +7,10 @@ signal car_served(car: Node3D)
 static var instance: DeliveryQueueManager = null
 
 @export var car_scene: PackedScene = preload("res://src/environment/delivery_car.tscn")
-@export var max_queue_size: int = 4
+@export var max_queue_size: int = 2
 @export var auto_spawn: bool = true
-@export var base_spawn_interval: float = 20.0
 
 # Posições da fila de delivery ao longo da rua dos fundos (Z = -11.5)
-# Pos 0: Exatamente em frente à janela de atendimento (X = 6.45)
-# Pos 1, 2, 3: Alinhados longitudinalmente atrás do primeiro com distância segura (6.2m)
 const QUEUE_POSITIONS = [
 	Vector3(6.45, 0.0, -11.5),  # Janela de atendimento
 	Vector3(12.65, 0.0, -11.5), # 2º Carro
@@ -26,17 +23,18 @@ const EXIT_POS = Vector3(-42.0, 0.0, -11.5) # Saída oeste
 
 var car_queue: Array[Node3D] = []
 var next_car_id: int = 1
-var spawn_timer: float = 0.0
-var current_target_interval: float = 20.0
 var is_night: bool = false
+
+var last_checked_day: int = -1
+var daily_scheduled_cars: Array[float] = []
+var daily_cars_spawned: int = 0
 
 func _enter_tree() -> void:
 	instance = self
 
 func _ready() -> void:
 	instance = self
-	current_target_interval = _calculate_interval_for_time(10.0)
-	spawn_timer = current_target_interval - 4.0 # Primeiro carro chega logo após abrir
+	_init_day_demand()
 
 func static_get() -> DeliveryQueueManager:
 	return instance
@@ -53,6 +51,43 @@ func _get_clock() -> Node:
 		return get_tree().root.find_child("GameClock", true, false)
 	return null
 
+func _init_day_demand() -> void:
+	var clock = _get_clock()
+	var day_num: int = int(clock.get("day_number")) if (clock and clock.get("day_number") != null) else 1
+	last_checked_day = day_num
+	daily_scheduled_cars.clear()
+	daily_cars_spawned = 0
+
+	# Sorteio controlado de demanda de Drive-Thru (Raro e Ocasional: 0 a 4 carros por dia)
+	var rand_val = randf()
+	var total_cars_today = 0
+
+	if rand_val < 0.25:
+		total_cars_today = 0 # 25% dos dias: Nenhum carro no drive-thru
+	elif rand_val < 0.65:
+		total_cars_today = 1 # 40% dos dias: 1 carro ocasional
+	elif rand_val < 0.90:
+		total_cars_today = 2 # 25% dos dias: 2 carros
+	else:
+		total_cars_today = randi_range(3, 4) # 10% dos dias: 3 a 4 carros (pico raro)
+
+	if total_cars_today > 0:
+		# Distribui horários aleatórios e não-fixos durante o horário de funcionamento (11:00 às 21:00)
+		var possible_windows = [
+			randf_range(11.2, 13.8), # Almoço
+			randf_range(14.5, 17.2), # Tarde
+			randf_range(18.0, 20.8)  # Jantar
+		]
+		possible_windows.shuffle()
+
+		for i in range(min(total_cars_today, possible_windows.size())):
+			daily_scheduled_cars.append(possible_windows[i])
+
+		if total_cars_today > possible_windows.size():
+			daily_scheduled_cars.append(randf_range(19.2, 21.2))
+
+		daily_scheduled_cars.sort()
+
 func _process(delta: float) -> void:
 	# Limpa instâncias inválidas
 	car_queue = car_queue.filter(func(c): return is_instance_valid(c) and c.get("current_state") != 5)
@@ -64,44 +99,19 @@ func _process(delta: float) -> void:
 	if clock and (clock.get("state") != 1 or clock.get("current_hour") >= 22):
 		return
 
+	if clock and clock.get("day_number") != last_checked_day:
+		_init_day_demand()
+
 	var current_hour_f = 10.0
 	if clock:
 		current_hour_f = clock.get("current_hour") + (clock.get("current_minute") / 60.0)
 
-	if car_queue.size() < max_queue_size:
-		spawn_timer += delta
-		if spawn_timer >= current_target_interval:
-			spawn_timer = 0.0
-			current_target_interval = _calculate_interval_for_time(current_hour_f)
+	# Verifica se há carro agendado para o horário atual
+	if daily_cars_spawned < daily_scheduled_cars.size():
+		var next_time = daily_scheduled_cars[daily_cars_spawned]
+		if current_hour_f >= next_time and car_queue.size() < max_queue_size:
+			daily_cars_spawned += 1
 			spawn_car()
-
-func _calculate_interval_for_time(time_h: float) -> float:
-	# CURVA DE INTERVALOS EQUILIBRADOS PARA DRIVE-THRU (Demanda Secundária Reduzida em 50%):
-	var base_int: float = 200.0
-	if time_h < 11.5:
-		base_int = randf_range(220.0, 340.0) # Abertura calma
-	elif time_h < 14.0:
-		base_int = randf_range(150.0, 220.0) # Almoço moderado
-	elif time_h < 17.0:
-		base_int = randf_range(200.0, 300.0) # Tarde espaçada
-	elif time_h < 19.0:
-		base_int = randf_range(170.0, 260.0) # Fim de tarde
-	elif time_h <= 22.0:
-		base_int = randf_range(145.0, 210.0) # Jantar moderado
-	else:
-		base_int = randf_range(240.0, 360.0) # Fechamento lento
-
-	# Eventos diários de alta movimentação (chuva, tempestade, etc.) aceleram o fluxo adequadamente
-	var event_mgr = DailyEventManager.instance
-	if not event_mgr and is_inside_tree() and get_tree() and get_tree().root:
-		event_mgr = get_tree().root.find_child("DailyEventManager", true, false) as DailyEventManager
-
-	if event_mgr and event_mgr.has_method("get_drive_thru_multiplier"):
-		var mult = event_mgr.get_drive_thru_multiplier()
-		if mult > 0.01:
-			base_int = base_int / mult
-
-	return base_int
 
 func spawn_car() -> Node3D:
 	if not car_scene:
@@ -160,7 +170,6 @@ func get_car_at_window() -> Node3D:
 func has_waiting_car_for_order() -> bool:
 	var car = get_car_at_window()
 	if car and is_instance_valid(car):
-		# CarState.AT_WINDOW_WAITING_ORDER == 3
 		return car.get("current_state") == 3 or (car.get("current_order") == null and car.position.distance_to(QUEUE_POSITIONS[0]) <= 0.5)
 	return false
 

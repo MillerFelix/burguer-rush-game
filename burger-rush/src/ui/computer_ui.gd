@@ -379,6 +379,23 @@ func _unhandled_input(event: InputEvent) -> void:
 	if visible and event.is_action_pressed("ui_cancel"):
 		close()
 
+func _input(event: InputEvent) -> void:
+	if not visible:
+		return
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		_play_ui_click()
+
+func _play_ui_click() -> void:
+	var stream = SoundSynthesizer.get_stream("pc_ui_click")
+	if stream:
+		var ap = AudioStreamPlayer.new()
+		ap.stream = stream
+		ap.volume_db = -12.0
+		ap.bus = "Master"
+		add_child(ap)
+		ap.play()
+		ap.finished.connect(ap.queue_free)
+
 func _process(delta: float) -> void:
 	if visible:
 		_refresh_header_data()
@@ -2442,27 +2459,93 @@ func _render_expenses_section(fin: FinanceManager) -> void:
 		finances_content_vbox.add_child(card)
 
 # =============================================================================
+# =============================================================================
 # SEÇÃO 4: CONTAS A PAGAR (BILLS)
 # =============================================================================
 
 func _render_bills_section(fin: FinanceManager) -> void:
 	var title = Label.new()
-	title.text = "📑 CONTAS A PAGAR & FATURAS DO RESTAURANTE"
+	title.text = "📑 CONTAS A PAGAR & DESPESAS OPERACIONAIS"
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2, 1.0))
 	title.add_theme_font_size_override("font_size", 15)
 	finances_content_vbox.add_child(title)
 
 	var desc = Label.new()
-	desc.text = "Gerencie e efetue o pagamento das contas de utilidades e salários diretamente pelo terminal."
+	desc.text = "Consulte e quite as despesas operacionais do restaurante (Energia, Água e Sala dos Funcionários). Prazo máximo de 7 dias."
 	desc.add_theme_font_size_override("font_size", 12)
 	desc.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
 	finances_content_vbox.add_child(desc)
 
+	# 1. Total Pendente Card (Header do Resumo)
+	var total_pending = fin.get_total_pending_debt()
+	var total_card = PanelContainer.new()
+	var total_style = StyleBoxFlat.new()
+	if total_pending > 0.0:
+		total_style.bg_color = Color(0.20, 0.12, 0.08, 0.95)
+		total_style.border_color = Color(1.0, 0.60, 0.20, 0.90)
+	else:
+		total_style.bg_color = Color(0.08, 0.18, 0.12, 0.95)
+		total_style.border_color = Color(0.30, 0.80, 0.45, 0.90)
+	total_style.set_border_width_all(2)
+	total_style.set_corner_radius_all(8)
+	total_style.set_content_margin_all(14)
+	total_card.add_theme_stylebox_override("panel", total_style)
+
+	var tot_hbox = HBoxContainer.new()
+	tot_hbox.add_theme_constant_override("separation", 14)
+
+	var tot_vbox = VBoxContainer.new()
+	tot_vbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+	var tot_lbl = Label.new()
+	tot_lbl.text = "💰 TOTAL PENDENTE: R$ %.2f" % total_pending
+	tot_lbl.add_theme_font_size_override("font_size", 16)
+	tot_lbl.add_theme_color_override("font_color", Color(1.0, 0.90, 0.35, 1.0) if total_pending > 0.0 else Color(0.40, 0.95, 0.55, 1.0))
+	tot_vbox.add_child(tot_lbl)
+
+	var tot_sub = Label.new()
+	if total_pending > 0.0:
+		tot_sub.text = "Existem contas pendentes. Contas não pagas acumulam e recebem +25% de multa após 7 dias."
+		tot_sub.add_theme_color_override("font_color", Color(0.90, 0.75, 0.60, 1.0))
+	else:
+		tot_sub.text = "✨ Nenhuma conta pendente! Todas as contas do restaurante estão em dia."
+		tot_sub.add_theme_color_override("font_color", Color(0.70, 0.90, 0.75, 1.0))
+	tot_sub.add_theme_font_size_override("font_size", 11)
+	tot_vbox.add_child(tot_sub)
+	tot_hbox.add_child(tot_vbox)
+
+	if total_pending > 0.0:
+		var pay_all_btn = Button.new()
+		pay_all_btn.text = "💳 QUITAR TODAS AS CONTAS"
+		pay_all_btn.custom_minimum_size = Vector2(220, 36)
+		pay_all_btn.focus_mode = Control.FOCUS_NONE
+		var bstyle = StyleBoxFlat.new()
+		bstyle.bg_color = Color(0.18, 0.65, 0.30, 0.95)
+		bstyle.set_corner_radius_all(6)
+		pay_all_btn.add_theme_stylebox_override("normal", bstyle)
+		pay_all_btn.pressed.connect(func(): _on_pay_all_bills_clicked(fin))
+		tot_hbox.add_child(pay_all_btn)
+
+	total_card.add_child(tot_hbox)
+	finances_content_vbox.add_child(total_card)
+
+	# 2. Renderiza as 3 Categorias Obrigatórias
 	var bills = fin.get_active_bills()
-	for bill_id in ["electricity", "water", "salaries"]:
-		if bills.has(bill_id):
-			var card = _create_bill_card(bills[bill_id], fin, true)
-			finances_content_vbox.add_child(card)
+	for cat_id in ["electricity", "water", "staff_room"]:
+		var cat_data = bills.get(cat_id, {})
+		var card = _create_bill_card(cat_data, fin, true)
+		finances_content_vbox.add_child(card)
+
+func _on_pay_all_bills_clicked(fin: FinanceManager) -> void:
+	if not fin:
+		return
+	var res = fin.pay_all_bills()
+	_refresh_header_data()
+	_refresh_finances_tab()
+	var p = get_parent()
+	if p and p.has_node("HUD") and p.get_node("HUD").has_method("show_temporary_feedback"):
+		var icon = "💳" if res.get("success", false) else "⚠️"
+		p.get_node("HUD").show_temporary_feedback("%s %s" % [icon, res.get("message", "")])
 
 # =============================================================================
 # SEÇÃO 5: RELATÓRIOS E HISTÓRICO DOS DIAS
@@ -2574,8 +2657,9 @@ func _render_history_section(fin: FinanceManager) -> void:
 func _create_bill_card(bill: Dictionary, fin: FinanceManager, expanded: bool = false) -> PanelContainer:
 	var card = PanelContainer.new()
 	var style = StyleBoxFlat.new()
-	var is_paid: bool = bill.get("is_paid", false)
-	var amount: float = bill.get("amount", 0.0)
+	var cat_id = bill.get("category", bill.get("id", ""))
+	var pending_amount = fin.get_category_pending_amount(cat_id) if fin else bill.get("amount", 0.0)
+	var is_paid = (pending_amount <= 0.0)
 
 	if is_paid:
 		style.bg_color = Color(0.08, 0.16, 0.12, 0.92)
@@ -2595,8 +2679,8 @@ func _create_bill_card(bill: Dictionary, fin: FinanceManager, expanded: bool = f
 	top_hbox.add_theme_constant_override("separation", 8)
 
 	var icon_str = "⚡"
-	if bill.get("id") == "water": icon_str = "💧"
-	elif bill.get("id") == "salaries": icon_str = "👥"
+	if cat_id == "water": icon_str = "💧"
+	elif cat_id == "staff_room" or cat_id == "salaries": icon_str = "👥"
 
 	var icon_lbl = Label.new()
 	icon_lbl.text = icon_str
@@ -2618,7 +2702,7 @@ func _create_bill_card(bill: Dictionary, fin: FinanceManager, expanded: bool = f
 		status_badge.text = "✔ PAGA"
 		status_badge.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45, 1.0))
 	else:
-		status_badge.text = "⚠️ PENDENTE"
+		status_badge.text = "⚠️ PENDENTE (R$ %.2f)" % pending_amount
 		status_badge.add_theme_color_override("font_color", Color(1.0, 0.65, 0.2, 1.0))
 	status_badge.add_theme_font_size_override("font_size", 11)
 	top_hbox.add_child(status_badge)
@@ -2635,16 +2719,16 @@ func _create_bill_card(bill: Dictionary, fin: FinanceManager, expanded: bool = f
 	bot_hbox.add_theme_constant_override("separation", 10)
 
 	var amount_lbl = Label.new()
-	amount_lbl.text = "R$ %.2f" % amount
+	amount_lbl.text = "R$ %.2f" % pending_amount
 	amount_lbl.add_theme_font_size_override("font_size", 16)
-	amount_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0))
+	amount_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3, 1.0) if not is_paid else Color(0.5, 0.8, 0.6, 1.0))
 	bot_hbox.add_child(amount_lbl)
 
 	var bot_spacer = Control.new()
 	bot_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bot_hbox.add_child(bot_spacer)
 
-	if not is_paid and amount > 0.0:
+	if not is_paid and pending_amount > 0.0:
 		var pay_btn = Button.new()
 		pay_btn.custom_minimum_size = Vector2(100 if not expanded else 140, 30)
 		pay_btn.text = "💳 PAGAR"
@@ -2653,8 +2737,7 @@ func _create_bill_card(bill: Dictionary, fin: FinanceManager, expanded: bool = f
 		btn_style.bg_color = Color(0.15, 0.55, 0.25, 0.95)
 		btn_style.set_corner_radius_all(6)
 		pay_btn.add_theme_stylebox_override("normal", btn_style)
-		var bill_id_str = bill.get("id", "")
-		pay_btn.pressed.connect(func(): _on_pay_bill_clicked(bill_id_str, fin))
+		pay_btn.pressed.connect(func(): _on_pay_bill_clicked(cat_id, fin))
 		bot_hbox.add_child(pay_btn)
 
 	vbox.add_child(bot_hbox)
@@ -4868,10 +4951,11 @@ func _refresh_news_tab() -> void:
 	var nm = NewsManager.get_instance()
 	if not nm and is_inside_tree() and get_tree() and get_tree().root:
 		nm = get_tree().root.find_child("NewsManager", true, false)
-	if not nm:
-		return
 
-	var articles = nm.get_today_news()
+	var articles: Array = []
+	if nm:
+		articles = nm.get_today_news()
+
 	if articles.is_empty():
 		var empty_card = _create_no_news_editorial_card()
 		news_content_vbox.add_child(empty_card)

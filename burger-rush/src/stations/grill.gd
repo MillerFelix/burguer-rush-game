@@ -422,7 +422,9 @@ func interact_item(player: Node3D) -> void:
 
 		var target_item_data = _get_aimed_item(player)
 		if target_item_data.is_empty():
-			target_item_data = active_items[0]
+			if tool_slot == 1:
+				_show_feedback(player, "🍳 Mire no alimento na chapa que deseja virar ou retirar.")
+			return
 
 		var node = target_item_data["item"]
 		if not is_instance_valid(node):
@@ -493,18 +495,29 @@ func clean_station(player: Node3D = null) -> void:
 	_update_dirt_visuals()
 	if player:
 		_show_feedback(player, "✨ Grelha limpa e pronta para uso!")
+		var th = player.get_node_or_null("Head/Camera3D/ToolHolder") if player.has_node("Head/Camera3D/ToolHolder") else null
+		var sp = th.get_node_or_null("Sponge") if th else null
+		if sp and sp.has_method("set_dirty"):
+			sp.set_dirty()
+		elif "sponge_is_dirty" in player:
+			player.set("sponge_is_dirty", true)
 
 func clean_progress(delta: float, player: Node3D = null) -> bool:
 	if dirt_level <= 0.0:
 		return true
 
-	# Limpeza de bancadas e grelha requer ~5.0 segundos contínuos de esfregação
-	dirt_level = maxf(0.0, dirt_level - (delta / 5.0))
+	dirt_level = maxf(0.0, dirt_level - (delta / 1.5))
 	_update_dirt_visuals()
 
 	if dirt_level <= 0.0:
 		if player:
 			_show_feedback(player, "✨ Grelha limpa e pronta para uso!")
+			var th = player.get_node_or_null("Head/Camera3D/ToolHolder") if player.has_node("Head/Camera3D/ToolHolder") else null
+			var sp = th.get_node_or_null("Sponge") if th else null
+			if sp and sp.has_method("set_dirty"):
+				sp.set_dirty()
+			elif "sponge_is_dirty" in player:
+				player.set("sponge_is_dirty", true)
 		return true
 	return false
 
@@ -562,6 +575,15 @@ func place_item(item: Node3D) -> bool:
 
 	if item.has_method("on_placed_in_station"):
 		item.on_placed_in_station()
+
+	if item is CollisionObject3D:
+		item.collision_layer = 1
+		item.collision_mask = 1
+
+	for child in item.find_children("*", "CollisionObject3D", true, false):
+		if child is CollisionObject3D:
+			child.collision_layer = 1
+			child.collision_mask = 1
 
 	# Reproduz som específico de impacto/contato com a chapa quente
 	_play_contact_sound(itm_type)
@@ -621,8 +643,8 @@ func _remove_item_from_grill(item: Node3D, player: Node3D) -> void:
 			if item.has_method("on_dropped"):
 				item.on_dropped()
 
-	# Uso da chapa acumula sujeira
-	add_dirt(0.25)
+	# Uso da chapa acumula sujeira suavemente (~25 itens para ficar suja)
+	add_dirt(0.04)
 
 func _find_free_slot_index() -> int:
 	var used_slots: Array[int] = []
@@ -635,11 +657,31 @@ func _find_free_slot_index() -> int:
 
 func _get_aimed_item(player: Node3D) -> Dictionary:
 	var ray = player.get_node_or_null("Head/Camera3D/RayCast3D")
-	if ray and ray is RayCast3D and ray.is_colliding():
-		var col = ray.get_collider()
+	if ray and ray is RayCast3D and (ray.is_colliding() or ray.has_meta("test_collider")):
+		var col = ray.get_meta("test_collider") if ray.has_meta("test_collider") else ray.get_collider()
+		# 1. Verifica colisão direta com o item ou sub-nó do item
 		for item_data in active_items:
-			if item_data["item"] == col or item_data["item"].is_ancestor_of(col):
+			var node = item_data.get("item")
+			if is_instance_valid(node) and (node == col or node.is_ancestor_of(col)):
 				return item_data
+
+		# 2. Se o RayCast atingiu a chapa da grelha, calcula o item mais próximo do ponto de impacto exato
+		var hit_pos = ray.get_meta("test_collision_point") if ray.has_meta("test_collision_point") else ray.get_collision_point()
+		var local_hit = to_local(hit_pos) if is_inside_tree() else (hit_pos - position)
+		var best_item_data: Dictionary = {}
+		var best_dist: float = 0.50 # Raio de busca preciso sobre a chapa
+		for item_data in active_items:
+			var node = item_data.get("item")
+			if is_instance_valid(node):
+				var node_local = node.position
+				if node.get_parent() == cooking_slot and cooking_slot:
+					node_local += cooking_slot.position
+				var d = Vector2(local_hit.x - node_local.x, local_hit.z - node_local.z).length()
+				if d < best_dist:
+					best_dist = d
+					best_item_data = item_data
+		if not best_item_data.is_empty():
+			return best_item_data
 	return {}
 
 func get_interaction_prompt(player: Node = null) -> String:
@@ -670,41 +712,47 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if tool_slot == 1:
 		if not active_items.is_empty():
 			var target = _get_aimed_item(player)
-			if target.is_empty():
-				target = active_items[0]
-			var node = target["item"]
-			if node is Patty:
-				var p = node as Patty
-				if p.state == Patty.State.READY_SIDE_1 or (p.state == Patty.State.COOKING_SIDE_1 and not p.is_flipped):
-					return "🍳 [Clique] VIRAR %s" % p.get_display_name()
-				elif p.is_fully_cooked():
-					return "🍳 [Clique] RETIRAR Hambúrguer Pronto!"
-				else:
-					return "🍳 [Clique] Virar/Retirar %s" % p.get_display_name()
-			elif node is Cheese:
-				var c = node as Cheese
-				if c.is_ready():
-					return "🍳 [Clique] RETIRAR Queijo Derretido!"
-				else:
-					return "🍳 [Clique] Retirar %s" % c.get_display_name()
-			elif node is Bacon:
-				var b = node as Bacon
-				if b.state == Bacon.State.COOKED:
-					return "🥓 [Clique] RETIRAR Bacon Crocante Pronto!"
-				elif b.state == Bacon.State.BURNT:
-					return "🗑️ [Clique] Retirar Bacon Queimado"
-				else:
-					return "🥓 Bacon Fritando (%d%%)" % int(b.cooking_progress)
-			elif node is Egg:
-				var e = node as Egg
-				if e.state == Egg.State.COOKED:
-					return "🍳 [Clique] RETIRAR Ovo Frito Pronto!"
-				elif e.state == Egg.State.BURNT:
-					return "🗑️ [Clique] Retirar Ovo Queimado"
-				elif e.state == Egg.State.DRYING:
-					return "⚠️ [Clique] Retirar Ovo Ressecando!"
-				else:
-					return "🍳 Ovo Fritando (%d%%)" % int(e.cooking_progress)
+			if not target.is_empty():
+				var node = target["item"]
+				if node is Patty:
+					var p = node as Patty
+					if p.state == Patty.State.READY_SIDE_1:
+						return "🍳 [Clique] VIRAR %s" % p.get_display_name()
+					elif p.state == Patty.State.COOKING_SIDE_1 and not p.is_flipped:
+						return "🍳 [Clique] Virar/Retirar %s" % p.get_display_name()
+					elif p.is_fully_cooked():
+						return "🍳 [Clique] RETIRAR %s Pronto!" % p.get_display_name()
+					elif p.state == Patty.State.BURNT:
+						return "🗑️ [Clique] Retirar %s Queimado" % p.get_display_name()
+					else:
+						return "🍳 [Clique] Virar/Retirar %s" % p.get_display_name()
+				elif node is Cheese:
+					var c = node as Cheese
+					if c.is_ready():
+						return "🍳 [Clique] RETIRAR Queijo Derretido!"
+					else:
+						return "🍳 [Clique] Retirar %s" % c.get_display_name()
+				elif node is Bacon:
+					var b = node as Bacon
+					if b.state == Bacon.State.COOKED:
+						return "🥓 [Clique] RETIRAR Bacon Crocante Pronto!"
+					elif b.state == Bacon.State.BURNT:
+						return "🗑️ [Clique] Retirar Bacon Queimado"
+					else:
+						return "🥓 Bacon Fritando (%d%%)" % int(b.cooking_progress)
+				elif node is Egg:
+					var e = node as Egg
+					if e.state == Egg.State.COOKED:
+						return "🍳 [Clique] RETIRAR Ovo Frito Pronto!"
+					elif e.state == Egg.State.BURNT:
+						return "🗑️ [Clique] Retirar Ovo Queimado"
+					elif e.state == Egg.State.DRYING:
+						return "⚠️ [Clique] Retirar Ovo Ressecando!"
+					else:
+						return "🍳 Ovo Fritando (%d%%)" % int(e.cooking_progress)
+				elif is_instance_valid(node):
+					return "🍳 [Clique] Manipular %s" % node.get_display_name()
+			return "🍳 Espátula — Mire em um alimento na chapa"
 		return "🍳 Espátula — Nenhum alimento na chapa"
 
 	# Se estiver com ingrediente fritável na mão ou ativo nos slots rápidos
@@ -745,12 +793,23 @@ func get_interaction_prompt(player: Node = null) -> String:
 			elif node is Patty:
 				var p = node as Patty
 				if p.is_fully_cooked():
-					return "🍳 [Clique] Pegar Hambúrguer Pronto"
+					return "🍳 [Clique] Pegar %s Pronto" % p.get_display_name()
 				elif p.state == Patty.State.READY_SIDE_1:
-					return "⚠️ [1] Equipe a Espátula para virar o hambúrguer!"
+					return "⚠️ [1] Equipe a Espátula para virar o %s!" % p.get_display_name()
 				else:
 					var p_pct = int(p.side_a_cooked) if not p.is_flipped else int(p.side_b_cooked)
-					return "🥩 Hambúrguer Grelhando (%d%%)" % p_pct
+					return "🥩 %s Grelhando (%d%%)" % [p.get_display_name(), p_pct]
+			elif node is Cheese:
+				var c = node as Cheese
+				if c.is_ready():
+					return "🧀 [Clique] Pegar Queijo Derretido"
+				elif c.is_burnt():
+					return "🗑️ [Clique] Pegar Queijo Queimado"
+				else:
+					var pct = int(c.cook_progress) if "cook_progress" in c else 0
+					return "🧀 Queijo Derretendo (%d%%)" % pct
+			elif is_instance_valid(node):
+				return "✋ [Clique] Pegar %s" % node.get_display_name()
 
 	# Interação com botão de ligar/desligar
 	if not is_on:

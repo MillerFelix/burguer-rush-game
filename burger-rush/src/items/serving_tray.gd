@@ -236,6 +236,13 @@ func interact(player: Node3D) -> void:
 		_show_feedback(player, "⚠️ Mãos ocupadas! Solte o item atual antes de pegar a bandeja.")
 		return
 
+	var p = get_parent()
+	while p != null:
+		if p is RestaurantTable:
+			p.served_items.erase(self)
+			break
+		p = p.get_parent()
+
 	if player.has_method("pick_up"):
 		player.pick_up(self)
 		if tray_state == TrayState.USED:

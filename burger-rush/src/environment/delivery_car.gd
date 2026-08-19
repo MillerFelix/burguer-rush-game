@@ -329,12 +329,12 @@ func take_order(player: Node3D = null) -> Order:
 
 	var group_size = 1
 	var r = randf()
-	if r < 0.45:
-		group_size = 1
-	elif r < 0.85:
-		group_size = 2
+	if r < 0.65:
+		group_size = 1 # 65% Pequeno (1 lanche / combo)
+	elif r < 0.92:
+		group_size = 2 # 27% Médio (2 lanches)
 	else:
-		group_size = 3
+		group_size = 3 # 8% Grande (3 lanches - raro)
 
 	current_order = order_mgr.create_group_order(self, group_size, 0, "DRIVE_THRU")
 	current_state = CarState.AT_WINDOW_WAITING_FOOD

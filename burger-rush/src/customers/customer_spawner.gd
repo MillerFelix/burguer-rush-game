@@ -21,6 +21,8 @@ var current_target_interval: float = 35.0
 
 var current_day_intensity: DayIntensity = DayIntensity.CALM
 var last_checked_day: int = -1
+var target_daily_customers: int = 18
+var daily_customers_spawned: int = 0
 
 func _ready() -> void:
 	if not customer_scene:
@@ -50,13 +52,9 @@ func _process(delta: float) -> void:
 	if clock and (clock.get("state") != 1 or clock.get("current_hour") >= 22):
 		return
 
-	# Atualiza intensidade caso o dia tenha virado
+	# Atualiza intensidade e metas caso o dia tenha virado
 	if clock and clock.get("day_number") != last_checked_day:
 		_update_day_intensity()
-
-	var table_mgr = TableManager.get_instance()
-	if not table_mgr and get_parent():
-		table_mgr = get_parent().get_node_or_null("TableManager")
 
 	var current_hour_f = 10.0
 	if clock:
@@ -72,36 +70,53 @@ func _process(delta: float) -> void:
 		if spawn_timer >= current_target_interval:
 			spawn_timer = 0.0
 			current_target_interval = _calculate_interval_for_time(current_hour_f)
+			daily_customers_spawned += 1
 			spawn_customer_group()
 
 func _update_day_intensity() -> void:
 	var clock = _get_clock()
 	var day_num: int = int(clock.get("day_number")) if (clock and clock.get("day_number") != null) else 1
 	last_checked_day = day_num
+	daily_customers_spawned = 0
 
 	# Dia da semana (1 = Segunda, 7 = Domingo)
 	var day_of_week: int = int(clock.get("day_of_week")) if (clock and clock.get("day_of_week") != null) else (((day_num - 1) % 7) + 1)
 	var rand_val = randf()
 
+	# Distribuição aleatória e variada por dia (evita escada fixa)
 	if day_of_week in [1, 2, 3]:
-		# Dias de semana tranquilos (Segunda a Quarta): 65% Calmo, 35% Normal
-		current_day_intensity = DayIntensity.CALM if rand_val < 0.65 else DayIntensity.NORMAL
-	elif day_of_week in [4, 5]:
-		# Quinta e Sexta: 30% Calmo, 50% Normal, 20% Movimentado
-		if rand_val < 0.30:
+		# Dias de semana tranquilos (Segunda a Quarta): 60% Calmo, 35% Normal, 5% Movimentado
+		if rand_val < 0.60:
 			current_day_intensity = DayIntensity.CALM
-		elif rand_val < 0.80:
+			target_daily_customers = randi_range(12, 16)
+		elif rand_val < 0.95:
 			current_day_intensity = DayIntensity.NORMAL
+			target_daily_customers = randi_range(16, 20)
 		else:
 			current_day_intensity = DayIntensity.BUSY
+			target_daily_customers = randi_range(20, 24)
+	elif day_of_week in [4, 5]:
+		# Quinta e Sexta: 25% Calmo, 50% Normal, 25% Movimentado
+		if rand_val < 0.25:
+			current_day_intensity = DayIntensity.CALM
+			target_daily_customers = randi_range(14, 17)
+		elif rand_val < 0.75:
+			current_day_intensity = DayIntensity.NORMAL
+			target_daily_customers = randi_range(17, 22)
+		else:
+			current_day_intensity = DayIntensity.BUSY
+			target_daily_customers = randi_range(22, 26)
 	else:
 		# Fim de semana (Sábado e Domingo): Mais movimento com variação natural
 		if rand_val < 0.20:
 			current_day_intensity = DayIntensity.NORMAL
-		elif rand_val < 0.65:
+			target_daily_customers = randi_range(16, 20)
+		elif rand_val < 0.70:
 			current_day_intensity = DayIntensity.BUSY
+			target_daily_customers = randi_range(20, 25)
 		else:
 			current_day_intensity = DayIntensity.VERY_BUSY
+			target_daily_customers = randi_range(24, 28)
 
 func _get_max_concurrent_customers(time_h: float) -> int:
 	# Limite equilibrado de clientes simultâneos no salão (evita sobrecarga no ritmo normal)
@@ -132,50 +147,52 @@ func _count_dining_customers() -> int:
 	return count
 
 func _calculate_interval_for_time(time_h: float) -> float:
-	# CURVA DINÂMICA EQUILIBRADA (10:00 — 22:00):
-	# Proporciona tempo natural para preparar os pedidos, cozinhar, fritar, atender e limpar
-	var base_interval = 50.0
+	# CURVA DINÂMICA NÃO-LINEAR COM JITTER ALEATÓRIO (10:00 — 22:00):
+	var base_interval = 48.0
 
 	if time_h < 11.5:
-		base_interval = randf_range(52.0, 78.0) # Abertura tranquila
-	elif time_h < 14.5:
-		base_interval = randf_range(40.0, 60.0) # Almoço moderado
+		base_interval = randf_range(48.0, 72.0) # Abertura calma
+	elif time_h < 14.0:
+		base_interval = randf_range(32.0, 48.0) # Pico de almoço dinâmico
 	elif time_h < 17.5:
-		base_interval = randf_range(50.0, 72.0) # Tarde espaçada
-	elif time_h <= 21.0:
-		base_interval = randf_range(42.0, 62.0) # Jantar moderado
+		base_interval = randf_range(44.0, 65.0) # Tarde espaçada
+	elif time_h <= 20.5:
+		base_interval = randf_range(34.0, 50.0) # Pico de jantar dinâmico
 	else:
-		base_interval = randf_range(65.0, 95.0) # Fechamento lento
+		base_interval = randf_range(55.0, 85.0) # Fechamento lento
 
-	# Aplicação do multiplicador da Intensidade do Dia
+	# Multiplicador da Intensidade do Dia
 	var intensity_multiplier = 1.0
 	match current_day_intensity:
 		DayIntensity.CALM:
-			intensity_multiplier = 1.30
+			intensity_multiplier = 1.25
 		DayIntensity.NORMAL:
 			intensity_multiplier = 1.0
 		DayIntensity.BUSY:
-			intensity_multiplier = 0.80
+			intensity_multiplier = 0.82
 		DayIntensity.VERY_BUSY:
-			intensity_multiplier = 0.65
+			intensity_multiplier = 0.70
 
-	# Modificadores de Eventos Diários e Finais de Semana (DailyEventManager)
+	# Modificadores de Eventos Diários
 	var event_demand_mult = 1.0
 	if is_inside_tree() and get_tree() and get_tree().root:
 		var dem = get_tree().root.find_child("DailyEventManager", true, false)
 		if dem and dem.has_method("get_customer_demand_multiplier"):
 			event_demand_mult = dem.get_customer_demand_multiplier(time_h) * dem.get_dine_in_multiplier()
 
-	var final_interval = (base_interval * intensity_multiplier) / maxf(0.2, event_demand_mult)
+	var jitter = randf_range(-4.0, 4.0)
+	var final_interval = maxf(24.0, ((base_interval * intensity_multiplier) / maxf(0.2, event_demand_mult)) + jitter)
 	return final_interval
 
 func _pick_group_size_for_time(time_h: float) -> Dictionary:
+	# DISTRIBUIÇÃO EQUILIBRADA DE TAMANHO DE GRUPO:
+	# 60% Solo (1 pessoa), 30% Casal (2 pessoas), 8% Trio (3 pessoas), 2% Família (4 pessoas)
 	var rand_val = randf()
 	var group_size = 1
 	var has_child = false
 
 	if time_h < 11.5:
-		# Manhã: Predominância de solo (75%) e casais (25%)
+		# Manhã: Predominância de solo (75%) e duplas (25%)
 		if rand_val < 0.75:
 			group_size = 1
 		else:
@@ -183,37 +200,37 @@ func _pick_group_size_for_time(time_h: float) -> Dictionary:
 			has_child = (randf() < 0.10)
 
 	elif time_h < 14.5:
-		# Almoço: Solo (35%), Casais (45%), Pequena família (20%)
-		if rand_val < 0.35:
+		# Almoço: Solo (55%), Duplas (35%), Pequeno grupo (10%)
+		if rand_val < 0.55:
 			group_size = 1
-		elif rand_val < 0.80:
+		elif rand_val < 0.90:
 			group_size = 2
-			has_child = (randf() < 0.25)
+			has_child = (randf() < 0.20)
 		else:
 			group_size = 3
-			has_child = (randf() < 0.40)
+			has_child = (randf() < 0.35)
 
 	elif time_h < 17.5:
-		# Tarde tranquila: 1 ou 2 pessoas
-		if rand_val < 0.65:
+		# Tarde: Solo (70%), Duplas (30%)
+		if rand_val < 0.70:
 			group_size = 1
 		else:
 			group_size = 2
 			has_child = (randf() < 0.15)
 
 	else:
-		# Noite / Jantar: Solo (30%), Casais (45%), Grupos moderados (25%)
-		if rand_val < 0.30:
+		# Noite / Jantar: Solo (50%), Duplas (38%), Grupos (10%), Família 4p (2%)
+		if rand_val < 0.50:
 			group_size = 1
-		elif rand_val < 0.75:
+		elif rand_val < 0.88:
 			group_size = 2
-			has_child = (randf() < 0.30)
-		elif rand_val < 0.92:
+			has_child = (randf() < 0.25)
+		elif rand_val < 0.98:
 			group_size = 3
-			has_child = (randf() < 0.50)
+			has_child = (randf() < 0.40)
 		else:
 			group_size = 4
-			has_child = (randf() < 0.60)
+			has_child = (randf() < 0.50)
 
 	return {"group_size": group_size, "has_child": has_child}
 

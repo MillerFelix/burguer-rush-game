@@ -233,17 +233,17 @@ func _animate_idle(delta: float, carrying: bool, extending_hand: bool = false) -
 		leg_right.rotation = Vector3(0, 0, deg_to_rad(1.0))
 
 	if extending_hand:
-		# Mão direita estendida para frente oferecendo o dinheiro ao caixa
+		# Mão direita estendida para frente na direção do balcão/jogador
 		if arm_left:
 			arm_left.position = orig_arm_l_pos
 			arm_left.rotation.x = deg_to_rad(-12.0) + breath
 			arm_left.rotation.y = deg_to_rad(6.0)
 			arm_left.rotation.z = deg_to_rad(-4.0)
 		if arm_right:
-			arm_right.position = orig_arm_r_pos + Vector3(0, 0.02, 0.04)
-			arm_right.rotation.x = deg_to_rad(-85.0) + sin(idle_timer * 2.0) * 0.02
-			arm_right.rotation.y = deg_to_rad(-8.0)
-			arm_right.rotation.z = deg_to_rad(6.0)
+			arm_right.position = orig_arm_r_pos + Vector3(-0.04, -0.02, -0.08)
+			arm_right.rotation.x = deg_to_rad(78.0) + sin(idle_timer * 2.0) * 0.02
+			arm_right.rotation.y = deg_to_rad(-10.0)
+			arm_right.rotation.z = deg_to_rad(-4.0)
 	elif carrying:
 		if arm_left:
 			arm_left.position = orig_arm_l_pos

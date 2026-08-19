@@ -14,6 +14,8 @@ static func get_stream(sound_id: String) -> AudioStreamWAV:
 
 	var stream: AudioStreamWAV = null
 	match sound_id:
+		"pc_ui_click", "pc_click", "ui_click":
+			stream = _generate_ui_click()
 		"grill_switch_on":
 			stream = _generate_switch_click(true)
 		"grill_switch_off":
@@ -1983,6 +1985,29 @@ static func _generate_payment_success_cash() -> AudioStreamWAV:
 	stream.stereo = false
 	stream.data = pcm
 	return stream
+
+static func _generate_ui_click() -> AudioStreamWAV:
+	var sample_rate = 44100
+	var duration = 0.040
+	var total_samples = int(sample_rate * duration)
+	var byte_array = PackedByteArray()
+	byte_array.resize(total_samples * 2)
+
+	for i in range(total_samples):
+		var t = float(i) / float(sample_rate)
+		var env = exp(-t * 110.0)
+		var freq = 1400.0 * exp(-t * 60.0) + 500.0
+		var sample_f = sin(2.0 * PI * freq * t) * env * 0.40
+		var sample_i = int(clampf(sample_f, -1.0, 1.0) * 32767.0)
+		byte_array.encode_s16(i * 2, sample_i)
+
+	var stream = AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = sample_rate
+	stream.stereo = false
+	stream.data = byte_array
+	return stream
+
 
 
 

@@ -344,11 +344,11 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 	if state == State.CLOSED:
 		var b_name = matched_recipe.display_name if matched_recipe else "Burger"
-		return "🍔 %s — [Clique] Pegar Lanche" % b_name
+		return "🍔 %s  │  [E] Pegar Lanche Inteiro" % b_name
 	elif state == State.ASSEMBLING:
-		return "🥪 [Clique] Pegar Lanche"
+		return "🥪 Lanche em Montagem  │  [E] Pegar Lanche Inteiro"
 
-	return "🖱️ Pegar Base do Pão"
+	return "🖱️ Adicionar Ingrediente  │  [E] Pegar Base do Pão"
 
 func interact_item(player: Node3D) -> void:
 	if not player:

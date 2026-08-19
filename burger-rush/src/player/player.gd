@@ -39,6 +39,7 @@ var _step_timer: float = 0.0
 
 var held_item: Node3D = null
 var active_tool_slot: int = ToolSlot.HANDS
+@export var sponge_is_dirty: bool = false
 
 # ================================================================
 # SISTEMA DE SLOTS RÁPIDOS DE INGREDIENTES (SLOTS 4, 5, 6)
@@ -193,6 +194,7 @@ func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
 		ToolSlot.SPONGE:
 			if tool_holder:
 				var sponge = SCENE_SPONGE.instantiate()
+				sponge.is_dirty = sponge_is_dirty
 				tool_holder.add_child(sponge)
 			if show_feedback:
 				_play_sound(tool_audio, "tool_sponge_equip", -8.0, 0.05)
@@ -399,10 +401,15 @@ func _try_interact_item() -> void:
 				collider = best_item
 
 		# ESTADO 1: O jogador está com item na mão (ou ingrediente ativo)
-		if held_item != null:
+		if held_item != null or has_active_ingredient():
 			if collider is ServingTray:
 				if hud and hud.has_method("show_temporary_feedback"):
 					hud.show_temporary_feedback("ℹ️ Use o [Botão Direito] para colocar o item na bandeja.")
+				return
+
+			# 1. Se mirou em uma montagem de lanche (BreadBottom): SEMPRE aciona interact_item para adicionar ingrediente ou embalar!
+			if collider is BreadBottom:
+				collider.interact_item(self)
 				return
 
 			# Se mirou em outro item no mundo -> Tenta pegar se houver espaço; avisa se cheio
@@ -469,11 +476,12 @@ func _try_interact_item() -> void:
 				# 2. Espátula: manipula itens válidos para grelha; para os demais, troca para Mão Livre
 				if active_tool_slot == ToolSlot.SPATULA:
 					if can_be_picked_with_spatula(collider):
-						if collider is Patty:
-							var parent_grill = collider.get_parent()
-							if parent_grill and parent_grill.get_parent() is Grill:
-								parent_grill.get_parent().interact_item(self)
+						var p_grill = collider.get_parent()
+						while p_grill != null:
+							if p_grill is Grill:
+								p_grill.interact_item(self)
 								return
+							p_grill = p_grill.get_parent()
 						pick_up(collider as Item)
 						return
 					else:
@@ -483,6 +491,12 @@ func _try_interact_item() -> void:
 
 				# 3. Mão Livre (Slot 3)
 				if active_tool_slot == ToolSlot.HANDS:
+					var p_grill = collider.get_parent()
+					while p_grill != null:
+						if p_grill is Grill:
+							p_grill.interact_item(self)
+							return
+						p_grill = p_grill.get_parent()
 					pick_up(collider as Item)
 					return
 
@@ -1359,6 +1373,17 @@ func pick_up(item: Node3D) -> void:
 		p_check = p_check.get_parent()
 	if tray_parent:
 		tray_parent.remove_product(item)
+
+	# Se estava servido em uma mesa, remove da lista de itens servidos da mesa
+	var table_parent: RestaurantTable = null
+	var p_tbl = item.get_parent()
+	while p_tbl != null:
+		if p_tbl is RestaurantTable:
+			table_parent = p_tbl as RestaurantTable
+			break
+		p_tbl = p_tbl.get_parent()
+	if table_parent:
+		table_parent.served_items.erase(item)
 
 	# Se a ferramenta atual for Bucha, troca automaticamente para a Mão Livre
 	if active_tool_slot == ToolSlot.SPONGE:

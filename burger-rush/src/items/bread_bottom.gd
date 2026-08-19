@@ -44,7 +44,7 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 	return "🖱️ Pegar Base do Pão"
 
-# [Clique Esquerdo] — Manipulação do lanche / adição de ingredientes / pegar conjunto
+# [Clique Esquerdo] — Manipulação do lanche / adição de ingredientes / embalar
 func interact_item(player: Node3D) -> void:
 	if not player or location != ItemLocation.WORLD or is_held:
 		return
@@ -58,5 +58,19 @@ func interact_item(player: Node3D) -> void:
 		assembly.interact_item(player)
 		return
 
+	if player.has_method("pick_up"):
+		player.pick_up(self)
+
+# [E] — Pegar o lanche inteiro (completo ou incompleto) para a mão principal
+func interact(player: Node3D) -> void:
+	if not player or location != ItemLocation.WORLD or is_held:
+		return
+	if player.get("held_item") == self:
+		player.drop_item()
+		return
+	if player.has_method("is_holding_large_item") and player.is_holding_large_item():
+		if player.get_node_or_null("HUD"):
+			player.get_node_or_null("HUD").show_temporary_feedback("⚠️ Mãos ocupadas! Solte o item atual antes de pegar o lanche.")
+		return
 	if player.has_method("pick_up"):
 		player.pick_up(self)

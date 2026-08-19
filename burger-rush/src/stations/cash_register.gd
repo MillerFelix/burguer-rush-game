@@ -86,7 +86,7 @@ func advance_queue() -> void:
 	_update_visual_status()
 
 func _clean_queue() -> void:
-	queue_customers = queue_customers.filter(func(c): return is_instance_valid(c) and c.state in [Customer.State.GOING_TO_QUEUE, Customer.State.IN_QUEUE, Customer.State.PAYING])
+	queue_customers = queue_customers.filter(func(c): return is_instance_valid(c) and c.state != Customer.State.LEAVING and c.state != Customer.State.FINISHED)
 
 func get_first_in_queue() -> Customer:
 	_clean_queue()

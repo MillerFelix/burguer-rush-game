@@ -44,9 +44,21 @@ func is_clean() -> bool:
 func set_dirty() -> void:
 	is_dirty = true
 	stop_scrub_continuous()
+	var p = get_parent()
+	while p != null:
+		if p is Player or "sponge_is_dirty" in p:
+			p.set("sponge_is_dirty", true)
+			break
+		p = p.get_parent()
 
 func set_clean() -> void:
 	is_dirty = false
+	var p = get_parent()
+	while p != null:
+		if p is Player or "sponge_is_dirty" in p:
+			p.set("sponge_is_dirty", false)
+			break
+		p = p.get_parent()
 
 func _update_visuals() -> void:
 	if not yellow_body:

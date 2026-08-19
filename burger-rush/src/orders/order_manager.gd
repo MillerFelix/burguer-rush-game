@@ -24,35 +24,12 @@ var daily_cancelled_orders: int = 0
 var daily_total_wait_time: float = 0.0
 
 @export var delivery_spawn_enabled: bool = true
-var _delivery_spawn_timer: float = 90.0
+var daily_scheduled_deliveries: Array[float] = []
+var daily_deliveries_spawned: int = 0
+var last_checked_delivery_day: int = -1
 
 func _enter_tree() -> void:
 	instance = self
-
-func _ready() -> void:
-	instance = self
-
-func _process(delta: float) -> void:
-	var to_expire: Array[Order] = []
-	for order in active_orders:
-		if order.state == Order.State.WAITING or order.state == Order.State.IN_PROGRESS or (order.source_type == "DELIVERY" and order.delivery_stage != "COMPLETED_PAID" and order.delivery_stage != "COMPLETED_WRONG" and order.delivery_stage != "CANCELLED" and order.delivery_stage != "NOT_ACCEPTED"):
-			order.wait_time += delta
-			order.elapsed_time += delta
-			if order.delivery_stage == "PREPARING":
-				order.prep_elapsed_time += delta
-
-		# Verificação de tempo limite para aceitar pedidos de delivery
-		if order.source_type == "DELIVERY" and order.delivery_stage == "NEW_RECEIVED" and not order.is_accepted:
-			order.delivery_accept_timer -= delta
-			if order.delivery_accept_timer <= 0.0:
-				to_expire.append(order)
-
-	for exp_order in to_expire:
-		expire_unaccepted_delivery_order(exp_order)
-
-	# Gerador automático de pedidos de delivery durante o expediente
-	if delivery_spawn_enabled:
-		_process_delivery_spawning(delta)
 
 static func get_instance() -> OrderManager:
 	if instance and is_instance_valid(instance):
@@ -67,19 +44,60 @@ static func get_instance() -> OrderManager:
 				return instance
 	return null
 
-func _process_delivery_spawning(delta: float) -> void:
+func _ready() -> void:
+	instance = self
+	_init_day_delivery_demand()
+
+func _init_day_delivery_demand() -> void:
+	var clock = GameClock.get_instance()
+	if not clock and is_inside_tree() and get_tree() and get_tree().root:
+		clock = get_tree().root.find_child("GameClock", true, false)
+	var day_num: int = int(clock.get("day_number")) if (clock and clock.get("day_number") != null) else 1
+	last_checked_delivery_day = day_num
+	daily_scheduled_deliveries.clear()
+	daily_deliveries_spawned = 0
+
+	# Delivery é um canal secundário/raro: 0 a 3 pedidos por dia no máximo
+	var rand_val = randf()
+	var total_deliveries_today = 0
+
+	if rand_val < 0.25:
+		total_deliveries_today = 0 # 25% dos dias: Nenhum delivery
+	elif rand_val < 0.70:
+		total_deliveries_today = 1 # 45% dos dias: 1 delivery ocasional
+	elif rand_val < 0.92:
+		total_deliveries_today = 2 # 22% dos dias: 2 deliveries
+	else:
+		total_deliveries_today = 3 # 8% dos dias: 3 deliveries (pico raro)
+
+	if total_deliveries_today > 0:
+		var possible_windows = [
+			randf_range(11.8, 13.8), # Almoço
+			randf_range(15.0, 17.5), # Tarde
+			randf_range(18.2, 20.8)  # Jantar
+		]
+		possible_windows.shuffle()
+
+		for i in range(min(total_deliveries_today, possible_windows.size())):
+			daily_scheduled_deliveries.append(possible_windows[i])
+
+		daily_scheduled_deliveries.sort()
+
+func _process_delivery_spawning(_delta: float) -> void:
 	var clock = GameClock.get_instance()
 	if not clock and is_inside_tree() and get_tree() and get_tree().root:
 		clock = get_tree().root.find_child("GameClock", true, false)
 
-	# NENHUM pedido de delivery pode chegar durante a fase de preparação ou quando fechado
 	if not clock:
 		return
 	if clock.has_method("is_restaurant_open"):
 		if not clock.is_restaurant_open():
 			return
-	elif clock.get("state") != null and clock.state != 1: # State.OPEN == 1
+	elif clock.get("state") != null and clock.state != 1:
 		return
+
+	if clock.get("day_number") != last_checked_delivery_day:
+		_init_day_delivery_demand()
 
 	# Não acumula mais que 2 deliveries pendentes de aceite simultâneos
 	var pending_count = 0
@@ -89,17 +107,13 @@ func _process_delivery_spawning(delta: float) -> void:
 	if pending_count >= 2:
 		return
 
-	_delivery_spawn_timer -= delta
-	if _delivery_spawn_timer <= 0.0:
-		var event_mult = 1.0
-		if is_inside_tree() and get_tree() and get_tree().root:
-			var dem = get_tree().root.find_child("DailyEventManager", true, false)
-			if dem and dem.has_method("get_customer_demand_multiplier"):
-				event_mult = dem.get_customer_demand_multiplier(clock.current_hour if clock else 12.0)
-		# Frequência base reduzida novamente em 50% (intervalos maiores e espaçados)
-		var base_spawn = randf_range(340.0, 640.0) / maxf(0.5, event_mult)
-		_delivery_spawn_timer = base_spawn
-		create_delivery_order()
+	var current_hour_f = clock.current_hour + (clock.current_minute / 60.0)
+
+	if daily_deliveries_spawned < daily_scheduled_deliveries.size():
+		var next_time = daily_scheduled_deliveries[daily_deliveries_spawned]
+		if current_hour_f >= next_time:
+			daily_deliveries_spawned += 1
+			create_delivery_order()
 
 ## Cria um novo pedido de Delivery recebido pelo aplicativo
 func create_delivery_order(custom_items: Array = []) -> Order:
@@ -123,7 +137,8 @@ func create_delivery_order(custom_items: Array = []) -> Order:
 		for it in custom_items:
 			order.add_item(it.get("product_id", ""), it.get("product_name", ""), it.get("quantity", 1), it.get("unit_price", 10.0))
 	else:
-		# Monta combo padrão de delivery: 1 Burger + 1 Batata/Acomp + 1 Bebida
+		# DISTRIBUIÇÃO CONTROLADA DE TAMANHO DE PEDIDO:
+		# 60% Pequeno, 30% Médio, 10% Grande (Raro)
 		var burger_recipe_ids = [
 			"burger_classic", "burger_double", "burger_cheddar", "burger_bacon",
 			"burger_salad", "burger_onion", "burger_chicken", "burger_supreme",
@@ -137,28 +152,60 @@ func create_delivery_order(custom_items: Array = []) -> Order:
 		if available_burgers.is_empty():
 			available_burgers = [{"id": "burger_classic", "name": "Burger Clássico", "price": 22.90}]
 
-		var b = available_burgers[randi() % available_burgers.size()]
-		var b_price = MenuPricingManager.get_selling_price(b.id)
-		order.add_item(b.id, b.name, 1, b_price)
-
-		# Batata ou cebola
-		if randf() < 0.75:
-			var f_price = MenuPricingManager.get_selling_price("fries")
-			order.add_item("fries", "Batata Frita", 1, f_price)
-		else:
-			var o_price = MenuPricingManager.get_selling_price("onion_rings")
-			order.add_item("onion_rings", "Cebola Frita", 1, o_price)
-
-		# Bebida
 		var available_drinks = [
 			{"id": "soda_cola", "name": "Refrigerante Cola", "price": 6.0},
 			{"id": "soda_cola_zero", "name": "Refrigerante Zero", "price": 6.0},
 			{"id": "soda_lime", "name": "Refrigerante Soda", "price": 6.0},
 			{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0}
 		]
-		var d = available_drinks[randi() % available_drinks.size()]
-		var d_price = MenuPricingManager.get_selling_price(d.id)
-		order.add_item(d.id, d.name, 1, d_price)
+
+		var rand_size = randf()
+
+		if rand_size < 0.60:
+			# PEDIDO PEQUENO (60%): 1 Burger (50%) ou 1 Burger + 1 Bebida (50%)
+			var b = available_burgers[randi() % available_burgers.size()]
+			var b_price = MenuPricingManager.get_selling_price(b.id)
+			order.add_item(b.id, b.name, 1, b_price)
+
+			if randf() < 0.50:
+				var d = available_drinks[randi() % available_drinks.size()]
+				var d_price = MenuPricingManager.get_selling_price(d.id)
+				order.add_item(d.id, d.name, 1, d_price)
+
+		elif rand_size < 0.90:
+			# PEDIDO MÉDIO (30%): 1 Combo = 1 Burger + 1 Batata/Cebola + 1 Bebida
+			var b = available_burgers[randi() % available_burgers.size()]
+			var b_price = MenuPricingManager.get_selling_price(b.id)
+			order.add_item(b.id, b.name, 1, b_price)
+
+			if randf() < 0.75:
+				var f_price = MenuPricingManager.get_selling_price("fries")
+				order.add_item("fries", "Batata Frita", 1, f_price)
+			else:
+				var o_price = MenuPricingManager.get_selling_price("onion_rings")
+				order.add_item("onion_rings", "Cebola Frita", 1, o_price)
+
+			var d = available_drinks[randi() % available_drinks.size()]
+			var d_price = MenuPricingManager.get_selling_price(d.id)
+			order.add_item(d.id, d.name, 1, d_price)
+
+		else:
+			# PEDIDO GRANDE (10% - RARO): 2 Burgers + 1 Acomp + 1-2 Bebidas
+			var b1 = available_burgers[randi() % available_burgers.size()]
+			order.add_item(b1.id, b1.name, 1, MenuPricingManager.get_selling_price(b1.id))
+
+			var b2 = available_burgers[randi() % available_burgers.size()]
+			order.add_item(b2.id, b2.name, 1, MenuPricingManager.get_selling_price(b2.id))
+
+			var f_price = MenuPricingManager.get_selling_price("fries")
+			order.add_item("fries", "Batata Frita", 1, f_price)
+
+			var d1 = available_drinks[randi() % available_drinks.size()]
+			order.add_item(d1.id, d1.name, 1, MenuPricingManager.get_selling_price(d1.id))
+
+			if randf() < 0.60:
+				var d2 = available_drinks[randi() % available_drinks.size()]
+				order.add_item(d2.id, d2.name, 1, MenuPricingManager.get_selling_price(d2.id))
 
 	order.state = Order.State.RECEIVED
 	active_orders.append(order)
@@ -380,46 +427,63 @@ func create_group_order(customer: Node, group_size: int, table_id: int = 0, sour
 		{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0}
 	]
 
-	# 1. Cada pessoa do grupo consome Hambúrguer e Bebida
+	# 1. Alocação de Hambúrgueres e Bebidas com distribuição balanceada
 	var bev_mult = 1.0
 	if is_inside_tree() and get_tree() and get_tree().root:
 		var dem = get_tree().root.find_child("DailyEventManager", true, false)
 		if dem and dem.has_method("get_beverage_demand_multiplier"):
 			bev_mult = dem.get_beverage_demand_multiplier()
 
-	for _p in range(order.group_size):
-		var b = available_burgers[randi() % available_burgers.size()]
-		var b_price = MenuPricingManager.get_selling_price(b.id)
-		order.add_item(b.id, b.name, 1, b_price)
-
-		var drinks_for_person = 1
-		if bev_mult >= 1.8:
-			drinks_for_person = 2 if randf() < 0.70 else 1
-
-		for _k in range(drinks_for_person):
-			var d = available_drinks[randi() % available_drinks.size()]
-			var d_price = MenuPricingManager.get_selling_price(d.id)
-			order.add_item(d.id, d.name, 1, d_price)
-
-	# 2. Acompanhamento (Batata Frita ou Cebola Frita)
-	var sides_count = 0
 	if order.group_size == 1:
-		if randf() < 0.45:
-			sides_count = 1
-	elif order.group_size == 2:
-		sides_count = 1 if randf() < 0.8 else 2
-	elif order.group_size == 3:
-		sides_count = 1 if randf() < 0.5 else 2
-	elif order.group_size >= 4:
-		sides_count = 2 if randf() < 0.7 else 3
+		# Pedido Solo: 60% Pequeno, 30% Médio, 10% Grande
+		var rand_solo = randf()
+		var b = available_burgers[randi() % available_burgers.size()]
+		order.add_item(b.id, b.name, 1, MenuPricingManager.get_selling_price(b.id))
 
-	for _s in range(sides_count):
-		if randf() < 0.5:
-			var f_price = MenuPricingManager.get_selling_price("fries")
-			order.add_item("fries", "Batata Frita", 1, f_price)
+		if rand_solo < 0.60:
+			# Pequeno: 50% só lanche, 50% lanche + bebida
+			if randf() < 0.50 or bev_mult >= 1.5:
+				var d = available_drinks[randi() % available_drinks.size()]
+				order.add_item(d.id, d.name, 1, MenuPricingManager.get_selling_price(d.id))
+		elif rand_solo < 0.90:
+			# Médio: Combo (Lanche + Bebida + Acompanhamento)
+			var d = available_drinks[randi() % available_drinks.size()]
+			order.add_item(d.id, d.name, 1, MenuPricingManager.get_selling_price(d.id))
+			if randf() < 0.70:
+				order.add_item("fries", "Batata Frita", 1, MenuPricingManager.get_selling_price("fries"))
+			else:
+				order.add_item("onion_rings", "Cebola Frita", 1, MenuPricingManager.get_selling_price("onion_rings"))
 		else:
-			var o_price = MenuPricingManager.get_selling_price("onion_rings")
-			order.add_item("onion_rings", "Cebola Frita", 1, o_price)
+			# Grande (Raro): Lanche + Bebida + 2 Acompanhamentos
+			var d = available_drinks[randi() % available_drinks.size()]
+			order.add_item(d.id, d.name, 1, MenuPricingManager.get_selling_price(d.id))
+			order.add_item("fries", "Batata Frita", 1, MenuPricingManager.get_selling_price("fries"))
+			order.add_item("onion_rings", "Cebola Frita", 1, MenuPricingManager.get_selling_price("onion_rings"))
+
+	else:
+		# Pedido de Grupo (2, 3 ou 4 pessoas)
+		for _p in range(order.group_size):
+			var b = available_burgers[randi() % available_burgers.size()]
+			order.add_item(b.id, b.name, 1, MenuPricingManager.get_selling_price(b.id))
+
+			if randf() < 0.85 or bev_mult >= 1.5:
+				var d = available_drinks[randi() % available_drinks.size()]
+				order.add_item(d.id, d.name, 1, MenuPricingManager.get_selling_price(d.id))
+
+		# Acompanhamentos proporcionais ao grupo
+		var sides_count = 0
+		if order.group_size == 2:
+			sides_count = 1 if randf() < 0.40 else 0 # 40% das duplas pedem 1 batata para dividir
+		elif order.group_size == 3:
+			sides_count = 1 if randf() < 0.70 else 2
+		elif order.group_size >= 4:
+			sides_count = 2
+
+		for _s in range(sides_count):
+			if randf() < 0.65:
+				order.add_item("fries", "Batata Frita", 1, MenuPricingManager.get_selling_price("fries"))
+			else:
+				order.add_item("onion_rings", "Cebola Frita", 1, MenuPricingManager.get_selling_price("onion_rings"))
 
 	order.state = Order.State.WAITING
 	active_orders.append(order)
