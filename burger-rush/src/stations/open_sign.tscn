@@ -62,13 +62,7 @@ mesh = SubResource("CylinderMesh_Hinge")
 transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.72, 0.16)
 billboard = 0
 double_sided = false
-text = "BURGER RUSH
-
-FECHADO
-
-10:00 — 22:00
-
-[E] Abrir Restaurante"
+text = "BURGER RUSH\n\nFECHADO\n\n10:00 — 22:00\n\n[E] Abrir Restaurante"
 font_size = 28
 outline_size = 8
 line_spacing = 6.0

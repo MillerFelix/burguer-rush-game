@@ -37,7 +37,6 @@ var unlocked_features: Dictionary = {
 	"cup_empty": true,
 	"cup_lid": true,
 	"syrup_soda": true,
-	"cooking_oil": true,
 	# Bebidas
 	"soda_cola": true,
 	"soda_guarana": true,

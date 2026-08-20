@@ -2,22 +2,41 @@ class_name TutorialController
 extends CanvasLayer
 
 # =============================================================================
-# BURGER RUSH — CONTROLADOR E GERENCIADOR DO TUTORIAL INICIAL (FASE 6)
+# BURGER RUSH — INTRODUÇÃO JOGÁVEL E REVISÃO COMPLETA DO TUTORIAL (15 ETAPAS)
 #
-# Coordena as etapas do tutorial, destacando objetos e validando interações
-# reais através dos sistemas originais do jogo.
+# Estruturado, didático, focado nas ações reais dos sistemas do restaurante.
+# Sem atalhos de mera proximidade. Transições com momento de leitura.
 # =============================================================================
 
 const PowerManager = preload("res://src/core/power_manager.gd")
 const GameClock = preload("res://src/time/game_clock.gd")
+const PurchaseManager = preload("res://src/purchasing/purchase_manager.gd")
+const MainPowerPanelClass = preload("res://src/stations/main_power_panel.gd")
+const ComputerStationClass = preload("res://src/stations/computer_station.gd")
+const ReceivingAreaClass = preload("res://src/stations/receiving_area.gd")
+const StorageRackClass = preload("res://src/stations/storage_rack.gd")
 const Refrigerator = preload("res://src/stations/commercial_refrigerator.gd")
 const Grill = preload("res://src/stations/grill.gd")
 const PrepIsland = preload("res://src/stations/prep_island.gd")
+const CommercialSinkClass = preload("res://src/stations/commercial_sink.gd")
+const PackagingStationClass = preload("res://src/stations/packaging_station.gd")
 const PackagedBurger = preload("res://src/items/packaged_burger.gd")
+const DrinkMachineClass = preload("res://src/stations/drink_machine.gd")
+const JuiceMachineClass = preload("res://src/stations/juice_machine.gd")
+const FryerClass = preload("res://src/stations/fryer.gd")
+const DrinkCup = preload("res://src/items/drink_cup.gd")
+const DeliveryWindowStationClass = preload("res://src/stations/delivery_window_station.gd")
 const ServingTray = preload("res://src/items/serving_tray.gd")
+const ServingTrayStackClass = preload("res://src/stations/serving_tray_stack.gd")
+const OpenSignClass = preload("res://src/stations/open_sign.gd")
+const CashRegisterClass = preload("res://src/stations/cash_register.gd")
+const RestaurantTableClass = preload("res://src/stations/restaurant_table.gd")
+const DeliveryBox = preload("res://src/items/delivery_box.gd")
 const Patty = preload("res://src/items/patty.gd")
 const BreadBottom = preload("res://src/items/bread_bottom.gd")
-const BurgerAssembly = preload("res://src/recipes/burger_assembly.gd")
+const Burger = preload("res://src/items/burger.gd")
+const Cheeseburger = preload("res://src/items/cheeseburger.gd")
+const FriesPack = preload("res://src/items/fries_pack.gd")
 
 @onready var step_title: Label = $Control/StepPanel/Margin/VBox/StepTitle
 @onready var step_instruction: Label = $Control/StepPanel/Margin/VBox/StepInstruction
@@ -27,21 +46,39 @@ const BurgerAssembly = preload("res://src/recipes/burger_assembly.gd")
 @onready var cancel_skip_button: Button = $Control/ConfirmDialog/Margin/VBox/Buttons/CancelSkipButton
 @onready var confirm_skip_button: Button = $Control/ConfirmDialog/Margin/VBox/Buttons/ConfirmSkipButton
 @onready var congrats_panel: PanelContainer = $Control/CongratsPanel
+@onready var congrats_title: Label = $Control/CongratsPanel/Margin/VBox/CongratsTitle
+@onready var congrats_text: Label = $Control/CongratsPanel/Margin/VBox/CongratsText
 @onready var start_day_button: Button = $Control/CongratsPanel/Margin/VBox/StartDayButton
 
 var current_step_index: int = 0
 var tutorial_completed: bool = false
 
-# Destaques visuais
+# Destaques visuais 3D reutilizáveis
 var current_highlight_marker: Label3D = null
 var current_highlight_light: OmniLight3D = null
+var _highlight_base_y: float = 0.0
 
 # Estado auxiliar de etapa
 var step_initialized: bool = false
 var step_start_pos: Vector3 = Vector3.ZERO
+var step_tested_jump: bool = false
+var step_tested_sprint: bool = false
+var step_pc_opened: bool = false
+var step_purchased_order: bool = false
+var step_stored_box: bool = false
+var step_ingredient_handled: bool = false
+var step_juice_prepared: bool = false
+var step_fryer_finished: bool = false
+var step_burger_assembled: bool = false
+var step_burger_packaged: bool = false
+var step_grill_was_cleaned: bool = false
+var step_payment_processed: bool = false
+var step_money_collected: bool = false
+var step_open_sign_interacted: bool = false
+
+var transition_timer: float = 0.0
 var check_timer: float = 0.0
 
-# Definição das etapas
 class TutorialStep:
 	var title: String
 	var instruction: String
@@ -55,483 +92,663 @@ func _ready() -> void:
 	_initialize_steps()
 	_connect_ui_signals()
 	
-	# Restaura progresso salvo se aplicável
 	var sm = _get_save_manager()
 	if sm and not sm.pending_save_data.is_empty():
-		var saved_step = sm.pending_save_data.get("tutorial_step", 0)
-		if saved_step >= 0 and saved_step < steps.size():
-			current_step_index = saved_step
-
-	# Garante que a energia do restaurante esteja ligada para o tutorial
-	var pm = PowerManager.get_instance()
-	if pm:
-		pm.set_main_power(true)
-
-	# Pausa o relógio do jogo durante o tutorial
-	var clock = GameClock.get_instance()
+		current_step_index = int(sm.pending_save_data.get("tutorial_step", 0))
+		tutorial_completed = bool(sm.pending_save_data.get("tutorial_completed", false))
+	
+	var clock = _get_game_clock()
 	if clock:
 		clock.is_paused = true
-
-	confirm_dialog.visible = false
-	congrats_panel.visible = false
 	
-	_show_step(current_step_index)
+	var rec = _get_receiving_area()
+	if rec:
+		rec.clear_pallet()
+	
+	var player = _get_player()
+	if player:
+		step_start_pos = player.global_position
+	
+	if current_step_index >= steps.size() or tutorial_completed:
+		_show_congrats_panel()
+	else:
+		_apply_step(current_step_index)
 
 func _initialize_steps() -> void:
 	steps.clear()
 	
+	# ETAPA 1 — MOVIMENTAÇÃO
 	var s0 = TutorialStep.new()
-	s0.title = "1. Movimentação Básica"
-	s0.instruction = "Bem-vindo ao seu restaurante!\nUse as teclas W, A, S, D para se movimentar e explore a cozinha."
-	s0.progress_text = "Duração: Caminhe 3 metros"
+	s0.title = "1. MOVIMENTAÇÃO E CONTROLES"
+	s0.instruction = "Use [W, A, S, D] para andar, mova o [Mouse] para olhar, pressione [Espaço] para pular e segure [Shift] para correr."
+	s0.progress_text = "Mova-se, pule com [Espaço] e corra com [Shift]."
 	s0.highlight_name = ""
-	s0.success_msg = "Muito bem!"
+	s0.success_msg = "Movimentação dominada com sucesso!"
 	steps.append(s0)
-
+	
+	# ETAPA 2 — QUADRO DE ENERGIA
 	var s1 = TutorialStep.new()
-	s1.title = "2. Computador Administrativo"
-	s1.instruction = "Vá até o Computador do Escritório e acesse-o pressionando [E] para visualizar o estoque de insumos."
-	s1.progress_text = "Objetivo: Acessar o PC"
-	s1.highlight_name = "ComputerStation"
-	s1.success_msg = "Excelente. Esse computador controla toda a gestão."
+	s1.title = "2. QUADRO GERAL DE ENERGIA"
+	s1.instruction = "O quadro de energia controla todo o fornecimento elétrico do restaurante. Vá até a parede externa na lateral e pressione [E] para ligar o disjuntor geral."
+	s1.progress_text = "Ligue o quadro de energia geral com [E]."
+	s1.highlight_name = "MainPowerPanel"
+	s1.success_msg = "⚡ Rede elétrica ativada! Equipamentos energizados."
 	steps.append(s1)
-
+	
+	# ETAPA 3 — PC ADMINISTRATIVO
 	var s2 = TutorialStep.new()
-	s2.title = "3. Pegando Ingredientes"
-	s2.instruction = "Vá até a Geladeira, abra-a clicando com o botão esquerdo e pegue 1x Carne Bovina Crua.\n(Equipe as Mãos Livres pressionando a tecla 3)."
-	s2.progress_text = "Objetivo: Segurar Carne Bovina Crua"
-	s2.highlight_name = "MeatRefrigerator"
-	s2.success_msg = "Perfeito. Você pegou a carne."
+	s2.title = "3. COMPUTADOR ADMINISTRATIVO"
+	s2.instruction = "Vá até o escritório e pressione [E] para acessar o computador. É por ele que você gerencia notícias, funcionários, contas, cardápio, compras e delivery."
+	s2.progress_text = "Acesse o computador com [E]."
+	s2.highlight_name = "ComputerStation"
+	s2.success_msg = "Computador acessado! Sistema de gestão pronto."
 	steps.append(s2)
-
+	
+	# ETAPA 4 — COMPRA E RECEBIMENTO DE INGREDIENTE
 	var s3 = TutorialStep.new()
-	s3.title = "4. Colocando na Chapa"
-	s3.instruction = "Leve a carne bovina crua até a chapa da grelha e coloque-a usando o Clique Esquerdo do mouse.\n(Se a chapa estiver desligada, ligue-a pressionando [E] nela)."
-	s3.progress_text = "Objetivo: Colocar a carne na chapa"
-	s3.highlight_name = "Grill"
-	s3.success_msg = "Isso aí. O hambúrguer começou a grelhar."
+	s3.title = "4. COMPRA E RECEBIMENTO DE INGREDIENTES"
+	s3.instruction = "No PC, abra a aba 'Compras' e confirme um pedido. A van chegará na doca externa. Vá até o pallet externo, pegue a caixa com [E] e leve para o armazém."
+	s3.progress_text = "Compre no PC, pegue a caixa no pallet [E] e leve ao armazém."
+	s3.highlight_name = "ReceivingArea"
+	s3.success_msg = "Mercadorias recebidas e guardadas no armazém!"
 	steps.append(s3)
-
+	
+	# ETAPA 5 — INGREDIENTES E ARMAZENAMENTO
 	var s4 = TutorialStep.new()
-	s4.title = "5. Virando a Carne"
-	s4.instruction = "Aguarde a carne grelhar o primeiro lado (o prompt indicará 'VIRAR'). Equipe a Espátula [Tecla 1] e clique na carne para virá-la."
-	s4.progress_text = "Objetivo: Virar a carne com a Espátula"
-	s4.highlight_name = "Grill"
-	s4.success_msg = "Boa! Agora o outro lado está grelhando."
+	s4.title = "5. INGREDIENTES E ARMAZENAMENTO"
+	s4.instruction = "Os ingredientes ficam nas prateleiras e refrigeradores do armazém. Pegue um item com [Clique Esquerdo] e devolva com [Clique Direito]."
+	s4.progress_text = "Pegue um ingrediente no armazém [Esq] e devolva [Dir]."
+	s4.highlight_name = "StorageRack"
+	s4.success_msg = "Lógica de estoque compreendida!"
 	steps.append(s4)
-
+	
+	# ETAPA 6 — MÁQUINA DE REFRIGERANTE
 	var s5 = TutorialStep.new()
-	s5.title = "6. Retirando o Hambúrguer"
-	s5.instruction = "Aguarde a carne grelhar o segundo lado até ficar no ponto (Pronta). Com a Espátula [1] equipada, clique na carne para retirá-la."
-	s5.progress_text = "Objetivo: Retirar a carne pronta da grelha"
-	s5.highlight_name = "Grill"
-	s5.success_msg = "Perfeito, carne grelhada com sucesso."
+	s5.title = "6. MÁQUINA DE REFRIGERANTES"
+	s5.instruction = "Pegue um copo vazio no dispenser com [Clique Esquerdo], posicione sob o bico da máquina de refrigerantes e sirva a bebida com [Clique Esquerdo]."
+	s5.progress_text = "Pegue um copo e sirva refrigerante na máquina."
+	s5.highlight_name = "DrinkMachine"
+	s5.success_msg = "Refrigerante geladinho servido com sucesso!"
 	steps.append(s5)
-
+	
+	# ETAPA 7 — MÁQUINA DE SUCO
 	var s6 = TutorialStep.new()
-	s6.title = "7. Iniciando a Montagem"
-	s6.instruction = "Vá até a Bancada de Preparo (ilha central) e coloque a Base do Pão (Bread Bottom) nela com o Clique Esquerdo.\n(Use Mãos Livres [3])."
-	s6.progress_text = "Objetivo: Colocar Base do Pão na bancada"
-	s6.highlight_name = "PrepIsland"
-	s6.success_msg = "Show. O lanche começou a ser montado."
+	s6.title = "7. MÁQUINA DE SUCOS NATURAIS"
+	s6.instruction = "Pegue uma polpa de fruta congelada na bancada com [Clique Esquerdo], insira na máquina de suco e sirva um suco natural fresco no copo."
+	s6.progress_text = "Coloque a polpa e sirva um suco natural no copo."
+	s6.highlight_name = "JuiceMachine"
+	s6.success_msg = "Suco natural preparado com perfeição!"
 	steps.append(s6)
-
+	
+	# ETAPA 8 — FRITADEIRA
 	var s7 = TutorialStep.new()
-	s7.title = "8. Adicionando a Carne"
-	s7.instruction = "Com a Espátula segurando o hambúrguer (ou carne nos slots [4, 5, 6]), clique na Base do Pão na bancada para adicioná-la."
-	s7.progress_text = "Objetivo: Adicionar carne bovina ao pão"
-	s7.highlight_name = "PrepIsland"
-	s7.success_msg = "Ótimo. Carne adicionada."
+	s7.title = "8. FRITADEIRA COMERCIAL"
+	s7.instruction = "Pegue batatas no armazém, coloque no cesto da fritadeira com [Clique Esquerdo], pressione [E] para abaixar no óleo e retire a porção crocante."
+	s7.progress_text = "Frite uma porção de batatas e retire da fritadeira."
+	s7.highlight_name = "Fryer"
+	s7.success_msg = "Batatas crocantes fritas com sucesso!"
 	steps.append(s7)
-
+	
+	# ETAPA 9 — GRELHA
 	var s8 = TutorialStep.new()
-	s8.title = "9. Fechando o Lanche"
-	s8.instruction = "Pegue a parte superior do pão (Bread Top) no armário de ingredientes e clique no hambúrguer na bancada para fechá-lo."
-	s8.progress_text = "Objetivo: Adicionar a tampa do pão"
-	s8.highlight_name = "PrepIsland"
-	s8.success_msg = "Hambúrguer finalizado e pronto para embalar!"
+	s8.title = "9. GRELHA INDUSTRIAL"
+	s8.instruction = "Pegue um hambúrguer cru com [Clique Esquerdo], coloque na chapa da grelha, equipe a Espátula [Tecla 1], vire quando dourar e retire na espátula."
+	s8.progress_text = "Coloque a carne na chapa, vire [1] e retire na espátula."
+	s8.highlight_name = "Grill"
+	s8.success_msg = "Carne assada no ponto perfeito recolhida na espátula!"
 	steps.append(s8)
-
+	
+	# ETAPA 10 — MONTAGEM
 	var s9 = TutorialStep.new()
-	s9.title = "10. Embalando o Pedido"
-	s9.instruction = "Pegue uma Caixa de Hambúrguer na bancada de embalagens e, com ela na mão, clique no lanche pronto para embalá-lo."
-	s9.progress_text = "Objetivo: Embalar o lanche na caixa"
-	s9.highlight_name = "PackagingStation"
-	s9.success_msg = "Excelente. Lanche embalado na caixa."
+	s9.title = "10. MONTAGEM DO HAMBÚRGUER"
+	s9.instruction = "Na bancada de montagem, coloque a base do pão, adicione a carne grelhada da espátula e finalize colocando a parte superior do pão."
+	s9.progress_text = "Monte o lanche: Base do pão + Carne + Topo do pão."
+	s9.highlight_name = "PrepIsland"
+	s9.success_msg = "Hambúrguer suculento montado com perfeição!"
 	steps.append(s9)
-
+	
+	# ETAPA 11 — EMBALAGEM
 	var s10 = TutorialStep.new()
-	s10.title = "11. Preparando a Bandeja"
-	s10.instruction = "Pegue uma Bandeja no stack pressionando [E]. Segurando o lanche embalado, clique com o botão DIREITO do mouse na bandeja para colocá-lo."
-	s10.progress_text = "Objetivo: Colocar o lanche embalado na bandeja"
-	s10.highlight_name = "ServingTrayStack"
-	s10.success_msg = "Perfeito, o pedido está montado na bandeja!"
+	s10.title = "11. ESTAÇÃO DE EMBALAGEM"
+	s10.instruction = "Leve o hambúrguer montado até a estação de embalagem. Pegue uma caixa de hambúrguer ou saco com [Clique Esquerdo] para embalar o lanche."
+	s10.progress_text = "Embale o hambúrguer na estação de embalagem."
+	s10.highlight_name = "PackagingStation"
+	s10.success_msg = "Lanche embalado e pronto para entrega!"
 	steps.append(s10)
-
+	
+	# ETAPA 12 — BANDEJA
 	var s11 = TutorialStep.new()
-	s11.title = "12. Limpeza da Chapa"
-	s11.instruction = "A chapa da grelha acumulou resíduos de óleo. Equipe a Bucha [Tecla 2], mire na grelha e segure o Clique Esquerdo do mouse para limpá-la."
-	s11.progress_text = "Objetivo: Limpar a sujeira da chapa"
-	s11.highlight_name = "Grill"
-	s11.success_msg = "Espetacular! Restaurante limpo e organizado."
+	s11.title = "12. BANDEJA DE SERVIÇO"
+	s11.instruction = "Pegue uma Bandeja de Serviço na pilha com [E] e coloque o lanche embalado nela com [Clique Esquerdo] para transportar o pedido ao cliente."
+	s11.progress_text = "Pegue uma bandeja [E] e deposite o lanche embalado nela."
+	s11.highlight_name = "ServingTrayStack"
+	s11.success_msg = "Pedido acomodado na bandeja com sucesso!"
 	steps.append(s11)
-
+	
+	# ETAPA 13 — LIMPEZA
 	var s12 = TutorialStep.new()
-	s12.title = "13. Tudo Pronto!"
-	s12.instruction = "O atendimento no BurgerRush envolve receber pedidos, preparar na grelha/fritadeira, montar na bandeja e receber o dinheiro de volta no caixa.\nAgora a gestão do restaurante é sua!"
-	s12.progress_text = "Conclusão do Tutorial"
-	s12.highlight_name = ""
-	s12.success_msg = ""
+	s12.title = "13. LIMPEZA E HIGIENE DA COZINHA"
+	s12.instruction = "Equipe a Bucha de Limpeza [Tecla 2], mire na grelha e segure o [Clique Esquerdo] até limpar. Quando a bucha ficar suja, lave-a na pia industrial com [Clique Esquerdo]."
+	s12.progress_text = "Limpe a grelha com a bucha [2] e lave a bucha na pia."
+	s12.highlight_name = "Grill"
+	s12.success_msg = "Grelha limpa e bucha higienizada na pia!"
 	steps.append(s12)
+	
+	# ETAPA 14 — PEDIDO E PAGAMENTO
+	var s13 = TutorialStep.new()
+	s13.title = "14. PEDIDO E PAGAMENTO"
+	s13.instruction = "Quando os clientes terminam a refeição, deixam o dinheiro no balcão ou nas mesas. Pegue as cédulas com [E] e guarde na Caixa Registradora com [E]."
+	s13.progress_text = "Recolha o dinheiro e deposite na Caixa Registradora com [E]."
+	s13.highlight_name = "CashRegister"
+	s13.success_msg = "Dinheiro no caixa! Faturamento registrado."
+	steps.append(s13)
+	
+	# ETAPA 15 — ABRIR E FECHAR RESTAURANTE
+	var s14 = TutorialStep.new()
+	s14.title = "15. EXPEDIENTE E PLACA DE ABERTURA"
+	s14.instruction = "O restaurante inicia às 09:00 no Período de Preparação. Abre oficialmente às 10:00 e encerra às 22:00. Pressione [E] na Placa de Abertura na entrada."
+	s14.progress_text = "Interaja com a Placa de Abertura [E]."
+	s14.highlight_name = "OpenSign"
+	s14.success_msg = "Rotina de funcionamento compreendida!"
+	steps.append(s14)
 
 func _connect_ui_signals() -> void:
-	skip_button.pressed.connect(_on_skip_pressed)
-	cancel_skip_button.pressed.connect(_on_cancel_skip_pressed)
-	confirm_skip_button.pressed.connect(_on_confirm_skip_pressed)
-	start_day_button.pressed.connect(_on_start_day_pressed)
-
-func _show_step(step_idx: int) -> void:
-	if step_idx < 0 or step_idx >= steps.size():
-		return
-	
-	current_step_index = step_idx
-	step_initialized = false
-	var step = steps[step_idx]
-	
-	# Aplica textos
-	step_title.text = step.title
-	step_instruction.text = step.instruction
-	step_progress.text = step.progress_text
-	
-	# Aplica destaque visual no objeto do mundo correspondente
-	_clear_highlight()
-	if step.highlight_name != "":
-		var target = _find_node_by_class(step.highlight_name)
-		if target:
-			_update_highlight(target, step.title.split(". ")[1])
-			
-	# Transição visual suave (Tween)
-	$Control/StepPanel.scale = Vector2(0.95, 0.95)
-	var tw = create_tween()
-	tw.tween_property($Control/StepPanel, "scale", Vector2(1.0, 1.0), 0.2).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-	
-	# Salva o progresso parcial no slot de save atual
-	_save_tutorial_step(step_idx)
+	if skip_button and not skip_button.pressed.is_connected(_on_skip_button_pressed):
+		skip_button.pressed.connect(_on_skip_button_pressed)
+	if cancel_skip_button and not cancel_skip_button.pressed.is_connected(_on_cancel_skip_pressed):
+		cancel_skip_button.pressed.connect(_on_cancel_skip_pressed)
+	if confirm_skip_button and not confirm_skip_button.pressed.is_connected(_on_confirm_skip_pressed):
+		confirm_skip_button.pressed.connect(_on_confirm_skip_pressed)
+	if start_day_button and not start_day_button.pressed.is_connected(_on_start_day_pressed):
+		start_day_button.pressed.connect(_on_start_day_pressed)
 
 func _process(delta: float) -> void:
-	if tutorial_completed:
+	if tutorial_completed or current_step_index >= steps.size():
 		return
-		
+	
+	# Animação suave do destaque 3D (pulso vertical suave)
+	if current_highlight_marker and is_instance_valid(current_highlight_marker):
+		var time_ms = Time.get_ticks_msec()
+		var offset_y = sin(time_ms * 0.0035) * 0.08
+		current_highlight_marker.position.y = _highlight_base_y + offset_y
+		if current_highlight_light and is_instance_valid(current_highlight_light):
+			current_highlight_light.light_energy = 1.0 + sin(time_ms * 0.004) * 0.3
+	
+	# Transição suave entre etapas para permitir leitura e evitar cascata
+	if transition_timer > 0.0:
+		transition_timer -= delta
+		return
+	
+	# Detecção de ações de movimentação
+	if Input.is_action_just_pressed("jump"):
+		step_tested_jump = true
+	if Input.is_action_pressed("sprint"):
+		step_tested_sprint = true
+	
 	check_timer += delta
 	if check_timer >= 0.15:
 		check_timer = 0.0
 		_check_step_conditions()
 
-func _check_step_conditions() -> void:
-	var gm = _get_game_manager()
-	var player = gm.get_player() as Player if gm else null
-	if not player:
+func _apply_step(idx: int) -> void:
+	if idx >= steps.size():
+		_complete_tutorial()
 		return
+	
+	current_step_index = idx
+	step_initialized = false
+	step_tested_jump = false
+	step_tested_sprint = false
+	step_pc_opened = false
+	step_purchased_order = false
+	step_stored_box = false
+	step_ingredient_handled = false
+	step_juice_prepared = false
+	step_fryer_finished = false
+	step_burger_assembled = false
+	step_burger_packaged = false
+	step_grill_was_cleaned = false
+	step_payment_processed = false
+	step_money_collected = false
+	step_open_sign_interacted = false
+	
+	transition_timer = 0.6
+	
+	var s = steps[idx]
+	if step_title:
+		step_title.text = s.title
+	if step_instruction:
+		step_instruction.text = s.instruction
+	if step_progress:
+		step_progress.text = s.progress_text
+	
+	var player = _get_player()
+	if player:
+		step_start_pos = player.global_position
+	
+	_clear_highlight()
+	_setup_step_context(idx)
+	
+	step_initialized = true
 
+func _setup_step_context(idx: int) -> void:
+	match idx:
+		1: # Quadro de Energia: Inicia desligado para exigir que o jogador ligue
+			var pm = PowerManager.get_instance()
+			if pm:
+				pm.set_main_power(false)
+			var panel = _get_main_power_panel()
+			if panel:
+				_create_highlight(panel, "Quadro Geral de Energia [E]")
+		2: # PC Administrativo
+			var pc = _get_computer_station()
+			if pc:
+				_create_highlight(pc, "PC Administrativo [E]")
+		3: # Compra e Recebimento
+			var rec = _get_receiving_area()
+			if rec:
+				_create_highlight(rec, "Pallet de Recebimento de Mercadorias")
+		4: # Armazenamento / Estoque
+			var rack = _get_storage_rack()
+			if rack:
+				_create_highlight(rack, "Prateleiras do Armazém [Esq / Dir]")
+		5: # Máquina de Refrigerante
+			var dm = _get_drink_machine()
+			if dm:
+				_create_highlight(dm, "Máquina de Refrigerantes")
+		6: # Máquina de Suco
+			var jm = _get_juice_machine()
+			if jm:
+				_create_highlight(jm, "Máquina de Sucos Naturais")
+		7: # Fritadeira
+			var fry = _get_fryer()
+			if fry:
+				_create_highlight(fry, "Fritadeira Comercial [E]")
+		8: # Grelha
+			var gr = _get_grill()
+			if gr:
+				gr.is_on = true
+				gr.current_temperature = 200.0
+				_create_highlight(gr, "Chapa da Grelha [1]")
+		9: # Montagem
+			var pi = _get_prep_island()
+			if pi:
+				_create_highlight(pi, "Ilha de Preparo e Montagem")
+		10: # Embalagem
+			var ps = _get_packaging_station()
+			if ps:
+				_create_highlight(ps, "Estação de Embalagem")
+		11: # Bandeja
+			var tr = _get_tray_stack()
+			if tr:
+				_create_highlight(tr, "Pilha de Bandejas [E]")
+		12: # Limpeza da Grelha
+			var gr = _get_grill()
+			if gr:
+				gr.add_dirt(0.60)
+				_create_highlight(gr, "Grelha (Esfregar com Bucha [2])")
+			var player = _get_player()
+			if player:
+				player.select_tool_slot(Player.ToolSlot.SPONGE, false)
+		13: # Pagamento
+			var cr = _get_cash_register()
+			if cr:
+				_create_highlight(cr, "Caixa Registradora [E]")
+		14: # Placa de Abertura
+			var op = _get_open_sign()
+			if op:
+				_create_highlight(op, "Placa de Abertura [E]")
+
+func _check_step_conditions() -> void:
+	if not step_initialized or current_step_index >= steps.size():
+		return
+	
+	var player = _get_player()
+	var step_ok = false
+	
 	match current_step_index:
 		0: # Movimentação
-			if not step_initialized:
-				step_start_pos = player.global_position
-				step_initialized = true
-			else:
-				var dist = player.global_position.distance_to(step_start_pos)
-				step_progress.text = "Caminhado: %.1fm / 3.0m" % dist
-				if dist >= 3.0:
-					_advance_step()
-					
-		1: # PC
-			var pc = _find_node_by_class("ComputerStation") as ComputerStation
-			if pc and pc.computer_ui_instance and pc.computer_ui_instance.visible:
-				_advance_step()
-				
-		2: # Pegar Carne
-			if player.has_method("has_matching_ingredient") and player.has_matching_ingredient("patty_beef"):
-				_advance_step()
-				
-		3: # Colocar na chapa
-			var grill = _find_node_by_class("Grill") as Grill
-			if grill and not grill.active_items.is_empty():
-				for item in grill.active_items:
-					if item["type"] == "patty":
-						var patty = item["item"] as Patty
-						if patty and (patty.state == Patty.State.RAW or patty.state == Patty.State.COOKING_SIDE_1):
-							_advance_step()
-							break
-							
-		4: # Virar carne
-			var grill = _find_node_by_class("Grill") as Grill
-			if grill and not grill.active_items.is_empty():
-				for item in grill.active_items:
-					if item["type"] == "patty":
-						var patty = item["item"] as Patty
-						if patty and patty.is_flipped:
-							_advance_step()
-							break
-							
-		5: # Retirar carne
-			# Verifica se o jogador retirou a carne com a espátula ou está segurando
-			var holding_cooked_patty = false
-			if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
-				holding_cooked_patty = true
-			if not holding_cooked_patty and player.held_item and player.held_item is Patty:
-				var patty = player.held_item as Patty
-				if patty.is_fully_cooked():
-					holding_cooked_patty = true
-			if not holding_cooked_patty:
-				for slot in player.quick_slots:
-					if not slot.is_empty() and slot.get("item_id") == "patty_beef":
-						var data = slot.get("data", {})
-						if data.get("side_a_cooked", 0.0) >= 100.0 and data.get("side_b_cooked", 0.0) >= 100.0:
-							holding_cooked_patty = true
-							break
-			if holding_cooked_patty:
-				_advance_step()
-				
-		6: # Colocar pão inferior na bancada
-			var island = _find_node_by_class("PrepIsland") as PrepIsland
-			if island:
-				for item in island.placed_items:
-					if is_instance_valid(item) and item is BreadBottom:
-						_advance_step()
-						break
-						
-		7: # Adicionar carne bovina ao pão
-			var island = _find_node_by_class("PrepIsland") as PrepIsland
-			if island:
-				for item in island.placed_items:
-					if is_instance_valid(item) and item is BreadBottom:
-						if item.has_ingredients():
-							_advance_step()
-							break
-							
-		8: # Fechar lanche (Bread Top)
-			var island = _find_node_by_class("PrepIsland") as PrepIsland
-			if island:
-				for item in island.placed_items:
-					if is_instance_valid(item) and item is BreadBottom:
-						if item.assembly and item.assembly.state == BurgerAssembly.State.CLOSED:
-							_advance_step()
-							break
-							
-		9: # Embalar lanche
-			var has_package = false
-			if player.held_item and player.held_item is PackagedBurger:
-				has_package = true
-			else:
-				var island = _find_node_by_class("PrepIsland") as PrepIsland
-				if island:
-					for item in island.placed_items:
-						if is_instance_valid(item) and item is PackagedBurger:
-							has_package = true
-							break
-			if has_package:
-				_advance_step()
-				
-		10: # Colocar na bandeja
-			if player.held_item and player.held_item is ServingTray:
+			if player and player.global_position.distance_to(step_start_pos) > 2.0 and step_tested_jump and step_tested_sprint:
+				step_ok = true
+		1: # Quadro de Energia: requer que o disjuntor tenha sido ligado com [E]
+			var pm = PowerManager.get_instance()
+			if pm and pm.is_main_power_on:
+				step_ok = true
+		2: # PC Administrativo: abrir o PC
+			var comp_ui = get_tree().root.find_child("ComputerUI", true, false)
+			if (comp_ui and comp_ui.visible) or (player and player.is_using_computer) or step_pc_opened:
+				step_ok = true
+		3: # Compra e Recebimento: comprar e levar caixa ao armazém
+			var rec = _get_receiving_area()
+			if step_stored_box:
+				step_ok = true
+			elif player and player.held_item is DeliveryBox:
+				var rack_pos = _get_station_pos("StorageRack")
+				if player.global_position.distance_to(rack_pos) < 3.5:
+					step_ok = true
+			elif rec and rec.get_delivered_boxes().size() > 0:
+				_create_highlight(rec, "Pegue a Caixa de Mercadorias com [E]")
+		4: # Ingredientes e Armazenamento: pegar ingrediente e devolver
+			if step_ingredient_handled:
+				step_ok = true
+			elif player and (player.has_active_ingredient() or player.held_item != null):
+				step_ok = true
+		5: # Máquina de Refrigerante: copo servido
+			if player and player.held_item is DrinkCup:
+				var cup = player.held_item as DrinkCup
+				if cup.state == DrinkCup.State.FILLED and not cup.beverage_type.begins_with("juice"):
+					step_ok = true
+		6: # Máquina de Suco: suco natural servido no copo
+			if step_juice_prepared:
+				step_ok = true
+			elif player and player.held_item is DrinkCup:
+				var cup = player.held_item as DrinkCup
+				if cup.state == DrinkCup.State.FILLED and cup.beverage_type.begins_with("juice"):
+					step_ok = true
+		7: # Fritadeira: porção de batatas frita e retirada
+			if step_fryer_finished:
+				step_ok = true
+			elif player and (player.held_item is FriesPack or (player.has_active_ingredient() and player.get_active_ingredient().get("item_id") == "fries_pack")):
+				step_ok = true
+		8: # Grelha: carne na espátula
+			if player and player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+				step_ok = true
+		9: # Montagem: hambúrguer montado
+			if step_burger_assembled:
+				step_ok = true
+			elif player and (player.held_item is Burger or player.held_item is Cheeseburger or (player.has_active_ingredient() and str(player.get_active_ingredient().get("item_id")).begins_with("burger"))):
+				step_ok = true
+		10: # Embalagem: hambúrguer embalado
+			if step_burger_packaged:
+				step_ok = true
+			elif player and (player.held_item is PackagedBurger or (player.held_item != null and player.held_item.has_method("is_packaged") and player.held_item.is_packaged())):
+				step_ok = true
+		11: # Bandeja: lanche na bandeja
+			if player and player.held_item is ServingTray:
 				var tray = player.held_item as ServingTray
-				if not tray.carried_items.is_empty():
-					for item in tray.carried_items:
-						if item is PackagedBurger:
-							_advance_step()
-							break
-							
-		11: # Limpar a chapa
-			var grill = _find_node_by_class("Grill") as Grill
-			if grill:
-				step_progress.text = "Sujeira restante: %d%%" % int(grill.dirt_level * 100.0)
-				if grill.dirt_level <= 0.001:
-					_advance_step()
-					
-		12: # Etapa de conclusão
-			_clear_highlight()
-			$Control/StepPanel.visible = false
-			skip_button.visible = false
-			congrats_panel.visible = true
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+				if tray.carried_items.size() > 0 or (tray.has_method("has_items") and tray.has_items()):
+					step_ok = true
+		12: # Limpeza: grelha limpa e bucha lavada na pia
+			var gr = _get_grill()
+			var sink = _get_sink()
+			var sponge_clean = (player and not player.sponge_is_dirty)
+			if gr and not gr.is_dirty():
+				step_grill_was_cleaned = true
+			if step_grill_was_cleaned and player and player.sponge_is_dirty and sink:
+				_create_highlight(sink, "Lave a Bucha na Pia [Clique Esquerdo]")
+			if gr and not gr.is_dirty() and sponge_clean and step_grill_was_cleaned:
+				step_ok = true
+		13: # Pagamento: dinheiro no caixa
+			if step_payment_processed or step_money_collected:
+				step_ok = true
+			var player_has_money = (player and player.held_item != null and (player.held_item.get("is_customer_deposit_money") == true or str(player.held_item.get("item_id")) == "customer_money"))
+			if player_has_money:
+				var cr = _get_cash_register()
+				if cr:
+					_create_highlight(cr, "Deposite o Dinheiro na Caixa Registradora [E]")
+		14: # Placa de Abertura
+			if step_open_sign_interacted:
+				step_ok = true
+	
+	if step_ok:
+		_advance_step()
 
 func _advance_step() -> void:
-	if current_step_index < steps.size() - 1:
-		# Exibe feedback temporário na tela
-		var step = steps[current_step_index]
-		if step.success_msg != "" and player_has_hud():
-			var gm = _get_game_manager()
-			var player = gm.get_player() if gm else null
-			if player:
-				player.get_node("HUD").show_temporary_feedback("✅ " + step.success_msg)
-		
-		_show_step(current_step_index + 1)
+	if current_step_index < steps.size():
+		var s = steps[current_step_index]
+		var player = _get_player()
+		if player and player.has_node("HUD") and player.get_node("HUD").has_method("show_temporary_feedback"):
+			player.get_node("HUD").show_temporary_feedback("✨ %s" % s.success_msg)
+	
+	current_step_index += 1
+	_save_tutorial_progress()
+	
+	if current_step_index >= steps.size():
+		_complete_tutorial()
 	else:
-		_clear_highlight()
-		$Control/StepPanel.visible = false
-		skip_button.visible = false
+		_apply_step(current_step_index)
+
+func _complete_tutorial() -> void:
+	tutorial_completed = true
+	_clear_highlight()
+	_show_congrats_panel()
+	_save_tutorial_progress()
+	
+	var clock = _get_game_clock()
+	if clock:
+		clock.is_paused = false
+		clock.current_hour = 9
+		clock.current_minute = 0
+		clock.state = GameClock.State.PREPARATION
+
+func _show_congrats_panel() -> void:
+	if congrats_panel:
 		congrats_panel.visible = true
+	if congrats_title:
+		congrats_title.text = "🎓 TUTORIAL CONCLUÍDO!"
+	if congrats_text:
+		congrats_text.text = "Você já conhece o básico para administrar seu restaurante."
+	if start_day_button:
+		start_day_button.text = "COMEÇAR DIA 1"
+	if step_title:
+		step_title.text = "🎉 TUTORIAL CONCLUÍDO COM SUCESSO!"
+	if step_instruction:
+		step_instruction.text = "Você aprendeu todos os sistemas essenciais do Burger Rush. Agora você está pronto para assumir o restaurante no Dia 1!"
+	if step_progress:
+		step_progress.text = "Etapa 15 / 15 (100% Concluído)"
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _on_skip_button_pressed() -> void:
+	if confirm_dialog:
+		confirm_dialog.visible = true
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-# =============================================================================
-# DESTAQUES VISUAIS DOS ALVOS
-# =============================================================================
-
-func _clear_highlight() -> void:
-	if is_instance_valid(current_highlight_marker):
-		current_highlight_marker.queue_free()
-	current_highlight_marker = null
-	if is_instance_valid(current_highlight_light):
-		current_highlight_light.queue_free()
-	current_highlight_light = null
-
-func _update_highlight(target: Node3D, label_text: String) -> void:
-	_clear_highlight()
-	if not is_instance_valid(target):
-		return
-	
-	# Cria Label3D
-	var label = Label3D.new()
-	label.text = "🎯 " + label_text
-	label.font_size = 32
-	label.outline_size = 6
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.modulate = Color(1.0, 0.85, 0.2, 1.0)
-	label.outline_modulate = Color(0.08, 0.1, 0.14, 0.95)
-	
-	var offset_y = 1.3
-	if target.name.contains("Refrigerator") or target is Refrigerator:
-		offset_y = 1.8
-	elif target.name.contains("Grill") or target is Grill:
-		offset_y = 1.2
-	
-	label.position = Vector3(0.0, offset_y, 0.0)
-	target.add_child(label)
-	current_highlight_marker = label
-	
-	# Cria OmniLight3D
-	var light = OmniLight3D.new()
-	light.light_color = Color(1.0, 0.9, 0.4)
-	light.light_energy = 1.5
-	light.omni_range = 3.0
-	light.position = Vector3(0.0, offset_y - 0.2, 0.0)
-	target.add_child(light)
-	current_highlight_light = light
-
-# =============================================================================
-# PULAR TUTORIAL (SKIP FLOW)
-# =============================================================================
-
-func _on_skip_pressed() -> void:
-	# Exibe diálogo de confirmação
-	confirm_dialog.visible = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	var tree = _get_tree_safe()
-	if tree:
-		tree.paused = true
-
 func _on_cancel_skip_pressed() -> void:
-	confirm_dialog.visible = false
-	var tree = _get_tree_safe()
-	if tree:
-		tree.paused = false
-	
-	# Restaura modo de mouse se necessário
-	var pc = _find_node_by_class("ComputerStation") as ComputerStation
-	var pc_open = pc and pc.computer_ui_instance and pc.computer_ui_instance.visible
-	if not pc_open and not congrats_panel.visible:
+	if confirm_dialog:
+		confirm_dialog.visible = false
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _on_confirm_skip_pressed() -> void:
-	confirm_dialog.visible = false
-	var tree = _get_tree_safe()
-	if tree:
-		tree.paused = false
-	_complete_tutorial(true)
+	if confirm_dialog:
+		confirm_dialog.visible = false
+	current_step_index = steps.size()
+	_complete_tutorial()
 
 func _on_start_day_pressed() -> void:
-	_complete_tutorial(false)
-
-func _complete_tutorial(_skipped: bool = false) -> void:
 	tutorial_completed = true
-	_clear_highlight()
+	_save_tutorial_progress()
 	
-	# Salva tutorial como completo no save e limpa steps
-	var sm = _get_save_manager()
-	if sm:
-		sm.pending_save_data["tutorial_completed"] = true
-		sm.pending_save_data["tutorial_step"] = 0
-		var slot_to_save = sm.active_slot if sm.active_slot > 0 else 1
-		sm.save_game(slot_to_save)
-	
-	# Despausa o clock e restaura tempo
-	var clock = GameClock.get_instance()
+	var clock = _get_game_clock()
 	if clock:
 		clock.is_paused = false
-		# Força o clock a ir para PREPARATION do dia 1 às 08:00
-		clock.current_hour = 8
+		clock.current_hour = 9
 		clock.current_minute = 0
-		clock.set_state(GameClock.State.PREPARATION)
-		clock.time_tick.emit(8, 0)
+		clock.state = GameClock.State.PREPARATION
 	
-	# Transita para gameplay oficial no GameManager
-	var gm = _get_game_manager()
-	if gm:
-		gm.change_state(gm.GameState.PLAYING)
+	var hud = get_tree().root.find_child("HUD", true, false)
+	if hud and hud.has_method("_check_and_show_day1_intro"):
+		hud._check_and_show_day1_intro()
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	
-	# Captura o mouse
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	
-	# Remove a si mesmo da árvore de nós
 	queue_free()
 
-# =============================================================================
-# PERSISTÊNCIA PARCIAL
-# =============================================================================
-
-func _save_tutorial_step(step_idx: int) -> void:
+func _save_tutorial_progress() -> void:
 	var sm = _get_save_manager()
 	if sm and sm.has_active_game:
-		sm.pending_save_data["tutorial_step"] = step_idx
-		sm.pending_save_data["tutorial_completed"] = false
+		sm.pending_save_data["tutorial_step"] = current_step_index
+		sm.pending_save_data["tutorial_completed"] = tutorial_completed
 		sm.save_game(sm.active_slot)
 
 # =============================================================================
-# HELPERS DE RESOLUÇÃO DE NÓS
+# SISTEMA DE DESTAQUES VISUAIS 3D (ANIMAÇÃO E BRILHO)
 # =============================================================================
 
-func _find_node_by_class(class_name_str: String) -> Node3D:
-	var tree = _get_tree_safe()
-	var root = tree.current_scene if tree else null
-	if not root:
-		return null
-	for child in root.find_children("*", "Node3D", true, false):
-		if child.get_class() == class_name_str or (child.get_script() and child.get_script().resource_path.get_file().get_basename() == class_name_str.to_snake_case()):
-			return child as Node3D
-		if child.get_script() and child.get_script().get_global_name() == class_name_str:
-			return child as Node3D
+func _create_highlight(target: Node3D, label_text: String) -> void:
+	_clear_highlight()
+	if not target or not is_instance_valid(target):
+		return
 	
-	var by_name = root.find_child(class_name_str, true, false)
-	if by_name and by_name is Node3D:
-		return by_name
-	return null
+	var marker_root = Node3D.new()
+	marker_root.name = "TutorialHighlight"
+	target.add_child(marker_root)
+	
+	var marker_y = 1.35
+	if target is MainPowerPanelClass:
+		marker_y = 1.60
+	elif target is CommercialSinkClass:
+		marker_y = 1.40
+	elif target is OpenSignClass:
+		marker_y = 1.60
+	
+	marker_root.position = Vector3(0, marker_y, 0)
+	_highlight_base_y = marker_y
+	
+	var lbl = Label3D.new()
+	lbl.name = "HighlightLabel"
+	lbl.text = "▼\n%s" % label_text
+	lbl.font_size = 24
+	lbl.outline_size = 6
+	lbl.modulate = Color(1.0, 0.84, 0.22, 1.0)
+	lbl.outline_modulate = Color(0.1, 0.1, 0.1, 1.0)
+	lbl.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	lbl.no_depth_test = true
+	lbl.double_sided = false
+	marker_root.add_child(lbl)
+	current_highlight_marker = lbl
+	
+	var light = OmniLight3D.new()
+	light.name = "HighlightLight"
+	light.light_color = Color(1.0, 0.85, 0.35, 1.0)
+	light.light_energy = 1.2
+	light.omni_range = 3.5
+	marker_root.add_child(light)
+	current_highlight_light = light
 
-func player_has_hud() -> bool:
-	var gm = _get_game_manager()
-	var player = gm.get_player() if gm else null
-	return player != null and player.has_node("HUD")
+func _clear_highlight() -> void:
+	if current_highlight_marker and is_instance_valid(current_highlight_marker):
+		var p = current_highlight_marker.get_parent()
+		if p and is_instance_valid(p):
+			p.queue_free()
+	current_highlight_marker = null
+	current_highlight_light = null
 
-func _get_game_manager() -> Node:
-	var gm_script = load("res://src/core/game_manager.gd")
-	if gm_script and "instance" in gm_script and gm_script.instance and is_instance_valid(gm_script.instance):
-		return gm_script.instance
-	return null
+# =============================================================================
+# RESOLUÇÃO DE REFERÊNCIAS DO JOGO
+# =============================================================================
 
-func _get_save_manager() -> Node:
-	var sm_script = load("res://src/core/save_manager.gd")
-	if sm_script and "instance" in sm_script and sm_script.instance and is_instance_valid(sm_script.instance):
-		return sm_script.instance
-	return null
+func _get_player() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("Player", true, false) as Node3D
 
-func _get_tree_safe() -> SceneTree:
-	return Engine.get_main_loop() as SceneTree
+func _get_game_clock() -> GameClock:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("GameClock", true, false) as GameClock
+
+func _get_save_manager():
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	var sm = get_tree().root.find_child("SaveManager", true, false)
+	if not sm:
+		var sm_script = load("res://src/core/save_manager.gd")
+		if sm_script and "instance" in sm_script:
+			sm = sm_script.instance
+	return sm
+
+func _get_purchase_manager() -> PurchaseManager:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("PurchaseManager", true, false) as PurchaseManager
+
+func _get_main_power_panel() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("MainPowerPanel", true, false) as Node3D
+
+func _get_computer_station() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("ComputerStation", true, false) as Node3D
+
+func _get_receiving_area() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("ReceivingArea", true, false) as Node3D
+
+func _get_storage_rack() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("StorageRack", true, false) as Node3D
+
+func _get_refrigerator() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("CommercialRefrigerator", true, false) as Node3D
+
+func _get_drink_machine() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("DrinkMachine", true, false) as Node3D
+
+func _get_juice_machine() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("JuiceMachine", true, false) as Node3D
+
+func _get_fryer() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("Fryer", true, false) as Node3D
+
+func _get_grill() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("Grill", true, false) as Node3D
+
+func _get_prep_island() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("PrepIsland", true, false) as Node3D
+
+func _get_sink() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("CommercialSink", true, false) as Node3D
+
+func _get_packaging_station() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("PackagingStation", true, false) as Node3D
+
+func _get_restaurant_table() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("RestaurantTable", true, false) as Node3D
+
+func _get_delivery_window() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("DeliveryWindowStation", true, false) as Node3D
+
+func _get_tray_stack() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("ServingTrayStack", true, false) as Node3D
+
+func _get_cash_register() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("CashRegister", true, false) as Node3D
+
+func _get_open_sign() -> Node3D:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return null
+	return get_tree().root.find_child("OpenSign", true, false) as Node3D
+
+func _get_station_pos(st_name: String) -> Vector3:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return Vector3.ZERO
+	var n = get_tree().root.find_child(st_name, true, false) as Node3D
+	return n.global_position if n else Vector3.ZERO

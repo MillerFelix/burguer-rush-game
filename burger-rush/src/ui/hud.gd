@@ -25,8 +25,14 @@ extends CanvasLayer
 @onready var date_tag_label: Label = get_node_or_null("DailyNoticeModal/VBox/DateTagLabel")
 @onready var dismiss_notice_button: Button = get_node_or_null("DailyNoticeModal/VBox/DismissNoticeButton")
 
+@onready var day1_welcome_modal: PanelContainer = get_node_or_null("Day1WelcomeModal")
+@onready var day1_title_label: Label = get_node_or_null("Day1WelcomeModal/VBox/TitleLabel")
+@onready var day1_body_label: Label = get_node_or_null("Day1WelcomeModal/VBox/BodyLabel")
+@onready var day1_start_button: Button = get_node_or_null("Day1WelcomeModal/VBox/StartButton")
+
 const CalendarManager = preload("res://src/core/calendar_manager.gd")
 const DailyEventManager = preload("res://src/core/daily_event_manager.gd")
+const SaveManager = preload("res://src/core/save_manager.gd")
 
 func _ready() -> void:
 	hide_prompt()
@@ -34,6 +40,8 @@ func _ready() -> void:
 		report_modal.visible = false
 	if daily_notice_modal:
 		daily_notice_modal.visible = false
+	if day1_welcome_modal:
+		day1_welcome_modal.visible = false
 
 	_update_money_display(100.0)
 	_update_orders_display()
@@ -67,8 +75,18 @@ func _ready() -> void:
 		next_day_button.pressed.connect(_on_next_day_button_pressed)
 	if dismiss_notice_button:
 		dismiss_notice_button.pressed.connect(_on_dismiss_notice_button_pressed)
+	if day1_start_button:
+		day1_start_button.pressed.connect(_on_day1_start_button_pressed)
+
+	_check_and_show_day1_intro()
 
 func _unhandled_input(event: InputEvent) -> void:
+	if day1_welcome_modal and day1_welcome_modal.visible:
+		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
+			_on_day1_start_button_pressed()
+			get_viewport().set_input_as_handled()
+			return
+
 	if daily_notice_modal and daily_notice_modal.visible:
 		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 			_on_dismiss_notice_button_pressed()
@@ -79,6 +97,42 @@ func _unhandled_input(event: InputEvent) -> void:
 		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
 			_on_next_day_button_pressed()
 			get_viewport().set_input_as_handled()
+
+func _check_and_show_day1_intro() -> void:
+	var tut = get_tree().root.find_child("Tutorial", true, false) if (is_inside_tree() and get_tree()) else null
+	if tut and not tut.get("tutorial_completed"):
+		return
+
+	var sm = SaveManager.instance
+	if not sm:
+		var sm_script = load("res://src/core/save_manager.gd")
+		if sm_script and "instance" in sm_script:
+			sm = sm_script.instance
+
+	if sm and sm.has_active_game:
+		var shown = sm.pending_save_data.get("day1_intro_shown", false)
+		if not shown:
+			var player_name = sm.pending_save_data.get("player_name", "Chefe")
+			if day1_title_label:
+				day1_title_label.text = "Primeiro dia, CHEFE %s!" % player_name.to_upper()
+			if day1_body_label:
+				day1_body_label.text = "Agora este restaurante está nas suas mãos. Você aprendeu o básico, mas daqui para frente as decisões são suas.\n\nPrepare os ingredientes, atenda seus clientes, controle suas despesas e faça o restaurante crescer."
+			if day1_welcome_modal:
+				day1_welcome_modal.visible = true
+				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+func _on_day1_start_button_pressed() -> void:
+	if day1_welcome_modal:
+		day1_welcome_modal.visible = false
+	var sm = SaveManager.instance
+	if not sm:
+		var sm_script = load("res://src/core/save_manager.gd")
+		if sm_script and "instance" in sm_script:
+			sm = sm_script.instance
+	if sm and sm.has_active_game:
+		sm.pending_save_data["day1_intro_shown"] = true
+		sm.save_game(sm.active_slot)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func show_prompt(text: String) -> void:
 	if interaction_label:

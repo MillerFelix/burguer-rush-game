@@ -51,6 +51,16 @@ func has_pending_boxes() -> bool:
 	_clean_destroyed_boxes()
 	return not spawned_boxes.is_empty()
 
+func get_delivered_boxes() -> Array[DeliveryBox]:
+	_clean_destroyed_boxes()
+	return spawned_boxes
+
+func clear_pallet() -> void:
+	for b in spawned_boxes:
+		if is_instance_valid(b):
+			b.queue_free()
+	spawned_boxes.clear()
+
 func add_pending_delivery(item_id: String, item_name: String, quantity: int) -> void:
 	var box = delivery_box_scene.instantiate() as DeliveryBox
 	if crate_spawn_slot:

@@ -338,7 +338,7 @@ func test_tutorial_skip_flow() -> void:
 	assert_test(sm.pending_save_data.get("player_name") == "Chef Miller", "Nome do chefe 'Chef Miller' preservado com sucesso")
 	assert_test(gm.current_state == GameManagerClass.GameState.PLAYING, "GameManager transitou para o estado PLAYING")
 	assert_test(clock.is_paused == false, "Relógio do jogo despausado")
-	assert_test(clock.current_hour == 8 and clock.current_minute == 0, "Dia 1 iniciou às 08:00")
+	assert_test(clock.current_hour == 9 and clock.current_minute == 0, "Dia 1 iniciou às 09:00")
 	assert_test(clock.state == GameClockClass.State.PREPARATION, "Dia 1 iniciou na fase de PREPARAÇÃO")
 
 	# Limpa

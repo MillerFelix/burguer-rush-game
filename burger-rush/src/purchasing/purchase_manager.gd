@@ -309,6 +309,10 @@ func get_cart_total() -> float:
 	return subtotal * mult
 
 func get_cart_delivery_time_sec() -> float:
+	var tut = _get_tutorial_controller()
+	if tut and not tut.get("tutorial_completed"):
+		return 1.5
+
 	var sup = get_selected_supplier()
 	var base_time = sup.get("base_time_sec", 300.0) as float
 
@@ -317,6 +321,11 @@ func get_cart_delivery_time_sec() -> float:
 	var event_mult = event_mgr.get_delivery_time_multiplier() if event_mgr else 1.0
 
 	return base_time * event_mult
+
+func _get_tutorial_controller() -> Node:
+	if is_inside_tree() and get_tree() and get_tree().root:
+		return get_tree().root.find_child("Tutorial", true, false)
+	return null
 
 # =============================================================================
 # CONFIRMAÇÃO DO PEDIDO E PROCESSAMENTO DE ENTREGAS

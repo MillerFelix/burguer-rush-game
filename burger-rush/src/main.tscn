@@ -102,26 +102,31 @@ glow_bloom = 0.1
 albedo_texture = ExtResource("91_light_red_tiles")
 roughness = 0.45
 uv1_scale = Vector3(18, 9, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_FloorKitchen"]
-albedo_texture = ExtResource("34_slate_tex")
-roughness = 0.55
-uv1_scale = Vector3(6, 3, 1)
+albedo_texture = ExtResource("37_subway_tex")
+roughness = 0.40
+uv1_scale = Vector3(3.5, 2.5, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_FloorStorage"]
-albedo_texture = ExtResource("35_sidewalk_tex")
+albedo_texture = ExtResource("34_slate_tex")
 roughness = 0.85
 uv1_scale = Vector3(4, 4, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_FloorSidewalk"]
 albedo_texture = ExtResource("35_sidewalk_tex")
 roughness = 0.85
-uv1_scale = Vector3(8, 2, 1)
+uv1_scale = Vector3(30, 2, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_FloorStreet"]
 albedo_texture = ExtResource("36_asphalt_tex")
 roughness = 0.92
-uv1_scale = Vector3(8, 2, 1)
+uv1_scale = Vector3(30, 5, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_AwningCream"]
 albedo_color = Color(0.95, 0.93, 0.85, 1)
@@ -187,9 +192,11 @@ material = SubResource("Material_DarkBeams")
 size = Vector3(18, 0.25, 0.3)
 
 [sub_resource type="StandardMaterial3D" id="Material_WallBacksplash"]
+albedo_color = Color(0.96, 0.96, 0.98, 1)
 albedo_texture = ExtResource("37_subway_tex")
-roughness = 0.38
-uv1_scale = Vector3(6, 2, 1)
+roughness = 0.45
+uv1_scale = Vector3(6, 2.2, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_AwningRed"]
 albedo_color = Color(0.78, 0.15, 0.15, 1)
@@ -200,8 +207,11 @@ material = SubResource("Material_AwningRed")
 size = Vector3(2.4, 0.08, 1.1)
 
 [sub_resource type="StandardMaterial3D" id="Material_WallKitchen"]
-albedo_color = Color(0.93, 0.94, 0.96, 1)
-roughness = 0.6
+albedo_color = Color(0.96, 0.96, 0.98, 1)
+albedo_texture = ExtResource("37_subway_tex")
+roughness = 0.45
+uv1_scale = Vector3(6, 2.2, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_Glass"]
 transparency = 1
@@ -257,8 +267,11 @@ height = 0.9
 radial_segments = 16
 
 [sub_resource type="StandardMaterial3D" id="Material_PlanterWood"]
-albedo_color = Color(0.48, 0.32, 0.2, 1)
-roughness = 0.7
+albedo_color = Color(0.85, 0.70, 0.55, 1)
+albedo_texture = ExtResource("33_wood_tex")
+roughness = 0.70
+uv1_scale = Vector3(2, 2, 1)
+texture_filter = 4
 
 [sub_resource type="BoxMesh" id="BoxMesh_PlanterBox"]
 material = SubResource("Material_PlanterWood")
@@ -296,9 +309,11 @@ material = SubResource("Material_SignPlateCharcoal")
 size = Vector3(0.04, 0.18, 1.18)
 
 [sub_resource type="StandardMaterial3D" id="Material_CounterDivider"]
+albedo_color = Color(0.85, 0.70, 0.55, 1)
 albedo_texture = ExtResource("33_wood_tex")
 roughness = 0.65
-uv1_scale = Vector3(2, 1, 1)
+uv1_scale = Vector3(4, 1, 1)
+texture_filter = 4
 
 [sub_resource type="StandardMaterial3D" id="Material_CounterTopQuartz"]
 albedo_color = Color(0.92, 0.94, 0.95, 1)

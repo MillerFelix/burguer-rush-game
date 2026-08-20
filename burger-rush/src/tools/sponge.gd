@@ -20,7 +20,7 @@ var _is_scrubbing_continuous: bool = false
 var _scrub_cycle_time: float = 0.0
 var _is_animating_wash: bool = false
 
-var _initial_pos: Vector3 = Vector3(-0.05, 0.04, -0.06)
+var _initial_pos: Vector3 = Vector3.ZERO
 var _initial_rot: Vector3 = Vector3.ZERO
 
 func _ready() -> void:

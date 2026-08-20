@@ -60,7 +60,14 @@ var _target_sizzle_vol: float = -80.0
 var _target_hum_vol: float = -80.0
 
 var active_items: Array[Dictionary] = [] # Array de { "item": Node3D, "type": String, "timer": float, "slot_index": int }
-var dirt_level: float = 0.0
+var dirt_level: float = 0.0:
+	set(val):
+		dirt_level = maxf(0.0, val)
+		if dirt_level <= 0.0:
+			cleanliness_state = CleanlinessState.CLEAN
+		elif cleanliness_state == CleanlinessState.CLEAN and dirt_level > 0.001:
+			cleanliness_state = CleanlinessState.DIRTY
+		_update_dirt_visuals()
 
 const SLOT_OFFSETS = [
 	Vector3(-0.65, 0.0, 0.0),
@@ -497,56 +504,86 @@ func interact_item(player: Node3D) -> void:
 			_show_feedback(player, "✨ A chapa da grelha já está limpa e brilhando!")
 		return
 
+enum CleanlinessState {
+	CLEAN,
+	CLEANING,
+	DIRTY
+}
+var cleanliness_state: CleanlinessState = CleanlinessState.CLEAN
+
 func is_dirty() -> bool:
-	return dirt_level >= 1.0
+	return cleanliness_state != CleanlinessState.CLEAN or dirt_level > 0.001
 
 func get_dirt_level() -> float:
-	return dirt_level
+	return dirt_level if (cleanliness_state != CleanlinessState.CLEAN or dirt_level > 0.001) else 0.0
 
 func add_dirt(amount: float = 0.25) -> void:
 	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)
+	if dirt_level > 0.001:
+		cleanliness_state = CleanlinessState.DIRTY
 	_update_dirt_visuals()
 
 func _update_dirt_visuals() -> void:
 	var grill_dirt = get_node_or_null("Model/GrillPlate/GrillDirt")
 	if grill_dirt:
-		grill_dirt.visible = (dirt_level > 0.001)
-		var sc = lerpf(0.25, 1.0, dirt_level) if dirt_level > 0.001 else 0.0
+		var has_dirt = (cleanliness_state != CleanlinessState.CLEAN and dirt_level > 0.001)
+		grill_dirt.visible = has_dirt
+		var sc = lerpf(0.25, 1.0, dirt_level) if has_dirt else 0.0
 		for child in grill_dirt.get_children():
 			if child is MeshInstance3D:
 				child.scale = Vector3(sc, sc, sc)
 				var mat = child.get_active_material(0)
 				if mat is StandardMaterial3D:
 					mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-					mat.albedo_color.a = clampf(dirt_level * 0.95, 0.0, 0.95)
+					mat.albedo_color.a = clampf(dirt_level * 0.95, 0.0, 0.95) if has_dirt else 0.0
 
 func clean_station(player: Node3D = null) -> void:
 	dirt_level = 0.0
+	cleanliness_state = CleanlinessState.CLEAN
 	_update_dirt_visuals()
 	if player:
-		_show_feedback(player, "✨ Grelha limpa e pronta para uso!")
+		if player.has_node("HUD") and player.get_node("HUD").has_method("show_temporary_feedback"):
+			player.get_node("HUD").show_temporary_feedback("✨ Grelha limpa e pronta para uso!")
 		var th = player.get_node_or_null("Head/Camera3D/ToolHolder") if player.has_node("Head/Camera3D/ToolHolder") else null
-		var sp = th.get_node_or_null("Sponge") if th else null
-		if sp and sp.has_method("set_dirty"):
-			sp.set_dirty()
-		elif "sponge_is_dirty" in player:
+		if not th and "tool_holder" in player and player.tool_holder:
+			th = player.tool_holder
+		if th:
+			for child in th.get_children():
+				if child.has_method("set_dirty"):
+					child.set_dirty()
+					break
+		if "sponge_is_dirty" in player:
 			player.set("sponge_is_dirty", true)
 
 func clean_progress(delta: float, player: Node3D = null) -> bool:
 	if dirt_level <= 0.0:
+		dirt_level = 0.0
+		cleanliness_state = CleanlinessState.CLEAN
+		_update_dirt_visuals()
 		return true
 
+	cleanliness_state = CleanlinessState.CLEANING
 	dirt_level = maxf(0.0, dirt_level - (delta / 1.5))
 	_update_dirt_visuals()
 
 	if dirt_level <= 0.0:
+		dirt_level = 0.0
+		cleanliness_state = CleanlinessState.CLEAN
+		_update_dirt_visuals()
 		if player:
-			_show_feedback(player, "✨ Grelha limpa e pronta para uso!")
+			if player.has_node("HUD") and player.get_node("HUD").has_method("show_temporary_feedback"):
+				player.get_node("HUD").show_temporary_feedback("✨ Grelha limpa e pronta para uso!")
 			var th = player.get_node_or_null("Head/Camera3D/ToolHolder") if player.has_node("Head/Camera3D/ToolHolder") else null
-			var sp = th.get_node_or_null("Sponge") if th else null
-			if sp and sp.has_method("set_dirty"):
-				sp.set_dirty()
-			elif "sponge_is_dirty" in player:
+			if not th and "tool_holder" in player and player.tool_holder:
+				th = player.tool_holder
+			var found_sp = false
+			if th:
+				for child in th.get_children():
+					if child.has_method("set_dirty"):
+						child.set_dirty()
+						found_sp = true
+						break
+			if "sponge_is_dirty" in player:
 				player.set("sponge_is_dirty", true)
 		return true
 	return false

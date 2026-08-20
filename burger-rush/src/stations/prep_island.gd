@@ -217,11 +217,20 @@ func _process(_delta: float) -> void:
 
 func _cleanup_placed_items() -> void:
 	var valid: Array[Node3D] = []
+	var world_node = get_parent() if get_parent() else (get_tree().current_scene if get_tree() else null)
+	if world_node:
+		for child in world_node.get_children():
+			if child is Item and is_instance_valid(child) and child.is_inside_tree():
+				if "location" in child and child.location == Item.ItemLocation.WORLD:
+					var local_p = to_local(child.global_position)
+					if absf(local_p.x) <= BOUNDS_X_MAX + 0.3 and absf(local_p.z) <= BOUNDS_Z_MAX + 0.3 and local_p.y >= SURFACE_TOP_Y - 0.25 and local_p.y <= SURFACE_TOP_Y + 0.8:
+						if not valid.has(child):
+							valid.append(child)
 	for it in placed_items:
-		if is_instance_valid(it) and it.is_inside_tree():
+		if is_instance_valid(it) and it.is_inside_tree() and not valid.has(it):
 			if "location" in it and it.location == Item.ItemLocation.WORLD:
 				var local_p = to_local(it.global_position)
-				if absf(local_p.x) <= 2.0 and absf(local_p.z) <= 1.05 and local_p.y >= 0.7 and local_p.y <= 1.3:
+				if absf(local_p.x) <= BOUNDS_X_MAX + 0.3 and absf(local_p.z) <= BOUNDS_Z_MAX + 0.3 and local_p.y >= SURFACE_TOP_Y - 0.25 and local_p.y <= SURFACE_TOP_Y + 0.8:
 					valid.append(it)
 	placed_items = valid
 

@@ -154,7 +154,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		_try_secondary_interact()
 
 	if event.is_action_pressed("ui_cancel"):
-		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var pm = get_tree().root.find_child("PauseMenu", true, false)
+		if pm and pm.has_method("pause_game") and not pm.visible:
+			pm.pause_game()
+		elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		else:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -190,7 +193,13 @@ func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
 		return
 
 	var transferring_item: Node3D = held_item
-	if transferring_item and transferring_item.get_parent():
+	if transferring_item and is_instance_valid(transferring_item) and transferring_item.get_meta("is_quick_slot_visual", false):
+		if transferring_item.get_parent():
+			transferring_item.get_parent().remove_child(transferring_item)
+		transferring_item.queue_free()
+		transferring_item = null
+		held_item = null
+	elif transferring_item and transferring_item.get_parent():
 		transferring_item.get_parent().remove_child(transferring_item)
 
 	active_tool_slot = slot
@@ -218,6 +227,7 @@ func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
 		ToolSlot.SPONGE:
 			if tool_holder:
 				var sponge = SCENE_SPONGE.instantiate()
+				sponge.name = "Sponge"
 				sponge.is_dirty = sponge_is_dirty
 				tool_holder.add_child(sponge)
 			if show_feedback:
@@ -394,6 +404,19 @@ func can_be_picked_with_spatula(obj: Object) -> bool:
 	return false
 
 func _try_interact_item() -> void:
+	if active_tool_slot == ToolSlot.SPONGE:
+		# Com a bucha de limpeza ativa, o clique/segurar é reservado exclusivamente para limpeza contínua e lavagem na pia
+		if raycast and raycast.is_colliding():
+			var raw_c = raycast.get_collider()
+			var c = _get_target_interactable(raw_c)
+			if c is CommercialSink or (c and c.get_parent() is CommercialSink):
+				var sink = c if c is CommercialSink else c.get_parent()
+				sink.wash_or_sanitize(self)
+				return
+			if (c and (c is Grill or c is RestaurantTable or c.has_method("clean_progress"))) or (raw_c and raw_c.has_method("clean_progress")):
+				return
+		return
+
 	if held_item != null and (held_item is SauceBottle or str(held_item.get("item_type")) == "sauce_bottle"):
 		return
 
@@ -899,7 +922,8 @@ func _update_interaction_detection() -> void:
 		hud.show_prompt("🖱️ / [E] Colocar %s" % d_name)
 		return
 
-	hud.hide_prompt()
+	if hud and hud.has_method("hide_prompt"):
+		hud.hide_prompt()
 
 # ================================================================
 # MÉTODOS DE CONTROLE DOS SLOTS RÁPIDOS (4, 5, 6)
@@ -984,8 +1008,8 @@ func _update_quick_slot_visual() -> void:
 	if not hold_position:
 		hold_position = get_node_or_null("Head/Camera3D/HoldPosition")
 
-	# Se a ferramenta ativa não for Mãos (Slot 3), limpa o visual se existir
-	if active_tool_slot != ToolSlot.HANDS:
+	# Se a ferramenta ativa não for Mãos (Slot 3) ou não houver ingrediente ativo nos slots rápidos
+	if active_tool_slot != ToolSlot.HANDS or not has_active_ingredient():
 		if held_item != null and is_instance_valid(held_item) and held_item.get_meta("is_quick_slot_visual", false):
 			if raycast and held_item is CollisionObject3D:
 				raycast.remove_exception(held_item)
@@ -993,52 +1017,62 @@ func _update_quick_slot_visual() -> void:
 				held_item.get_parent().remove_child(held_item)
 			held_item.queue_free()
 			held_item = null
+		quick_slot_visual = null
+
+		# Limpeza estrita de qualquer nó visual órfão remanescente em HoldPosition
+		if hold_position and is_instance_valid(hold_position):
+			for child in hold_position.get_children():
+				if child != held_item or not is_instance_valid(held_item) or held_item == null:
+					if raycast and child is CollisionObject3D:
+						raycast.remove_exception(child)
+					child.queue_free()
 		return
 
-	if has_active_ingredient():
-		var slot = quick_slots[active_quick_slot]
-		var item_id: String = slot.get("item_id", "")
-		var item_data: Dictionary = slot.get("data", {})
+	# Caso haja ingrediente ativo nos slots rápidos:
+	var slot = quick_slots[active_quick_slot]
 
-		# Se já está segurando o visual do mesmo slot ativo, não precisa recriar
-		if held_item != null and is_instance_valid(held_item) and held_item.get_meta("is_quick_slot_visual", false):
-			if held_item.get_meta("quick_slot_index", -1) == active_quick_slot:
-				return
-			# Se mudou de slot, limpa o anterior
-			if raycast and held_item is CollisionObject3D:
-				raycast.remove_exception(held_item)
-			if held_item.get_parent():
-				held_item.get_parent().remove_child(held_item)
-			held_item.queue_free()
-			held_item = null
+	# Se já está segurando exatamente o visual do slot ativo atual, valida e limpa duplicatas
+	if held_item != null and is_instance_valid(held_item) and held_item.get_meta("is_quick_slot_visual", false):
+		if held_item.get_meta("quick_slot_index", -1) == active_quick_slot:
+			quick_slot_visual = held_item
+			if hold_position and is_instance_valid(hold_position):
+				for child in hold_position.get_children():
+					if child != held_item:
+						child.queue_free()
+			return
 
-		# Instancia o nó 3D do ingrediente na mão
-		if held_item == null:
-			var node = _instantiate_from_slot_data(slot)
-			if node:
-				node.set_meta("is_quick_slot_visual", true)
-				node.set_meta("quick_slot_index", active_quick_slot)
-				held_item = node
-				if hold_position:
-					hold_position.add_child(node)
-					node.position = Vector3.ZERO
-					node.rotation = Vector3.ZERO
-				if node.has_method("on_picked_up"):
-					node.on_picked_up()
-				elif node is CollisionObject3D:
-					node.collision_layer = 0
-					node.collision_mask = 0
-				if raycast and node is CollisionObject3D:
-					raycast.add_exception(node)
-	else:
-		# Sem ingrediente ativo: se held_item for apenas visual de quick slot, remove
-		if held_item != null and is_instance_valid(held_item) and held_item.get_meta("is_quick_slot_visual", false):
-			if raycast and held_item is CollisionObject3D:
-				raycast.remove_exception(held_item)
-			if held_item.get_parent():
-				held_item.get_parent().remove_child(held_item)
-			held_item.queue_free()
-			held_item = null
+		# Se mudou de slot rápido, remove o visual do slot anterior
+		if raycast and held_item is CollisionObject3D:
+			raycast.remove_exception(held_item)
+		if held_item.get_parent():
+			held_item.get_parent().remove_child(held_item)
+		held_item.queue_free()
+		held_item = null
+
+	# Limpa qualquer resíduo anterior em HoldPosition antes de instanciar o novo visual
+	if hold_position and is_instance_valid(hold_position):
+		for child in hold_position.get_children():
+			if child != held_item or not is_instance_valid(held_item) or held_item == null:
+				child.queue_free()
+
+	# Instancia o novo nó 3D representativo do ingrediente na mão
+	var node = _instantiate_from_slot_data(slot)
+	if node:
+		node.set_meta("is_quick_slot_visual", true)
+		node.set_meta("quick_slot_index", active_quick_slot)
+		held_item = node
+		quick_slot_visual = node
+		if hold_position:
+			hold_position.add_child(node)
+			node.position = Vector3.ZERO
+			node.rotation = Vector3.ZERO
+		if node.has_method("on_picked_up"):
+			node.on_picked_up()
+		elif node is CollisionObject3D:
+			node.collision_layer = 0
+			node.collision_mask = 0
+		if raycast and node is CollisionObject3D:
+			raycast.add_exception(node)
 
 func cycle_quick_slot(direction: int) -> void:
 	var occupied: Array[int] = []
@@ -1449,10 +1483,19 @@ func pick_up(item: Node3D) -> void:
 		return
 
 	# 2. Caso contrário: Objeto Grande / Único na Mão Principal
-	if held_item != null:
+	if held_item != null and not held_item.get_meta("is_quick_slot_visual", false):
 		if hud and hud.has_method("show_temporary_feedback"):
 			hud.show_temporary_feedback("⚠️ Mãos ocupadas!")
 		return
+
+	if held_item != null and is_instance_valid(held_item) and held_item.get_meta("is_quick_slot_visual", false):
+		if raycast and held_item is CollisionObject3D:
+			raycast.remove_exception(held_item)
+		if held_item.get_parent():
+			held_item.get_parent().remove_child(held_item)
+		held_item.queue_free()
+		held_item = null
+		quick_slot_visual = null
 
 	# Se estava dentro de uma bandeja, remove da lista da bandeja
 	var tray_parent: ServingTray = null
@@ -1531,9 +1574,13 @@ func pick_up(item: Node3D) -> void:
 	_update_interaction_detection()
 
 func take_held_item() -> Node3D:
+	if has_active_ingredient():
+		return consume_active_ingredient()
+
 	if held_item != null:
 		var item := held_item
 		held_item = null
+		quick_slot_visual = null
 		if raycast and item is CollisionObject3D:
 			raycast.remove_exception(item)
 
@@ -1545,18 +1592,16 @@ func take_held_item() -> Node3D:
 		if item.has_meta("quick_slot_index"):
 			item.remove_meta("quick_slot_index")
 
-		if active_quick_slot >= 0 and active_quick_slot < quick_slots.size():
-			quick_slots[active_quick_slot] = {}
-			active_quick_slot = -1
+		if hold_position and is_instance_valid(hold_position):
+			for child in hold_position.get_children():
+				if child == item:
+					continue
+				child.queue_free()
 
 		_notify_hud_quick_slots()
 		_update_interaction_detection()
 		_update_quick_slot_visual()
 		return item
-
-	# Fallback se não estiver segurando node físico mas tiver slot
-	if has_active_ingredient():
-		return consume_active_ingredient()
 
 	return null
 
@@ -1570,14 +1615,17 @@ func drop_item() -> void:
 			hud.show_temporary_feedback("⚠️ O dinheiro do cliente deve ser depositado na caixa registradora!")
 		return
 
-	var item: Node3D = held_item
-	if item == null and has_active_ingredient():
+	var item: Node3D = null
+	if has_active_ingredient():
 		item = consume_active_ingredient()
+	elif held_item != null:
+		item = held_item
+		held_item = null
+		quick_slot_visual = null
 
 	if not item:
 		return
 
-	held_item = null
 	if raycast and item is CollisionObject3D:
 		raycast.remove_exception(item)
 
@@ -1674,10 +1722,6 @@ func drop_item() -> void:
 
 	if "location" in item:
 		item.location = Item.ItemLocation.WORLD
-
-	if active_quick_slot >= 0 and active_quick_slot < quick_slots.size():
-		quick_slots[active_quick_slot] = {}
-		active_quick_slot = -1
 
 	_play_sound(item_audio, "item_drop", -8.0, 0.05)
 	_notify_hud_quick_slots()
