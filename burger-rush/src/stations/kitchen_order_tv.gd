@@ -111,36 +111,34 @@ func _update_display() -> void:
 	var is_active = is_turned_on and has_power
 
 	if power_led:
-		var mat = power_led.get_surface_override_material(0)
+		var mat = power_led.get_surface_override_material(0) as StandardMaterial3D
 		if not mat:
 			mat = StandardMaterial3D.new()
 			power_led.set_surface_override_material(0, mat)
-		if mat is StandardMaterial3D:
-			if is_active:
-				mat.albedo_color = Color(0.15, 0.95, 0.25, 1.0)
-				mat.emission = Color(0.15, 0.95, 0.25, 1.0)
-				mat.emission_enabled = true
-			else:
-				mat.albedo_color = Color(0.95, 0.15, 0.15, 1.0)
-				mat.emission = Color(0.95, 0.15, 0.15, 1.0)
-				mat.emission_enabled = true
+		var led_col = Color(0.15, 0.95, 0.25, 1.0) if is_active else Color(0.95, 0.15, 0.15, 1.0)
+		if mat.albedo_color != led_col:
+			mat.albedo_color = led_col
+			mat.emission = led_col
+			mat.emission_enabled = true
 
 	if not is_active:
-		if screen_label:
+		if screen_label and screen_label.text != "":
 			screen_label.text = ""
-		if header_label:
+		if header_label and header_label.text != "":
 			header_label.text = ""
 		return
 
-	if header_label:
+	if header_label and header_label.text != "📋 PEDIDOS EM ANDAMENTO":
 		header_label.text = "📋 PEDIDOS EM ANDAMENTO"
 
 	_connect_order_signals()
 	var order_mgr = _get_order_manager()
 	if not order_mgr:
 		if screen_label:
-			screen_label.text = "✓ COZINHA LIVRE\nNenhum pedido pendente no momento."
-			screen_label.modulate = Color(0.4, 1.0, 0.6, 0.9)
+			var free_msg = "✓ COZINHA LIVRE\nNenhum pedido pendente no momento."
+			if screen_label.text != free_msg:
+				screen_label.text = free_msg
+				screen_label.modulate = Color(0.4, 1.0, 0.6, 0.9)
 		return
 
 	var active_orders = order_mgr.get_active_orders()
@@ -152,8 +150,10 @@ func _update_display() -> void:
 				pending_orders.append(o)
 
 	if pending_orders.is_empty():
-		screen_label.text = "✓ COZINHA LIVRE\nNenhum pedido pendente no momento."
-		screen_label.modulate = Color(0.4, 1.0, 0.6, 0.9)
+		var free_msg = "✓ COZINHA LIVRE\nNenhum pedido pendente no momento."
+		if screen_label.text != free_msg:
+			screen_label.text = free_msg
+			screen_label.modulate = Color(0.4, 1.0, 0.6, 0.9)
 		return
 
 	screen_label.modulate = Color(1.0, 1.0, 1.0, 1.0)
@@ -181,4 +181,6 @@ func _update_display() -> void:
 	if pending_orders.size() > max_display:
 		display_lines.append("+ %d pedido(s) aguardando" % (pending_orders.size() - max_display))
 
-	screen_label.text = "\n".join(display_lines)
+	var new_text = "\n".join(display_lines)
+	if screen_label.text != new_text:
+		screen_label.text = new_text

@@ -26,6 +26,15 @@ static func register_price_listener(callback: Callable) -> void:
 static func unregister_price_listener(callback: Callable) -> void:
 	on_prices_updated_callbacks.erase(callback)
 
+static func get_custom_prices() -> Dictionary:
+	return _custom_prices.duplicate(true)
+
+static func set_custom_prices(prices: Dictionary) -> void:
+	_custom_prices = prices.duplicate(true)
+	for cb in on_prices_updated_callbacks:
+		if cb.is_valid():
+			cb.call()
+
 static func get_purchase_manager() -> PurchaseManager:
 	var pm = PurchaseManager.get_instance()
 	if not pm and Engine.has_singleton("PurchaseManager"):

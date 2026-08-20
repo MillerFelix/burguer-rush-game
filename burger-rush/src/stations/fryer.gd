@@ -83,6 +83,20 @@ var active_potatoes: Array[Dictionary]:
 func _ready() -> void:
 	add_to_group("cleanable_stations")
 	_setup_audio()
+	_cached_basket_nodes.clear()
+	_cached_lever_arms.clear()
+	_cached_oil_meshes.clear()
+	_cached_bubbles.clear()
+	_cached_steams.clear()
+	_cached_drips.clear()
+	for j in range(4):
+		_cached_basket_nodes.append(get_node_or_null("Model/Basket%d" % j))
+		_cached_lever_arms.append(get_node_or_null("Model/Lever%d/LeverArm" % j))
+		_cached_oil_meshes.append(get_node_or_null("Model/OilMesh%d" % j))
+		_cached_bubbles.append(get_node_or_null("Model/Bubbles%d" % j))
+		_cached_steams.append(get_node_or_null("Model/Steam%d" % j))
+		_cached_drips.append(get_node_or_null("Model/Drips%d" % j))
+
 	var pm = PowerManager.get_instance()
 	if pm:
 		pm.register_appliance(self, "fryer", "Fritadeira Industrial Dupla", 3.5, is_on)
@@ -209,15 +223,6 @@ func _process(delta: float) -> void:
 
 	# 4. Processa cada um dos 4 compartimentos de forma 100% independente
 	var speed = get_cooking_speed_factor()
-
-	if _cached_basket_nodes.is_empty():
-		for j in range(4):
-			_cached_basket_nodes.append(get_node_or_null("Model/Basket%d" % j))
-			_cached_lever_arms.append(get_node_or_null("Model/Lever%d/LeverArm" % j))
-			_cached_oil_meshes.append(get_node_or_null("Model/OilMesh%d" % j))
-			_cached_bubbles.append(get_node_or_null("Model/Bubbles%d" % j))
-			_cached_steams.append(get_node_or_null("Model/Steam%d" % j))
-			_cached_drips.append(get_node_or_null("Model/Drips%d" % j))
 
 	for i in range(4):
 		var comp = compartments[i]
@@ -391,7 +396,8 @@ func _update_thermometer(delta: float) -> void:
 		fluid_column_pivot = get_node_or_null("Model/ControlPanel/HorizontalThermometer/FluidColumnPivot")
 	if fluid_column_pivot:
 		var t = clampf((current_temperature - 25.0) / (180.0 - 25.0), 0.04, 1.0)
-		fluid_column_pivot.scale.x = lerpf(fluid_column_pivot.scale.x, t, 1.0 - exp(-6.0 * delta))
+		if absf(fluid_column_pivot.scale.x - t) > 0.001:
+			fluid_column_pivot.scale.x = lerpf(fluid_column_pivot.scale.x, t, 1.0 - exp(-6.0 * delta))
 
 	if not temp_pilot_light:
 		temp_pilot_light = get_node_or_null("Model/ControlPanel/TempPilotLight")
@@ -402,13 +408,15 @@ func _update_thermometer(delta: float) -> void:
 			temp_pilot_light.material_override = mat
 
 		if not is_on:
-			mat.albedo_color = Color(0.2, 0.2, 0.22, 1.0)
-			mat.emission_enabled = false
+			if mat.emission_enabled:
+				mat.albedo_color = Color(0.2, 0.2, 0.22, 1.0)
+				mat.emission_enabled = false
 		elif is_ideal_temp():
-			mat.albedo_color = Color(0.12, 0.95, 0.25, 1.0)
-			mat.emission_enabled = true
-			mat.emission = Color(0.12, 0.95, 0.25, 1.0)
-			mat.emission_energy_multiplier = 1.6
+			if not mat.emission_enabled or mat.albedo_color != Color(0.12, 0.95, 0.25, 1.0):
+				mat.albedo_color = Color(0.12, 0.95, 0.25, 1.0)
+				mat.emission_enabled = true
+				mat.emission = Color(0.12, 0.95, 0.25, 1.0)
+				mat.emission_energy_multiplier = 1.6
 		else:
 			var pulse = (sin(Time.get_ticks_msec() * 0.008) + 1.0) * 0.5
 			mat.albedo_color = Color(0.95, 0.55, 0.1, 1.0)

@@ -108,5 +108,8 @@ func _process(delta: float) -> void:
 			target_outside_vol = -80.0
 
 		if outside_traffic_audio:
-			var w = 1.0 - exp(-4.5 * delta)
-			outside_traffic_audio.volume_db = lerpf(outside_traffic_audio.volume_db, target_outside_vol, w)
+			if absf(outside_traffic_audio.volume_db - target_outside_vol) > 0.05:
+				var w = 1.0 - exp(-4.5 * delta)
+				outside_traffic_audio.volume_db = lerpf(outside_traffic_audio.volume_db, target_outside_vol, w)
+			else:
+				outside_traffic_audio.volume_db = target_outside_vol

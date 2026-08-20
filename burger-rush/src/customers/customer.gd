@@ -929,7 +929,12 @@ func receive_food() -> void:
 
 		_update_visual_status()
 
-func _update_visual_status() -> void:
+var _last_visual_state: State = State.ARRIVING
+var _last_visual_pct: int = -99
+var _last_visual_emoji: String = ""
+var _visual_timer: float = 0.0
+
+func _update_visual_status(force: bool = false) -> void:
 	if not label_3d:
 		label_3d = get_node_or_null("Label3D") as Label3D
 		if not label_3d:
@@ -937,7 +942,15 @@ func _update_visual_status() -> void:
 	if not label_3d:
 		return
 
+	var cur_pct = int(mood.current_mood) if mood else 100
 	var emoji = mood.get_emoji() if mood else "🙂"
+	if not force and state == _last_visual_state and cur_pct == _last_visual_pct and emoji == _last_visual_emoji:
+		return
+
+	_last_visual_state = state
+	_last_visual_pct = cur_pct
+	_last_visual_emoji = emoji
+
 	var mood_color = mood.get_color() if mood else Color(1, 1, 1)
 
 	var target_text = ""
@@ -949,7 +962,7 @@ func _update_visual_status() -> void:
 			target_color = Color(0.9, 0.9, 0.4)
 
 		State.SITTING, State.SEATED_WAITING_TO_ORDER:
-			var pct = int(mood.current_mood) if mood else 100
+			var pct = cur_pct
 			if pct <= 25:
 				target_text = "%s ⚠️ Quase Desistindo! (%d%%)" % [emoji, pct]
 				target_color = Color(1.0, 0.25, 0.25)
@@ -958,7 +971,7 @@ func _update_visual_status() -> void:
 				target_color = mood_color
 
 		State.WAITING_FOR_FOOD:
-			var pct = int(mood.current_mood) if mood else 100
+			var pct = cur_pct
 			if pct <= 25:
 				target_text = "%s ⚠️ Com Fome / Atrasado! (%d%%)" % [emoji, pct]
 				target_color = Color(1.0, 0.25, 0.25)

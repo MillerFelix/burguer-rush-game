@@ -156,7 +156,10 @@ func create_delivery_order(custom_items: Array = []) -> Order:
 			{"id": "soda_cola", "name": "Refrigerante Cola", "price": 6.0},
 			{"id": "soda_cola_zero", "name": "Refrigerante Zero", "price": 6.0},
 			{"id": "soda_lime", "name": "Refrigerante Soda", "price": 6.0},
-			{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0}
+			{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0},
+			{"id": "juice_orange", "name": "Suco de Laranja", "price": 7.50},
+			{"id": "juice_grape", "name": "Suco de Uva", "price": 7.50},
+			{"id": "juice_strawberry", "name": "Suco de Morango", "price": 7.50}
 		]
 
 		var rand_size = randf()
@@ -424,7 +427,10 @@ func create_group_order(customer: Node, group_size: int, table_id: int = 0, sour
 		{"id": "soda_cola", "name": "Refrigerante Cola", "price": 6.0},
 		{"id": "soda_cola_zero", "name": "Refrigerante Zero", "price": 6.0},
 		{"id": "soda_lime", "name": "Refrigerante Soda", "price": 6.0},
-		{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0}
+		{"id": "soda_citrus", "name": "Refrigerante Citrus", "price": 6.0},
+		{"id": "juice_orange", "name": "Suco de Laranja", "price": 7.50},
+		{"id": "juice_grape", "name": "Suco de Uva", "price": 7.50},
+		{"id": "juice_strawberry", "name": "Suco de Morango", "price": 7.50}
 	]
 
 	# 1. Alocação de Hambúrgueres e Bebidas com distribuição balanceada
@@ -659,6 +665,8 @@ func _get_product_info(product_id: String) -> Dictionary:
 			return {"name": "Suco de Laranja", "price": current_price}
 		"juice_grape":
 			return {"name": "Suco de Uva", "price": current_price}
+		"juice_strawberry":
+			return {"name": "Suco de Morango", "price": current_price}
 		"juice_passion":
 			return {"name": "Suco de Maracujá", "price": current_price}
 		_:

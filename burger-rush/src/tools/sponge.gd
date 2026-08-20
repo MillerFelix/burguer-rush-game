@@ -23,11 +23,36 @@ var _is_animating_wash: bool = false
 var _initial_pos: Vector3 = Vector3.ZERO
 var _initial_rot: Vector3 = Vector3.ZERO
 
+var _mat_yellow_clean: StandardMaterial3D = null
+var _mat_yellow_dirty: StandardMaterial3D = null
+var _mat_green_clean: StandardMaterial3D = null
+var _mat_green_dirty: StandardMaterial3D = null
+
+func _setup_materials() -> void:
+	if _mat_yellow_clean == null:
+		_mat_yellow_clean = StandardMaterial3D.new()
+		_mat_yellow_clean.albedo_color = Color(0.95, 0.85, 0.18, 1.0)
+		_mat_yellow_clean.roughness = 0.80
+
+		_mat_yellow_dirty = StandardMaterial3D.new()
+		_mat_yellow_dirty.albedo_color = Color(0.40, 0.32, 0.20, 1.0)
+		_mat_yellow_dirty.roughness = 0.95
+
+		_mat_green_clean = StandardMaterial3D.new()
+		_mat_green_clean.albedo_color = Color(0.12, 0.48, 0.18, 1.0)
+		_mat_green_clean.roughness = 0.88
+
+		_mat_green_dirty = StandardMaterial3D.new()
+		_mat_green_dirty.albedo_color = Color(0.16, 0.14, 0.09, 1.0)
+		_mat_green_dirty.roughness = 0.98
+
 func _ready() -> void:
 	if model:
 		_initial_pos = model.position
 		_initial_rot = model.rotation
+	_setup_materials()
 	_update_visuals()
+	set_process(false)
 
 func _process(delta: float) -> void:
 	if _is_scrubbing_continuous and model:
@@ -48,6 +73,12 @@ func _process(delta: float) -> void:
 		if model.position != _initial_pos or model.rotation != _initial_rot:
 			model.position = model.position.move_toward(_initial_pos, 1.2 * delta)
 			model.rotation = model.rotation.move_toward(_initial_rot, 10.0 * delta)
+			if model.position.distance_to(_initial_pos) < 0.001 and model.rotation.distance_to(_initial_rot) < 0.001:
+				model.position = _initial_pos
+				model.rotation = _initial_rot
+				set_process(false)
+		else:
+			set_process(false)
 
 func is_clean() -> bool:
 	return not is_dirty
@@ -76,34 +107,21 @@ func _update_visuals() -> void:
 		yellow_body = get_node_or_null("Model/YellowBody")
 	if not green_pad:
 		green_pad = get_node_or_null("Model/GreenScourPad")
+	_setup_materials()
 
 	if yellow_body:
-		var mat_yellow = StandardMaterial3D.new()
-		if is_dirty:
-			# Manchas escuras de gordura e sujeira acumulada
-			mat_yellow.albedo_color = Color(0.40, 0.32, 0.20, 1.0)
-			mat_yellow.roughness = 0.95
-		else:
-			# Amarelo vivo e limpo
-			mat_yellow.albedo_color = Color(0.95, 0.85, 0.18, 1.0)
-			mat_yellow.roughness = 0.80
-		yellow_body.material_override = mat_yellow
+		yellow_body.material_override = _mat_yellow_dirty if is_dirty else _mat_yellow_clean
 
 	if green_pad:
-		var mat_green = StandardMaterial3D.new()
-		if is_dirty:
-			mat_green.albedo_color = Color(0.16, 0.14, 0.09, 1.0)
-			mat_green.roughness = 0.98
-		else:
-			mat_green.albedo_color = Color(0.12, 0.48, 0.18, 1.0)
-			mat_green.roughness = 0.88
-		green_pad.material_override = mat_green
+		green_pad.material_override = _mat_green_dirty if is_dirty else _mat_green_clean
 
 func start_scrub_continuous() -> void:
 	_is_scrubbing_continuous = true
+	set_process(true)
 
 func stop_scrub_continuous() -> void:
 	_is_scrubbing_continuous = false
+	set_process(true)
 
 func play_action_animation() -> void:
 	play_scrub_animation()

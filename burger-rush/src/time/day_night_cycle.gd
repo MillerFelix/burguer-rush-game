@@ -54,6 +54,13 @@ func _ready() -> void:
 
 var _references_checked: bool = false
 var _cached_weather_manager: WeatherManager = null
+var _cached_street_lamps: Array = []
+var _cached_dining_lamps: Array = []
+var _cached_kitchen_panels: Array = []
+var _cached_deliv_mgr: Node = null
+var _last_calc_time_h: float = -1.0
+var _last_calc_cloud: float = -1.0
+var _last_calc_rain: float = -1.0
 
 func _find_references_if_null() -> void:
 	if _references_checked:
@@ -79,6 +86,14 @@ func _find_references_if_null() -> void:
 		ambient_traffic = search_root.find_child("AmbientTraffic", true, false) as AmbientTraffic
 	if not customer_spawner:
 		customer_spawner = search_root.find_child("CustomerSpawner", true, false) as CustomerSpawner
+	if not _cached_deliv_mgr:
+		_cached_deliv_mgr = search_root.find_child("DeliveryQueueManager", true, false)
+
+	_cached_street_lamps = search_root.find_children("StreetLamp*", "Node3D", true, false)
+	_cached_dining_lamps = search_root.find_children("DiningCeilingLamp*", "Node3D", true, false)
+	var kp = search_root.find_children("KitchenPanel*", "Node3D", true, false)
+	kp.append_array(search_root.find_children("StoragePanel*", "Node3D", true, false))
+	_cached_kitchen_panels = kp
 
 func _on_time_tick(hours: int, minutes: int) -> void:
 	current_time_hours = hours + (minutes / 60.0)
@@ -117,6 +132,12 @@ func _update_lighting(time_h: float) -> void:
 		cloudiness = wm.cloudiness
 		rain_intensity = wm.rain_intensity
 
+	if absf(time_h - _last_calc_time_h) < 0.0001 and absf(cloudiness - _last_calc_cloud) < 0.001 and absf(rain_intensity - _last_calc_rain) < 0.001:
+		return
+	_last_calc_time_h = time_h
+	_last_calc_cloud = cloudiness
+	_last_calc_rain = rain_intensity
+
 	# ---------------------------------------------------------
 	# 2. CÁLCULO DAS FASES BASE DO CICLO HORÁRIO (08:30 - 24:00+)
 	# ---------------------------------------------------------
@@ -136,8 +157,8 @@ func _update_lighting(time_h: float) -> void:
 	var cur_amb_energy: float = 1.0
 	var cur_bg_energy: float = 1.0
 
-	if time_h < 11.5:
-		# MANHÃ (08:30 - 11:30)
+	if time_h >= 6.0 and time_h < 11.5:
+		# MANHÃ (06:00 - 11:30)
 		var t = clampf((time_h - 8.5) / 3.0, 0.0, 1.0)
 		sun_color = Color(1.0, 0.96, 0.90).lerp(Color(1.0, 0.99, 0.96), t)
 		sun_energy = lerpf(1.0, 1.3, t)
@@ -349,66 +370,61 @@ func _update_lighting(time_h: float) -> void:
 	# ---------------------------------------------------------
 	# 7. EMISSÃO VISUAL DAS LUMINÁRIAS E POSTES
 	# ---------------------------------------------------------
-	var root_node: Node = null
-	if is_inside_tree() and get_tree():
-		root_node = get_tree().current_scene if get_tree().current_scene else get_tree().root
-	elif get_parent():
-		root_node = get_parent()
+	# A) Postes de Rua
+	for lamp in _cached_street_lamps:
+		if not is_instance_valid(lamp):
+			continue
+		var omni = lamp.find_child("LampLight", true, false) as Light3D
+		if omni:
+			var base_e = omni.get_meta("base_energy", -1.0)
+			if base_e < 0.0:
+				base_e = omni.light_energy
+				omni.set_meta("base_energy", base_e)
+			omni.light_energy = base_e * street_lamp_energy_mult
 
-	if root_node:
-		# A) Postes de Rua
-		var street_lamps = root_node.find_children("StreetLamp*", "Node3D", true, false)
-		for lamp in street_lamps:
-			var omni = lamp.find_child("LampLight", true, false) as Light3D
-			if omni:
-				var base_e = omni.get_meta("base_energy", -1.0)
-				if base_e < 0.0:
-					base_e = omni.light_energy
-					omni.set_meta("base_energy", base_e)
-				omni.light_energy = base_e * street_lamp_energy_mult
+		var bulb = lamp.find_child("Bulb", true, false) as MeshInstance3D
+		if bulb:
+			if bulb.material_override == null:
+				var m = StandardMaterial3D.new()
+				m.albedo_color = Color(1.0, 0.92, 0.72)
+				bulb.material_override = m
+			var b_mat = bulb.material_override as StandardMaterial3D
+			if b_mat:
+				b_mat.emission_enabled = (street_lamp_energy_mult > 0.05)
+				b_mat.emission = Color(1.0, 0.85, 0.55)
+				b_mat.emission_energy_multiplier = 2.8 * street_lamp_energy_mult
 
-			var bulb = lamp.find_child("Bulb", true, false) as MeshInstance3D
-			if bulb:
-				if bulb.material_override == null:
-					var m = StandardMaterial3D.new()
-					m.albedo_color = Color(1.0, 0.92, 0.72)
-					bulb.material_override = m
-				var b_mat = bulb.material_override as StandardMaterial3D
-				if b_mat:
-					b_mat.emission_enabled = (street_lamp_energy_mult > 0.05)
-					b_mat.emission = Color(1.0, 0.85, 0.55)
-					b_mat.emission_energy_multiplier = 2.8 * street_lamp_energy_mult
+	# B) Luminárias Centrais do Salão
+	for dlamp in _cached_dining_lamps:
+		if not is_instance_valid(dlamp):
+			continue
+		var bulb = dlamp.find_child("Bulb", true, false) as MeshInstance3D
+		if bulb:
+			if bulb.material_override == null:
+				var m = StandardMaterial3D.new()
+				m.albedo_color = Color(1.0, 0.94, 0.82)
+				bulb.material_override = m
+			var b_mat = bulb.material_override as StandardMaterial3D
+			if b_mat:
+				b_mat.emission_enabled = (indoor_energy_mult > 0.05)
+				b_mat.emission = Color(1.0, 0.86, 0.65)
+				b_mat.emission_energy_multiplier = 2.4 * indoor_energy_mult
 
-		# B) Luminárias Centrais do Salão
-		var dining_lamps = root_node.find_children("DiningCeilingLamp*", "Node3D", true, false)
-		for dlamp in dining_lamps:
-			var bulb = dlamp.find_child("Bulb", true, false) as MeshInstance3D
-			if bulb:
-				if bulb.material_override == null:
-					var m = StandardMaterial3D.new()
-					m.albedo_color = Color(1.0, 0.94, 0.82)
-					bulb.material_override = m
-				var b_mat = bulb.material_override as StandardMaterial3D
-				if b_mat:
-					b_mat.emission_enabled = (indoor_energy_mult > 0.05)
-					b_mat.emission = Color(1.0, 0.86, 0.65)
-					b_mat.emission_energy_multiplier = 2.4 * indoor_energy_mult
-
-		# C) Painéis de LED da Cozinha e Estoque
-		var kitchen_panels = root_node.find_children("KitchenPanel*", "Node3D", true, false)
-		kitchen_panels.append_array(root_node.find_children("StoragePanel*", "Node3D", true, false))
-		for kpanel in kitchen_panels:
-			var diff = kpanel.find_child("Diffuser", true, false) as MeshInstance3D
-			if diff:
-				if diff.material_override == null:
-					var m = StandardMaterial3D.new()
-					m.albedo_color = Color(0.96, 0.98, 1.0)
-					diff.material_override = m
-				var d_mat = diff.material_override as StandardMaterial3D
-				if d_mat:
-					d_mat.emission_enabled = (indoor_energy_mult > 0.05)
-					d_mat.emission = Color(0.94, 0.97, 1.0)
-					d_mat.emission_energy_multiplier = 2.5 * indoor_energy_mult
+	# C) Painéis de LED da Cozinha e Estoque
+	for kpanel in _cached_kitchen_panels:
+		if not is_instance_valid(kpanel):
+			continue
+		var diff = kpanel.find_child("Diffuser", true, false) as MeshInstance3D
+		if diff:
+			if diff.material_override == null:
+				var m = StandardMaterial3D.new()
+				m.albedo_color = Color(0.96, 0.98, 1.0)
+				diff.material_override = m
+			var d_mat = diff.material_override as StandardMaterial3D
+			if d_mat:
+				d_mat.emission_enabled = (indoor_energy_mult > 0.05)
+				d_mat.emission = Color(0.94, 0.97, 1.0)
+				d_mat.emission_energy_multiplier = 2.5 * indoor_energy_mult
 
 	# ---------------------------------------------------------
 	# 8. AJUSTE DE FLUXO DE CLIENTES (CustomerSpawner)
@@ -426,8 +442,5 @@ func _update_lighting(time_h: float) -> void:
 	if ambient_traffic and ambient_traffic.has_method("set_night_mode"):
 		ambient_traffic.set_night_mode(enable_headlights)
 
-	var deliv_mgr = null
-	if root_node:
-		deliv_mgr = root_node.find_child("DeliveryQueueManager", true, false)
-	if deliv_mgr and deliv_mgr.has_method("set_night_mode"):
-		deliv_mgr.set_night_mode(enable_headlights)
+	if _cached_deliv_mgr and _cached_deliv_mgr.has_method("set_night_mode"):
+		_cached_deliv_mgr.set_night_mode(enable_headlights)

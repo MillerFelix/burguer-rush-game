@@ -121,8 +121,11 @@ func _process(delta: float) -> void:
 	if hum_audio:
 		if is_inside_tree() and not hum_audio.playing:
 			hum_audio.play()
-		var w = 1.0 - exp(-6.0 * delta)
-		hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w)
+		if absf(hum_audio.volume_db - _target_hum_vol) > 0.05:
+			var w = 1.0 - exp(-6.0 * delta)
+			hum_audio.volume_db = lerpf(hum_audio.volume_db, _target_hum_vol, w)
+		else:
+			hum_audio.volume_db = _target_hum_vol
 
 	# Efeito de perda de frio e formação de poça quando aberto por tempo suficiente
 	if current_state == State.OPEN:

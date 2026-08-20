@@ -114,6 +114,9 @@ func hire_employee(emp_name: String = "", initial_role: Employee.Role = Employee
 	if clock:
 		current_day = clock.day_number
 
+	if not employee_scene:
+		employee_scene = load("res://src/employees/employee.tscn")
+
 	var name_str = emp_name if emp_name != "" else get_next_name()
 	var emp = employee_scene.instantiate() as Employee
 	emp.employee_id = next_id
@@ -211,3 +214,56 @@ func process_weekly_payroll() -> Dictionary:
 		"total_salaries": total_salaries,
 		"employees_summary": summaries
 	}
+
+func serialize_employees() -> Array[Dictionary]:
+	var list: Array[Dictionary] = []
+	for emp in employees:
+		if is_instance_valid(emp):
+			list.append({
+				"id": emp.employee_id,
+				"name": emp.employee_name,
+				"role": int(emp.role),
+				"daily_salary": emp.daily_salary,
+				"weekly_salary": emp.weekly_salary,
+				"hired_day": emp.hired_day,
+				"rest_position": [emp.rest_position.x, emp.rest_position.y, emp.rest_position.z]
+			})
+	return list
+
+func restore_employees(data_list: Array) -> void:
+	if not employee_scene:
+		employee_scene = load("res://src/employees/employee.tscn")
+	for emp in employees:
+		if is_instance_valid(emp):
+			emp.queue_free()
+	employees.clear()
+
+	for d in data_list:
+		if not (d is Dictionary):
+			continue
+		var emp = employee_scene.instantiate() as Employee
+		emp.employee_id = d.get("id", 1)
+		next_id = max(next_id, emp.employee_id + 1)
+		emp.employee_name = d.get("name", "Carlos")
+		emp.role = d.get("role", Employee.Role.GENERAL)
+		emp.daily_salary = d.get("daily_salary", 150.0)
+		emp.weekly_salary = d.get("weekly_salary", 1050.0)
+		emp.hired_day = d.get("hired_day", 1)
+		var r_pos = d.get("rest_position", [2.4, 0.0, 7.5])
+		if r_pos is Array and r_pos.size() >= 3:
+			emp.rest_position = Vector3(r_pos[0], r_pos[1], r_pos[2])
+		else:
+			emp.rest_position = Vector3(2.4, 0.0, 7.5)
+
+		var parent_node: Node = get_parent() if get_parent() else (get_tree().current_scene if (get_tree() and get_tree().current_scene) else null)
+		if not parent_node and is_inside_tree() and get_tree() and get_tree().root:
+			parent_node = get_tree().root
+		if parent_node:
+			parent_node.add_child(emp)
+			if emp.is_inside_tree():
+				emp.global_position = emp.rest_position
+			else:
+				emp.position = emp.rest_position
+			emp.state = Employee.State.IDLE_WAITING
+		employees.append(emp)
+		employee_hired.emit(emp)

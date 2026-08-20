@@ -295,10 +295,14 @@ func _apply_weather_state(_delta: float) -> void:
 				rain_particles.global_position = Vector3(p_pos.x, 12.0, p_pos.z)
 			else:
 				rain_particles.position = Vector3(p_pos.x, 12.0, p_pos.z)
-			rain_particles.emitting = true
-			rain_particles.amount = int(lerpf(600.0, 2000.0, rain_intensity))
+			if not rain_particles.emitting:
+				rain_particles.emitting = true
+			var target_amt = int(lerpf(600.0, 2000.0, rain_intensity))
+			if abs(rain_particles.amount - target_amt) > 50:
+				rain_particles.amount = target_amt
 		else:
-			rain_particles.emitting = false
+			if rain_particles.emitting:
+				rain_particles.emitting = false
 
 	if rain_splashes:
 		if rain_intensity > 0.10:
@@ -306,10 +310,14 @@ func _apply_weather_state(_delta: float) -> void:
 				rain_splashes.global_position = Vector3(p_pos.x, 0.03, p_pos.z)
 			else:
 				rain_splashes.position = Vector3(p_pos.x, 0.03, p_pos.z)
-			rain_splashes.emitting = true
-			rain_splashes.amount = int(lerpf(250.0, 800.0, rain_intensity))
+			if not rain_splashes.emitting:
+				rain_splashes.emitting = true
+			var target_sp_amt = int(lerpf(250.0, 800.0, rain_intensity))
+			if abs(rain_splashes.amount - target_sp_amt) > 30:
+				rain_splashes.amount = target_sp_amt
 		else:
-			rain_splashes.emitting = false
+			if rain_splashes.emitting:
+				rain_splashes.emitting = false
 
 	# 2. Áudio Espacial da Chuva com Abafamento Interno e Presença nas Portas/Janelas
 	_process_spatial_audio(p_pos)

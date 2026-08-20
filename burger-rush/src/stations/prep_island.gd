@@ -155,19 +155,16 @@ func interact(player: Node3D) -> void:
 	interact_item(player)
 
 func _find_nearby_bread(world_pos: Vector3, max_dist: float) -> Node3D:
-	var world_node = get_parent() if get_parent() else get_tree().current_scene
-	if not world_node:
-		return null
-
 	var closest: Node3D = null
 	var closest_dist: float = max_dist
 
-	for child in world_node.get_children():
-		if child is Item and (child.get("assembly") != null or child.item_id == "bread_bottom" or child.has_node("BurgerAssembly")):
-			var d = Vector2(child.global_position.x - world_pos.x, child.global_position.z - world_pos.z).length()
-			if d < closest_dist:
-				closest_dist = d
-				closest = child
+	for child in placed_items:
+		if is_instance_valid(child) and child.is_inside_tree():
+			if child is Item and (child.get("assembly") != null or child.item_id == "bread_bottom" or child.has_node("BurgerAssembly")):
+				var d = Vector2(child.global_position.x - world_pos.x, child.global_position.z - world_pos.z).length()
+				if d < closest_dist:
+					closest_dist = d
+					closest = child
 	return closest
 
 func _calculate_placement_position(player: Node3D) -> Vector3:
@@ -222,17 +219,8 @@ func _process(delta: float) -> void:
 
 func _cleanup_placed_items() -> void:
 	var valid: Array[Node3D] = []
-	var world_node = get_parent() if get_parent() else (get_tree().current_scene if get_tree() else null)
-	if world_node:
-		for child in world_node.get_children():
-			if child is Item and is_instance_valid(child) and child.is_inside_tree():
-				if "location" in child and child.location == Item.ItemLocation.WORLD:
-					var local_p = to_local(child.global_position)
-					if absf(local_p.x) <= BOUNDS_X_MAX + 0.3 and absf(local_p.z) <= BOUNDS_Z_MAX + 0.3 and local_p.y >= SURFACE_TOP_Y - 0.25 and local_p.y <= SURFACE_TOP_Y + 0.8:
-						if not valid.has(child):
-							valid.append(child)
 	for it in placed_items:
-		if is_instance_valid(it) and it.is_inside_tree() and not valid.has(it):
+		if is_instance_valid(it) and it.is_inside_tree():
 			if "location" in it and it.location == Item.ItemLocation.WORLD:
 				var local_p = to_local(it.global_position)
 				if absf(local_p.x) <= BOUNDS_X_MAX + 0.3 and absf(local_p.z) <= BOUNDS_Z_MAX + 0.3 and local_p.y >= SURFACE_TOP_Y - 0.25 and local_p.y <= SURFACE_TOP_Y + 0.8:

@@ -255,3 +255,18 @@ func get_low_stock_alerts() -> Array[String]:
 		if qty <= reorder:
 			alerts.append(item.get("display_name", id))
 	return alerts
+
+func get_stock_dictionary() -> Dictionary:
+	var dict: Dictionary = {}
+	for id in items.keys():
+		dict[id] = items[id].get("quantity", 0)
+	return dict
+
+func restore_stock_dictionary(stock_data: Dictionary) -> void:
+	if items.is_empty():
+		_initialize_default_inventory()
+	for id in stock_data.keys():
+		var real_id = _resolve_item_id(id)
+		if items.has(real_id):
+			items[real_id]["quantity"] = int(stock_data[id])
+			stock_changed.emit(real_id, items[real_id]["quantity"])

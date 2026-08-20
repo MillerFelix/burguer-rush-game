@@ -313,8 +313,9 @@ func _update_thermometer(delta: float) -> void:
 		fluid_column_pivot = get_node_or_null("Model/ControlPanel/HorizontalThermometer/FluidColumnPivot")
 	if fluid_column_pivot:
 		var t = clampf((current_temperature - 25.0) / (200.0 - 25.0), 0.04, 1.0)
-		var weight = 1.0 - exp(-6.0 * delta)
-		fluid_column_pivot.scale.x = lerpf(fluid_column_pivot.scale.x, t, weight)
+		if absf(fluid_column_pivot.scale.x - t) > 0.001:
+			var weight = 1.0 - exp(-6.0 * delta)
+			fluid_column_pivot.scale.x = lerpf(fluid_column_pivot.scale.x, t, weight)
 
 	if not temp_pilot_light:
 		temp_pilot_light = get_node_or_null("Model/ControlPanel/TempPilotLight")
@@ -325,13 +326,15 @@ func _update_thermometer(delta: float) -> void:
 			temp_pilot_light.material_override = mat
 
 		if not is_on:
-			mat.albedo_color = Color(0.2, 0.2, 0.22, 1.0)
-			mat.emission_enabled = false
+			if mat.emission_enabled:
+				mat.albedo_color = Color(0.2, 0.2, 0.22, 1.0)
+				mat.emission_enabled = false
 		elif is_ideal_temp():
-			mat.albedo_color = Color(0.12, 0.95, 0.25, 1.0)
-			mat.emission_enabled = true
-			mat.emission = Color(0.12, 0.95, 0.25, 1.0)
-			mat.emission_energy_multiplier = 1.6
+			if not mat.emission_enabled or mat.albedo_color != Color(0.12, 0.95, 0.25, 1.0):
+				mat.albedo_color = Color(0.12, 0.95, 0.25, 1.0)
+				mat.emission_enabled = true
+				mat.emission = Color(0.12, 0.95, 0.25, 1.0)
+				mat.emission_energy_multiplier = 1.6
 		else:
 			var pulse = (sin(Time.get_ticks_msec() * 0.008) + 1.0) * 0.5
 			mat.albedo_color = Color(0.95, 0.55, 0.1, 1.0)
@@ -524,7 +527,7 @@ enum CleanlinessState {
 var cleanliness_state: CleanlinessState = CleanlinessState.CLEAN
 
 func is_dirty() -> bool:
-	return cleanliness_state == CleanlinessState.DIRTY or cleanliness_state == CleanlinessState.CLEANING or dirt_level >= DIRT_THRESHOLD
+	return dirt_level >= DIRT_THRESHOLD or cleanliness_state == CleanlinessState.DIRTY
 
 func get_dirt_level() -> float:
 	return dirt_level
@@ -547,7 +550,7 @@ func set_dirty(dirty: bool = true) -> void:
 func _update_dirt_visuals() -> void:
 	var grill_dirt = get_node_or_null("Model/GrillPlate/GrillDirt")
 	if grill_dirt:
-		var has_dirt = (dirt_level > 0.02)
+		var has_dirt = (dirt_level > 0.001)
 		grill_dirt.visible = has_dirt
 		var sc = lerpf(0.20, 1.0, dirt_level) if has_dirt else 0.0
 		for child in grill_dirt.get_children():
@@ -585,9 +588,8 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 
 	cleanliness_state = CleanlinessState.CLEANING
 	dirt_level = maxf(0.0, dirt_level - (delta / 0.8))
-	_update_dirt_visuals()
 
-	if dirt_level <= 0.0:
+	if dirt_level <= 0.001:
 		dirt_level = 0.0
 		cleanliness_state = CleanlinessState.CLEAN
 		_update_dirt_visuals()
@@ -597,16 +599,16 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 			var th = player.get_node_or_null("Head/Camera3D/ToolHolder") if player.has_node("Head/Camera3D/ToolHolder") else null
 			if not th and "tool_holder" in player and player.tool_holder:
 				th = player.tool_holder
-			var found_sp = false
 			if th:
 				for child in th.get_children():
 					if child.has_method("set_dirty"):
 						child.set_dirty()
-						found_sp = true
 						break
 			if "sponge_is_dirty" in player:
 				player.set("sponge_is_dirty", true)
 		return true
+
+	_update_dirt_visuals()
 	return false
 
 func place_item(item: Node3D) -> bool:

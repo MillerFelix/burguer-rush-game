@@ -89,7 +89,7 @@ func add_ingredient(item: Item, hit_pos: Vector3 = Vector3.ZERO, player_rot_y: f
 	if item.get("collision_shape") != null and item.collision_shape:
 		item.collision_shape.disabled = false
 	item.collision_layer = 1
-	item.collision_mask = 1
+	item.collision_mask = 0
 	item.set_meta("burger_assembly", self)
 	item.set_meta("burger_base", base_bun)
 

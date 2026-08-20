@@ -137,9 +137,19 @@ var fill_progress: float:
 	set(val):
 		fill_progresses[current_flavor_index] = val
 
+var _cached_lever_pivots: Array[Node3D] = []
+var _cached_stream_meshes: Array[Node3D] = []
+var _visuals_dirty: bool = true
+
 func _ready() -> void:
 	_setup_audio()
 	_init_canisters()
+	_cached_lever_pivots.clear()
+	_cached_stream_meshes.clear()
+	for i in range(4):
+		_cached_lever_pivots.append(get_node_or_null("Model/LeverPivot_%d" % i))
+		_cached_stream_meshes.append(get_node_or_null("Model/Stream_%d" % i))
+
 	var pm = PowerManager.get_instance()
 	if pm:
 		pm.register_appliance(self, "drink_machine", "Máquina de Refrigerantes", 0.85, is_powered)
@@ -156,6 +166,7 @@ func on_power_state_changed(main_power_on: bool) -> void:
 	var pm = PowerManager.get_instance()
 	if pm:
 		pm.set_appliance_state(self, is_powered and main_power_on)
+	_visuals_dirty = true
 	_update_all_visuals()
 
 func _setup_audio() -> void:
@@ -220,20 +231,30 @@ func _init_canisters() -> void:
 
 func _process(delta: float) -> void:
 	# Animação suave e independente das duas portas inferiores nas dobradiças
+	var door_animating = false
 	if left_door_hinge:
 		var target_left_y = deg_to_rad(-95.0) if is_left_door_open else 0.0
-		left_door_hinge.rotation.y = move_toward(left_door_hinge.rotation.y, target_left_y, 4.0 * delta)
+		if absf(left_door_hinge.rotation.y - target_left_y) > 0.005:
+			left_door_hinge.rotation.y = move_toward(left_door_hinge.rotation.y, target_left_y, 4.0 * delta)
+			door_animating = true
 
 	if right_door_hinge:
 		var target_right_y = deg_to_rad(95.0) if is_right_door_open else 0.0
-		right_door_hinge.rotation.y = move_toward(right_door_hinge.rotation.y, target_right_y, 4.0 * delta)
+		if absf(right_door_hinge.rotation.y - target_right_y) > 0.005:
+			right_door_hinge.rotation.y = move_toward(right_door_hinge.rotation.y, target_right_y, 4.0 * delta)
+			door_animating = true
 
 	# Atualização das 4 estações independentes de enchimento
+	var any_lever = false
 	for i in range(4):
 		_process_station_dispense(i, delta)
+		if is_lever_down[i]:
+			any_lever = true
 
 	_process_audio(delta)
-	_update_all_visuals()
+	if _visuals_dirty or any_lever or door_animating:
+		_update_all_visuals()
+		_visuals_dirty = false
 
 func _process_audio(delta: float) -> void:
 	if not hum_audio or not dispense_audio:
@@ -275,8 +296,8 @@ func _process_audio(delta: float) -> void:
 		dispense_audio.stop()
 
 func _process_station_dispense(idx: int, delta: float) -> void:
-	var lever_pivot = get_node_or_null("Model/LeverPivot_%d" % idx)
-	var stream_mesh = get_node_or_null("Model/Stream_%d" % idx)
+	var lever_pivot = _cached_lever_pivots[idx] if idx < _cached_lever_pivots.size() else null
+	var stream_mesh = _cached_stream_meshes[idx] if idx < _cached_stream_meshes.size() else null
 
 	# Movimento angular nítido da alavanca ao acionar
 	if lever_pivot:
@@ -816,7 +837,6 @@ var _mat_led_on: StandardMaterial3D = null
 var _mat_led_off: StandardMaterial3D = null
 var _meter_materials: Array[StandardMaterial3D] = []
 var _cached_meters: Array[MeshInstance3D] = []
-var _visuals_dirty: bool = true
 
 func _ensure_cached_materials() -> void:
 	if _mat_led_on == null:

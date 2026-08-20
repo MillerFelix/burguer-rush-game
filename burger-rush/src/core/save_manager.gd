@@ -341,10 +341,14 @@ func _collect_game_data(slot: int) -> Dictionary:
 	if economy and "current_money" in economy:
 		current_money = economy.current_money
 
-	# 2. Dia atual via GameClock ou pending_save_data
+	# 2. Dia e Horário Atual via GameClock
 	var current_day: int = pending_save_data.get("current_day", pending_save_data.get("day", 1))
 	var day_of_week: int = pending_save_data.get("day_of_week", 4)
 	var week_number: int = pending_save_data.get("week_number", 1)
+	var clock_hour: int = pending_save_data.get("clock_hour", 9)
+	var clock_minute: int = pending_save_data.get("clock_minute", 0)
+	var clock_state_name: String = pending_save_data.get("clock_state", "PREPARATION")
+
 	var clock = _get_subsystem("GameClock")
 	if clock:
 		if "day_number" in clock:
@@ -353,20 +357,62 @@ func _collect_game_data(slot: int) -> Dictionary:
 			day_of_week = clock.day_of_week
 		if "week_number" in clock:
 			week_number = clock.week_number
+		if "current_hour" in clock:
+			clock_hour = clock.current_hour
+		if "current_minute" in clock:
+			clock_minute = clock.current_minute
+		if "state" in clock:
+			match clock.state:
+				0: clock_state_name = "PREPARATION"
+				1: clock_state_name = "OPEN"
+				2: clock_state_name = "CLOSING"
+				3: clock_state_name = "CLOSED"
 
-	# 3. Desbloqueios via ProgressionManager
+	# 3. Estoque via InventoryManager
+	var inventory_stock: Dictionary = {}
+	var inv = _get_subsystem("InventoryManager")
+	if not inv:
+		var inv_script = load("res://src/inventory/inventory_manager.gd")
+		if inv_script and inv_script.has_method("get_instance"):
+			inv = inv_script.get_instance()
+	if inv and inv.has_method("get_stock_dictionary"):
+		inventory_stock = inv.get_stock_dictionary()
+	elif pending_save_data.has("inventory_stock") and pending_save_data["inventory_stock"] is Dictionary:
+		inventory_stock = pending_save_data["inventory_stock"]
+
+	# 4. Funcionários via EmployeeManager
+	var employees_data: Array = []
+	var emp_mgr = _get_subsystem("EmployeeManager")
+	if not emp_mgr:
+		var emp_script = load("res://src/employees/employee_manager.gd")
+		if emp_script and emp_script.has_method("get_instance"):
+			emp_mgr = emp_script.get_instance()
+	if emp_mgr and emp_mgr.has_method("serialize_employees"):
+		employees_data = emp_mgr.serialize_employees()
+	elif pending_save_data.has("employees") and pending_save_data["employees"] is Array:
+		employees_data = pending_save_data["employees"]
+
+	# 5. Preços do Cardápio via MenuPricingManager
+	var menu_prices: Dictionary = {}
+	var pricing_script = load("res://src/recipes/menu_pricing_manager.gd")
+	if pricing_script and pricing_script.has_method("get_custom_prices"):
+		menu_prices = pricing_script.get_custom_prices()
+	elif pending_save_data.has("menu_prices") and pending_save_data["menu_prices"] is Dictionary:
+		menu_prices = pending_save_data["menu_prices"]
+
+	# 6. Desbloqueios via ProgressionManager
 	var unlocked_features: Dictionary = {}
 	var progression = _get_subsystem("ProgressionManager")
 	if progression and "unlocked_features" in progression:
 		unlocked_features = progression.unlocked_features.duplicate(true)
 
-	# 4. Reputação via ReputationManager
+	# 7. Reputação via ReputationManager
 	var reputation_stars: float = 5.0
 	var reputation = _get_subsystem("ReputationManager")
 	if reputation and "current_reputation" in reputation:
 		reputation_stars = reputation.current_reputation
 
-	# 5. Estado do Tutorial
+	# 8. Estado do Tutorial
 	var tut_completed: bool = pending_save_data.get("tutorial_completed", false)
 	var tut_step: int = pending_save_data.get("tutorial_step", 0)
 	
@@ -386,7 +432,7 @@ func _collect_game_data(slot: int) -> Dictionary:
 	var player_name = pending_save_data.get("player_name", "Chefe")
 	var day1_intro_shown = pending_save_data.get("day1_intro_shown", false)
 
-	# 6. Finanças e Contas Pendentes via FinanceManager
+	# 9. Finanças e Contas Pendentes via FinanceManager
 	var pending_bills_data: Array = []
 	var reports_history_data: Array = []
 	var fin_mgr = _get_subsystem("FinanceManager")
@@ -413,14 +459,17 @@ func _collect_game_data(slot: int) -> Dictionary:
 		"current_day": current_day,
 		"day": current_day,
 		"day_number": current_day,
-		"clock_hour": pending_save_data.get("clock_hour", 9),
-		"clock_minute": pending_save_data.get("clock_minute", 0),
-		"clock_state": pending_save_data.get("clock_state", "PREPARATION"),
+		"clock_hour": clock_hour,
+		"clock_minute": clock_minute,
+		"clock_state": clock_state_name,
 		"money": current_money,
 		"last_save_timestamp": timestamp_str,
 		"last_save_unix": unix_timestamp,
 		"tutorial_completed": tut_completed,
 		"tutorial_step": tut_step,
+		"inventory_stock": inventory_stock,
+		"employees": employees_data,
+		"menu_prices": menu_prices,
 		"progression": {
 			"unlocked_features": unlocked_features
 		},
@@ -432,7 +481,10 @@ func _collect_game_data(slot: int) -> Dictionary:
 		"game_clock": {
 			"day_number": current_day,
 			"day_of_week": day_of_week,
-			"week_number": week_number
+			"week_number": week_number,
+			"clock_hour": clock_hour,
+			"clock_minute": clock_minute,
+			"clock_state": clock_state_name
 		}
 	}
 
@@ -493,6 +545,9 @@ func apply_save_data_to_game(data: Dictionary) -> void:
 	var current_day_num = data.get("current_day", data.get("calendar_day", 1))
 	var day_of_wk = data.get("day_of_week", 4)
 	var week_num = data.get("week_number", 1)
+	var saved_hour = data.get("clock_hour", 9)
+	var saved_min = data.get("clock_minute", 0)
+	var saved_st_str = data.get("clock_state", "PREPARATION")
 
 	if cal_mgr:
 		cal_mgr.day_number = current_day_num
@@ -502,12 +557,53 @@ func apply_save_data_to_game(data: Dictionary) -> void:
 		clock.day_number = current_day_num
 		clock.day_of_week = day_of_wk
 		clock.week_number = week_num
-		clock.current_hour = data.get("clock_hour", 9)
-		clock.current_minute = data.get("clock_minute", 0)
-		clock.state = 0 # State.PREPARATION
+		clock.current_hour = saved_hour
+		clock.current_minute = saved_min
+		
+		var st_enum = 0 # State.PREPARATION
+		if saved_st_str is String:
+			match saved_st_str:
+				"PREPARATION": st_enum = 0
+				"OPEN": st_enum = 1
+				"CLOSING": st_enum = 2
+				"CLOSED": st_enum = 3
+		elif saved_st_str is int:
+			st_enum = saved_st_str
+		clock.state = st_enum
 		clock.is_paused = false
+		
+		if clock.has_signal("time_tick"):
+			clock.time_tick.emit(clock.current_hour, clock.current_minute)
+		if clock.has_signal("state_changed"):
+			clock.state_changed.emit(clock.state)
 
-	# 3. Restaura Desbloqueios no ProgressionManager
+	# 3. Restaura Estoque no InventoryManager
+	var inv = _get_subsystem("InventoryManager")
+	if not inv:
+		var inv_script = load("res://src/inventory/inventory_manager.gd")
+		if inv_script and inv_script.has_method("get_instance"):
+			inv = inv_script.get_instance()
+	if inv and data.has("inventory_stock") and data["inventory_stock"] is Dictionary and not data["inventory_stock"].is_empty():
+		if inv.has_method("restore_stock_dictionary"):
+			inv.restore_stock_dictionary(data["inventory_stock"])
+
+	# 4. Restaura Funcionários no EmployeeManager
+	var emp_mgr = _get_subsystem("EmployeeManager")
+	if not emp_mgr:
+		var emp_script = load("res://src/employees/employee_manager.gd")
+		if emp_script and emp_script.has_method("get_instance"):
+			emp_mgr = emp_script.get_instance()
+	if emp_mgr and data.has("employees") and data["employees"] is Array:
+		if emp_mgr.has_method("restore_employees"):
+			emp_mgr.restore_employees(data["employees"])
+
+	# 5. Restaura Preços do Cardápio no MenuPricingManager
+	if data.has("menu_prices") and data["menu_prices"] is Dictionary and not data["menu_prices"].is_empty():
+		var pricing_script = load("res://src/recipes/menu_pricing_manager.gd")
+		if pricing_script and pricing_script.has_method("set_custom_prices"):
+			pricing_script.set_custom_prices(data["menu_prices"])
+
+	# 6. Restaura Desbloqueios no ProgressionManager
 	var progression = _get_subsystem("ProgressionManager")
 	if progression:
 		var prog_data = data.get("progression", {})
@@ -516,12 +612,12 @@ func apply_save_data_to_game(data: Dictionary) -> void:
 			for k in features:
 				progression.unlocked_features[k] = features[k]
 
-	# 4. Restaura Reputação no ReputationManager
+	# 7. Restaura Reputação no ReputationManager
 	var reputation = _get_subsystem("ReputationManager")
 	if reputation and "current_reputation" in reputation:
 		reputation.current_reputation = data.get("reputation", 5.0)
 
-	# 5. Restaura Contas Pendentes e Histórico no FinanceManager
+	# 8. Restaura Contas Pendentes e Histórico no FinanceManager
 	var fin_mgr = _get_subsystem("FinanceManager")
 	if not fin_mgr:
 		var fin_script = load("res://src/economy/finance_manager.gd")
@@ -568,13 +664,14 @@ func _process(delta: float) -> void:
 		return
 
 	# Só processa auto-save se estiver em gameplay ativo e despausado
-	var is_playing = false
+	var is_playing = true
 	var gm = _get_game_manager()
 	if gm and gm.has_method("is_playing"):
 		is_playing = gm.is_playing() and not gm.is_paused()
 	else:
 		var tree = get_tree() if (is_inside_tree() and get_tree() != null) else null
-		is_playing = (tree != null and not tree.paused)
+		if tree and tree.paused:
+			is_playing = false
 
 	if not is_playing:
 		return
@@ -642,6 +739,20 @@ func _get_subsystem(node_name: String) -> Node:
 				if inst: return inst
 			if prog_script and "instance" in prog_script and prog_script.instance and is_instance_valid(prog_script.instance):
 				return prog_script.instance
+		"InventoryManager":
+			var inv_script = load("res://src/inventory/inventory_manager.gd")
+			if inv_script and inv_script.has_method("get_instance"):
+				var inst = inv_script.get_instance()
+				if inst: return inst
+			if inv_script and "instance" in inv_script and inv_script.instance and is_instance_valid(inv_script.instance):
+				return inv_script.instance
+		"EmployeeManager":
+			var emp_script = load("res://src/employees/employee_manager.gd")
+			if emp_script and emp_script.has_method("get_instance"):
+				var inst = emp_script.get_instance()
+				if inst: return inst
+			if emp_script and "instance" in emp_script and emp_script.instance and is_instance_valid(emp_script.instance):
+				return emp_script.instance
 
 	# 2. Tenta resolução via GameManager
 	var gm = _get_game_manager()

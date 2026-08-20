@@ -51,10 +51,18 @@ func attach_patty(patty: Node3D) -> void:
 		patty.rotation = Vector3.ZERO
 		patty.scale = Vector3.ONE
 	
-	if "is_held" in patty:
-		patty.is_held = true
-	if "location" in patty:
-		patty.location = 1 # ItemLocation.HELD
+	if patty.has_method("on_picked_up"):
+		patty.on_picked_up()
+	else:
+		if "is_held" in patty:
+			patty.is_held = true
+		if "location" in patty:
+			patty.location = 1 # ItemLocation.PLAYER_HAND
+		if patty is CollisionObject3D:
+			patty.collision_layer = 0
+			patty.collision_mask = 0
+		if "set_physics_process" in patty:
+			patty.set_physics_process(false)
 
 func detach_patty() -> Node3D:
 	var p = held_food

@@ -1825,10 +1825,10 @@ func _process_sponge_cleaning(delta: float) -> void:
 
 	if cleanable_target:
 		var is_target_dirty = false
-		if cleanable_target.has_method("get_dirt_level"):
-			is_target_dirty = (cleanable_target.get_dirt_level() > 0.01)
-		elif cleanable_target.has_method("is_dirty"):
-			is_target_dirty = cleanable_target.is_dirty()
+		if cleanable_target.has_method("is_dirty") and cleanable_target.is_dirty():
+			is_target_dirty = true
+		elif cleanable_target.has_method("get_dirt_level") and cleanable_target.get_dirt_level() > 0.001:
+			is_target_dirty = true
 
 		if cleanable_target is RestaurantTable and cleanable_target.has_tray_on_table():
 			is_target_dirty = false

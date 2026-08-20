@@ -401,7 +401,7 @@ func _update_day_time_display(day: int, hours: int, minutes: int, st: GameClock.
 	var date_str = cal.get_formatted_date() if cal else "01/01/2026"
 	var weekday_short = cal.get_weekday_name().substr(0, 3) if cal else "Qui"
 
-	day_time_label.text = "DIA %d (%s, %s)  |  %02d:%02d  |  %s" % [day, weekday_short, date_str, hours, minutes, state_str]
+	day_time_label.text = "DIA %d (%s, %s)  |  %02d:%02d  |  %s" % [day, weekday_short, date_str, (hours % 24), minutes, state_str]
 	day_time_label.add_theme_color_override("font_color", state_color)
 
 func _check_and_show_daily_notice() -> void:
@@ -468,6 +468,17 @@ func _on_day_ended(summary: DaySummary) -> void:
 	var cal = CalendarManager.get_instance()
 	var date_str = cal.get_full_date_string() if cal else "Dia %d" % summary.day_number
 
+	if not report_title: report_title = get_node_or_null("DayReportModal/MarginContainer/VBox/TitleLabel")
+	if not report_date: report_date = get_node_or_null("DayReportModal/MarginContainer/VBox/DateLabel")
+	if not report_starting_balance: report_starting_balance = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/StartingBalanceLabel")
+	if not report_revenue: report_revenue = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/RevenueLabel")
+	if not report_purchases: report_purchases = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/PurchasesLabel")
+	if not report_net_profit: report_net_profit = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/NetProfitLabel")
+	if not report_completed: report_completed = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/CompletedLabel")
+	if not report_reputation: report_reputation = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/ReputationLabel")
+	if not report_balance: report_balance = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/BalanceLabel")
+	if not report_modal: report_modal = get_node_or_null("DayReportModal")
+
 	if report_title:
 		report_title.text = "🎉 DIA %d ENCERRADO!" % summary.day_number
 	if report_date:
@@ -491,23 +502,26 @@ func _on_day_ended(summary: DaySummary) -> void:
 	if report_balance:
 		report_balance.text = "💰 Dinheiro Final: R$ %.2f" % summary.ending_balance
 
-	report_modal.visible = true
-	get_tree().paused = true
-	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if report_modal:
+		report_modal.visible = true
+	if is_inside_tree() and get_tree():
+		get_tree().paused = true
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 	if next_day_button and is_inside_tree():
 		next_day_button.grab_focus()
 
 	# Toca o som de resultado/fechamento
 	var audio_stream = SoundSynthesizer.get_stream("cash_register_open")
-	if audio_stream:
+	if audio_stream and is_inside_tree():
 		var p = AudioStreamPlayer.new()
 		p.stream = audio_stream
 		p.bus = "SFX"
 		p.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(p)
-		p.play()
-		p.finished.connect(p.queue_free)
+		if p.is_inside_tree():
+			p.play()
+			p.finished.connect(p.queue_free)
 
 func _on_day_started(_day_number: int) -> void:
 	if report_modal:

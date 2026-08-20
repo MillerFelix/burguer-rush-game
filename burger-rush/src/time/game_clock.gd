@@ -85,6 +85,28 @@ func _ready() -> void:
 	current_minute = start_minute
 	state = State.PREPARATION
 
+	var sm = null
+	var sm_script = load("res://src/core/save_manager.gd")
+	if sm_script and sm_script.has_method("get_instance"):
+		sm = sm_script.get_instance()
+	if sm and sm.has_active_game and sm.pending_save_data:
+		var saved_h = sm.pending_save_data.get("clock_hour", -1)
+		var saved_m = sm.pending_save_data.get("clock_minute", -1)
+		var saved_st = sm.pending_save_data.get("clock_state", null)
+		if saved_h >= 0:
+			current_hour = saved_h
+		if saved_m >= 0:
+			current_minute = saved_m
+		if saved_st != null:
+			if saved_st is String:
+				match saved_st:
+					"PREPARATION": state = State.PREPARATION
+					"OPEN": state = State.OPEN
+					"CLOSING": state = State.CLOSING
+					"CLOSED": state = State.CLOSED
+			elif saved_st is int:
+				state = saved_st
+
 	var cal = CalendarManager.get_instance()
 	if cal:
 		day_number = cal.day_number
@@ -173,18 +195,18 @@ func _advance_minute() -> void:
 	current_minute += 1
 	if current_minute >= 60:
 		current_minute = 0
-		current_hour += 1
+		current_hour = (current_hour + 1) % 24
 
 	time_tick.emit(current_hour, current_minute)
 
 	# Transição automática: PREPARATION -> OPEN (às 10:00 se ainda estiver fechado)
 	if state == State.PREPARATION:
-		if current_hour > auto_open_hour or (current_hour == auto_open_hour and current_minute >= auto_open_minute):
+		if (current_hour >= auto_open_hour and current_hour < closing_hour) or (current_hour == auto_open_hour and current_minute >= auto_open_minute):
 			open_restaurant()
 
 	# Transição automática: OPEN -> CLOSING (às 22:00 - para novos clientes)
 	elif state == State.OPEN:
-		if current_hour > closing_hour or (current_hour == closing_hour and current_minute >= closing_minute):
+		if (current_hour >= closing_hour or current_hour < auto_open_hour) or (current_hour == closing_hour and current_minute >= closing_minute):
 			set_state(State.CLOSING)
 
 func open_restaurant() -> void:
@@ -236,6 +258,13 @@ func close_day() -> DaySummary:
 		summary.orders_cancelled = order_mgr.daily_cancelled_orders
 		summary.total_orders = summary.orders_completed + summary.orders_cancelled
 		summary.avg_wait_time = order_mgr.get_avg_wait_time()
+
+	if not rep_mgr:
+		rep_mgr = ReputationManager.instance
+	if not rep_mgr and is_inside_tree() and get_tree() and get_tree().root:
+		rep_mgr = get_tree().root.find_child("ReputationManager", true, false)
+	if not rep_mgr and get_parent():
+		rep_mgr = get_parent().find_child("ReputationManager", true, false)
 
 	if rep_mgr:
 		summary.reputation = rep_mgr.get_average_rating()
@@ -341,7 +370,7 @@ func is_restaurant_open() -> bool:
 	return state == State.OPEN
 
 func get_formatted_time() -> String:
-	return "%02d:%02d" % [current_hour, current_minute]
+	return "%02d:%02d" % [current_hour % 24, current_minute]
 
 func get_state_string() -> String:
 	match state:

@@ -84,8 +84,14 @@ var _target_hum_vol: float = -80.0
 var _target_dispense_vol: float = -80.0
 var _target_process_vol: float = -80.0
 
+var _cached_drawers: Array[Node3D] = []
+
 func _ready() -> void:
 	_setup_audio()
+	_cached_drawers.clear()
+	for i in range(3):
+		_cached_drawers.append(get_node_or_null("Model/Drawer_%d" % i))
+
 	var pm = PowerManager.get_instance()
 	if pm:
 		pm.register_appliance(self, "juice_machine", "Máquina de Sucos Naturais", 0.85, is_powered)
@@ -166,10 +172,11 @@ func _process(delta: float) -> void:
 	# 1. Animação de deslizamento suave das gavetas
 	for i in range(3):
 		var target_z = 0.32 if is_drawer_open[i] else 0.0
-		drawer_positions[i] = lerpf(drawer_positions[i], target_z, delta * 12.0)
-		var d_node = get_node_or_null("Model/Drawer_%d" % i)
-		if d_node:
-			d_node.position.z = drawer_positions[i]
+		if absf(drawer_positions[i] - target_z) > 0.001:
+			drawer_positions[i] = lerpf(drawer_positions[i], target_z, delta * 12.0)
+			var d_node = _cached_drawers[i] if i < _cached_drawers.size() else null
+			if d_node:
+				d_node.position.z = drawer_positions[i]
 
 	# 2. Processamento e Moagem da Polpa
 	var prev_any_filling = false

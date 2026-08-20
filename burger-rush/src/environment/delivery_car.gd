@@ -645,51 +645,73 @@ func _submit_review() -> void:
 	if rep_mgr:
 		rep_mgr.add_review(review)
 
-func _update_status_label() -> void:
+var _last_car_state: CarState = CarState.SPAWNING
+var _last_car_pct: int = -99
+var _last_car_emoji: String = ""
+var _last_car_queue_idx: int = -99
+
+func _update_status_label(force: bool = false) -> void:
 	if not status_label:
 		status_label = get_node_or_null("StatusLabel") as Label3D
 	if not status_label:
 		return
 
+	var cur_pct = int(mood.current_mood) if mood else 100
 	var emoji = mood.get_emoji() if mood else "🙂"
+	if not force and current_state == _last_car_state and cur_pct == _last_car_pct and emoji == _last_car_emoji and target_queue_index == _last_car_queue_idx:
+		return
+
+	_last_car_state = current_state
+	_last_car_pct = cur_pct
+	_last_car_emoji = emoji
+	_last_car_queue_idx = target_queue_index
+
 	var mood_color = mood.get_color() if mood else Color(1, 1, 1)
+
+	var target_text = ""
+	var target_color = Color.WHITE
 
 	match current_state:
 		CarState.SPAWNING, CarState.MOVING_TO_QUEUE:
-			status_label.text = "%s 🚗 Carro #%d" % [emoji, car_id]
-			status_label.modulate = Color(1.0, 1.0, 1.0, 0.8)
+			target_text = "%s 🚗 Carro #%d" % [emoji, car_id]
+			target_color = Color(1.0, 1.0, 1.0, 0.8)
 
 		CarState.WAITING_IN_LINE:
-			status_label.text = "%s ⏳ Fila (#%d)" % [emoji, target_queue_index + 1]
-			status_label.modulate = mood_color
+			target_text = "%s ⏳ Fila (#%d)" % [emoji, target_queue_index + 1]
+			target_color = mood_color
 
 		CarState.AT_WINDOW_WAITING_ORDER:
-			var pct = int(mood.current_mood) if mood else 100
+			var pct = cur_pct
 			if pct <= 25:
-				status_label.text = "%s ⚠️ Quase Desistindo! (%d%%)" % [emoji, pct]
-				status_label.modulate = Color(1.0, 0.25, 0.25)
+				target_text = "%s ⚠️ Quase Desistindo! (%d%%)" % [emoji, pct]
+				target_color = Color(1.0, 0.25, 0.25)
 			else:
-				status_label.text = "%s 💬 [E] Fazer Pedido (%d%%)" % [emoji, pct]
-				status_label.modulate = mood_color
+				target_text = "%s 💬 [E] Fazer Pedido (%d%%)" % [emoji, pct]
+				target_color = mood_color
 
 		CarState.AT_WINDOW_WAITING_FOOD:
 			var pend = current_order.get_total_quantity() - current_order.get_delivered_count() if current_order else 1
-			var pct = int(mood.current_mood) if mood else 100
+			var pct = cur_pct
 			if pct <= 25:
-				status_label.text = "%s ⚠️ Demora na Entrega! (%d%%)" % [emoji, pct]
-				status_label.modulate = Color(1.0, 0.25, 0.25)
+				target_text = "%s ⚠️ Demora na Entrega! (%d%%)" % [emoji, pct]
+				target_color = Color(1.0, 0.25, 0.25)
 			else:
-				status_label.text = "%s 🍔 Aguardando (%d)" % [emoji, pend]
-				status_label.modulate = mood_color
+				target_text = "%s 🍔 Aguardando (%d)" % [emoji, pend]
+				target_color = mood_color
 
 		CarState.LEAVING:
 			if experience and experience.abandoned:
 				if experience.abandon_type == CustomerExperience.AbandonType.WRONG_ORDER or "errad" in experience.abandon_reason.to_lower() or "incorret" in experience.abandon_reason.to_lower():
-					status_label.text = "😡 🚗 'Esse pedido não é o meu! Fui.'"
-					status_label.modulate = Color(1.0, 0.2, 0.2)
+					target_text = "😡 🚗 'Esse pedido não é o meu! Fui.'"
+					target_color = Color(1.0, 0.2, 0.2)
 				else:
-					status_label.text = "😡 ⏰ 'Demorou demais! Desisti do Drive-Thru.'"
-					status_label.modulate = Color(1.0, 0.25, 0.25)
+					target_text = "😡 ⏰ 'Demorou demais! Desisti do Drive-Thru.'"
+					target_color = Color(1.0, 0.25, 0.25)
 			else:
-				status_label.text = "%s ✓ Obrigado!" % emoji
-				status_label.modulate = Color(0.4, 1.0, 0.5, 1.0)
+				target_text = "%s ✓ Obrigado!" % emoji
+				target_color = Color(0.4, 1.0, 0.5, 1.0)
+
+	if status_label.text != target_text:
+		status_label.text = target_text
+	if status_label.modulate != target_color:
+		status_label.modulate = target_color

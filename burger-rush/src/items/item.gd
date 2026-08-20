@@ -51,6 +51,16 @@ func _ready() -> void:
 	if not _is_falling:
 		set_physics_process(false)
 
+var _cached_col_rids: Array[RID] = []
+
+func _get_self_col_rids() -> Array[RID]:
+	if _cached_col_rids.is_empty():
+		_cached_col_rids.append(get_rid())
+		for child in find_children("*", "CollisionObject3D", true, false):
+			if child is CollisionObject3D:
+				_cached_col_rids.append(child.get_rid())
+	return _cached_col_rids
+
 func _physics_process(delta: float) -> void:
 	if location != ItemLocation.WORLD or not _is_falling:
 		_is_falling = false
@@ -67,11 +77,7 @@ func _physics_process(delta: float) -> void:
 	var ray_start = global_position + Vector3.UP * 0.1
 	var ray_end = global_position + Vector3.DOWN * 10.0
 	var query = PhysicsRayQueryParameters3D.create(ray_start, ray_end)
-	var excludes = [get_rid()]
-	for child in find_children("*", "CollisionObject3D", true, false):
-		if child is CollisionObject3D:
-			excludes.append(child.get_rid())
-	query.exclude = excludes
+	query.exclude = _get_self_col_rids()
 
 	var result = space_state.intersect_ray(query)
 	if result:
@@ -160,6 +166,9 @@ func on_stored_in_fridge() -> void:
 func _set_all_colliders_disabled(node: Node, is_disabled: bool) -> void:
 	if node is CollisionShape3D:
 		node.disabled = is_disabled
+	if node is CollisionObject3D:
+		node.collision_layer = 0 if is_disabled else 1
+		node.collision_mask = 0 if is_disabled else 1
 	for child in node.get_children():
 		_set_all_colliders_disabled(child, is_disabled)
 
