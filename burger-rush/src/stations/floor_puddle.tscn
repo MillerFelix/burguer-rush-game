@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://floor_puddle_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/floor_puddle.gd" id="1_puddle_script"]
 

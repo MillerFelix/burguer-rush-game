@@ -396,9 +396,15 @@ func _play_ui_click() -> void:
 		ap.play()
 		ap.finished.connect(ap.queue_free)
 
+var _header_poll_timer: float = 0.0
+
 func _process(delta: float) -> void:
 	if visible:
-		_refresh_header_data()
+		_header_poll_timer -= delta
+		if _header_poll_timer <= 0.0:
+			_header_poll_timer = 0.25
+			_refresh_header_data()
+
 		if current_tab == TabID.EMPLOYEES:
 			_employee_poll_timer -= delta
 			if _employee_poll_timer <= 0.0:
@@ -2471,7 +2477,7 @@ func _render_bills_section(fin: FinanceManager) -> void:
 	finances_content_vbox.add_child(title)
 
 	var desc = Label.new()
-	desc.text = "Consulte e quite as despesas operacionais do restaurante (Energia, Água e Sala dos Funcionários). Prazo máximo de 7 dias."
+	desc.text = "Consulte e quite as contas de consumo do restaurante (Energia, Água e Salários). Prazo máximo de 7 dias."
 	desc.add_theme_font_size_override("font_size", 12)
 	desc.add_theme_color_override("font_color", Color(0.7, 0.75, 0.85, 1.0))
 	finances_content_vbox.add_child(desc)
@@ -2529,9 +2535,9 @@ func _render_bills_section(fin: FinanceManager) -> void:
 	total_card.add_child(tot_hbox)
 	finances_content_vbox.add_child(total_card)
 
-	# 2. Renderiza as 3 Categorias Obrigatórias
+	# 2. Renderiza as Categorias Obrigatórias (Energia, Água, Salários)
 	var bills = fin.get_active_bills()
-	for cat_id in ["electricity", "water", "staff_room"]:
+	for cat_id in ["electricity", "water", "salaries"]:
 		var cat_data = bills.get(cat_id, {})
 		var card = _create_bill_card(cat_data, fin, true)
 		finances_content_vbox.add_child(card)

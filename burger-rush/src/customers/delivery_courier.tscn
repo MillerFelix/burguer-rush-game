@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://delivery_courier_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/customers/delivery_courier.gd" id="1_courier"]
 [ext_resource type="Script" path="res://src/characters/humanoid_animator.gd" id="2_anim"]

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://sauce_bottle_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/sauce_bottle.gd" id="1_bottle_script"]
 

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://floor_dirt_spot_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/floor_dirt_spot.gd" id="1_spot_script"]
 [ext_resource type="Texture2D" path="res://assets/textures/dirt_stain_floor.png" id="2_floor_dirt_tex"]

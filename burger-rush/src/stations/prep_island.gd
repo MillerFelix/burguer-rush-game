@@ -212,8 +212,13 @@ func _place_item_on_surface(item: Node3D, target_world_pos: Vector3, player_rot_
 	placed_items.append(item)
 	_cleanup_placed_items()
 
-func _process(_delta: float) -> void:
-	_cleanup_placed_items()
+var _cleanup_timer: float = 0.0
+
+func _process(delta: float) -> void:
+	_cleanup_timer -= delta
+	if _cleanup_timer <= 0.0:
+		_cleanup_timer = 0.5
+		_cleanup_placed_items()
 
 func _cleanup_placed_items() -> void:
 	var valid: Array[Node3D] = []

@@ -64,6 +64,12 @@ const PowerManager = preload("res://src/core/power_manager.gd")
 var _has_played_ready_chime: bool = false
 var _target_hum_vol: float = -80.0
 var _target_sizzle_vol: float = -80.0
+var _cached_basket_nodes: Array[Node3D] = []
+var _cached_lever_arms: Array[Node3D] = []
+var _cached_oil_meshes: Array[MeshInstance3D] = []
+var _cached_bubbles: Array[CPUParticles3D] = []
+var _cached_steams: Array[CPUParticles3D] = []
+var _cached_drips: Array[CPUParticles3D] = []
 
 # Compatibilidade com sistemas anteriores
 var active_potatoes: Array[Dictionary]:
@@ -164,13 +170,20 @@ func _play_basket_move(is_lowering: bool) -> void:
 func is_ideal_temp() -> bool:
 	return current_temperature >= IDEAL_TEMP_MIN
 
+func _is_tutorial_active() -> bool:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return false
+	var tut = get_tree().root.find_child("Tutorial", true, false)
+	return tut != null and is_instance_valid(tut) and not tut.get("tutorial_completed")
+
 func get_cooking_speed_factor() -> float:
+	var tut_mult = 3.5 if _is_tutorial_active() else 1.0
 	if current_temperature < 100.0:
 		return 0.0
 	elif current_temperature < IDEAL_TEMP_MIN:
-		return (current_temperature / IDEAL_TEMP_MIN) * 0.5
+		return (current_temperature / IDEAL_TEMP_MIN) * 0.5 * tut_mult
 	else:
-		return 1.0
+		return 1.0 * tut_mult
 
 func _process(delta: float) -> void:
 	var pm = PowerManager.get_instance()
@@ -197,20 +210,29 @@ func _process(delta: float) -> void:
 	# 4. Processa cada um dos 4 compartimentos de forma 100% independente
 	var speed = get_cooking_speed_factor()
 
+	if _cached_basket_nodes.is_empty():
+		for j in range(4):
+			_cached_basket_nodes.append(get_node_or_null("Model/Basket%d" % j))
+			_cached_lever_arms.append(get_node_or_null("Model/Lever%d/LeverArm" % j))
+			_cached_oil_meshes.append(get_node_or_null("Model/OilMesh%d" % j))
+			_cached_bubbles.append(get_node_or_null("Model/Bubbles%d" % j))
+			_cached_steams.append(get_node_or_null("Model/Steam%d" % j))
+			_cached_drips.append(get_node_or_null("Model/Drips%d" % j))
+
 	for i in range(4):
 		var comp = compartments[i]
 		var basket_down: bool = comp["basket_down"]
 		var food_state: String = comp["food_state"]
 
 		# Animação suave da posição do cesto (entra e sai da cuba e do óleo)
-		var basket_node = get_node_or_null("Model/Basket%d" % i)
-		if basket_node:
+		var basket_node = _cached_basket_nodes[i] if i < _cached_basket_nodes.size() else null
+		if basket_node and is_instance_valid(basket_node):
 			var target_y = BASKET_Y_DOWN if basket_down else BASKET_Y_UP
 			basket_node.position.y = lerpf(basket_node.position.y, target_y, 1.0 - exp(-12.0 * delta))
 
 		# Animação suave da alavanca
-		var lever_arm = get_node_or_null("Model/Lever%d/LeverArm" % i)
-		if lever_arm:
+		var lever_arm = _cached_lever_arms[i] if i < _cached_lever_arms.size() else null
+		if lever_arm and is_instance_valid(lever_arm):
 			var target_rot_x = deg_to_rad(45.0) if basket_down else 0.0
 			lever_arm.rotation.x = lerpf(lever_arm.rotation.x, target_rot_x, 1.0 - exp(-12.0 * delta))
 
@@ -338,7 +360,7 @@ func _update_compartment_visuals(i: int, is_frying: bool) -> void:
 					mat.roughness = 0.85
 
 	# Superfície líquida de óleo dourado com ondulações suaves
-	var oil_mesh = get_node_or_null("Model/OilMesh%d" % i) as MeshInstance3D
+	var oil_mesh = _cached_oil_meshes[i] if i < _cached_oil_meshes.size() else null
 	if oil_mesh:
 		oil_mesh.visible = true
 		var wave_amp = 0.004 if is_frying else 0.0015
@@ -346,17 +368,22 @@ func _update_compartment_visuals(i: int, is_frying: bool) -> void:
 		oil_mesh.position.y = 0.74 + wave
 
 	# Partículas de Fritura e Borbulhamento ao redor das batatas
-	var bubbles = get_node_or_null("Model/Bubbles%d" % i) as CPUParticles3D
+	var bubbles = _cached_bubbles[i] if i < _cached_bubbles.size() else null
 	if bubbles and bubbles.is_inside_tree():
-		bubbles.emitting = is_frying
+		if bubbles.emitting != is_frying:
+			bubbles.emitting = is_frying
 
-	var steam = get_node_or_null("Model/Steam%d" % i) as CPUParticles3D
+	var steam = _cached_steams[i] if i < _cached_steams.size() else null
 	if steam and steam.is_inside_tree():
-		steam.emitting = is_frying or (is_on and is_ideal_temp())
+		var target_steam = is_frying or (is_on and is_ideal_temp())
+		if steam.emitting != target_steam:
+			steam.emitting = target_steam
 
-	var drips = get_node_or_null("Model/Drips%d" % i) as CPUParticles3D
+	var drips = _cached_drips[i] if i < _cached_drips.size() else null
 	if drips and drips.is_inside_tree():
-		drips.emitting = (comp["drain_timer"] > 0.0 and not comp["basket_down"] and food_state != "empty")
+		var target_drips = (comp["drain_timer"] > 0.0 and not comp["basket_down"] and food_state != "empty")
+		if drips.emitting != target_drips:
+			drips.emitting = target_drips
 
 # Atualiza termômetro horizontal e luz piloto
 func _update_thermometer(delta: float) -> void:

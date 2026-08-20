@@ -36,10 +36,37 @@ func _init() -> void:
 
 func _enter_tree() -> void:
 	instance = self
+	_enforce_clean_window_title()
+
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
+
+static func get_instance():
+	if instance and is_instance_valid(instance):
+		return instance
+	var ml = Engine.get_main_loop()
+	if ml and ml is SceneTree:
+		var tree = ml as SceneTree
+		if tree.root:
+			var found = tree.root.find_child("SaveManager", true, false)
+			if found:
+				instance = found
+				return instance
+	return instance
 
 func _ready() -> void:
+	instance = self
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_ensure_save_directory()
+	_enforce_clean_window_title()
+
+func _enforce_clean_window_title() -> void:
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_title("Burger Rush")
+		var tree = get_tree() if (is_inside_tree() and get_tree() != null) else (Engine.get_main_loop() as SceneTree)
+		if tree and tree.root and tree.root.title != "Burger Rush":
+			tree.root.title = "Burger Rush"
 
 func _ensure_save_directory() -> void:
 	var dir_path = get_save_directory()
@@ -224,6 +251,7 @@ func save_game(slot: int = -1) -> bool:
 
 	has_active_game = true
 	active_slot = target_slot
+	pending_save_data = save_data
 	save_completed.emit(target_slot, true)
 	return true
 
@@ -250,7 +278,9 @@ func create_new_career(slot: int, player_name: String = "Chefe") -> bool:
 		"slot": slot,
 		"has_game": true,
 		"player_name": clean_name,
+		"day1_intro_shown": false,
 		"current_day": 1,
+		"day": 1,
 		"money": 100.0,
 		"last_save_timestamp": timestamp_str,
 		"last_save_unix": unix_timestamp,
@@ -311,10 +341,10 @@ func _collect_game_data(slot: int) -> Dictionary:
 	if economy and "current_money" in economy:
 		current_money = economy.current_money
 
-	# 2. Dia atual via GameClock
+	# 2. Dia atual via GameClock ou pending_save_data
 	var current_day: int = pending_save_data.get("current_day", pending_save_data.get("day", 1))
-	var day_of_week: int = 4
-	var week_number: int = 1
+	var day_of_week: int = pending_save_data.get("day_of_week", 4)
+	var week_number: int = pending_save_data.get("week_number", 1)
 	var clock = _get_subsystem("GameClock")
 	if clock:
 		if "day_number" in clock:
@@ -337,29 +367,55 @@ func _collect_game_data(slot: int) -> Dictionary:
 		reputation_stars = reputation.current_reputation
 
 	# 5. Estado do Tutorial
-	var tut_completed: bool = false
-	var tut_step: int = 0
+	var tut_completed: bool = pending_save_data.get("tutorial_completed", false)
+	var tut_step: int = pending_save_data.get("tutorial_step", 0)
 	
 	var gm = _get_game_manager()
 	var main_scene = gm.get_main_scene() if gm else null
 	var tutorial_node = main_scene.get_node_or_null("Tutorial") if main_scene else null
-	if tutorial_node:
-		tut_completed = tutorial_node.get("tutorial_completed") if "tutorial_completed" in tutorial_node else false
-		tut_step = tutorial_node.get("current_step_index") if "current_step_index" in tutorial_node else 0
-	else:
-		tut_completed = pending_save_data.get("tutorial_completed", false)
-		tut_step = pending_save_data.get("tutorial_step", 0)
+	if not tutorial_node and is_inside_tree() and get_tree() and get_tree().root:
+		tutorial_node = get_tree().root.find_child("Tutorial", true, false)
 
-	# Preserva o player_name real!
+	if tutorial_node:
+		if "tutorial_completed" in tutorial_node and tutorial_node.tutorial_completed:
+			tut_completed = true
+		if "current_step_index" in tutorial_node:
+			tut_step = max(tut_step, tutorial_node.current_step_index)
+
+	# Preserva o player_name real e flag de introdução do Dia 1
 	var player_name = pending_save_data.get("player_name", "Chefe")
+	var day1_intro_shown = pending_save_data.get("day1_intro_shown", false)
+
+	# 6. Finanças e Contas Pendentes via FinanceManager
+	var pending_bills_data: Array = []
+	var reports_history_data: Array = []
+	var fin_mgr = _get_subsystem("FinanceManager")
+	if not fin_mgr:
+		var fin_script = load("res://src/economy/finance_manager.gd")
+		if fin_script and fin_script.has_method("get_instance"):
+			fin_mgr = fin_script.get_instance()
+	if fin_mgr and "pending_bills" in fin_mgr:
+		pending_bills_data = fin_mgr.pending_bills.duplicate(true)
+	elif pending_save_data.has("finances") and pending_save_data["finances"] is Dictionary:
+		pending_bills_data = pending_save_data["finances"].get("pending_bills", [])
+
+	if fin_mgr and "daily_reports_history" in fin_mgr:
+		reports_history_data = fin_mgr.daily_reports_history.duplicate(true)
+	elif pending_save_data.has("finances") and pending_save_data["finances"] is Dictionary:
+		reports_history_data = pending_save_data["finances"].get("reports_history", [])
 
 	return {
 		"save_version": SAVE_VERSION,
 		"slot": slot,
 		"has_game": true,
 		"player_name": player_name,
+		"day1_intro_shown": day1_intro_shown,
 		"current_day": current_day,
 		"day": current_day,
+		"day_number": current_day,
+		"clock_hour": pending_save_data.get("clock_hour", 9),
+		"clock_minute": pending_save_data.get("clock_minute", 0),
+		"clock_state": pending_save_data.get("clock_state", "PREPARATION"),
 		"money": current_money,
 		"last_save_timestamp": timestamp_str,
 		"last_save_unix": unix_timestamp,
@@ -367,6 +423,10 @@ func _collect_game_data(slot: int) -> Dictionary:
 		"tutorial_step": tut_step,
 		"progression": {
 			"unlocked_features": unlocked_features
+		},
+		"finances": {
+			"pending_bills": pending_bills_data,
+			"reports_history": reports_history_data
 		},
 		"reputation": reputation_stars,
 		"game_clock": {
@@ -427,16 +487,25 @@ func apply_save_data_to_game(data: Dictionary) -> void:
 		if economy.has_signal("money_changed"):
 			economy.money_changed.emit(saved_money, 0.0)
 
-	# 2. Restaura Dia e Calendário no GameClock
+	# 2. Restaura Dia e Calendário no GameClock e CalendarManager
 	var clock = _get_subsystem("GameClock")
+	var cal_mgr = _get_subsystem("CalendarManager")
+	var current_day_num = data.get("current_day", data.get("calendar_day", 1))
+	var day_of_wk = data.get("day_of_week", 4)
+	var week_num = data.get("week_number", 1)
+
+	if cal_mgr:
+		cal_mgr.day_number = current_day_num
+		cal_mgr.day_of_week = day_of_wk
+
 	if clock:
-		var clock_data = data.get("game_clock", {})
-		if "day_number" in clock:
-			clock.day_number = clock_data.get("day_number", data.get("current_day", 1))
-		if "day_of_week" in clock:
-			clock.day_of_week = clock_data.get("day_of_week", 4)
-		if "week_number" in clock:
-			clock.week_number = clock_data.get("week_number", 1)
+		clock.day_number = current_day_num
+		clock.day_of_week = day_of_wk
+		clock.week_number = week_num
+		clock.current_hour = data.get("clock_hour", 9)
+		clock.current_minute = data.get("clock_minute", 0)
+		clock.state = 0 # State.PREPARATION
+		clock.is_paused = false
 
 	# 3. Restaura Desbloqueios no ProgressionManager
 	var progression = _get_subsystem("ProgressionManager")
@@ -451,6 +520,28 @@ func apply_save_data_to_game(data: Dictionary) -> void:
 	var reputation = _get_subsystem("ReputationManager")
 	if reputation and "current_reputation" in reputation:
 		reputation.current_reputation = data.get("reputation", 5.0)
+
+	# 5. Restaura Contas Pendentes e Histórico no FinanceManager
+	var fin_mgr = _get_subsystem("FinanceManager")
+	if not fin_mgr:
+		var fin_script = load("res://src/economy/finance_manager.gd")
+		if fin_script and fin_script.has_method("get_instance"):
+			fin_mgr = fin_script.get_instance()
+	if fin_mgr:
+		var fin_data = data.get("finances", {})
+		if fin_data is Dictionary:
+			if fin_data.has("pending_bills") and fin_data["pending_bills"] is Array:
+				fin_mgr.pending_bills.clear()
+				for b in fin_data["pending_bills"]:
+					if b is Dictionary:
+						fin_mgr.pending_bills.append(b.duplicate(true))
+			if fin_data.has("reports_history") and fin_data["reports_history"] is Array:
+				fin_mgr.daily_reports_history.clear()
+				for r in fin_data["reports_history"]:
+					if r is Dictionary:
+						fin_mgr.daily_reports_history.append(r.duplicate(true))
+			if fin_mgr.has_method("_ensure_daily_bills"):
+				fin_mgr._ensure_daily_bills()
 
 ## Exclui o save de um slot específico
 func delete_save(slot: int) -> bool:
@@ -501,11 +592,19 @@ func trigger_auto_save() -> bool:
 	var success = save_game(active_slot)
 	if success:
 		auto_save_triggered.emit(active_slot)
+		var hud = null
+		if is_inside_tree() and get_tree() and get_tree().root:
+			hud = get_tree().root.find_child("HUD", true, false)
+		if hud and hud.has_method("show_temporary_feedback"):
+			hud.show_temporary_feedback("💾 Progresso salvo automaticamente.")
 	return success
 
 ## Notificação de encerramento do dia recebida do GameClock/GameManager
 func on_day_ended(_summary = null) -> void:
 	if has_active_game:
+		if _summary is DaySummary:
+			pending_save_data["current_day"] = _summary.day_number
+			pending_save_data["money"] = _summary.ending_balance
 		save_game(active_slot)
 
 # =============================================================================
@@ -517,14 +616,30 @@ func _get_subsystem(node_name: String) -> Node:
 	match node_name:
 		"EconomyManager":
 			var eco_script = load("res://src/economy/economy_manager.gd")
+			if eco_script and eco_script.has_method("get_instance"):
+				var inst = eco_script.get_instance()
+				if inst: return inst
 			if eco_script and "instance" in eco_script and eco_script.instance and is_instance_valid(eco_script.instance):
 				return eco_script.instance
 		"GameClock":
 			var clock_script = load("res://src/time/game_clock.gd")
+			if clock_script and clock_script.has_method("get_instance"):
+				var inst = clock_script.get_instance()
+				if inst: return inst
 			if clock_script and "instance" in clock_script and clock_script.instance and is_instance_valid(clock_script.instance):
 				return clock_script.instance
+		"CalendarManager":
+			var cal_script = load("res://src/core/calendar_manager.gd")
+			if cal_script and cal_script.has_method("get_instance"):
+				var inst = cal_script.get_instance()
+				if inst: return inst
+			if cal_script and "instance" in cal_script and cal_script.instance and is_instance_valid(cal_script.instance):
+				return cal_script.instance
 		"ProgressionManager":
 			var prog_script = load("res://src/progression/progression_manager.gd")
+			if prog_script and prog_script.has_method("get_instance"):
+				var inst = prog_script.get_instance()
+				if inst: return inst
 			if prog_script and "instance" in prog_script and prog_script.instance and is_instance_valid(prog_script.instance):
 				return prog_script.instance
 

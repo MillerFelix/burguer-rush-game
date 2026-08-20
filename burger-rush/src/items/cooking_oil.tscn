@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cooking_oil_item_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/cooking_oil.gd" id="1_cooking_oil"]
 [ext_resource type="PackedScene" path="res://assets/models/food/bottleOil.glb" id="2_bottleoil_glb"]

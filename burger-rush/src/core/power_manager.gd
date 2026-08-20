@@ -52,7 +52,8 @@ func _process(delta: float) -> void:
 
 	# Acumula o consumo energético de cada aparelho em funcionamento ativo
 	var active_kw_total: float = 0.0
-	for id in registered_appliances.keys():
+	var dead_ids: Array = []
+	for id in registered_appliances:
 		var app = registered_appliances[id]
 		var node = app.get("node")
 		if node and is_instance_valid(node):
@@ -64,7 +65,10 @@ func _process(delta: float) -> void:
 				app["total_kwh"] = app.get("total_kwh", 0.0) + energy_step
 				active_kw_total += kw
 		else:
-			registered_appliances.erase(id)
+			dead_ids.append(id)
+
+	for id in dead_ids:
+		registered_appliances.erase(id)
 
 	total_energy_kwh += (active_kw_total * delta) / 3600.0
 
@@ -81,7 +85,7 @@ func toggle_main_power() -> void:
 
 func _broadcast_power_state() -> void:
 	power_state_changed.emit(is_main_power_on)
-	for id in registered_appliances.keys():
+	for id in registered_appliances:
 		var app = registered_appliances[id]
 		var node = app.get("node")
 		if node and is_instance_valid(node):

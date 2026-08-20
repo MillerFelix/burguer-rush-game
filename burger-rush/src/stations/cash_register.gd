@@ -18,8 +18,6 @@ const CustomerMoney = preload("res://src/items/customer_money.gd")
 
 static var instance: CashRegister = null
 
-@onready var status_label: Label3D = get_node_or_null("StatusLabel")
-@onready var screen_label: Label3D = get_node_or_null("Model/ScreenLabel")
 @onready var interaction_slot: Node3D = get_node_or_null("InteractionSlot")
 @onready var cash_drawer: Node3D = get_node_or_null("Model/CashDrawer")
 @onready var audio_player: AudioStreamPlayer3D = get_node_or_null("AudioPlayer")
@@ -250,20 +248,3 @@ func _show_feedback(player: Node3D, msg: String) -> void:
 
 func _update_visual_status() -> void:
 	_clean_queue()
-	if status_label:
-		if queue_customers.is_empty():
-			status_label.text = "💰 CAIXA REGISTRADORA\n[Disponível]"
-			status_label.modulate = Color(0.3, 0.9, 0.4)
-		else:
-			var first = queue_customers[0]
-			var price = first.current_order.total_price if (first and first.current_order) else 15.0
-			status_label.text = "💰 CAIXA — %d na fila\nCobrar: R$ %.2f" % [queue_customers.size(), price]
-			status_label.modulate = Color(1.0, 0.85, 0.2)
-
-	if screen_label:
-		if queue_customers.is_empty():
-			screen_label.text = "BURGER RUSH\nR$ 0.00"
-		else:
-			var first = queue_customers[0]
-			var price = first.current_order.total_price if (first and first.current_order) else 15.0
-			screen_label.text = "TOTAL:\nR$ %.2f" % price

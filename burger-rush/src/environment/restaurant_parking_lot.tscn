@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://restaurant_parking_lot_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/asphalt_road.png" id="1_asphalt"]
 [ext_resource type="Texture2D" path="res://assets/textures/sidewalk_concrete.png" id="2_sidewalk"]

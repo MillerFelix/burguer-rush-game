@@ -46,6 +46,7 @@ var home_parent: Node = null
 var home_transform: Transform3D
 
 func _ready() -> void:
+	add_to_group("sauce_bottles")
 	item_id = sauce_type
 	item_type = "sauce_bottle"
 	current_amount = 100.0
@@ -54,10 +55,16 @@ func _ready() -> void:
 	_setup_sauce_properties()
 	_update_visuals()
 
-	# Conecta ao relógio para retornar automaticamente ao suporte no fim do dia
+	# Conecta ao relógio para retornar automaticamente ao suporte no fim e início do dia
 	var clock = _get_game_clock()
-	if clock and not clock.day_ended.is_connected(_on_day_ended):
-		clock.day_ended.connect(_on_day_ended)
+	if clock:
+		if not clock.day_ended.is_connected(_on_day_ended):
+			clock.day_ended.connect(_on_day_ended)
+		if not clock.day_started.is_connected(_on_day_started):
+			clock.day_started.connect(_on_day_started)
+
+func _on_day_started(_day_num: int = 1) -> void:
+	reset_to_home_position()
 
 func _get_game_clock() -> Node:
 	if is_inside_tree() and get_tree() and get_tree().root:

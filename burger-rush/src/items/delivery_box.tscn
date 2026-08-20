@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://delivery_box_item_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/delivery_box.gd" id="1_delivery_box"]
 [ext_resource type="Texture2D" path="res://assets/textures/cardboard_box_kraft.png" id="2_kraft_tex"]

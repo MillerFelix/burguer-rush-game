@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://packaged_burger_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/packaged_burger.gd" id="1_packaged_script"]
 [ext_resource type="Texture2D" path="res://assets/textures/burger_box_top.png" id="2_box_tex"]

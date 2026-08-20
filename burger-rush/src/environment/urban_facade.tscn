@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://urban_facade_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Texture2D" path="res://assets/textures/brick_facade.png" id="1_brick_tex"]
 [ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]

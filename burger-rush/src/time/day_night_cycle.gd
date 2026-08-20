@@ -52,7 +52,14 @@ func _ready() -> void:
 	_find_references_if_null()
 	_update_lighting(current_time_hours)
 
+var _references_checked: bool = false
+var _cached_weather_manager: WeatherManager = null
+
 func _find_references_if_null() -> void:
+	if _references_checked:
+		return
+	_references_checked = true
+
 	var search_root: Node = null
 	if is_inside_tree() and get_tree() and get_tree().root:
 		search_root = get_tree().root
@@ -82,6 +89,8 @@ func _process(_delta: float) -> void:
 	_update_lighting(current_time_hours)
 
 func _get_weather_manager() -> WeatherManager:
+	if _cached_weather_manager and is_instance_valid(_cached_weather_manager):
+		return _cached_weather_manager
 	var wm = WeatherManager.instance
 	if not wm:
 		var curr = self.get_parent()
@@ -92,7 +101,8 @@ func _get_weather_manager() -> WeatherManager:
 			curr = curr.get_parent()
 	if not wm and is_inside_tree() and get_tree() and get_tree().root:
 		wm = get_tree().root.find_child("WeatherManager", true, false) as WeatherManager
-	return wm
+	_cached_weather_manager = wm
+	return _cached_weather_manager
 
 func _update_lighting(time_h: float) -> void:
 	_find_references_if_null()

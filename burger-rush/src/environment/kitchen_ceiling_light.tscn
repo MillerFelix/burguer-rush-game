@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://kitchen_ceiling_light_uid"]
+[gd_scene format=3]
 
 [sub_resource type="StandardMaterial3D" id="Material_PanelFrame"]
 albedo_color = Color(0.35, 0.36, 0.38, 1)

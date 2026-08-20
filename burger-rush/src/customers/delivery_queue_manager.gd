@@ -48,10 +48,15 @@ func has_active_cars() -> bool:
 	car_queue = car_queue.filter(func(c): return is_instance_valid(c) and c.get("current_state") != 5)
 	return not car_queue.is_empty()
 
+var _cached_clock: Node = null
+var _filter_timer: float = 0.0
+
 func _get_clock() -> Node:
+	if _cached_clock and is_instance_valid(_cached_clock):
+		return _cached_clock
 	if is_inside_tree() and get_tree() and get_tree().root:
-		return get_tree().root.find_child("GameClock", true, false)
-	return null
+		_cached_clock = get_tree().root.find_child("GameClock", true, false)
+	return _cached_clock
 
 func _init_day_demand() -> void:
 	var clock = _get_clock()
@@ -64,19 +69,20 @@ func _init_day_demand() -> void:
 	var rand_val = randf()
 	var total_cars_today = 0
 
-	if rand_val < 0.25:
-		total_cars_today = 0 # 25% dos dias: Nenhum carro no drive-thru
-	elif rand_val < 0.65:
-		total_cars_today = 1 # 40% dos dias: 1 carro ocasional
-	elif rand_val < 0.90:
+	if rand_val < 0.20:
+		total_cars_today = 0 # 20% dos dias: Nenhum carro
+	elif rand_val < 0.60:
+		total_cars_today = 1 # 40% dos dias: 1 carro
+	elif rand_val < 0.85:
 		total_cars_today = 2 # 25% dos dias: 2 carros
+	elif rand_val < 0.95:
+		total_cars_today = 3 # 10% dos dias: 3 carros
 	else:
-		total_cars_today = randi_range(3, 4) # 10% dos dias: 3 a 4 carros (pico raro)
+		total_cars_today = 4 # 5% dos dias: 4 carros
 
 	if total_cars_today > 0:
-		# Distribui horários aleatórios e não-fixos durante o horário de funcionamento (11:00 às 21:00)
 		var possible_windows = [
-			randf_range(11.2, 13.8), # Almoço
+			randf_range(11.2, 13.5), # Almoço
 			randf_range(14.5, 17.2), # Tarde
 			randf_range(18.0, 20.8)  # Jantar
 		]
@@ -91,8 +97,10 @@ func _init_day_demand() -> void:
 		daily_scheduled_cars.sort()
 
 func _process(delta: float) -> void:
-	# Limpa instâncias inválidas
-	car_queue = car_queue.filter(func(c): return is_instance_valid(c) and c.get("current_state") != 5)
+	_filter_timer -= delta
+	if _filter_timer <= 0.0:
+		_filter_timer = 0.3
+		car_queue = car_queue.filter(func(c): return is_instance_valid(c) and c.get("current_state") != 5)
 
 	if not auto_spawn:
 		return

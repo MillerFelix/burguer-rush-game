@@ -49,33 +49,52 @@ func _ready() -> void:
 	generate_daily_news()
 
 ## Gera o pacote de notícias do dia com base nos sistemas reais do jogo
-func generate_daily_news(forced_day: int = -1) -> Array:
+func generate_daily_news(forced_day: int = -1, forced_event: int = -1) -> Array:
 	var cal = CalendarManager.get_instance()
-	var day_num = forced_day if forced_day > 0 else (cal.day_number if cal else 1)
-	var date_str = cal.get_formatted_date() if (cal and forced_day <= 0) else "01/01/2026"
-	if forced_day > 0 and cal:
+	if not cal and is_inside_tree() and get_tree() and get_tree().root:
+		cal = get_tree().root.find_child("CalendarManager", true, false)
+
+	var current_day_num = cal.day_number if cal else 1
+	var is_current_day = (forced_day <= 0 or forced_day == current_day_num)
+	var day_num = current_day_num if is_current_day else forced_day
+	var date_str = cal.get_formatted_date() if (cal and is_current_day) else "01/01/2026"
+	if not is_current_day and cal:
 		date_str = cal.get_date_for_day_number(forced_day).get("formatted_date", "01/01/2026")
 
 	var dem = DailyEventManager.get_instance()
-	var event_type = dem.current_event if dem else DailyEventManager.EventType.NONE
+	if not dem and is_inside_tree() and get_tree() and get_tree().root:
+		dem = get_tree().root.find_child("DailyEventManager", true, false)
 
-	today_articles.clear()
+	var event_type = DailyEventManager.EventType.NONE
+	if forced_event >= 0:
+		event_type = forced_event
+	elif is_current_day and dem:
+		event_type = dem.current_event
+	elif dem and not is_current_day:
+		for h in dem.event_history:
+			if h.get("day_number") == day_num:
+				event_type = h.get("event_type", DailyEventManager.EventType.NONE)
+				break
 
+	var articles: Array = []
 	if event_type != DailyEventManager.EventType.NONE:
 		var main_article = _build_main_event_article(day_num, date_str, event_type)
-		today_articles.append(main_article)
+		articles.append(main_article)
 	else:
 		var normal_bulletin = _build_normal_day_bulletin(day_num, date_str)
-		today_articles.append(normal_bulletin)
+		articles.append(normal_bulletin)
 
-	# Adiciona notícias secundárias contextuais da cidade para enriquecer o jornal
 	var sec_news = _build_secondary_local_news(day_num)
 	for s in sec_news:
-		today_articles.append(s)
+		articles.append(s)
 
-	news_history[day_num] = today_articles.duplicate(true)
-	news_updated.emit(today_articles)
-	return today_articles
+	news_history[day_num] = articles.duplicate(true)
+
+	if is_current_day:
+		today_articles = articles.duplicate(true)
+		news_updated.emit(today_articles)
+
+	return articles
 
 func _build_normal_day_bulletin(day_num: int, date_str: String) -> Dictionary:
 	var impacts: Array[String] = [

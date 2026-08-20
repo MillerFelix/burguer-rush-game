@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://tree_park_scene_uid"]
+[gd_scene format=3]
 
 [sub_resource type="StandardMaterial3D" id="Material_TreeBark"]
 albedo_color = Color(0.42, 0.28, 0.18, 1)

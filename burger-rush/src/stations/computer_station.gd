@@ -80,8 +80,10 @@ func _connect_order_manager() -> void:
 func _process(_delta: float) -> void:
 	# Garante conexão caso o OrderManager tenha sido instanciado depois
 	var om = OrderManager.get_instance()
-	if om and not om.order_created.is_connected(_on_order_created):
-		om.order_created.connect(_on_order_created)
+	if om:
+		if not om.order_created.is_connected(_on_order_created):
+			om.order_created.connect(_on_order_created)
+		set_process(false)
 
 func _on_order_created(order: Order) -> void:
 	if not order or notified_order_ids.has(order.id):

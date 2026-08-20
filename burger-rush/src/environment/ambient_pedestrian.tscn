@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://ambient_pedestrian_uid"]
+[gd_scene format=3]
 
 [sub_resource type="StandardMaterial3D" id="Material_Skin"]
 albedo_color = Color(0.96, 0.78, 0.65, 1)
@@ -50,35 +50,35 @@ size = Vector3(0.34, 0.34, 0.34)
 
 [sub_resource type="BoxMesh" id="BoxMesh_EyeWhite"]
 material = SubResource("Material_EyesWhite")
-size = Vector3(0.065, 0.075, 0.01)
+size = Vector3(0.065, 0.065, 0.004)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Pupil"]
 material = SubResource("Material_Pupil")
-size = Vector3(0.042, 0.052, 0.01)
+size = Vector3(0.042, 0.045, 0.003)
 
 [sub_resource type="BoxMesh" id="BoxMesh_EyeHighlight"]
 material = SubResource("Material_EyeHighlight")
-size = Vector3(0.016, 0.016, 0.01)
+size = Vector3(0.015, 0.015, 0.003)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Eyebrow"]
 material = SubResource("Material_Eyebrow")
-size = Vector3(0.08, 0.02, 0.01)
+size = Vector3(0.075, 0.018, 0.004)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Nose"]
 material = SubResource("Material_Skin")
-size = Vector3(0.045, 0.045, 0.025)
+size = Vector3(0.040, 0.040, 0.016)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Mouth"]
 material = SubResource("Material_Mouth")
-size = Vector3(0.11, 0.035, 0.01)
+size = Vector3(0.10, 0.030, 0.004)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Hair"]
 material = SubResource("Material_Hair")
-size = Vector3(0.36, 0.15, 0.36)
+size = Vector3(0.36, 0.14, 0.36)
 
 [sub_resource type="BoxMesh" id="BoxMesh_HairBang"]
 material = SubResource("Material_Hair")
-size = Vector3(0.32, 0.07, 0.06)
+size = Vector3(0.33, 0.060, 0.040)
 
 [sub_resource type="BoxMesh" id="BoxMesh_Neck"]
 material = SubResource("Material_Skin")
@@ -133,43 +133,43 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.45, 0)
 mesh = SubResource("BoxMesh_Head")
 
 [node name="EyeLeft" type="MeshInstance3D" parent="Model/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.02, 0.172)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.015, 0.171)
 mesh = SubResource("BoxMesh_EyeWhite")
 
 [node name="PupilLeft" type="MeshInstance3D" parent="Model/Head/EyeLeft"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.005, 0.005)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.002, 0.001)
 mesh = SubResource("BoxMesh_Pupil")
 
 [node name="HighlightLeft" type="MeshInstance3D" parent="Model/Head/EyeLeft"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.012, 0.012, 0.008)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.012, 0.012, 0.002)
 mesh = SubResource("BoxMesh_EyeHighlight")
 
 [node name="EyeRight" type="MeshInstance3D" parent="Model/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.02, 0.172)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.015, 0.171)
 mesh = SubResource("BoxMesh_EyeWhite")
 
 [node name="PupilRight" type="MeshInstance3D" parent="Model/Head/EyeRight"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.005, 0.005)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.002, 0.001)
 mesh = SubResource("BoxMesh_Pupil")
 
 [node name="HighlightRight" type="MeshInstance3D" parent="Model/Head/EyeRight"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.012, 0.012, 0.008)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.012, 0.012, 0.002)
 mesh = SubResource("BoxMesh_EyeHighlight")
 
 [node name="EyebrowLeft" type="MeshInstance3D" parent="Model/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.08, 0.173)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.08, 0.065, 0.171)
 mesh = SubResource("BoxMesh_Eyebrow")
 
 [node name="EyebrowRight" type="MeshInstance3D" parent="Model/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.08, 0.173)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.08, 0.065, 0.171)
 mesh = SubResource("BoxMesh_Eyebrow")
 
 [node name="Nose" type="MeshInstance3D" parent="Model/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0.18)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.030, 0.176)
 mesh = SubResource("BoxMesh_Nose")
 
 [node name="Mouth" type="MeshInstance3D" parent="Model/Head"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0.172)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.085, 0.171)
 mesh = SubResource("BoxMesh_Mouth")
 
 [node name="Hair" type="MeshInstance3D" parent="Model/Head"]
@@ -177,7 +177,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.11, -0.01)
 mesh = SubResource("BoxMesh_Hair")
 
 [node name="HairBang" type="MeshInstance3D" parent="Model/Head/Hair"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.08, 0.17)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.015, 0.165)
 mesh = SubResource("BoxMesh_HairBang")
 
 [node name="ArmLeft" type="MeshInstance3D" parent="Model"]

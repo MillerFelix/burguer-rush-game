@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://potato_box_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/fries_pack.gd" id="1_fries_pack"]
 

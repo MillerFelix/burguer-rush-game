@@ -67,10 +67,9 @@ func _setup_ambient_players() -> void:
 
 func _process(delta: float) -> void:
 	if not player_ref or not is_instance_valid(player_ref):
-		var players = get_tree().get_nodes_in_group("player") if (is_inside_tree() and get_tree()) else []
-		if not players.is_empty():
-			player_ref = players[0]
-		elif get_parent():
+		if is_inside_tree() and get_tree():
+			player_ref = get_tree().get_first_node_in_group("player") as Node3D
+		if not player_ref and get_parent():
 			player_ref = get_parent().get_node_or_null("Player")
 
 	if player_ref:

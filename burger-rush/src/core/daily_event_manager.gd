@@ -76,10 +76,17 @@ func _exit_tree() -> void:
 	if instance == self:
 		instance = null
 
-static func get_instance():
+static func get_instance() -> DailyEventManager:
 	if instance and is_instance_valid(instance):
 		return instance
-	return null
+	var ml = Engine.get_main_loop()
+	if ml and ml is SceneTree:
+		var tree = ml as SceneTree
+		if tree.root:
+			var found = tree.root.find_child("DailyEventManager", true, false)
+			if found and found is DailyEventManager:
+				instance = found
+	return instance
 
 func _ready() -> void:
 	var clock = _get_game_clock()
@@ -136,6 +143,10 @@ func roll_daily_event(forced_event: EventType = EventType.NONE, force_roll: bool
 	var nm = null
 	if is_inside_tree() and get_tree() and get_tree().root:
 		nm = get_tree().root.find_child("NewsManager", true, false)
+	if not nm:
+		var nm_class = load("res://src/news/news_manager.gd")
+		if nm_class and nm_class.has_method("get_instance"):
+			nm = nm_class.get_instance()
 	if nm and nm.has_method("generate_daily_news"):
 		nm.generate_daily_news()
 

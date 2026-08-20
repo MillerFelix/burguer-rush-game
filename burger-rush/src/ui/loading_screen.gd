@@ -10,10 +10,10 @@ extends Control
 # =============================================================================
 
 @onready var background_rect: TextureRect = $BackgroundRect
-@onready var loading_container: VBoxContainer = $LoadingBottom/MarginContainer/LoadingContainer
-@onready var loading_label: Label = $LoadingBottom/MarginContainer/LoadingContainer/LoadingLabel
-@onready var progress_bar: ProgressBar = $LoadingBottom/MarginContainer/LoadingContainer/ProgressBar
-@onready var progress_label: Label = $LoadingBottom/MarginContainer/LoadingContainer/ProgressLabel
+@onready var loading_container: VBoxContainer = find_child("LoadingContainer", true, false) as VBoxContainer
+@onready var loading_label: Label = find_child("LoadingLabel", true, false) as Label
+@onready var progress_bar: ProgressBar = find_child("ProgressBar", true, false) as ProgressBar
+@onready var progress_label: Label = find_child("ProgressLabel", true, false) as Label
 @onready var fade_overlay: ColorRect = $FadeOverlay
 
 @export var target_scene_path: String = "res://src/main.tscn"
@@ -26,6 +26,11 @@ var _loaded_resource: PackedScene = null
 var _visual_progress: float = 0.0
 
 func _ready() -> void:
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_title("Burger Rush")
+		if is_inside_tree() and get_tree() and get_tree().root:
+			get_tree().root.title = "Burger Rush"
+
 	# 1. Determina o destino a ser carregado
 	_resolve_target_scene()
 

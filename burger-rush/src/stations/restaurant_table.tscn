@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://restaurant_table_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/restaurant_table.gd" id="1_table"]
 [ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]

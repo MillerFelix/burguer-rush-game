@@ -23,12 +23,14 @@ func _ready() -> void:
 	if not water_audio:
 		water_audio = get_node_or_null("WaterAudioPlayer")
 	set_water_flow(false)
+	set_process(false)
 
 func _process(delta: float) -> void:
 	if _wash_timer > 0.0:
 		_wash_timer -= delta
 		if _wash_timer <= 0.0:
 			set_water_flow(false)
+			set_process(false)
 
 func set_water_flow(active: bool) -> void:
 	is_water_running = active
@@ -62,11 +64,8 @@ func get_interaction_prompt(player: Node = null) -> String:
 		sponge = tool_holder.get_node_or_null("Sponge")
 
 	if sponge and sponge.is_dirty:
-		return "🖱️ [Segurar] ou [E] — Lavar Bucha na Pia"
-	elif sponge and not sponge.is_dirty:
-		return "Bucha já está limpa e higienizada"
-	else:
-		return "E — Higienizar as Mãos na Pia"
+		return "E — Lavar e Higienizar Bucha"
+	return "E — Lavar as Mãos"
 
 func interact(player: Node3D) -> void:
 	wash_or_sanitize(player)
@@ -78,6 +77,7 @@ func wash_or_sanitize(player: Node3D) -> void:
 	var dem = DailyEventManager.get_instance()
 	if dem and not dem.is_water_available():
 		set_water_flow(false)
+		set_process(false)
 		_show_feedback(player, "⚠️ Sem fornecimento de água! Abastecimento temporariamente interrompido.")
 		return
 
@@ -88,6 +88,7 @@ func wash_or_sanitize(player: Node3D) -> void:
 
 	set_water_flow(true)
 	_wash_timer = 1.2
+	set_process(true)
 
 	var wm = WaterManager.get_instance()
 	if wm:

@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://potato_item_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/potato.gd" id="1_potato"]
 [ext_resource type="Texture2D" path="res://assets/textures/frozen_fries_bag.png" id="2_tex_bag"]

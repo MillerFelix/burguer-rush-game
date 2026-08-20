@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://street_lamp_uid"]
+[gd_scene format=3]
 
 [sub_resource type="StandardMaterial3D" id="Material_PoleDarkMetal"]
 albedo_color = Color(0.18, 0.20, 0.22, 1)

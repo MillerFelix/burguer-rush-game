@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://computer_ui_v2_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/ui/computer_ui.gd" id="1_comp_ui"]
 

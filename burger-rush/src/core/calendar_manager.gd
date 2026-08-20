@@ -59,13 +59,17 @@ func _exit_tree() -> void:
 		instance = null
 
 static func get_instance() -> CalendarManager:
-	if not instance:
-		var ml = Engine.get_main_loop()
-		if ml and ml is SceneTree:
-			var tree = ml as SceneTree
-			if tree.root:
-				instance = tree.root.find_child("CalendarManager", true, false)
-	return instance
+	if instance and is_instance_valid(instance):
+		return instance
+	var ml = Engine.get_main_loop()
+	if ml and ml is SceneTree:
+		var tree = ml as SceneTree
+		if tree.root:
+			var found = tree.root.find_child("CalendarManager", true, false)
+			if found:
+				instance = found
+				return instance
+	return null
 
 func _ready() -> void:
 	reset_calendar()

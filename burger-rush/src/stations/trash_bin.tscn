@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://trash_bin_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/trash_bin.gd" id="1_trash"]
 [ext_resource type="PackedScene" path="res://assets/models/furniture/trashcan.glb" id="2_trashcan_glb"]

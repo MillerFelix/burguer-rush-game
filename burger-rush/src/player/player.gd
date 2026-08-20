@@ -110,10 +110,38 @@ func _play_sound(audio_player: AudioStreamPlayer3D, sound_id: String, vol_db: fl
 		audio_player.play()
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		rotate_y(-event.relative.x * mouse_sensitivity)
-		head.rotate_x(-event.relative.y * mouse_sensitivity)
-		head.rotation.x = clamp(head.rotation.x, deg_to_rad(-80), deg_to_rad(80))
+	if is_inside_tree() and get_tree().paused:
+		return
+
+	var hud_node = hud
+	if not hud_node and is_inside_tree() and get_tree() and get_tree().root:
+		hud_node = get_tree().root.find_child("HUD", true, false)
+	if hud_node:
+		if hud_node.get("report_modal") and hud_node.report_modal.visible:
+			return
+		if hud_node.get("day1_welcome_modal") and hud_node.day1_welcome_modal.visible:
+			return
+		if hud_node.get("daily_notice_modal") and hud_node.daily_notice_modal.visible:
+			return
+
+	var comp_ui = get_tree().root.find_child("ComputerUI", true, false) if (is_inside_tree() and get_tree() and get_tree().root) else null
+	if comp_ui and comp_ui.visible:
+		return
+
+	var pause_menu_node = get_tree().root.find_child("PauseMenu", true, false) if (is_inside_tree() and get_tree() and get_tree().root) else null
+	if pause_menu_node and pause_menu_node.visible:
+		return
+
+	# Clique do mouse recaptura o controle se o cursor estiver livre durante gameplay
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+	if event is InputEventMouseMotion:
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or DisplayServer.get_name() == "headless":
+			rotate_y(-event.relative.x * mouse_sensitivity)
+			head.rotate_x(-event.relative.y * mouse_sensitivity)
+			head.rotation.x = clamp(head.rotation.x, deg_to_rad(-80), deg_to_rad(80))
 
 	# Seleção de ferramentas (1, 2, 3) e Slots Rápidos de Ingredientes (4, 5, 6)
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -150,17 +178,13 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		_try_return_to_storage()
 
-	if event.is_action_pressed("secondary_interact"):
+	if InputMap.has_action("secondary_interact") and event.is_action_pressed("secondary_interact"):
 		_try_secondary_interact()
 
 	if event.is_action_pressed("ui_cancel"):
-		var pm = get_tree().root.find_child("PauseMenu", true, false)
+		var pm = get_tree().root.find_child("PauseMenu", true, false) if (is_inside_tree() and get_tree() and get_tree().root) else null
 		if pm and pm.has_method("pause_game") and not pm.visible:
 			pm.pause_game()
-		elif Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		else:
-			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func get_spatula() -> Node3D:
 	if active_tool_slot == ToolSlot.SPATULA and tool_holder and tool_holder.get_child_count() > 0:
@@ -381,10 +405,10 @@ func _get_target_interactable(collider: Object) -> Object:
 	if collider is Customer:
 		return collider
 
-	# Se o colisor for parte de uma estação / equipamento (ex: colisor de porta ou alavanca de DrinkMachine, RestaurantTable, etc.):
+	# Se o colisor for parte de uma estação / equipamento (ex: Grill, Sink, DrinkMachine, RestaurantTable, etc.):
 	var curr = collider
 	while curr != null:
-		if curr is Node and (curr is RestaurantTable or curr is Customer or curr is CashRegister or curr is DeliveryStation or curr is DeliveryCar or curr is TrashBin):
+		if curr is Node and (curr is RestaurantTable or curr is Customer or curr is CashRegister or curr is DeliveryStation or curr is DeliveryCar or curr is TrashBin or curr is Grill or curr is Fryer or curr is CommercialSink or curr is PrepIsland or curr is StorageRack or curr is MainPowerPanel or curr is ComputerStation or curr is DrinkMachine or curr is JuiceMachine or curr is PackagingStation or curr is OpenSign or curr.has_method("clean_progress")):
 			return curr
 		if curr is Node and curr.has_method("get_interaction_prompt") and (curr.has_method("interact") or curr.has_method("interact_item")):
 			return curr
@@ -811,7 +835,36 @@ func _try_secondary_interact() -> void:
 			elif collider.has_method("secondary_interact"):
 				collider.secondary_interact(self)
 
+var _cached_hud_node: Node = null
+var _cached_pause_menu: Node = null
+
+func _get_hud_node() -> Node:
+	if _cached_hud_node and is_instance_valid(_cached_hud_node):
+		return _cached_hud_node
+	if hud and is_instance_valid(hud):
+		_cached_hud_node = hud
+		return _cached_hud_node
+	if is_inside_tree() and get_tree() and get_tree().root:
+		_cached_hud_node = get_tree().root.find_child("HUD", true, false)
+	return _cached_hud_node
+
+func _get_pause_menu_node() -> Node:
+	if _cached_pause_menu and is_instance_valid(_cached_pause_menu):
+		return _cached_pause_menu
+	if is_inside_tree() and get_tree() and get_tree().root:
+		_cached_pause_menu = get_tree().root.find_child("PauseMenu", true, false)
+	return _cached_pause_menu
+
 func _physics_process(delta: float) -> void:
+	if is_inside_tree() and get_tree().paused:
+		velocity = Vector3.ZERO
+		return
+
+	var hud_node = _get_hud_node()
+	if hud_node and hud_node.get("report_modal") and hud_node.report_modal.visible:
+		velocity = Vector3.ZERO
+		return
+
 	if held_item != null and held_item is SauceBottle:
 		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			held_item.start_squeezing(raycast)
@@ -824,12 +877,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		_stop_scrubbing_audio()
 
-	if Input.mouse_mode == Input.MOUSE_MODE_VISIBLE and DisplayServer.get_name() != "headless":
-		velocity.x = 0.0
-		velocity.z = 0.0
-		if not is_on_floor():
-			velocity += get_gravity() * delta
-		move_and_slide()
+	var pause_menu = _get_pause_menu_node()
+	if pause_menu and pause_menu.visible:
+		velocity = Vector3.ZERO
 		return
 
 	if not is_on_floor():

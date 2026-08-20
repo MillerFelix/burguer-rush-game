@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://fryer_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/fryer.gd" id="1_fryer"]
 [ext_resource type="Texture2D" path="res://assets/textures/wire_mesh_grid.png" id="2_wire_mesh"]

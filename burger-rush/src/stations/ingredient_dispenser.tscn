@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://ingredient_dispenser_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/ingredient_dispenser.gd" id="1_dispenser"]
 

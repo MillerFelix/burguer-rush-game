@@ -32,18 +32,26 @@ func _ready() -> void:
 	# Início do dia com pequeno atraso para o jogador respirar e abrir o restaurante
 	spawn_timer = 0.0
 
+var _cached_clock: Node = null
+var _filter_timer: float = 0.0
+
 func has_active_customers() -> bool:
 	active_customers = active_customers.filter(func(c): return is_instance_valid(c) and c.state != Customer.State.FINISHED)
 	return not active_customers.is_empty()
 
 func _get_clock() -> Node:
+	if _cached_clock and is_instance_valid(_cached_clock):
+		return _cached_clock
 	if is_inside_tree() and get_tree() and get_tree().root:
-		return get_tree().root.find_child("GameClock", true, false)
-	return null
+		_cached_clock = get_tree().root.find_child("GameClock", true, false)
+	return _cached_clock
 
 func _process(delta: float) -> void:
-	# Filtra apenas clientes válidos que não foram finalizados
-	active_customers = active_customers.filter(func(c): return is_instance_valid(c) and c.state != Customer.State.FINISHED)
+	# Filtra clientes válidos a cada 0.3s em vez de 60 vezes por segundo
+	_filter_timer -= delta
+	if _filter_timer <= 0.0:
+		_filter_timer = 0.3
+		active_customers = active_customers.filter(func(c): return is_instance_valid(c) and c.state != Customer.State.FINISHED)
 
 	if not auto_spawn:
 		return

@@ -1,9 +1,16 @@
 class_name OpenSign
 extends StaticBody3D
 
+# =============================================================================
+# BURGER RUSH — PLACA DE ABERTURA / FECHAMENTO (CAVALETE DE MADEIRA)
+#
+# O texto é posicionado diretamente na face da lousa de ardósia escura,
+# perfeitamente plano e rente à madeira (sem texturas corrompidas ou flutuação).
+# =============================================================================
+
 const GameClock = preload("res://src/time/game_clock.gd")
 
-@onready var label_3d: Label3D = $Label3D
+@onready var sign_content: Label3D = get_node_or_null("Model/EaselFront/ChalkAreaFront/SignContent")
 
 func _ready() -> void:
 	_ensure_clock_connection()
@@ -51,27 +58,32 @@ func _on_clock_state_changed(_new_state: GameClock.State) -> void:
 	_update_sign()
 
 func _update_sign() -> void:
-	if not label_3d:
-		label_3d = get_node_or_null("Label3D")
-	if not label_3d:
+	if not sign_content:
+		sign_content = get_node_or_null("Model/EaselFront/ChalkAreaFront/SignContent")
+	if not sign_content:
+		sign_content = find_child("SignContent", true, false) as Label3D
+	if not sign_content:
+		sign_content = find_child("Label3D", true, false) as Label3D
+
+	if not sign_content:
 		return
 
 	var clock = _ensure_clock_connection()
 	if not clock:
-		label_3d.text = "BURGER RUSH\n\nFECHADO\n\n10:00 — 22:00"
-		label_3d.modulate = Color(0.95, 0.95, 0.95, 1.0)
+		sign_content.text = "★ BURGER RUSH ★\n\n🔴 FECHADO\n\nHORÁRIO DE FUNCIONAMENTO\n10:00 — 22:00\n\n[E] Abrir Restaurante"
+		sign_content.modulate = Color(1.0, 0.94, 0.76, 1.0)
 		return
 
 	match clock.state:
 		GameClock.State.PREPARATION:
-			label_3d.text = "BURGER RUSH\n\nFECHADO\n\n10:00 — 22:00\n\n[E] Abrir Restaurante"
-			label_3d.modulate = Color(1.0, 0.92, 0.75, 1.0)
+			sign_content.text = "★ BURGER RUSH ★\n\n🔴 FECHADO\n\nHORÁRIO DE FUNCIONAMENTO\n10:00 — 22:00\n\n[E] Abrir Restaurante"
+			sign_content.modulate = Color(1.0, 0.94, 0.76, 1.0)
 		GameClock.State.OPEN:
-			label_3d.text = "BURGER RUSH\n\n🟢 ABERTO\n\n10:00 — 22:00"
-			label_3d.modulate = Color(0.85, 1.0, 0.85, 1.0)
+			sign_content.text = "★ BURGER RUSH ★\n\n🟢 ABERTO\n\nHORÁRIO DE FUNCIONAMENTO\n10:00 — 22:00\n\nExpediente em Andamento"
+			sign_content.modulate = Color(0.85, 1.0, 0.85, 1.0)
 		GameClock.State.CLOSING:
-			label_3d.text = "BURGER RUSH\n\n🟠 ENCERRANDO\n\n10:00 — 22:00\n\n[E] Finalizar Dia"
-			label_3d.modulate = Color(1.0, 0.85, 0.65, 1.0)
+			sign_content.text = "★ BURGER RUSH ★\n\n🟠 ENCERRANDO\n\nHORÁRIO DE FUNCIONAMENTO\n10:00 — 22:00\n\n[E] Finalizar Dia"
+			sign_content.modulate = Color(1.0, 0.88, 0.65, 1.0)
 		GameClock.State.CLOSED:
-			label_3d.text = "BURGER RUSH\n\n🔴 FECHADO\n\n10:00 — 22:00"
-			label_3d.modulate = Color(0.95, 0.80, 0.80, 1.0)
+			sign_content.text = "★ BURGER RUSH ★\n\n🔴 FECHADO\n\nHORÁRIO DE FUNCIONAMENTO\n10:00 — 22:00\n\nExpediente Encerrado"
+			sign_content.modulate = Color(0.95, 0.80, 0.80, 1.0)

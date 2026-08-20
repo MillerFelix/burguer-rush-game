@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://cash_register_station_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/cash_register.gd" id="1_cash_reg"]
 
@@ -220,15 +220,6 @@ mesh = SubResource("BoxMesh_ScreenHousing")
 [node name="ScreenGlass" type="MeshInstance3D" parent="Model/ScreenHousing"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.025)
 mesh = SubResource("BoxMesh_ScreenGlass")
-
-[node name="ScreenLabel" type="Label3D" parent="Model"]
-transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0.36, -0.09)
-billboard = 0
-double_sided = false
-text = "BURGER RUSH\nR$ 0.00"
-font_size = 12
-outline_size = 3
-modulate = Color(0.9, 0.95, 1.0, 1)
 
 [node name="Keypad" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, -0.09, 0.27, 0.08)

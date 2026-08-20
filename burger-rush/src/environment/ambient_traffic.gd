@@ -65,18 +65,27 @@ func set_night_mode(enabled: bool) -> void:
 		if is_instance_valid(v.node) and v.node.has_method("set_night_mode"):
 			v.node.set_night_mode(enabled)
 
+var _car_materials: Array[StandardMaterial3D] = []
+
+func _ensure_car_materials() -> void:
+	if _car_materials.is_empty():
+		for color in CAR_COLORS:
+			var mat = StandardMaterial3D.new()
+			mat.albedo_color = color
+			mat.roughness = 0.35
+			mat.metallic = 0.2
+			_car_materials.append(mat)
+
 func _spawn_vehicle(lane_type: int, custom_x: float = -999.0) -> void:
+	_ensure_car_materials()
 	var car = CAR_SCENE.instantiate() as Node3D
 	add_child(car)
 
 	if car.has_method("set_night_mode"):
 		car.set_night_mode(is_night_mode)
 
-	var color = CAR_COLORS[randi() % CAR_COLORS.size()]
-	var mat = StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.roughness = 0.35
-	mat.metallic = 0.2
+	var color_idx = randi() % _car_materials.size()
+	var mat = _car_materials[color_idx]
 
 	var chassis = car.get_node_or_null("Model/Chassis") as MeshInstance3D
 	var roof = car.get_node_or_null("Model/Roof") as MeshInstance3D

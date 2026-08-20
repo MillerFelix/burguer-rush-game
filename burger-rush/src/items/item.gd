@@ -47,39 +47,48 @@ func get_quality_name() -> String:
 
 @export var bottom_offset: float = 0.002
 
-@onready var collision_shape: CollisionShape3D = $CollisionShape3D
+func _ready() -> void:
+	if not _is_falling:
+		set_physics_process(false)
 
 func _physics_process(delta: float) -> void:
-	if location == ItemLocation.WORLD and _is_falling:
-		var world_3d = get_world_3d()
-		if not world_3d:
-			_is_falling = false
-			return
+	if location != ItemLocation.WORLD or not _is_falling:
+		_is_falling = false
+		set_physics_process(false)
+		return
 
-		var space_state = world_3d.direct_space_state
-		var ray_start = global_position + Vector3.UP * 0.1
-		var ray_end = global_position + Vector3.DOWN * 10.0
-		var query = PhysicsRayQueryParameters3D.create(ray_start, ray_end)
-		var excludes = [get_rid()]
-		for child in find_children("*", "CollisionObject3D", true, false):
-			if child is CollisionObject3D:
-				excludes.append(child.get_rid())
-		query.exclude = excludes
+	var world_3d = get_world_3d()
+	if not world_3d:
+		_is_falling = false
+		set_physics_process(false)
+		return
 
-		var result = space_state.intersect_ray(query)
-		if result:
-			var target_y = result.position.y + bottom_offset
-			if global_position.y > target_y + 0.03:
-				global_position.y = move_toward(global_position.y, target_y, 9.8 * delta)
-			else:
-				global_position.y = target_y
-				_is_falling = false
+	var space_state = world_3d.direct_space_state
+	var ray_start = global_position + Vector3.UP * 0.1
+	var ray_end = global_position + Vector3.DOWN * 10.0
+	var query = PhysicsRayQueryParameters3D.create(ray_start, ray_end)
+	var excludes = [get_rid()]
+	for child in find_children("*", "CollisionObject3D", true, false):
+		if child is CollisionObject3D:
+			excludes.append(child.get_rid())
+	query.exclude = excludes
+
+	var result = space_state.intersect_ray(query)
+	if result:
+		var target_y = result.position.y + bottom_offset
+		if global_position.y > target_y + 0.03:
+			global_position.y = move_toward(global_position.y, target_y, 9.8 * delta)
 		else:
-			if global_position.y > bottom_offset:
-				global_position.y = move_toward(global_position.y, bottom_offset, 9.8 * delta)
-			else:
-				global_position.y = bottom_offset
-				_is_falling = false
+			global_position.y = target_y
+			_is_falling = false
+			set_physics_process(false)
+	else:
+		if global_position.y > bottom_offset:
+			global_position.y = move_toward(global_position.y, bottom_offset, 9.8 * delta)
+		else:
+			global_position.y = bottom_offset
+			_is_falling = false
+			set_physics_process(false)
 
 func get_interaction_prompt(player: Node = null) -> String:
 	if location != ItemLocation.WORLD and location != ItemLocation.TRAY and location != ItemLocation.TABLE and location != ItemLocation.STATION:
@@ -98,6 +107,7 @@ func on_picked_up() -> void:
 	is_held = true
 	location = ItemLocation.PLAYER_HAND
 	_is_falling = false
+	set_physics_process(false)
 	collision_layer = 0
 	collision_mask = 0
 	_set_all_colliders_disabled(self, true)
@@ -106,6 +116,7 @@ func on_dropped() -> void:
 	is_held = false
 	location = ItemLocation.WORLD
 	_is_falling = true
+	set_physics_process(true)
 	collision_layer = 1
 	collision_mask = 1
 	_set_all_colliders_disabled(self, false)
@@ -114,6 +125,7 @@ func on_placed_in_station() -> void:
 	is_held = false
 	location = ItemLocation.STATION
 	_is_falling = false
+	set_physics_process(false)
 	collision_layer = 1
 	collision_mask = 1
 	_set_all_colliders_disabled(self, false)
@@ -122,6 +134,7 @@ func on_placed_in_tray() -> void:
 	is_held = false
 	location = ItemLocation.TRAY
 	_is_falling = false
+	set_physics_process(false)
 	collision_layer = 0
 	collision_mask = 0
 	_set_all_colliders_disabled(self, true)
@@ -130,6 +143,7 @@ func on_placed_on_table() -> void:
 	is_held = false
 	location = ItemLocation.TABLE
 	_is_falling = false
+	set_physics_process(false)
 	collision_layer = 1
 	collision_mask = 1
 	_set_all_colliders_disabled(self, false)
@@ -138,6 +152,7 @@ func on_stored_in_fridge() -> void:
 	is_held = false
 	location = ItemLocation.FRIDGE
 	_is_falling = false
+	set_physics_process(false)
 	collision_layer = 0
 	collision_mask = 0
 	_set_all_colliders_disabled(self, true)

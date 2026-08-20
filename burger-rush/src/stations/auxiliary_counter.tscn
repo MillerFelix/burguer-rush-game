@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://auxiliary_counter_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/auxiliary_counter.gd" id="1_counter"]
 

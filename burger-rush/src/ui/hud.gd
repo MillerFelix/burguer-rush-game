@@ -9,14 +9,17 @@ extends CanvasLayer
 @onready var feedback_label: Label = $FeedbackLabel
 @onready var feedback_timer: Timer = $FeedbackTimer
 
-@onready var report_modal: PanelContainer = $DayReportModal
-@onready var report_title: Label = $DayReportModal/VBox/TitleLabel
-@onready var report_revenue: Label = $DayReportModal/VBox/RevenueLabel
-@onready var report_completed: Label = $DayReportModal/VBox/CompletedLabel
-@onready var report_cancelled: Label = $DayReportModal/VBox/CancelledLabel
-@onready var report_avg_time: Label = $DayReportModal/VBox/AvgTimeLabel
-@onready var report_balance: Label = $DayReportModal/VBox/BalanceLabel
-@onready var next_day_button: Button = $DayReportModal/VBox/NextDayButton
+@onready var report_modal: PanelContainer = get_node_or_null("DayReportModal")
+@onready var report_title: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/TitleLabel")
+@onready var report_date: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/DateLabel")
+@onready var report_starting_balance: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/StartingBalanceLabel")
+@onready var report_revenue: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/RevenueLabel")
+@onready var report_purchases: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/PurchasesLabel")
+@onready var report_net_profit: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/NetProfitLabel")
+@onready var report_completed: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/CompletedLabel")
+@onready var report_reputation: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/ReputationLabel")
+@onready var report_balance: Label = get_node_or_null("DayReportModal/MarginContainer/VBox/Grid/BalanceLabel")
+@onready var next_day_button: Button = get_node_or_null("DayReportModal/MarginContainer/VBox/NextDayButton")
 
 @onready var daily_notice_modal: PanelContainer = get_node_or_null("DailyNoticeModal")
 @onready var notice_title_label: Label = get_node_or_null("DailyNoticeModal/VBox/NoticeTitle")
@@ -26,21 +29,27 @@ extends CanvasLayer
 @onready var dismiss_notice_button: Button = get_node_or_null("DailyNoticeModal/VBox/DismissNoticeButton")
 
 @onready var day1_welcome_modal: PanelContainer = get_node_or_null("Day1WelcomeModal")
-@onready var day1_title_label: Label = get_node_or_null("Day1WelcomeModal/VBox/TitleLabel")
-@onready var day1_body_label: Label = get_node_or_null("Day1WelcomeModal/VBox/BodyLabel")
-@onready var day1_start_button: Button = get_node_or_null("Day1WelcomeModal/VBox/StartButton")
+@onready var day1_title_label: Label = get_node_or_null("Day1WelcomeModal/MarginContainer/VBox/TitleLabel")
+@onready var day1_body_label: Label = get_node_or_null("Day1WelcomeModal/MarginContainer/VBox/BodyLabel")
+@onready var day1_start_button: Button = get_node_or_null("Day1WelcomeModal/MarginContainer/VBox/StartButton")
 
 const CalendarManager = preload("res://src/core/calendar_manager.gd")
 const DailyEventManager = preload("res://src/core/daily_event_manager.gd")
 const SaveManager = preload("res://src/core/save_manager.gd")
+const GameClock = preload("res://src/time/game_clock.gd")
+const EconomyManager = preload("res://src/economy/economy_manager.gd")
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS
 	hide_prompt()
 	if report_modal:
+		report_modal.process_mode = Node.PROCESS_MODE_ALWAYS
 		report_modal.visible = false
 	if daily_notice_modal:
+		daily_notice_modal.process_mode = Node.PROCESS_MODE_ALWAYS
 		daily_notice_modal.visible = false
 	if day1_welcome_modal:
+		day1_welcome_modal.process_mode = Node.PROCESS_MODE_ALWAYS
 		day1_welcome_modal.visible = false
 
 	_update_money_display(100.0)
@@ -68,7 +77,9 @@ func _ready() -> void:
 		_update_day_time_display(clock.day_number, clock.current_hour, clock.current_minute, clock.state)
 
 	var dem = DailyEventManager.get_instance()
-	if dem:
+	if not dem and is_inside_tree() and get_tree() and get_tree().root:
+		dem = get_tree().root.find_child("DailyEventManager", true, false)
+	if dem and not dem.event_started.is_connected(_on_daily_event_started):
 		dem.event_started.connect(_on_daily_event_started)
 
 	if next_day_button:
@@ -79,6 +90,9 @@ func _ready() -> void:
 		day1_start_button.pressed.connect(_on_day1_start_button_pressed)
 
 	_check_and_show_day1_intro()
+	_check_and_show_daily_notice()
+	call_deferred("_check_and_show_day1_intro")
+	call_deferred("_check_and_show_daily_notice")
 
 func _unhandled_input(event: InputEvent) -> void:
 	if day1_welcome_modal and day1_welcome_modal.visible:
@@ -93,51 +107,111 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 
+	# Bloqueio estrito: Enquanto a tela de Dia Encerrado estiver visível, NENHUMA tecla ou ação de gameplay é disparada
 	if report_modal and report_modal.visible:
-		if event.is_action_pressed("interact") or event.is_action_pressed("ui_accept"):
-			_on_next_day_button_pressed()
-			get_viewport().set_input_as_handled()
-
-func _check_and_show_day1_intro() -> void:
-	var tut = get_tree().root.find_child("Tutorial", true, false) if (is_inside_tree() and get_tree()) else null
-	if tut and not tut.get("tutorial_completed"):
+		get_viewport().set_input_as_handled()
 		return
 
-	var sm = SaveManager.instance
+func _check_and_show_day1_intro() -> void:
+	var sm = _get_save_manager()
 	if not sm:
-		var sm_script = load("res://src/core/save_manager.gd")
-		if sm_script and "instance" in sm_script:
-			sm = sm_script.instance
+		return
 
-	if sm and sm.has_active_game:
-		var shown = sm.pending_save_data.get("day1_intro_shown", false)
-		if not shown:
-			var player_name = sm.pending_save_data.get("player_name", "Chefe")
-			if day1_title_label:
-				day1_title_label.text = "Primeiro dia, CHEFE %s!" % player_name.to_upper()
-			if day1_body_label:
-				day1_body_label.text = "Agora este restaurante está nas suas mãos. Você aprendeu o básico, mas daqui para frente as decisões são suas.\n\nPrepare os ingredientes, atenda seus clientes, controle suas despesas e faça o restaurante crescer."
-			if day1_welcome_modal:
-				day1_welcome_modal.visible = true
-				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if not sm.has_active_game or sm.pending_save_data.is_empty():
+		if sm.has_method("load_game"):
+			sm.load_game(sm.active_slot)
+
+	if not sm.has_active_game:
+		return
+
+	# 1. Se o tutorial NÃO foi concluído, NUNCA exibe a introdução do Dia 1
+	var tut_completed = bool(sm.pending_save_data.get("tutorial_completed", false))
+	if not tut_completed:
+		return
+
+	# 2. Se houver qualquer nó de tutorial ativo na árvore de nós, não exibe
+	if is_inside_tree() and get_tree() and get_tree().root:
+		var tut = get_tree().root.find_child("Tutorial", true, false)
+		if tut and is_instance_valid(tut) and not tut.get("tutorial_completed"):
+			return
+		var tut_intro = get_tree().root.find_child("TutorialIntroUI", true, false)
+		if tut_intro and is_instance_valid(tut_intro):
+			return
+
+	# 3. Se o GameManager estiver em estado de tutorial, não exibe
+	var gm = _get_game_manager()
+	if gm and "GameState" in gm and "current_state" in gm:
+		if gm.current_state == gm.GameState.TUTORIAL:
+			return
+
+	# 4. Só exibe se for o Dia 1 e a mensagem ainda não tiver sido apresentada
+	var current_day = sm.pending_save_data.get("current_day", sm.pending_save_data.get("day_number", 1))
+	var shown = sm.pending_save_data.get("day1_intro_shown", false)
+	if current_day == 1 and not shown:
+		var raw_name = str(sm.pending_save_data.get("chef_name", sm.pending_save_data.get("player_name", "Chefe")))
+		var player_name = raw_name.strip_edges()
+		if player_name.begins_with("Chef ") or player_name.begins_with("Chefe "):
+			player_name = player_name.substr(player_name.find(" ") + 1).strip_edges()
+		if player_name.is_empty():
+			player_name = "Chefe"
+		if day1_title_label:
+			day1_title_label.text = "SEU PRIMEIRO DIA"
+		if day1_body_label:
+			day1_body_label.text = "Chefe %s, agora é pra valer.\n\nO treinamento terminou e o restaurante está oficialmente sob sua responsabilidade.\n\nAgora é sua vez de colocar tudo o que aprendeu em prática, atender seus clientes, administrar o restaurante e fazer seu negócio crescer.\n\nBoa sorte. O seu primeiro dia começa agora!" % player_name
+		if day1_start_button:
+			day1_start_button.text = "COMEÇAR DIA 1"
+		if day1_welcome_modal:
+			day1_welcome_modal.visible = true
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _on_day1_start_button_pressed() -> void:
 	if day1_welcome_modal:
 		day1_welcome_modal.visible = false
-	var sm = SaveManager.instance
-	if not sm:
-		var sm_script = load("res://src/core/save_manager.gd")
-		if sm_script and "instance" in sm_script:
-			sm = sm_script.instance
+	var sm = _get_save_manager()
 	if sm and sm.has_active_game:
 		sm.pending_save_data["day1_intro_shown"] = true
 		sm.save_game(sm.active_slot)
+
+	var gm = _get_game_manager()
+	if gm and "GameState" in gm and gm.has_method("change_state"):
+		gm.change_state(gm.GameState.PLAYING)
+
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+func _get_save_manager() -> Node:
+	if is_inside_tree() and get_tree() != null and get_tree().root:
+		if get_tree().root.has_node("SaveManager"):
+			return get_tree().root.get_node("SaveManager")
+		for child in get_tree().root.get_children():
+			if child.name == "SaveManager" or child.get_script() == load("res://src/core/save_manager.gd"):
+				return child
+	var sm_script = load("res://src/core/save_manager.gd")
+	if sm_script and "instance" in sm_script and sm_script.instance and is_instance_valid(sm_script.instance):
+		return sm_script.instance
+	if sm_script and sm_script.has_method("get_instance"):
+		return sm_script.get_instance()
+	return null
+
+func _get_game_manager() -> Node:
+	if is_inside_tree() and get_tree() != null and get_tree().root:
+		if get_tree().root.has_node("GameManager"):
+			return get_tree().root.get_node("GameManager")
+		for child in get_tree().root.get_children():
+			if child.name == "GameManager" or child.get_script() == load("res://src/core/game_manager.gd"):
+				return child
+	var gm_script = load("res://src/core/game_manager.gd")
+	if gm_script and "instance" in gm_script and gm_script.instance and is_instance_valid(gm_script.instance):
+		return gm_script.instance
+	if gm_script and gm_script.has_method("get_instance"):
+		return gm_script.get_instance()
+	return null
 
 func show_prompt(text: String) -> void:
 	if interaction_label:
-		interaction_label.text = text
-		interaction_label.visible = true
+		if interaction_label.text != text:
+			interaction_label.text = text
+		if not interaction_label.visible:
+			interaction_label.visible = true
 
 @onready var slot1_label: Label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot1Label")
 @onready var slot2_label: Label = get_node_or_null("BottomInventoryBar/TopRowHBox/ToolHotbar/HBox/Slot2Label")
@@ -232,7 +306,7 @@ func update_quick_slots_display(slots_info: Array, active_slot_idx: int, active_
 		panel.add_theme_stylebox_override("panel", style)
 
 func hide_prompt() -> void:
-	if interaction_label:
+	if interaction_label and interaction_label.visible:
 		interaction_label.text = ""
 		interaction_label.visible = false
 
@@ -330,11 +404,28 @@ func _update_day_time_display(day: int, hours: int, minutes: int, st: GameClock.
 	day_time_label.text = "DIA %d (%s, %s)  |  %02d:%02d  |  %s" % [day, weekday_short, date_str, hours, minutes, state_str]
 	day_time_label.add_theme_color_override("font_color", state_color)
 
+func _check_and_show_daily_notice() -> void:
+	if day1_welcome_modal and day1_welcome_modal.visible:
+		return
+	var dem = DailyEventManager.get_instance()
+	if not dem and is_inside_tree() and get_tree() and get_tree().root:
+		dem = get_tree().root.find_child("DailyEventManager", true, false)
+	if dem:
+		var edata = dem.get_current_event_data()
+		_on_daily_event_started(dem.current_event, edata)
+
 func _on_daily_event_started(_event_type: int, event_data: Dictionary) -> void:
+	if not daily_notice_modal:
+		daily_notice_modal = get_node_or_null("DailyNoticeModal")
 	if not daily_notice_modal:
 		return
 
-	if not event_data.get("has_event", false):
+	# Se for o Dia 1 e a introdução de boas-vindas estiver ativa, prioriza a introdução
+	if day1_welcome_modal and day1_welcome_modal.visible:
+		daily_notice_modal.visible = false
+		return
+
+	if not event_data.get("has_event", false) or _event_type == DailyEventManager.EventType.NONE:
 		daily_notice_modal.visible = false
 		return
 
@@ -358,25 +449,118 @@ func _on_dismiss_notice_button_pressed() -> void:
 
 func _on_day_ended(summary: DaySummary) -> void:
 	if not report_modal:
-		return
+		report_modal = get_node_or_null("DayReportModal")
+		if not report_modal:
+			return
 
-	report_title.text = "📋 RELATÓRIO DO DIA %d" % summary.day_number
-	report_revenue.text = "💵 Vendas do Dia: +$%.2f" % summary.revenue
-	report_completed.text = "🛒 Gastos em Compras: -$%.2f" % summary.purchases
-	report_cancelled.text = "📈 Lucro Líquido: $%.2f" % summary.net_profit
-	report_avg_time.text = "✅ Pedidos Concluídos: %d  |  ⏱️ Tempo Médio: %.1fs" % [summary.orders_completed, summary.avg_wait_time]
-	report_balance.text = "💰 Saldo Final no Caixa: $%.2f" % summary.ending_balance
+	# 1. Salva imediatamente o progresso final do dia no slot ativo
+	var sm = _get_save_manager()
+	if sm and sm.has_active_game:
+		sm.pending_save_data["current_day"] = summary.day_number
+		sm.pending_save_data["money"] = summary.ending_balance
+		sm.save_game(sm.active_slot)
+
+	# 2. Notifica o GameManager do estado DAY_END
+	var gm = _get_game_manager()
+	if gm and gm.has_method("change_state"):
+		gm.change_state(gm.get("GameState").DAY_END if "GameState" in gm else 6)
+
+	var cal = CalendarManager.get_instance()
+	var date_str = cal.get_full_date_string() if cal else "Dia %d" % summary.day_number
+
+	if report_title:
+		report_title.text = "🎉 DIA %d ENCERRADO!" % summary.day_number
+	if report_date:
+		report_date.text = "📅 %s" % date_str
+	if report_starting_balance:
+		report_starting_balance.text = "💵 Dinheiro Inicial: R$ %.2f" % summary.starting_balance
+	if report_revenue:
+		report_revenue.text = "🛒 Vendas do Dia: +R$ %.2f" % summary.revenue
+	if report_purchases:
+		report_purchases.text = "📦 Despesas e Compras: -R$ %.2f" % summary.purchases
+	if report_net_profit:
+		var sign_char = "+" if summary.net_profit >= 0 else ""
+		report_net_profit.text = "📈 Lucro Líquido: %sR$ %.2f" % [sign_char, summary.net_profit]
+		report_net_profit.modulate = Color(0.4, 0.95, 0.55, 1.0) if summary.net_profit >= 0 else Color(1.0, 0.4, 0.4, 1.0)
+	if report_completed:
+		var abandon_count = summary.customers_abandoned if "customers_abandoned" in summary else 0
+		report_completed.text = "🍔 Pedidos Atendidos: %d concluídos | 🚶 Abandono: %d clientes" % [summary.orders_completed, abandon_count]
+	if report_reputation:
+		var rep_val = summary.reputation if "reputation" in summary else 5.0
+		report_reputation.text = "⭐ Reputação do Restaurante: %.1f / 5.0 estrelas" % rep_val
+	if report_balance:
+		report_balance.text = "💰 Dinheiro Final: R$ %.2f" % summary.ending_balance
 
 	report_modal.visible = true
+	get_tree().paused = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+	if next_day_button and is_inside_tree():
+		next_day_button.grab_focus()
+
+	# Toca o som de resultado/fechamento
+	var audio_stream = SoundSynthesizer.get_stream("cash_register_open")
+	if audio_stream:
+		var p = AudioStreamPlayer.new()
+		p.stream = audio_stream
+		p.bus = "SFX"
+		p.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(p)
+		p.play()
+		p.finished.connect(p.queue_free)
 
 func _on_day_started(_day_number: int) -> void:
 	if report_modal:
 		report_modal.visible = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_update_orders_display()
+	_check_and_show_daily_notice()
 
 func _on_next_day_button_pressed() -> void:
+	get_tree().paused = false
+	if report_modal:
+		report_modal.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+	# 1. Inicia o próximo dia no mesmo mundo sem recarregar a cena (preserva itens e estado do restaurante)
 	var clock = GameClock.get_instance()
 	if clock:
 		clock.start_next_day()
+
+	# 2. Atualiza e salva o estado do jogo no disco
+	var sm = _get_save_manager()
+	if sm and sm.has_active_game:
+		var cal_mgr = CalendarManager.get_instance()
+		var current_d = cal_mgr.day_number if cal_mgr else (clock.day_number if clock else 2)
+		sm.pending_save_data["current_day"] = current_d
+		sm.pending_save_data["day"] = current_d
+		sm.pending_save_data["day_number"] = current_d
+		sm.pending_save_data["calendar_day"] = current_d
+		sm.pending_save_data["day_of_week"] = cal_mgr.day_of_week if cal_mgr else 1
+		sm.pending_save_data["week_number"] = int((current_d - 1) / 7) + 1
+		var econ = EconomyManager.get_instance()
+		if econ:
+			sm.pending_save_data["money"] = econ.get_money()
+		sm.pending_save_data["clock_hour"] = 9
+		sm.pending_save_data["clock_minute"] = 0
+		sm.pending_save_data["clock_state"] = "PREPARATION"
+		sm.pending_save_data["day1_intro_shown"] = true
+		sm.save_game(sm.active_slot)
+
+	# 3. Notifica o GameManager do retorno ao estado PLAYING
+	var gm = _get_game_manager()
+	if gm and gm.has_method("change_state"):
+		gm.change_state(gm.GameState.PLAYING if "GameState" in gm else 1)
+
+	# 4. Restaura controle do jogador e câmera
+	var player = get_tree().get_first_node_in_group("player") as Node3D if (is_inside_tree() and get_tree()) else null
+	if player:
+		if "can_move" in player:
+			player.can_move = true
+		if "is_paused" in player:
+			player.is_paused = false
+		if player.has_method("_notify_hud_quick_slots"):
+			player._notify_hud_quick_slots()
+
+	_update_orders_display()
+	_check_and_show_daily_notice()

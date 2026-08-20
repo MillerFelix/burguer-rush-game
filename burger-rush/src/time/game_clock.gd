@@ -3,6 +3,10 @@ extends Node
 
 const CalendarManager = preload("res://src/core/calendar_manager.gd")
 const DailyEventManager = preload("res://src/core/daily_event_manager.gd")
+const ReputationManager = preload("res://src/customers/reputation_manager.gd")
+const EconomyManager = preload("res://src/economy/economy_manager.gd")
+const OrderManager = preload("res://src/orders/order_manager.gd")
+const WasteManager = preload("res://src/economy/waste_manager.gd")
 
 enum State {
 	PREPARATION,
@@ -69,7 +73,7 @@ static func get_instance() -> GameClock:
 	if ml and ml is SceneTree:
 		var tree = ml as SceneTree
 		if tree.root:
-			var found = tree.root.find_child("GameClock", true, false) as GameClock
+			var found = tree.root.find_child("GameClock", true, false)
 			if found:
 				instance = found
 				return instance
@@ -100,6 +104,8 @@ func get_weekday_name() -> String:
 	var idx = (day_of_week - 1) % 7
 	return weekdays[idx]
 
+var _closing_check_timer: float = 0.0
+
 func _process(delta: float) -> void:
 	if is_paused or state == State.CLOSED:
 		return
@@ -111,8 +117,11 @@ func _process(delta: float) -> void:
 
 	# Às 22:00+, o restaurante entra em CLOSING e só fecha o dia quando não houver clientes ou pedidos
 	if state == State.CLOSING:
-		if can_finish_day():
-			close_day()
+		_closing_check_timer -= delta
+		if _closing_check_timer <= 0.0:
+			_closing_check_timer = 0.35
+			if can_finish_day():
+				close_day()
 
 func can_finish_day() -> bool:
 	if state != State.CLOSING:
@@ -196,12 +205,24 @@ func close_day() -> DaySummary:
 	var waste_mgr = WasteManager.get_instance()
 	var rep_mgr = ReputationManager.get_instance()
 
+	var fin_mgr = null
+	var fin_script = load("res://src/economy/finance_manager.gd")
+	if fin_script and fin_script.has_method("get_instance"):
+		fin_mgr = fin_script.get_instance()
+
+	if fin_mgr and fin_mgr.has_method("close_current_day"):
+		fin_mgr.close_current_day()
+
 	var summary = DaySummary.new()
 	summary.day_number = day_number
 	summary.starting_balance = starting_day_money
 	summary.ending_balance = economy.get_money() if economy else 100.0
 
-	if economy:
+	if fin_mgr:
+		summary.revenue = fin_mgr.get_total_daily_revenue()
+		summary.purchases = fin_mgr.get_total_daily_expenses()
+		summary.net_profit = fin_mgr.get_daily_net_profit()
+	elif economy:
 		summary.revenue = economy.get_daily_sales()
 		summary.purchases = economy.get_daily_purchases()
 		summary.net_profit = economy.get_daily_net()
@@ -216,7 +237,26 @@ func close_day() -> DaySummary:
 		summary.total_orders = summary.orders_completed + summary.orders_cancelled
 		summary.avg_wait_time = order_mgr.get_avg_wait_time()
 
+	if rep_mgr:
+		summary.reputation = rep_mgr.get_average_rating()
+		if rep_mgr.has_method("get_daily_abandoned"):
+			summary.customers_abandoned = rep_mgr.get_daily_abandoned(day_number)
+
+	is_paused = true
 	day_history.append(summary)
+
+	# 1. SALVAMENTO IMEDIATO DO FINAL DO DIA ANTES DE QUALQUER TRANSIÇÃO OU TELA
+	var sm = null
+	var sm_script = load("res://src/core/save_manager.gd")
+	if sm_script and sm_script.has_method("get_instance"):
+		sm = sm_script.get_instance()
+	if not sm and sm_script and "instance" in sm_script:
+		sm = sm_script.instance
+	if sm and sm.has_active_game:
+		sm.pending_save_data["current_day"] = day_number
+		sm.pending_save_data["money"] = summary.ending_balance
+		sm.save_game(sm.active_slot)
+
 	day_ended.emit(summary)
 
 	# Arquiva o snapshot completo do dia no CalendarManager
@@ -285,6 +325,14 @@ func start_next_day() -> void:
 	if waste_mgr and waste_mgr.has_method("start_new_day"):
 		waste_mgr.start_new_day()
 
+	# Retorna todas as bisnagas de molho para seus suportes originais
+	if is_inside_tree() and get_tree():
+		var bottles = get_tree().get_nodes_in_group("sauce_bottles")
+		for b in bottles:
+			if is_instance_valid(b) and b.has_method("reset_to_home_position"):
+				b.reset_to_home_position()
+
+	is_paused = false
 	set_state(State.PREPARATION)
 	day_started.emit(day_number)
 	time_tick.emit(current_hour, current_minute)

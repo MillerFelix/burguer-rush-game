@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://drink_machine_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/drink_machine.gd" id="1_drink_machine"]
 [ext_resource type="PackedScene" path="res://src/items/syrup_canister.tscn" id="2_canister_scene"]

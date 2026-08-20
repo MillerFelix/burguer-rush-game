@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://x_salada_item_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/burger.gd" id="1_burger"]
 [ext_resource type="PackedScene" path="res://assets/models/food/burgerDouble.glb" id="2_saladburger_glb"]

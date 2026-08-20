@@ -812,27 +812,58 @@ func interact_item(player: Node3D) -> void:
 			take_cup_from_slot(idx, player)
 			return
 
+var _mat_led_on: StandardMaterial3D = null
+var _mat_led_off: StandardMaterial3D = null
+var _meter_materials: Array[StandardMaterial3D] = []
+var _cached_meters: Array[MeshInstance3D] = []
+var _visuals_dirty: bool = true
+
+func _ensure_cached_materials() -> void:
+	if _mat_led_on == null:
+		_mat_led_on = StandardMaterial3D.new()
+		_mat_led_on.albedo_color = Color(0.2, 0.95, 0.3, 1.0)
+		_mat_led_on.emission_enabled = true
+		_mat_led_on.emission = Color(0.2, 0.95, 0.3, 1.0)
+		_mat_led_on.emission_energy_multiplier = 1.3
+
+	if _mat_led_off == null:
+		_mat_led_off = StandardMaterial3D.new()
+		_mat_led_off.albedo_color = Color(0.9, 0.2, 0.2, 1.0)
+		_mat_led_off.emission_enabled = true
+		_mat_led_off.emission = Color(0.9, 0.2, 0.2, 1.0)
+		_mat_led_off.emission_energy_multiplier = 0.4
+
+	if _meter_materials.is_empty():
+		for i in range(4):
+			var m = StandardMaterial3D.new()
+			_meter_materials.append(m)
+
+	if _cached_meters.is_empty():
+		for i in range(4):
+			var meter = get_node_or_null("Model/LevelMeter_%d" % i) as MeshInstance3D
+			_cached_meters.append(meter)
+
 # Atualização de barras LED e luz indicadora Power
 func _update_all_visuals() -> void:
+	_ensure_cached_materials()
+
 	# 1. LED Power
 	if not power_led:
 		power_led = get_node_or_null("Model/PowerSwitch/StatusLED")
 	if power_led:
-		var mat_led = StandardMaterial3D.new()
-		mat_led.albedo_color = Color(0.2, 0.95, 0.3, 1.0) if is_powered else Color(0.9, 0.2, 0.2, 1.0)
-		mat_led.emission_enabled = true
-		mat_led.emission = mat_led.albedo_color
-		mat_led.emission_energy_multiplier = 1.3 if is_powered else 0.4
-		power_led.material_override = mat_led
+		var target_mat = _mat_led_on if is_powered else _mat_led_off
+		if power_led.material_override != target_mat:
+			power_led.material_override = target_mat
 
 	# 2. Barras LED de nível das 4 estações
 	for i in range(4):
-		var meter = get_node_or_null("Model/LevelMeter_%d" % i)
-		if meter and meter is MeshInstance3D:
+		var meter = _cached_meters[i] if i < _cached_meters.size() else null
+		if meter and is_instance_valid(meter):
 			var lvl = syrup_levels[i]
-			var mat = StandardMaterial3D.new()
+			var mat = _meter_materials[i]
 			if not is_powered:
 				mat.albedo_color = Color(0.18, 0.18, 0.20, 1.0)
+				mat.emission_enabled = false
 				mat.roughness = 0.8
 			elif lvl <= 0.0:
 				mat.albedo_color = Color(0.9, 0.18, 0.18, 1.0)
@@ -850,10 +881,12 @@ func _update_all_visuals() -> void:
 				mat.emission = Color(0.2, 0.95, 0.3, 1.0)
 				mat.emission_energy_multiplier = 0.95
 
-			meter.material_override = mat
+			if meter.material_override != mat:
+				meter.material_override = mat
 			# Escala visual da barra proporcional ao nível de 25 doses
 			var fraction = clampf(lvl / MAX_DOSES_PER_CANISTER, 0.05, 1.0) if is_powered else 0.05
-			meter.scale.x = fraction
+			if absf(meter.scale.x - fraction) > 0.001:
+				meter.scale.x = fraction
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	if player and player.has_node("HUD"):

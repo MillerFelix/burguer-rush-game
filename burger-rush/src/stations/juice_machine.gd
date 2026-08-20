@@ -708,7 +708,46 @@ func interact_item(player: Node3D) -> void:
 # ================================================================
 # ATUALIZAÇÃO VISUAL DOS RESERVATÓRIOS E POWER LED
 # ================================================================
+var _mat_led_on: StandardMaterial3D = null
+var _mat_led_off: StandardMaterial3D = null
+var _reservoir_materials: Array[StandardMaterial3D] = []
+var _cached_liquid_meshes: Array[MeshInstance3D] = []
+
+func _ensure_cached_resources() -> void:
+	if _mat_led_on == null:
+		_mat_led_on = StandardMaterial3D.new()
+		_mat_led_on.albedo_color = Color(0.2, 0.95, 0.3, 1.0)
+		_mat_led_on.emission_enabled = true
+		_mat_led_on.emission = Color(0.2, 0.95, 0.3, 1.0)
+		_mat_led_on.emission_energy_multiplier = 1.3
+
+	if _mat_led_off == null:
+		_mat_led_off = StandardMaterial3D.new()
+		_mat_led_off.albedo_color = Color(0.9, 0.2, 0.2, 1.0)
+		_mat_led_off.emission_enabled = true
+		_mat_led_off.emission = Color(0.9, 0.2, 0.2, 1.0)
+		_mat_led_off.emission_energy_multiplier = 0.4
+
+	if _reservoir_materials.is_empty():
+		for i in range(3):
+			var mat = StandardMaterial3D.new()
+			mat.render_priority = 0
+			mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
+			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			mat.albedo_color = FLAVORS[i].color
+			mat.roughness = 0.12
+			mat.clearcoat = 0.6
+			mat.emission_enabled = true
+			mat.emission = Color(FLAVORS[i].color.r, FLAVORS[i].color.g, FLAVORS[i].color.b) * 0.22
+			_reservoir_materials.append(mat)
+
+	if _cached_liquid_meshes.is_empty():
+		for i in range(3):
+			var liquid_mesh = get_node_or_null("Model/Reservoir_%d/Liquid" % i) as MeshInstance3D
+			_cached_liquid_meshes.append(liquid_mesh)
+
 func _update_all_visuals() -> void:
+	_ensure_cached_resources()
 	_update_power_visual()
 	for i in range(3):
 		_update_reservoir_visual(i)
@@ -717,39 +756,37 @@ func _update_power_visual() -> void:
 	if not power_led:
 		power_led = get_node_or_null("Model/PowerSwitch/StatusLED")
 	if power_led:
-		var mat_led = StandardMaterial3D.new()
-		mat_led.albedo_color = Color(0.2, 0.95, 0.3, 1.0) if is_powered else Color(0.9, 0.2, 0.2, 1.0)
-		mat_led.emission_enabled = true
-		mat_led.emission = mat_led.albedo_color
-		mat_led.emission_energy_multiplier = 1.3 if is_powered else 0.4
-		power_led.material_override = mat_led
+		var target_mat = _mat_led_on if is_powered else _mat_led_off
+		if power_led.material_override != target_mat:
+			power_led.material_override = target_mat
 
 func _update_reservoir_visual(idx: int) -> void:
-	var liquid_mesh = get_node_or_null("Model/Reservoir_%d/Liquid" % idx)
-	if liquid_mesh and liquid_mesh is MeshInstance3D:
+	var liquid_mesh = _cached_liquid_meshes[idx] if idx < _cached_liquid_meshes.size() else null
+	if liquid_mesh and is_instance_valid(liquid_mesh):
 		var pct = clampf(juice_doses[idx] / MAX_JUICE_DOSES, 0.0, 1.0)
 		if pct <= 0.001:
-			liquid_mesh.visible = false
+			if liquid_mesh.visible:
+				liquid_mesh.visible = false
 		else:
-			liquid_mesh.visible = true
-			var mat = StandardMaterial3D.new()
-			mat.render_priority = 0
-			mat.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_ALWAYS
-			mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-			mat.albedo_color = FLAVORS[idx].color
-			mat.roughness = 0.12
-			mat.clearcoat = 0.6
-			mat.emission_enabled = true
-			mat.emission = Color(FLAVORS[idx].color.r, FLAVORS[idx].color.g, FLAVORS[idx].color.b) * 0.22
-			liquid_mesh.material_override = mat
+			if not liquid_mesh.visible:
+				liquid_mesh.visible = true
+			var mat = _reservoir_materials[idx]
+			if liquid_mesh.material_override != mat:
+				liquid_mesh.material_override = mat
 
 			# Altura e posicionamento preciso dentro do jarro de acrílico (Y 1.20 a 1.74)
 			var max_h = 0.52
 			var h = maxf(0.03, max_h * pct)
-			var box = BoxMesh.new()
-			box.size = Vector3(0.33, h, 0.39)
-			liquid_mesh.mesh = box
-			liquid_mesh.position = Vector3(0, 1.20 + h * 0.5, 0)
+			var box = liquid_mesh.mesh as BoxMesh
+			if not box:
+				box = BoxMesh.new()
+				box.size = Vector3(0.33, h, 0.39)
+				liquid_mesh.mesh = box
+			elif absf(box.size.y - h) > 0.001:
+				box.size.y = h
+			var target_pos_y = 1.20 + h * 0.5
+			if absf(liquid_mesh.position.y - target_pos_y) > 0.001:
+				liquid_mesh.position = Vector3(0, target_pos_y, 0)
 
 func _show_feedback(player: Node3D, message: String) -> void:
 	if player and player.has_node("HUD"):

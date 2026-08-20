@@ -14,6 +14,7 @@ const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
 @onready var main_card: PanelContainer = get_node_or_null("DarkBackdrop/MainCard")
 @onready var continue_btn: Button = get_node_or_null("DarkBackdrop/MainCard/VBox/BtnMargin/BtnVBox/ContinueButton")
 @onready var settings_btn: Button = get_node_or_null("DarkBackdrop/MainCard/VBox/BtnMargin/BtnVBox/SettingsButton")
+@onready var skip_tutorial_btn: Button = get_node_or_null("DarkBackdrop/MainCard/VBox/BtnMargin/BtnVBox/SkipTutorialButton")
 @onready var menu_btn: Button = get_node_or_null("DarkBackdrop/MainCard/VBox/BtnMargin/BtnVBox/MenuButton")
 @onready var quit_btn: Button = get_node_or_null("DarkBackdrop/MainCard/VBox/BtnMargin/BtnVBox/QuitButton")
 
@@ -35,7 +36,7 @@ const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
 @onready var confirm_cancel_btn: Button = $DarkBackdrop/ConfirmCard/VBox/HBox/ConfirmCancelButton
 
 var _ui_audio_player: AudioStreamPlayer = null
-var _pending_confirm_action: String = "" # "MENU" ou "QUIT"
+var _pending_confirm_action: String = "" # "MENU", "QUIT" ou "SKIP_TUTORIAL"
 var is_active: bool = false
 
 func _ready() -> void:
@@ -65,6 +66,8 @@ func _setup_signals() -> void:
 		continue_btn.pressed.connect(_on_continue_pressed)
 	if settings_btn:
 		settings_btn.pressed.connect(_on_settings_pressed)
+	if skip_tutorial_btn:
+		skip_tutorial_btn.pressed.connect(_on_skip_tutorial_pressed)
 	if menu_btn:
 		menu_btn.pressed.connect(_on_menu_pressed)
 	if quit_btn:
@@ -80,10 +83,19 @@ func _setup_signals() -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
-		# Se uma janela interna do jogo estiver consumindo o ESC (ex: PC administrativo), não intercepta
-		var comp_ui = get_tree().root.find_child("ComputerUI", true, false)
+		# Se uma janela interna do jogo estiver consumindo o ESC (ex: PC administrativo, Modal do Dia Encerrado, etc.), não intercepta
+		var comp_ui = get_tree().root.find_child("ComputerUI", true, false) if (is_inside_tree() and get_tree() and get_tree().root) else null
 		if comp_ui and comp_ui.visible:
 			return
+
+		var hud = get_tree().root.find_child("HUD", true, false) if (is_inside_tree() and get_tree() and get_tree().root) else null
+		if hud:
+			if hud.get("report_modal") and hud.report_modal.visible:
+				return
+			if hud.get("day1_welcome_modal") and hud.day1_welcome_modal.visible:
+				return
+			if hud.get("daily_notice_modal") and hud.daily_notice_modal.visible:
+				return
 
 		if visible:
 			if confirm_overlay.visible:
@@ -109,6 +121,12 @@ func pause_game() -> void:
 	settings_overlay.visible = false
 	confirm_overlay.visible = false
 	
+	# Exibe o botão "Pular Tutorial" somente se estivermos ativamente no tutorial
+	var tut = get_tree().root.find_child("Tutorial", true, false) if (is_inside_tree() and get_tree()) else null
+	var in_tutorial = (tut != null and is_instance_valid(tut) and not tut.get("tutorial_completed"))
+	if skip_tutorial_btn:
+		skip_tutorial_btn.visible = in_tutorial
+	
 	if continue_btn and is_inside_tree():
 		continue_btn.grab_focus()
 
@@ -118,6 +136,12 @@ func resume_game() -> void:
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_play_ui_sound(0.9, -2.0)
+
+	var gm = get_tree().root.find_child("GameManager", true, false) if (is_inside_tree() and get_tree() and get_tree().root) else null
+	if gm and gm.has_method("change_state") and "GameState" in gm:
+		var tut = get_tree().root.find_child("Tutorial", true, false) if (is_inside_tree() and get_tree()) else null
+		var in_tut = (tut != null and is_instance_valid(tut) and not tut.get("tutorial_completed"))
+		gm.change_state(gm.GameState.TUTORIAL if in_tut else gm.GameState.PLAYING)
 
 func _on_continue_pressed() -> void:
 	resume_game()
@@ -129,6 +153,16 @@ func _on_settings_pressed() -> void:
 	_refresh_settings_values()
 	if back_settings_btn and is_inside_tree():
 		back_settings_btn.grab_focus()
+
+func _on_skip_tutorial_pressed() -> void:
+	_play_ui_sound(1.0, 0.0)
+	_pending_confirm_action = "SKIP_TUTORIAL"
+	confirm_title_lbl.text = "PULAR O TUTORIAL?"
+	confirm_msg_lbl.text = "Você poderá começar o Dia 1 imediatamente, mas algumas mecânicas ainda não terão sido apresentadas."
+	main_card.visible = false
+	confirm_overlay.visible = true
+	if confirm_cancel_btn and is_inside_tree():
+		confirm_cancel_btn.grab_focus()
 
 func _on_back_settings_pressed() -> void:
 	_play_ui_sound(0.9, -2.0)
@@ -166,6 +200,34 @@ func _on_confirm_ok_pressed() -> void:
 		get_tree().change_scene_to_file("res://src/ui/main_menu.tscn")
 	elif _pending_confirm_action == "QUIT":
 		get_tree().quit()
+	elif _pending_confirm_action == "SKIP_TUTORIAL":
+		confirm_overlay.visible = false
+		visible = false
+		get_tree().paused = false
+		var tut = get_tree().root.find_child("Tutorial", true, false) if (is_inside_tree() and get_tree()) else null
+		if tut and is_instance_valid(tut):
+			tut._on_confirm_skip_pressed()
+		else:
+			var sm = _get_save_manager()
+			if sm and sm.has_active_game:
+				sm.pending_save_data["tutorial_step"] = 15
+				sm.pending_save_data["tutorial_completed"] = true
+				sm.pending_save_data["day1_intro_shown"] = false
+				sm.pending_save_data["clock_hour"] = 9
+				sm.pending_save_data["clock_minute"] = 0
+				sm.pending_save_data["clock_state"] = "PREPARATION"
+				sm.save_game(sm.active_slot)
+			
+			var gm = get_tree().root.find_child("GameManager", true, false) if (is_inside_tree() and get_tree()) else null
+			if not gm:
+				var gm_class = load("res://src/core/game_manager.gd")
+				if gm_class and gm_class.has_method("get_instance"):
+					gm = gm_class.get_instance()
+			
+			if gm and gm.has_method("load_scene_with_loading"):
+				gm.load_scene_with_loading("main", gm.GameState.PLAYING)
+			else:
+				get_tree().change_scene_to_file("res://src/ui/loading_screen.tscn")
 
 func _on_confirm_cancel_pressed() -> void:
 	_play_ui_sound(0.9, -2.0)
@@ -174,12 +236,16 @@ func _on_confirm_cancel_pressed() -> void:
 	if continue_btn and is_inside_tree():
 		continue_btn.grab_focus()
 
-func _save_current_game_state() -> void:
-	var sm = get_tree().root.find_child("SaveManager", true, false)
+func _get_save_manager():
+	var sm = get_tree().root.find_child("SaveManager", true, false) if (is_inside_tree() and get_tree()) else null
 	if not sm:
 		var sm_class = preload("res://src/core/save_manager.gd")
 		if sm_class and "instance" in sm_class:
 			sm = sm_class.instance
+	return sm
+
+func _save_current_game_state() -> void:
+	var sm = _get_save_manager()
 	if sm and sm.has_active_game:
 		sm.save_game(sm.active_slot)
 

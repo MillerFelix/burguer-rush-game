@@ -23,13 +23,17 @@ func _ready() -> void:
 	instance = self
 
 static func get_instance() -> ReputationManager:
-	if not instance:
-		var ml = Engine.get_main_loop()
-		if ml and ml is SceneTree:
-			var tree = ml as SceneTree
-			if tree.root:
-				instance = tree.root.find_child("ReputationManager", true, false)
-	return instance
+	if instance and is_instance_valid(instance):
+		return instance
+	var ml = Engine.get_main_loop()
+	if ml and ml is SceneTree:
+		var tree = ml as SceneTree
+		if tree.root:
+			var found = tree.root.find_child("ReputationManager", true, false)
+			if found:
+				instance = found
+				return instance
+	return null
 
 func add_review(review: CustomerReview) -> void:
 	if not review:
@@ -138,6 +142,13 @@ func get_total_abandoned() -> int:
 	var count = 0
 	for r in reviews:
 		if r.abandoned:
+			count += 1
+	return count
+
+func get_daily_abandoned(target_day: int = -1) -> int:
+	var count = 0
+	for r in reviews:
+		if r.abandoned and (target_day <= 0 or r.day == target_day):
 			count += 1
 	return count
 

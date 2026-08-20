@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://soda_refill_rack_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/soda_refill_rack.gd" id="1_rack_script"]
 

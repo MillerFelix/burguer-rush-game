@@ -20,7 +20,7 @@ var next_id: int = 1
 
 @export var max_employees: int = 1
 @export var hiring_cost: float = 150.0
-@export var daily_salary: float = 50.0
+@export var daily_salary: float = 150.0
 
 var names_pool: Array[String] = ["Carlos", "João", "Pedro", "Ana", "Mariana", "Lucas", "Beatriz", "Gabriel"]
 

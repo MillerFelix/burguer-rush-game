@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://hud_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/ui/hud.gd" id="1_hud"]
 [ext_resource type="PackedScene" path="res://src/ui/pause_menu.tscn" id="2_pause_menu"]
@@ -48,6 +48,7 @@ content_margin_right = 8
 content_margin_bottom = 3
 
 [node name="HUD" type="CanvasLayer"]
+process_mode = 3
 script = ExtResource("1_hud")
 
 [node name="Crosshair" type="ColorRect" parent="."]
@@ -258,72 +259,112 @@ text = "[6] 📦 Vazio"
 horizontal_alignment = 1
 
 [node name="DayReportModal" type="PanelContainer" parent="."]
+process_mode = 3
 visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -240.0
-offset_top = -200.0
-offset_right = 240.0
-offset_bottom = 200.0
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_Modal")
 
-[node name="VBox" type="VBoxContainer" parent="DayReportModal"]
+[node name="MarginContainer" type="MarginContainer" parent="DayReportModal"]
 layout_mode = 2
-theme_override_constants/separation = 12
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
 
-[node name="TitleLabel" type="Label" parent="DayReportModal/VBox"]
+[node name="VBox" type="VBoxContainer" parent="DayReportModal/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HeaderTag" type="Label" parent="DayReportModal/MarginContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 13
+text = "★ BURGER RUSH — FECHAMENTO DIÁRIO ★"
+horizontal_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="DayReportModal/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.85, 1)
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
 theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 24
-text = "📋 RELATÓRIO DO DIA 1"
+text = "🎉 DIA 1 ENCERRADO!"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="DayReportModal/VBox"]
+[node name="DateLabel" type="Label" parent="DayReportModal/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.8, 0.88, 1)
+theme_override_font_sizes/font_size = 13
+text = "Quinta-feira, 01 de Janeiro de 2026"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="DayReportModal/MarginContainer/VBox"]
 layout_mode = 2
 
-[node name="RevenueLabel" type="Label" parent="DayReportModal/VBox"]
+[node name="Grid" type="VBoxContainer" parent="DayReportModal/MarginContainer/VBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "💵 Receita do Dia: $0.00"
+theme_override_constants/separation = 6
 
-[node name="CompletedLabel" type="Label" parent="DayReportModal/VBox"]
+[node name="StartingBalanceLabel" type="Label" parent="DayReportModal/MarginContainer/VBox/Grid"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "✅ Pedidos Concluídos: 0"
+theme_override_font_sizes/font_size = 15
+text = "💵 Dinheiro Inicial: R$ 100.00"
 
-[node name="CancelledLabel" type="Label" parent="DayReportModal/VBox"]
+[node name="RevenueLabel" type="Label" parent="DayReportModal/MarginContainer/VBox/Grid"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "❌ Pedidos Cancelados: 0"
+theme_override_colors/font_color = Color(0.4, 0.95, 0.55, 1)
+theme_override_font_sizes/font_size = 15
+text = "🛒 Vendas do Dia: +R$ 0.00"
 
-[node name="AvgTimeLabel" type="Label" parent="DayReportModal/VBox"]
+[node name="PurchasesLabel" type="Label" parent="DayReportModal/MarginContainer/VBox/Grid"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "⏱️ Tempo Médio: 0.0s"
+theme_override_colors/font_color = Color(0.95, 0.45, 0.45, 1)
+theme_override_font_sizes/font_size = 15
+text = "📦 Despesas e Compras: -R$ 0.00"
 
-[node name="BalanceLabel" type="Label" parent="DayReportModal/VBox"]
+[node name="NetProfitLabel" type="Label" parent="DayReportModal/MarginContainer/VBox/Grid"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
-text = "💰 Saldo no Caixa: $100.00"
+theme_override_font_sizes/font_size = 15
+text = "📈 Lucro Líquido: R$ 0.00"
 
-[node name="HSeparator2" type="HSeparator" parent="DayReportModal/VBox"]
+[node name="CompletedLabel" type="Label" parent="DayReportModal/MarginContainer/VBox/Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 15
+text = "🍔 Pedidos Atendidos: 0 concluídos | 🚶 Abandono: 0 clientes"
+
+[node name="ReputationLabel" type="Label" parent="DayReportModal/MarginContainer/VBox/Grid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+text = "⭐ Reputação do Restaurante: 5.0 / 5.0 estrelas"
+
+[node name="BalanceLabel" type="Label" parent="DayReportModal/MarginContainer/VBox/Grid"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.35, 1)
+theme_override_font_sizes/font_size = 17
+text = "💰 Dinheiro Final: R$ 100.00"
+
+[node name="HSeparator2" type="HSeparator" parent="DayReportModal/MarginContainer/VBox"]
 layout_mode = 2
 
-[node name="NextDayButton" type="Button" parent="DayReportModal/VBox"]
-custom_minimum_size = Vector2(0, 45)
+[node name="NextDayButton" type="Button" parent="DayReportModal/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 44)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "Iniciar Próximo Dia (08:00) [E / Enter]"
+theme_override_font_sizes/font_size = 16
+text = "PRÓXIMO DIA ▶"
 
 [node name="DailyNoticeModal" type="PanelContainer" parent="."]
+process_mode = 3
 visible = false
 anchors_preset = 8
 anchor_left = 0.5
@@ -384,57 +425,71 @@ theme_override_font_sizes/font_size = 16
 text = "Iniciar Expediente [E / Enter]"
 
 [node name="Day1WelcomeModal" type="PanelContainer" parent="."]
+process_mode = 3
 visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -280.0
-offset_top = -170.0
-offset_right = 280.0
-offset_bottom = 170.0
+offset_left = -290.0
+offset_top = -180.0
+offset_right = 290.0
+offset_bottom = 180.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_Modal")
 
-[node name="VBox" type="VBoxContainer" parent="Day1WelcomeModal"]
+[node name="MarginContainer" type="MarginContainer" parent="Day1WelcomeModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Day1WelcomeModal/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 12
 
-[node name="TagLabel" type="Label" parent="Day1WelcomeModal/VBox"]
+[node name="TagLabel" type="Label" parent="Day1WelcomeModal/MarginContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 14
-text = "★ BOAS-VINDAS AO BURGER RUSH ★"
+theme_override_font_sizes/font_size = 13
+text = "★ INÍCIO OFICIAL DA CARREIRA ★"
 horizontal_alignment = 1
 
-[node name="TitleLabel" type="Label" parent="Day1WelcomeModal/VBox"]
+[node name="TitleLabel" type="Label" parent="Day1WelcomeModal/MarginContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.95, 0.85, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 20
-text = "SEU PRIMEIRO DIA COMO CHEFE!"
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 22
+text = "AGORA É PRA VALER!"
 horizontal_alignment = 1
 
-[node name="HSeparator" type="HSeparator" parent="Day1WelcomeModal/VBox"]
+[node name="HSeparator" type="HSeparator" parent="Day1WelcomeModal/MarginContainer/VBox"]
 layout_mode = 2
 
-[node name="BodyLabel" type="Label" parent="Day1WelcomeModal/VBox"]
+[node name="BodyLabel" type="Label" parent="Day1WelcomeModal/MarginContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.88, 0.90, 0.94, 1)
 theme_override_font_sizes/font_size = 14
-text = "Agora o restaurante está sob sua responsabilidade.\nSeu pai confiou este lugar a você, e chegou a hora de colocar tudo que aprendeu em prática.\n\nOrganize sua cozinha no Período de Preparação, atenda bem os clientes e faça o Burger Rush crescer!"
+text = "Chefe, você está pronto.
+O treinamento terminou e agora o restaurante está sob sua responsabilidade.
+
+Organize sua cozinha, atenda seus clientes, cuide das finanças e faça seu restaurante crescer.
+
+Boa sorte no seu primeiro dia!"
 autowrap_mode = 3
 
-[node name="HSeparator2" type="HSeparator" parent="Day1WelcomeModal/VBox"]
+[node name="HSeparator2" type="HSeparator" parent="Day1WelcomeModal/MarginContainer/VBox"]
 layout_mode = 2
 
-[node name="StartButton" type="Button" parent="Day1WelcomeModal/VBox"]
+[node name="StartButton" type="Button" parent="Day1WelcomeModal/MarginContainer/VBox"]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 theme_override_font_sizes/font_size = 16
-text = "COMEÇAR EXPEDIENTE"
+text = "COMEÇAR DIA 1"
 
 [node name="PauseMenu" parent="." instance=ExtResource("2_pause_menu")]
 

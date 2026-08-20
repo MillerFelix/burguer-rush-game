@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://delivery_station_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/delivery_station.gd" id="1_delivery"]
 [ext_resource type="Texture2D" path="res://assets/textures/wood_planks_warm.png" id="2_wood_tex"]

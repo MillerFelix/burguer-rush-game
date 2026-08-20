@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://security_fence_alley_scene_uid"]
+[gd_scene format=3]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_NorthWing"]
 size = Vector3(0.2, 2.8, 3.2)

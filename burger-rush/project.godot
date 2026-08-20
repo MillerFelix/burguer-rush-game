@@ -11,23 +11,33 @@ config_version=5
 
 [application]
 
-config/name="BurgerRush"
-config/version="0.1.7"
+config/name="Burger Rush"
+config/description="Burger Rush"
+config/version="0.2.0"
 run/main_scene="res://src/ui/main_menu.tscn"
+run/max_fps=60
 config/features=PackedStringArray("4.7", "GL Compatibility")
-config/icon="res://icon.svg"
+config/icon="res://icon.png"
 
 [autoload]
 
+SaveManager="*res://src/core/save_manager.gd"
 GameManager="*res://src/core/game_manager.gd"
 
 [display]
 
+window/title="Burger Rush"
 window/size/viewport_width=1920
 window/size/viewport_height=1080
 window/size/mode=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/vsync/vsync_mode=1
+
+[debug]
+
+settings/stdout/print_fps=false
+settings/stdout/verbose_stdout=false
 
 [input]
 

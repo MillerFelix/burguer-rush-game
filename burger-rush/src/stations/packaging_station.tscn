@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://packaging_station_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/packaging_station.gd" id="1_pack"]
 

@@ -59,13 +59,15 @@ var _has_played_ready_chime: bool = false
 var _target_sizzle_vol: float = -80.0
 var _target_hum_vol: float = -80.0
 
+const DIRT_THRESHOLD: float = 0.80
+
 var active_items: Array[Dictionary] = [] # Array de { "item": Node3D, "type": String, "timer": float, "slot_index": int }
 var dirt_level: float = 0.0:
 	set(val):
-		dirt_level = maxf(0.0, val)
+		dirt_level = clampf(val, 0.0, 1.0)
 		if dirt_level <= 0.0:
 			cleanliness_state = CleanlinessState.CLEAN
-		elif cleanliness_state == CleanlinessState.CLEAN and dirt_level > 0.001:
+		elif dirt_level >= DIRT_THRESHOLD:
 			cleanliness_state = CleanlinessState.DIRTY
 		_update_dirt_visuals()
 
@@ -129,13 +131,20 @@ func _create_audio_player_3d(player_name: String, initial_db: float) -> AudioStr
 func is_ideal_temp() -> bool:
 	return current_temperature >= IDEAL_TEMP_MIN
 
+func _is_tutorial_active() -> bool:
+	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		return false
+	var tut = get_tree().root.find_child("Tutorial", true, false)
+	return tut != null and is_instance_valid(tut) and not tut.get("tutorial_completed")
+
 func get_cooking_speed_factor() -> float:
+	var tut_mult = 3.5 if _is_tutorial_active() else 1.0
 	if current_temperature < 100.0:
 		return 0.0
 	elif current_temperature < IDEAL_TEMP_MIN:
-		return (current_temperature / IDEAL_TEMP_MIN) * 0.45
+		return (current_temperature / IDEAL_TEMP_MIN) * 0.45 * tut_mult
 	else:
-		return 1.0
+		return 1.0 * tut_mult
 
 func _process(delta: float) -> void:
 	var pm = PowerManager.get_instance()
@@ -230,10 +239,13 @@ func _process(delta: float) -> void:
 
 	# 5. Efeitos de partículas de fritura e respingos de óleo
 	var any_cooking = (cooking_items_count > 0)
+	var target_smoke = (any_cooking and is_ideal_temp())
 	if smoke_particles and smoke_particles.is_inside_tree():
-		smoke_particles.emitting = (any_cooking and is_ideal_temp())
+		if smoke_particles.emitting != target_smoke:
+			smoke_particles.emitting = target_smoke
 	if oil_particles and oil_particles.is_inside_tree():
-		oil_particles.emitting = (any_cooking and is_ideal_temp())
+		if oil_particles.emitting != target_smoke:
+			oil_particles.emitting = target_smoke
 
 	# 6. Atualização do Áudio 3D da Chapa
 	_process_audio(delta, cooking_items_count, any_burning)
@@ -512,23 +524,32 @@ enum CleanlinessState {
 var cleanliness_state: CleanlinessState = CleanlinessState.CLEAN
 
 func is_dirty() -> bool:
-	return cleanliness_state != CleanlinessState.CLEAN or dirt_level > 0.001
+	return cleanliness_state == CleanlinessState.DIRTY or cleanliness_state == CleanlinessState.CLEANING or dirt_level >= DIRT_THRESHOLD
 
 func get_dirt_level() -> float:
-	return dirt_level if (cleanliness_state != CleanlinessState.CLEAN or dirt_level > 0.001) else 0.0
+	return dirt_level
 
-func add_dirt(amount: float = 0.25) -> void:
+func add_dirt(amount: float = 0.035) -> void:
 	dirt_level = clampf(dirt_level + amount, 0.0, 1.0)
-	if dirt_level > 0.001:
+	if dirt_level >= DIRT_THRESHOLD:
 		cleanliness_state = CleanlinessState.DIRTY
+	_update_dirt_visuals()
+
+func set_dirty(dirty: bool = true) -> void:
+	if dirty:
+		dirt_level = 1.0
+		cleanliness_state = CleanlinessState.DIRTY
+	else:
+		dirt_level = 0.0
+		cleanliness_state = CleanlinessState.CLEAN
 	_update_dirt_visuals()
 
 func _update_dirt_visuals() -> void:
 	var grill_dirt = get_node_or_null("Model/GrillPlate/GrillDirt")
 	if grill_dirt:
-		var has_dirt = (cleanliness_state != CleanlinessState.CLEAN and dirt_level > 0.001)
+		var has_dirt = (dirt_level > 0.02)
 		grill_dirt.visible = has_dirt
-		var sc = lerpf(0.25, 1.0, dirt_level) if has_dirt else 0.0
+		var sc = lerpf(0.20, 1.0, dirt_level) if has_dirt else 0.0
 		for child in grill_dirt.get_children():
 			if child is MeshInstance3D:
 				child.scale = Vector3(sc, sc, sc)
@@ -563,7 +584,7 @@ func clean_progress(delta: float, player: Node3D = null) -> bool:
 		return true
 
 	cleanliness_state = CleanlinessState.CLEANING
-	dirt_level = maxf(0.0, dirt_level - (delta / 1.5))
+	dirt_level = maxf(0.0, dirt_level - (delta / 0.8))
 	_update_dirt_visuals()
 
 	if dirt_level <= 0.0:

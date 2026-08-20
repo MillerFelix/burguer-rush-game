@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dirty_dishes_item_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/dirty_dishes.gd" id="1_dirty"]
 [ext_resource type="PackedScene" path="res://assets/models/food/plate.glb" id="2_plate_glb"]

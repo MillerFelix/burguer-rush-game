@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://serving_tray_stack_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/serving_tray_stack.gd" id="1_stack_script"]
 

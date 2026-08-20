@@ -54,6 +54,11 @@ const PANELS: Array[Dictionary] = [
 ]
 
 func _ready() -> void:
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_title("Burger Rush")
+		if is_inside_tree() and get_tree() and get_tree().root:
+			get_tree().root.title = "Burger Rush"
+
 	var gm = _get_game_manager()
 	if gm and gm.has_method("change_state"):
 		gm.change_state(gm.GameState.STORY)

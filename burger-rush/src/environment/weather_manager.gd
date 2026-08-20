@@ -315,21 +315,23 @@ func _apply_weather_state(_delta: float) -> void:
 	_process_spatial_audio(p_pos)
 
 	# 3. Superfícies Molhadas (Asfalto, Calçada, Deck, Pallet)
-	for mat in wet_materials:
-		if is_instance_valid(mat) and mat.has_meta("orig_roughness"):
-			var orig_r = mat.get_meta("orig_roughness", 0.8)
-			var orig_alb = mat.get_meta("orig_albedo", Color.WHITE) as Color
-			mat.roughness = lerpf(orig_r, 0.16, wetness)
-			mat.albedo_color = orig_alb.lerp(orig_alb.darkened(0.25 * wetness), wetness)
+	if absf(wetness - _last_applied_wetness) > 0.004:
+		_last_applied_wetness = wetness
+		for mat in wet_materials:
+			if is_instance_valid(mat) and mat.has_meta("orig_roughness"):
+				var orig_r = mat.get_meta("orig_roughness", 0.8)
+				var orig_alb = mat.get_meta("orig_albedo", Color.WHITE) as Color
+				mat.roughness = lerpf(orig_r, 0.16, wetness)
+				mat.albedo_color = orig_alb.lerp(orig_alb.darkened(0.25 * wetness), wetness)
 
-	# 4. Janelas Úmidas com Gotículas
-	for wmat in window_materials:
-		if is_instance_valid(wmat) and wmat.has_meta("orig_roughness"):
-			var orig_r = wmat.get_meta("orig_roughness", 0.05)
-			var orig_alb = wmat.get_meta("orig_albedo", Color(0.85, 0.93, 0.98, 0.25)) as Color
-			wmat.roughness = lerpf(orig_r, 0.02, wetness)
-			var wet_window_col = Color(0.78, 0.88, 0.96, 0.35)
-			wmat.albedo_color = orig_alb.lerp(wet_window_col, wetness)
+		# 4. Janelas Úmidas com Gotículas
+		for wmat in window_materials:
+			if is_instance_valid(wmat) and wmat.has_meta("orig_roughness"):
+				var orig_r = wmat.get_meta("orig_roughness", 0.05)
+				var orig_alb = wmat.get_meta("orig_albedo", Color(0.85, 0.93, 0.98, 0.25)) as Color
+				wmat.roughness = lerpf(orig_r, 0.02, wetness)
+				var wet_window_col = Color(0.78, 0.88, 0.96, 0.35)
+				wmat.albedo_color = orig_alb.lerp(wet_window_col, wetness)
 
 	rain_intensity_changed.emit(rain_intensity)
 
@@ -368,12 +370,15 @@ func _process_spatial_audio(p_pos: Vector3) -> void:
 		if rain_audio_ext: rain_audio_ext.volume_db = ext_vol
 		if rain_audio_int: rain_audio_int.volume_db = int_vol
 
+var _cached_player_node: Node3D = null
+var _last_applied_wetness: float = -1.0
+
 func _get_player_node() -> Node3D:
+	if _cached_player_node and is_instance_valid(_cached_player_node):
+		return _cached_player_node
 	if is_inside_tree() and get_tree():
-		var p = get_tree().get_first_node_in_group("player")
-		if p:
-			return p as Node3D
-	return null
+		_cached_player_node = get_tree().get_first_node_in_group("player") as Node3D
+	return _cached_player_node
 
 func get_weather_name() -> String:
 	match current_weather:

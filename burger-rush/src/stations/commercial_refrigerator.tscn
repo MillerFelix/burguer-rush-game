@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://commercial_refrigerator_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/commercial_refrigerator.gd" id="1_root"]
 [ext_resource type="Script" path="res://src/stations/fridge_door.gd" id="2_door"]

@@ -48,9 +48,48 @@ const SCENE_PATHS: Dictionary = {
 func _init() -> void:
 	instance = self
 
+func _enter_tree() -> void:
+	instance = self
+	_enforce_clean_window_title()
+
+func _exit_tree() -> void:
+	if instance == self:
+		instance = null
+
+static func get_instance() -> GameManager:
+	if instance and is_instance_valid(instance):
+		return instance
+	var ml = Engine.get_main_loop()
+	if ml and ml is SceneTree:
+		var tree = ml as SceneTree
+		if tree.root:
+			var found = tree.root.find_child("GameManager", true, false)
+			if found:
+				instance = found
+				return instance
+	return instance
+
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	_enforce_clean_window_title()
+	var sm = _get_save_manager()
+	if not sm:
+		var sm_class = load("res://src/core/save_manager.gd")
+		if sm_class:
+			var sm_node = sm_class.new()
+			sm_node.name = "SaveManager"
+			add_child(sm_node)
 	_initialize_game_state()
+
+func _process(_delta: float) -> void:
+	_enforce_clean_window_title()
+
+func _enforce_clean_window_title() -> void:
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_title("Burger Rush")
+		var tree = get_tree() if (is_inside_tree() and get_tree() != null) else (Engine.get_main_loop() as SceneTree)
+		if tree and tree.root and tree.root.title != "Burger Rush":
+			tree.root.title = "Burger Rush"
 
 ## Inicializa o estado de acordo com a cena em execução
 func _initialize_game_state() -> void:

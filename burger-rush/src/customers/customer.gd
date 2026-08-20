@@ -940,54 +940,62 @@ func _update_visual_status() -> void:
 	var emoji = mood.get_emoji() if mood else "🙂"
 	var mood_color = mood.get_color() if mood else Color(1, 1, 1)
 
+	var target_text = ""
+	var target_color = Color.WHITE
+
 	match state:
 		State.ARRIVING, State.GOING_TO_ENTRANCE, State.ENTERING_RESTAURANT, State.GOING_TO_SEAT:
-			label_3d.text = "%s 🚶 Entrando..." % emoji
-			label_3d.modulate = Color(0.9, 0.9, 0.4)
+			target_text = "%s 🚶 Entrando..." % emoji
+			target_color = Color(0.9, 0.9, 0.4)
 
 		State.SITTING, State.SEATED_WAITING_TO_ORDER:
 			var pct = int(mood.current_mood) if mood else 100
 			if pct <= 25:
-				label_3d.text = "%s ⚠️ Quase Desistindo! (%d%%)" % [emoji, pct]
-				label_3d.modulate = Color(1.0, 0.25, 0.25)
+				target_text = "%s ⚠️ Quase Desistindo! (%d%%)" % [emoji, pct]
+				target_color = Color(1.0, 0.25, 0.25)
 			else:
-				label_3d.text = "%s 🙋 Aguardando Atendimento (%d%%)" % [emoji, pct]
-				label_3d.modulate = mood_color
+				target_text = "%s 🙋 Aguardando Atendimento (%d%%)" % [emoji, pct]
+				target_color = mood_color
 
 		State.WAITING_FOR_FOOD:
 			var pct = int(mood.current_mood) if mood else 100
 			if pct <= 25:
-				label_3d.text = "%s ⚠️ Com Fome / Atrasado! (%d%%)" % [emoji, pct]
-				label_3d.modulate = Color(1.0, 0.25, 0.25)
+				target_text = "%s ⚠️ Com Fome / Atrasado! (%d%%)" % [emoji, pct]
+				target_color = Color(1.0, 0.25, 0.25)
 			else:
-				label_3d.text = "%s ⏳ Aguardando Refeição (%d%%)" % [emoji, pct]
-				label_3d.modulate = mood_color
+				target_text = "%s ⏳ Aguardando Refeição (%d%%)" % [emoji, pct]
+				target_color = mood_color
 
 		State.EATING:
-			label_3d.text = "😋 🍔 Saboreando Refeição..."
-			label_3d.modulate = Color(0.3, 0.9, 0.4)
+			target_text = "😋 🍔 Saboreando Refeição..."
+			target_color = Color(0.3, 0.9, 0.4)
 
 		State.GOING_TO_QUEUE:
-			label_3d.text = "%s 🚶 Indo para a fila" % emoji
-			label_3d.modulate = Color(0.9, 0.8, 0.3)
+			target_text = "%s 🚶 Indo para a fila" % emoji
+			target_color = Color(0.9, 0.8, 0.3)
 
 		State.IN_QUEUE, State.PAYING:
 			var price = current_order.total_price if current_order else 15.0
-			label_3d.text = "%s 💳 Na fila do Caixa (R$ %.2f)" % [emoji, price]
-			label_3d.modulate = Color(0.2, 0.9, 0.6)
+			target_text = "%s 💳 Na fila do Caixa (R$ %.2f)" % [emoji, price]
+			target_color = Color(0.2, 0.9, 0.6)
 
 		State.WAITING_FOR_GROUP_PAYMENT:
-			label_3d.text = "%s ⏳ Aguardando Família" % emoji
-			label_3d.modulate = Color(0.9, 0.8, 0.4)
+			target_text = "%s ⏳ Aguardando Família" % emoji
+			target_color = Color(0.9, 0.8, 0.4)
 
 		State.LEAVING:
 			if experience and experience.abandoned:
 				if experience.abandon_type == CustomerExperience.AbandonType.WRONG_ORDER or "errad" in experience.abandon_reason.to_lower() or "incorret" in experience.abandon_reason.to_lower():
-					label_3d.text = "😡 ❌ 'Esse pedido está errado! Vou embora.'"
-					label_3d.modulate = Color(1.0, 0.2, 0.2)
+					target_text = "😡 ❌ 'Esse pedido está errado! Vou embora.'"
+					target_color = Color(1.0, 0.2, 0.2)
 				else:
-					label_3d.text = "😡 ⏰ 'Cansei de esperar! Demorou demais, fui.'"
-					label_3d.modulate = Color(1.0, 0.25, 0.25)
+					target_text = "😡 ⏰ 'Cansei de esperar! Demorou demais, fui.'"
+					target_color = Color(1.0, 0.25, 0.25)
 			else:
-				label_3d.text = "%s 👋 Volte sempre!" % emoji
-				label_3d.modulate = Color(0.85, 0.85, 0.85)
+				target_text = "%s 👋 Volte sempre!" % emoji
+				target_color = Color(0.85, 0.85, 0.85)
+
+	if label_3d.text != target_text:
+		label_3d.text = target_text
+	if label_3d.modulate != target_color:
+		label_3d.modulate = target_color

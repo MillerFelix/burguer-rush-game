@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://commercial_chest_freezer_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/commercial_chest_freezer.gd" id="1_freezer"]
 [ext_resource type="Script" path="res://src/stations/freezer_chest_lid.gd" id="2_lid"]

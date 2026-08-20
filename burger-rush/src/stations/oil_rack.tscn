@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://oil_rack_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/oil_rack.gd" id="1_oil_rack"]
 [ext_resource type="PackedScene" path="res://assets/models/food/bottleOil.glb" id="2_bottleoil_glb"]

@@ -2,10 +2,11 @@ class_name TutorialController
 extends CanvasLayer
 
 # =============================================================================
-# BURGER RUSH — INTRODUÇÃO JOGÁVEL E REVISÃO COMPLETA DO TUTORIAL (15 ETAPAS)
+# BURGER RUSH — TUTORIAL DIDÁTICO E REFINADO (15 ETAPAS COM MICROETAPAS)
 #
-# Estruturado, didático, focado nas ações reais dos sistemas do restaurante.
-# Sem atalhos de mera proximidade. Transições com momento de leitura.
+# Ritmo calmo na explicação, rápido na execução.
+# Cada etapa ensina detalhadamente: o que é o objeto, para que serve,
+# onde ir, qual botão usar e como saber que terminou.
 # =============================================================================
 
 const PowerManager = preload("res://src/core/power_manager.gd")
@@ -37,14 +38,11 @@ const BreadBottom = preload("res://src/items/bread_bottom.gd")
 const Burger = preload("res://src/items/burger.gd")
 const Cheeseburger = preload("res://src/items/cheeseburger.gd")
 const FriesPack = preload("res://src/items/fries_pack.gd")
+const BurgerAssembly = preload("res://src/recipes/burger_assembly.gd")
 
 @onready var step_title: Label = $Control/StepPanel/Margin/VBox/StepTitle
 @onready var step_instruction: Label = $Control/StepPanel/Margin/VBox/StepInstruction
 @onready var step_progress: Label = $Control/StepPanel/Margin/VBox/StepProgress
-@onready var skip_button: Button = $Control/SkipButton
-@onready var confirm_dialog: PanelContainer = $Control/ConfirmDialog
-@onready var cancel_skip_button: Button = $Control/ConfirmDialog/Margin/VBox/Buttons/CancelSkipButton
-@onready var confirm_skip_button: Button = $Control/ConfirmDialog/Margin/VBox/Buttons/ConfirmSkipButton
 @onready var congrats_panel: PanelContainer = $Control/CongratsPanel
 @onready var congrats_title: Label = $Control/CongratsPanel/Margin/VBox/CongratsTitle
 @onready var congrats_text: Label = $Control/CongratsPanel/Margin/VBox/CongratsText
@@ -53,9 +51,11 @@ const FriesPack = preload("res://src/items/fries_pack.gd")
 var current_step_index: int = 0
 var tutorial_completed: bool = false
 
-# Destaques visuais 3D reutilizáveis
+# Destaques visuais 3D reutilizáveis e estáveis
 var current_highlight_marker: Label3D = null
 var current_highlight_light: OmniLight3D = null
+var current_highlight_target: Node3D = null
+var current_highlight_label_text: String = ""
 var _highlight_base_y: float = 0.0
 
 # Estado auxiliar de etapa
@@ -100,6 +100,8 @@ func _ready() -> void:
 	var clock = _get_game_clock()
 	if clock:
 		clock.is_paused = true
+		if not clock.state_changed.is_connected(_on_clock_state_changed):
+			clock.state_changed.connect(_on_clock_state_changed)
 	
 	var rec = _get_receiving_area()
 	if rec:
@@ -117,148 +119,142 @@ func _ready() -> void:
 func _initialize_steps() -> void:
 	steps.clear()
 	
-	# ETAPA 1 — MOVIMENTAÇÃO
+	# ETAPA 1 — MOVIMENTAÇÃO E CONTROLES
 	var s0 = TutorialStep.new()
 	s0.title = "1. MOVIMENTAÇÃO E CONTROLES"
-	s0.instruction = "Use [W, A, S, D] para andar, mova o [Mouse] para olhar, pressione [Espaço] para pular e segure [Shift] para correr."
+	s0.instruction = "Bem-vindo ao Burger Rush! Use [W, A, S, D] para andar pelo restaurante, mova o [Mouse] para olhar ao redor, pressione [Espaço] para pular e segure [Shift] para correr."
 	s0.progress_text = "Mova-se, pule com [Espaço] e corra com [Shift]."
 	s0.highlight_name = ""
-	s0.success_msg = "Movimentação dominada com sucesso!"
+	s0.success_msg = "Perfeito! Movimentação dominada com sucesso."
 	steps.append(s0)
 	
-	# ETAPA 2 — QUADRO DE ENERGIA
+	# ETAPA 2 — QUADRO GERAL DE ENERGIA
 	var s1 = TutorialStep.new()
 	s1.title = "2. QUADRO GERAL DE ENERGIA"
-	s1.instruction = "O quadro de energia controla todo o fornecimento elétrico do restaurante. Vá até a parede externa na lateral e pressione [E] para ligar o disjuntor geral."
-	s1.progress_text = "Ligue o quadro de energia geral com [E]."
+	s1.instruction = "O quadro de energia controla todo o fornecimento elétrico do restaurante. Sem energia, máquinas e iluminação não funcionam. Vá até a parede externa na lateral e pressione [E] para ligar o disjuntor geral."
+	s1.progress_text = "Vá até o quadro na parede externa e ligue a chave geral com [E]."
 	s1.highlight_name = "MainPowerPanel"
-	s1.success_msg = "⚡ Rede elétrica ativada! Equipamentos energizados."
+	s1.success_msg = "⚡ Excelente! Rede elétrica ativada e equipamentos energizados."
 	steps.append(s1)
 	
-	# ETAPA 3 — PC ADMINISTRATIVO
+	# ETAPA 3 — COMPUTADOR ADMINISTRATIVO
 	var s2 = TutorialStep.new()
-	s2.title = "3. COMPUTADOR ADMINISTRATIVO"
-	s2.instruction = "Vá até o escritório e pressione [E] para acessar o computador. É por ele que você gerencia notícias, funcionários, contas, cardápio, compras e delivery."
-	s2.progress_text = "Acesse o computador com [E]."
+	s2.title = "3. COMPUTADOR ADMINISTRATIVO E GESTÃO"
+	s2.instruction = "Na cozinha, localize o computador administrativo e acesse-o pressionando [E]. Ele é a central de comando do Burger Rush, onde você gerencia compras de insumos, receitas, finanças e contratação de funcionários."
+	s2.progress_text = "Acesse o computador administrativo na cozinha com [E]."
 	s2.highlight_name = "ComputerStation"
-	s2.success_msg = "Computador acessado! Sistema de gestão pronto."
+	s2.success_msg = "Ótimo! Computador administrativo acessado com sucesso."
 	steps.append(s2)
 	
-	# ETAPA 4 — COMPRA E RECEBIMENTO DE INGREDIENTE
+	# ETAPA 4 — COMPRA E RECEBIMENTO DE MERCADORIAS
 	var s3 = TutorialStep.new()
-	s3.title = "4. COMPRA E RECEBIMENTO DE INGREDIENTES"
-	s3.instruction = "No PC, abra a aba 'Compras' e confirme um pedido. A van chegará na doca externa. Vá até o pallet externo, pegue a caixa com [E] e leve para o armazém."
-	s3.progress_text = "Compre no PC, pegue a caixa no pallet [E] e leve ao armazém."
+	s3.title = "4. COMPRA E RECEBIMENTO DE MERCADORIAS"
+	s3.instruction = "No computador, abra a aba 'Compras' e confirme um pedido de suprimentos. O fornecedor descarregará as caixas no PALLET EXTERNO DO RESTAURANTE. Vá até a área externa, pegue a caixa no pallet pressionando [E] e transporte-a para dentro do armazém."
+	s3.progress_text = "Pegue a caixa de mercadorias no pallet externo [E] e guarde no armazém."
 	s3.highlight_name = "ReceivingArea"
-	s3.success_msg = "Mercadorias recebidas e guardadas no armazém!"
+	s3.success_msg = "Mercadorias recolhidas do pallet externo e guardadas no armazém!"
 	steps.append(s3)
 	
 	# ETAPA 5 — INGREDIENTES E ARMAZENAMENTO
 	var s4 = TutorialStep.new()
 	s4.title = "5. INGREDIENTES E ARMAZENAMENTO"
-	s4.instruction = "Os ingredientes ficam nas prateleiras e refrigeradores do armazém. Pegue um item com [Clique Esquerdo] e devolva com [Clique Direito]."
-	s4.progress_text = "Pegue um ingrediente no armazém [Esq] e devolva [Dir]."
+	s4.instruction = "No armazém, os ingredientes ficam organizados em prateleiras e refrigeradores. Para pegar um item, use o [Clique Esquerdo]. Para devolver ao estoque, use o [Clique Direito]. Pratique pegando um item."
+	s4.progress_text = "Pegue um ingrediente no armazém [Clique Esquerdo]."
 	s4.highlight_name = "StorageRack"
-	s4.success_msg = "Lógica de estoque compreendida!"
+	s4.success_msg = "Muito bem! Lógica de estoque compreendida."
 	steps.append(s4)
 	
-	# ETAPA 6 — MÁQUINA DE REFRIGERANTE
+	# ETAPA 6 — MÁQUINA DE REFRIGERANTES
 	var s5 = TutorialStep.new()
 	s5.title = "6. MÁQUINA DE REFRIGERANTES"
-	s5.instruction = "Pegue um copo vazio no dispenser com [Clique Esquerdo], posicione sob o bico da máquina de refrigerantes e sirva a bebida com [Clique Esquerdo]."
-	s5.progress_text = "Pegue um copo e sirva refrigerante na máquina."
+	s5.instruction = "1. Pegue um copo vazio na MESA DE EMBALAGENS com [Clique Esquerdo].\n2. Leve o copo até a máquina de refrigerante.\n3. Posicione o copo na máquina pressionando a tecla [E].\n4. A máquina encherá o copo automaticamente com refrigerante gelado."
+	s5.progress_text = "Pegue um copo na mesa de embalagens e posicione na máquina de refrigerante com [E]."
 	s5.highlight_name = "DrinkMachine"
-	s5.success_msg = "Refrigerante geladinho servido com sucesso!"
+	s5.success_msg = "Refrigerante gelado servido com sucesso!"
 	steps.append(s5)
 	
-	# ETAPA 7 — MÁQUINA DE SUCO
+	# ETAPA 7 — MÁQUINA DE SUCOS NATURAIS
 	var s6 = TutorialStep.new()
 	s6.title = "7. MÁQUINA DE SUCOS NATURAIS"
-	s6.instruction = "Pegue uma polpa de fruta congelada na bancada com [Clique Esquerdo], insira na máquina de suco e sirva um suco natural fresco no copo."
-	s6.progress_text = "Coloque a polpa e sirva um suco natural no copo."
+	s6.instruction = "1. Pegue uma polpa de fruta congelada no ESTOQUE / armazém com [Clique Esquerdo].\n2. Coloque a polpa na gaveta superior da máquina de suco com [Clique Esquerdo].\n3. Pegue um copo vazio na mesa de embalagens.\n4. Posicione o copo na máquina pressionando [E] para extrair e servir o suco natural fresco."
+	s6.progress_text = "Pegue a polpa no estoque, coloque na máquina, posicione o copo com [E] e sirva o suco."
 	s6.highlight_name = "JuiceMachine"
-	s6.success_msg = "Suco natural preparado com perfeição!"
+	s6.success_msg = "Suco natural fresco preparado e servido com sucesso!"
 	steps.append(s6)
 	
-	# ETAPA 8 — FRITADEIRA
+	# ETAPA 8 — FRITADEIRA COMERCIAL
 	var s7 = TutorialStep.new()
-	s7.title = "8. FRITADEIRA COMERCIAL"
-	s7.instruction = "Pegue batatas no armazém, coloque no cesto da fritadeira com [Clique Esquerdo], pressione [E] para abaixar no óleo e retire a porção crocante."
-	s7.progress_text = "Frite uma porção de batatas e retire da fritadeira."
+	s7.title = "8. FRITADEIRA COMERCIAL (BATATAS E ANÉIS DE CEBOLA)"
+	s7.instruction = "A fritadeira prepara TANTO BATATAS QUANTO ANÉIS DE CEBOLA:\n1. Ligue a fritadeira interagindo com ela.\n2. Pegue a porção crua de batata ou cebola no estoque com [Clique Esquerdo].\n3. Coloque na cesta da fritadeira.\n4. Pressione [E] para abaixar a cesta no óleo aquecido.\n5. Aguarde o tempo rápido de fritura.\n6. Pressione [E] para erguer e retirar a porção pronta.\n(Dica: As embalagens vermelhas de porções prontas ficam na mesa de embalagens)."
+	s7.progress_text = "Ligue a fritadeira, coloque a batata ou cebola na cesta, abaixe com [E] e retire quando dourar."
 	s7.highlight_name = "Fryer"
-	s7.success_msg = "Batatas crocantes fritas com sucesso!"
+	s7.success_msg = "Acompanhamento crocante frito com perfeição!"
 	steps.append(s7)
 	
-	# ETAPA 9 — GRELHA
+	# ETAPA 9 — GRELHA INDUSTRIAL — PREPARO DO HAMBÚRGUER
 	var s8 = TutorialStep.new()
-	s8.title = "9. GRELHA INDUSTRIAL"
-	s8.instruction = "Pegue um hambúrguer cru com [Clique Esquerdo], coloque na chapa da grelha, equipe a Espátula [Tecla 1], vire quando dourar e retire na espátula."
-	s8.progress_text = "Coloque a carne na chapa, vire [1] e retire na espátula."
+	s8.title = "9. GRELHA INDUSTRIAL — PREPARO DO HAMBÚRGUER"
+	s8.instruction = "Vamos preparar seu primeiro hambúrguer. Pegue um hambúrguer cru no refrigerador com [Clique Esquerdo], coloque sobre a chapa quente, equipe a Espátula [Tecla 1] e aguarde o preparo acelerado. Quando dourar, vire a carne e depois retire-a na espátula."
+	s8.progress_text = "Coloque a carne na chapa, vire com a Espátula [1] e retire-a na espátula."
 	s8.highlight_name = "Grill"
 	s8.success_msg = "Carne assada no ponto perfeito recolhida na espátula!"
 	steps.append(s8)
 	
-	# ETAPA 10 — MONTAGEM
+	# ETAPA 10 — MONTAGEM DO HAMBÚRGUER NA BANCADA
 	var s9 = TutorialStep.new()
 	s9.title = "10. MONTAGEM DO HAMBÚRGUER"
-	s9.instruction = "Na bancada de montagem, coloque a base do pão, adicione a carne grelhada da espátula e finalize colocando a parte superior do pão."
-	s9.progress_text = "Monte o lanche: Base do pão + Carne + Topo do pão."
+	s9.instruction = "Na bancada de montagem, coloque a Base do Pão, adicione o hambúrguer grelhado que está na sua espátula e finalize colocando a Parte Superior do Pão para fechar o lanche."
+	s9.progress_text = "Monte o lanche: Base do Pão + Carne da Espátula + Parte Superior do Pão."
 	s9.highlight_name = "PrepIsland"
-	s9.success_msg = "Hambúrguer suculento montado com perfeição!"
+	s9.success_msg = "Perfeito! Seu primeiro hambúrguer está montado."
 	steps.append(s9)
 	
-	# ETAPA 11 — EMBALAGEM
+	# ETAPA 11 — ESTAÇÃO DE EMBALAGEM
 	var s10 = TutorialStep.new()
 	s10.title = "11. ESTAÇÃO DE EMBALAGEM"
-	s10.instruction = "Leve o hambúrguer montado até a estação de embalagem. Pegue uma caixa de hambúrguer ou saco com [Clique Esquerdo] para embalar o lanche."
-	s10.progress_text = "Embale o hambúrguer na estação de embalagem."
+	s10.instruction = "1. Leve o hambúrguer montado até a Mesa de Embalagens.\n2. Pegue uma Caixa de Hambúrguer na bancada com [Clique Esquerdo] e embale o lanche.\n\n⚠️ DIFERENCIAÇÃO DE PEDIDOS:\n• Cliente no Salão: Use a Caixa de Hambúrguer e acomode na Bandeja de Serviço.\n• Delivery / Drive-thru (Etapa Adicional): Coloque a Caixa de Hambúrguer dentro do Saco de Delivery de papel kraft na bancada."
+	s10.progress_text = "Pegue uma caixa de hambúrguer na mesa de embalagens e embale o lanche."
 	s10.highlight_name = "PackagingStation"
-	s10.success_msg = "Lanche embalado e pronto para entrega!"
+	s10.success_msg = "Lanche embalado e protegido com sucesso!"
 	steps.append(s10)
 	
-	# ETAPA 12 — BANDEJA
+	# ETAPA 12 — BANDEJA DE SERVIÇO
 	var s11 = TutorialStep.new()
-	s11.title = "12. BANDEJA DE SERVIÇO"
-	s11.instruction = "Pegue uma Bandeja de Serviço na pilha com [E] e coloque o lanche embalado nela com [Clique Esquerdo] para transportar o pedido ao cliente."
-	s11.progress_text = "Pegue uma bandeja [E] e deposite o lanche embalado nela."
+	s11.title = "12. ATENDIMENTO NO SALÃO E BANDEJA DE SERVIÇO"
+	s11.instruction = "Fluxo de atendimento para clientes que comem no restaurante:\n1. Aproxime-se do balcão de atendimento e pegue uma Bandeja de Serviço na pilha com [E] ou [Clique Esquerdo].\n2. Coloque a caixa do hambúrguer sobre a bandeja com [Clique Esquerdo].\n3. Adicione os outros itens do pedido (bebida/fritas) na mesma bandeja.\n4. Leve a bandeja completa até a mesa do cliente sentado no salão.\n5. Entregue o pedido interagindo com o cliente."
+	s11.progress_text = "Pegue uma bandeja no balcão [E / Clique Esq] e coloque o lanche embalado nela."
 	s11.highlight_name = "ServingTrayStack"
-	s11.success_msg = "Pedido acomodado na bandeja com sucesso!"
+	s11.success_msg = "Pedido acomodado na bandeja de serviço com sucesso!"
 	steps.append(s11)
 	
-	# ETAPA 13 — LIMPEZA
+	# ETAPA 13 — LIMPEZA DA GRELHA E HIGIENIZAÇÃO DA BUCHA
 	var s12 = TutorialStep.new()
 	s12.title = "13. LIMPEZA E HIGIENE DA COZINHA"
-	s12.instruction = "Equipe a Bucha de Limpeza [Tecla 2], mire na grelha e segure o [Clique Esquerdo] até limpar. Quando a bucha ficar suja, lave-a na pia industrial com [Clique Esquerdo]."
-	s12.progress_text = "Limpe a grelha com a bucha [2] e lave a bucha na pia."
+	s12.instruction = "A higiene da cozinha é fundamental. Equipe a Bucha de Limpeza com a [Tecla 2], mire na grelha e segure o [Clique Esquerdo] até limpá-la. Quando a bucha ficar suja, vá até a pia industrial e segure o [Clique Esquerdo] para lavá-la."
+	s12.progress_text = "Limpe a grelha com a bucha [2] e lave a bucha na pia industrial."
 	s12.highlight_name = "Grill"
 	s12.success_msg = "Grelha limpa e bucha higienizada na pia!"
 	steps.append(s12)
 	
-	# ETAPA 14 — PEDIDO E PAGAMENTO
+	# ETAPA 14 — RECEBIMENTO E CAIXA REGISTRADORA
 	var s13 = TutorialStep.new()
-	s13.title = "14. PEDIDO E PAGAMENTO"
-	s13.instruction = "Quando os clientes terminam a refeição, deixam o dinheiro no balcão ou nas mesas. Pegue as cédulas com [E] e guarde na Caixa Registradora com [E]."
-	s13.progress_text = "Recolha o dinheiro e deposite na Caixa Registradora com [E]."
-	s13.highlight_name = "CashRegister"
-	s13.success_msg = "Dinheiro no caixa! Faturamento registrado."
+	s13.title = "14. RECEBIMENTO E CAIXA REGISTRADORA"
+	s13.instruction = "Os clientes deixam o dinheiro do pagamento no balcão de atendimento. Aproxime-se do balcão, pegue as notas com [E] ou [Clique Esquerdo], mire na Caixa Registradora e pressione [E] para abrir a gaveta e registrar o faturamento."
+	s13.progress_text = "Pegue o dinheiro no balcão e guarde na Caixa Registradora [E]."
+	s13.highlight_name = "CustomerMoney"
+	s13.success_msg = "💵 Pagamento guardado na caixa registradora! Faturamento contabilizado com sucesso."
 	steps.append(s13)
 	
-	# ETAPA 15 — ABRIR E FECHAR RESTAURANTE
+	# ETAPA 15 — EXPEDIENTE E PLACA DE ABERTURA
 	var s14 = TutorialStep.new()
 	s14.title = "15. EXPEDIENTE E PLACA DE ABERTURA"
-	s14.instruction = "O restaurante inicia às 09:00 no Período de Preparação. Abre oficialmente às 10:00 e encerra às 22:00. Pressione [E] na Placa de Abertura na entrada."
+	s14.instruction = "O expediente oficial começa às 09:00 no Período de Preparação. O restaurante abre às 10:00 e encerra às 22:00. Pressione [E] na Placa de Abertura na entrada para conhecer as regras de abertura."
 	s14.progress_text = "Interaja com a Placa de Abertura [E]."
 	s14.highlight_name = "OpenSign"
-	s14.success_msg = "Rotina de funcionamento compreendida!"
+	s14.success_msg = "Rotina e horários de funcionamento compreendidos!"
 	steps.append(s14)
 
 func _connect_ui_signals() -> void:
-	if skip_button and not skip_button.pressed.is_connected(_on_skip_button_pressed):
-		skip_button.pressed.connect(_on_skip_button_pressed)
-	if cancel_skip_button and not cancel_skip_button.pressed.is_connected(_on_cancel_skip_pressed):
-		cancel_skip_button.pressed.connect(_on_cancel_skip_pressed)
-	if confirm_skip_button and not confirm_skip_button.pressed.is_connected(_on_confirm_skip_pressed):
-		confirm_skip_button.pressed.connect(_on_confirm_skip_pressed)
 	if start_day_button and not start_day_button.pressed.is_connected(_on_start_day_pressed):
 		start_day_button.pressed.connect(_on_start_day_pressed)
 
@@ -270,9 +266,9 @@ func _process(delta: float) -> void:
 	if current_highlight_marker and is_instance_valid(current_highlight_marker):
 		var time_ms = Time.get_ticks_msec()
 		var offset_y = sin(time_ms * 0.0035) * 0.08
-		current_highlight_marker.position.y = _highlight_base_y + offset_y
+		current_highlight_marker.position.y = offset_y
 		if current_highlight_light and is_instance_valid(current_highlight_light):
-			current_highlight_light.light_energy = 1.0 + sin(time_ms * 0.004) * 0.3
+			current_highlight_light.light_energy = 1.0 + sin(time_ms * 0.004) * 0.25
 	
 	# Transição suave entre etapas para permitir leitura e evitar cascata
 	if transition_timer > 0.0:
@@ -312,7 +308,8 @@ func _apply_step(idx: int) -> void:
 	step_money_collected = false
 	step_open_sign_interacted = false
 	
-	transition_timer = 0.6
+	# Pausa suave de ~1.0s para leitura e observação do novo objetivo
+	transition_timer = 1.0
 	
 	var s = steps[idx]
 	if step_title:
@@ -385,18 +382,38 @@ func _setup_step_context(idx: int) -> void:
 		12: # Limpeza da Grelha
 			var gr = _get_grill()
 			if gr:
-				gr.add_dirt(0.60)
+				if gr.has_method("set_dirty"):
+					gr.set_dirty(true)
+				else:
+					gr.add_dirt(1.0)
 				_create_highlight(gr, "Grelha (Esfregar com Bucha [2])")
 			var player = _get_player()
 			if player:
 				player.select_tool_slot(Player.ToolSlot.SPONGE, false)
 		13: # Pagamento
 			var cr = _get_cash_register()
-			if cr:
-				_create_highlight(cr, "Caixa Registradora [E]")
-		14: # Placa de Abertura
+			var money_scene = load("res://src/items/customer_money.tscn")
+			if cr and money_scene:
+				var old_money = get_tree().root.find_children("", "CustomerMoney", true, false)
+				for m in old_money:
+					if is_instance_valid(m) and m.get_parent():
+						m.get_parent().remove_child(m)
+						m.queue_free()
+				
+				var money = money_scene.instantiate() as CustomerMoney
+				var main_scene = get_tree().current_scene if get_tree().current_scene else get_tree().root
+				main_scene.add_child(money)
+				money.global_position = cr.global_position + Vector3(-0.45, 0.05, 0.25)
+				money.setup(35.0, null)
+				_create_highlight(money, "Dinheiro do Cliente [E / Clique Esq]")
+		14: # Placa de Abertura / Abertura Real do Restaurante
+			var clock = _get_game_clock()
+			if clock:
+				clock.state = GameClock.State.PREPARATION
 			var op = _get_open_sign()
 			if op:
+				if op.has_method("_update_sign"):
+					op._update_sign()
 				_create_highlight(op, "Placa de Abertura [E]")
 
 func _check_step_conditions() -> void:
@@ -456,8 +473,29 @@ func _check_step_conditions() -> void:
 		9: # Montagem: hambúrguer montado
 			if step_burger_assembled:
 				step_ok = true
-			elif player and (player.held_item is Burger or player.held_item is Cheeseburger or (player.has_active_ingredient() and str(player.get_active_ingredient().get("item_id")).begins_with("burger"))):
-				step_ok = true
+			elif player:
+				if player.held_item is Burger or player.held_item is Cheeseburger:
+					step_ok = true
+				elif player.held_item is BreadBottom:
+					var bb = player.held_item as BreadBottom
+					if bb.assembly != null and (bb.assembly.state == BurgerAssembly.State.CLOSED or bb.assembly.state == BurgerAssembly.State.PACKAGED):
+						step_ok = true
+				elif player.has_active_ingredient() and str(player.get_active_ingredient().get("item_id")).begins_with("burger"):
+					step_ok = true
+				else:
+					# Verifica se há algum lanche fechado na bancada ou no chão
+					var bottoms = get_tree().root.find_children("", "BreadBottom", true, false)
+					for child in bottoms:
+						if is_instance_valid(child) and child is BreadBottom:
+							if child.assembly != null and (child.assembly.state == BurgerAssembly.State.CLOSED or child.assembly.state == BurgerAssembly.State.PACKAGED):
+								step_ok = true
+								break
+					if not step_ok:
+						var assemblies = get_tree().root.find_children("", "BurgerAssembly", true, false)
+						for ass in assemblies:
+							if is_instance_valid(ass) and (ass.state == BurgerAssembly.State.CLOSED or ass.state == BurgerAssembly.State.PACKAGED):
+								step_ok = true
+								break
 		10: # Embalagem: hambúrguer embalado
 			if step_burger_packaged:
 				step_ok = true
@@ -471,12 +509,14 @@ func _check_step_conditions() -> void:
 		12: # Limpeza: grelha limpa e bucha lavada na pia
 			var gr = _get_grill()
 			var sink = _get_sink()
-			var sponge_clean = (player and not player.sponge_is_dirty)
+			var sponge_clean = (player == null or not player.sponge_is_dirty)
 			if gr and not gr.is_dirty():
 				step_grill_was_cleaned = true
 			if step_grill_was_cleaned and player and player.sponge_is_dirty and sink:
 				_create_highlight(sink, "Lave a Bucha na Pia [Clique Esquerdo]")
-			if gr and not gr.is_dirty() and sponge_clean and step_grill_was_cleaned:
+			elif gr and gr.is_dirty():
+				_create_highlight(gr, "Grelha (Esfregar com Bucha [2])")
+			if gr and not gr.is_dirty() and sponge_clean:
 				step_ok = true
 		13: # Pagamento: dinheiro no caixa
 			if step_payment_processed or step_money_collected:
@@ -486,12 +526,28 @@ func _check_step_conditions() -> void:
 				var cr = _get_cash_register()
 				if cr:
 					_create_highlight(cr, "Deposite o Dinheiro na Caixa Registradora [E]")
-		14: # Placa de Abertura
-			if step_open_sign_interacted:
+			else:
+				var money_in_world = get_tree().root.find_children("", "CustomerMoney", true, false)
+				var has_world_money = false
+				for m in money_in_world:
+					if is_instance_valid(m) and m.location == Item.ItemLocation.WORLD and not m.is_held:
+						has_world_money = true
+						break
+				if not has_world_money and not player_has_money and step_initialized:
+					step_ok = true
+		14: # Placa de Abertura / Abrir Restaurante
+			var clock = _get_game_clock()
+			if (clock and (clock.state == GameClock.State.OPEN or clock.is_restaurant_open())) or step_open_sign_interacted:
 				step_ok = true
 	
 	if step_ok:
 		_advance_step()
+
+func _on_clock_state_changed(new_state: GameClock.State) -> void:
+	if current_step_index == 14 and (new_state == GameClock.State.OPEN or new_state == GameClock.State.CLOSING):
+		step_open_sign_interacted = true
+		if not tutorial_completed:
+			_advance_step()
 
 func _advance_step() -> void:
 	if current_step_index < steps.size():
@@ -525,53 +581,52 @@ func _show_congrats_panel() -> void:
 	if congrats_panel:
 		congrats_panel.visible = true
 	if congrats_title:
-		congrats_title.text = "🎓 TUTORIAL CONCLUÍDO!"
+		congrats_title.text = "🎓 TREINAMENTO CONCLUÍDO!"
 	if congrats_text:
-		congrats_text.text = "Você já conhece o básico para administrar seu restaurante."
+		congrats_text.text = "Treinamento finalizado com sucesso! Agora o restaurante é todo seu e o jogo real vai começar."
 	if start_day_button:
 		start_day_button.text = "COMEÇAR DIA 1"
 	if step_title:
-		step_title.text = "🎉 TUTORIAL CONCLUÍDO COM SUCESSO!"
+		step_title.text = "🎉 TREINAMENTO CONCLUÍDO COM SUCESSO!"
 	if step_instruction:
-		step_instruction.text = "Você aprendeu todos os sistemas essenciais do Burger Rush. Agora você está pronto para assumir o restaurante no Dia 1!"
+		step_instruction.text = "Você concluiu todas as etapas e dominou os sistemas reais do Burger Rush.\nClique abaixo para iniciar seu expediente no Dia 1!"
 	if step_progress:
 		step_progress.text = "Etapa 15 / 15 (100% Concluído)"
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
-func _on_skip_button_pressed() -> void:
-	if confirm_dialog:
-		confirm_dialog.visible = true
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-
-func _on_cancel_skip_pressed() -> void:
-	if confirm_dialog:
-		confirm_dialog.visible = false
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
 func _on_confirm_skip_pressed() -> void:
-	if confirm_dialog:
-		confirm_dialog.visible = false
 	current_step_index = steps.size()
-	_complete_tutorial()
+	tutorial_completed = true
+	_save_tutorial_progress()
+	_on_start_day_pressed()
 
 func _on_start_day_pressed() -> void:
 	tutorial_completed = true
-	_save_tutorial_progress()
 	
-	var clock = _get_game_clock()
-	if clock:
-		clock.is_paused = false
-		clock.current_hour = 9
-		clock.current_minute = 0
-		clock.state = GameClock.State.PREPARATION
+	var sm = _get_save_manager()
+	if sm and sm.has_active_game:
+		sm.pending_save_data["tutorial_step"] = steps.size()
+		sm.pending_save_data["tutorial_completed"] = true
+		sm.pending_save_data["day1_intro_shown"] = false
+		sm.pending_save_data["day_number"] = 1
+		sm.pending_save_data["current_day"] = 1
+		sm.pending_save_data["day_of_week"] = 4
+		sm.pending_save_data["week_number"] = 1
+		sm.pending_save_data["clock_hour"] = 9
+		sm.pending_save_data["clock_minute"] = 0
+		sm.pending_save_data["clock_state"] = "PREPARATION"
+		sm.save_game(sm.active_slot)
 	
-	var hud = get_tree().root.find_child("HUD", true, false)
-	if hud and hud.has_method("_check_and_show_day1_intro"):
-		hud._check_and_show_day1_intro()
+	var gm = get_tree().root.find_child("GameManager", true, false) if (is_inside_tree() and get_tree()) else null
+	if not gm:
+		var gm_class = load("res://src/core/game_manager.gd")
+		if gm_class and gm_class.has_method("get_instance"):
+			gm = gm_class.get_instance()
+	
+	if gm and gm.has_method("load_scene_with_loading"):
+		gm.load_scene_with_loading("main", gm.GameState.PLAYING)
 	else:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	
-	queue_free()
+		get_tree().change_scene_to_file("res://src/ui/loading_screen.tscn")
 
 func _save_tutorial_progress() -> void:
 	var sm = _get_save_manager()
@@ -585,9 +640,22 @@ func _save_tutorial_progress() -> void:
 # =============================================================================
 
 func _create_highlight(target: Node3D, label_text: String) -> void:
-	_clear_highlight()
 	if not target or not is_instance_valid(target):
+		_clear_highlight()
 		return
+	
+	# Se o destaque já está apontando para este alvo com o mesmo texto, não recria para evitar piscar
+	if current_highlight_target == target and current_highlight_label_text == label_text and current_highlight_marker and is_instance_valid(current_highlight_marker):
+		return
+	
+	_clear_highlight()
+	current_highlight_target = target
+	current_highlight_label_text = label_text
+	
+	# Limpa quaisquer nós de highlight órfãos no alvo
+	for child in target.get_children():
+		if is_instance_valid(child) and child.name == "TutorialHighlight":
+			child.queue_free()
 	
 	var marker_root = Node3D.new()
 	marker_root.name = "TutorialHighlight"
@@ -632,6 +700,8 @@ func _clear_highlight() -> void:
 			p.queue_free()
 	current_highlight_marker = null
 	current_highlight_light = null
+	current_highlight_target = null
+	current_highlight_label_text = ""
 
 # =============================================================================
 # RESOLUÇÃO DE REFERÊNCIAS DO JOGO
@@ -649,12 +719,17 @@ func _get_game_clock() -> GameClock:
 
 func _get_save_manager():
 	if not is_inside_tree() or not get_tree() or not get_tree().root:
+		var sm_class = load("res://src/core/save_manager.gd")
+		if sm_class and sm_class.has_method("get_instance"):
+			return sm_class.get_instance()
 		return null
 	var sm = get_tree().root.find_child("SaveManager", true, false)
 	if not sm:
 		var sm_script = load("res://src/core/save_manager.gd")
-		if sm_script and "instance" in sm_script:
+		if sm_script and "instance" in sm_script and sm_script.instance:
 			sm = sm_script.instance
+		elif sm_script and sm_script.has_method("get_instance"):
+			sm = sm_script.get_instance()
 	return sm
 
 func _get_purchase_manager() -> PurchaseManager:

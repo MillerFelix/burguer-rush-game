@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://tomato_item_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/tomato.gd" id="1_tomato"]
 [ext_resource type="Texture2D" path="res://assets/textures/veg_tomato_bright.png" id="2_tex_tomato"]

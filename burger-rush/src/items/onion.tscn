@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://onion_item_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/items/onion.gd" id="1_onion"]
 [ext_resource type="Texture2D" path="res://assets/textures/veg_onion.png" id="2_tex_onion"]

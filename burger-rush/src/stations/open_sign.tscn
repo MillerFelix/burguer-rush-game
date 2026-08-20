@@ -3,14 +3,14 @@
 [ext_resource type="Script" path="res://src/stations/open_sign.gd" id="1_opensign"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.05, 1.5, 0.65)
+size = Vector3(1.10, 1.5, 0.65)
 
 [sub_resource type="StandardMaterial3D" id="Material_WoodFrame"]
 albedo_color = Color(0.38, 0.24, 0.14, 1)
 roughness = 0.75
 
 [sub_resource type="StandardMaterial3D" id="Material_Chalkboard"]
-albedo_color = Color(0.11, 0.12, 0.13, 1)
+albedo_color = Color(0.11, 0.12, 0.14, 1)
 roughness = 0.85
 
 [sub_resource type="StandardMaterial3D" id="Material_IronHinge"]
@@ -20,17 +20,17 @@ roughness = 0.4
 
 [sub_resource type="BoxMesh" id="BoxMesh_EaselSide"]
 material = SubResource("Material_WoodFrame")
-size = Vector3(0.95, 1.35, 0.05)
+size = Vector3(1.02, 1.35, 0.05)
 
 [sub_resource type="BoxMesh" id="BoxMesh_ChalkArea"]
 material = SubResource("Material_Chalkboard")
-size = Vector3(0.82, 1.15, 0.01)
+size = Vector3(0.92, 1.20, 0.012)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Hinge"]
 material = SubResource("Material_IronHinge")
 top_radius = 0.024
 bottom_radius = 0.024
-height = 0.96
+height = 1.02
 radial_segments = 12
 
 [node name="OpenSign" type="StaticBody3D"]
@@ -47,8 +47,31 @@ transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 
 mesh = SubResource("BoxMesh_EaselSide")
 
 [node name="ChalkAreaFront" type="MeshInstance3D" parent="Model/EaselFront"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.026)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.027)
 mesh = SubResource("BoxMesh_ChalkArea")
+
+[node name="SignContent" type="Label3D" parent="Model/EaselFront/ChalkAreaFront"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.008)
+billboard = 0
+double_sided = false
+render_priority = 2
+pixel_size = 0.0028
+font_size = 20
+outline_size = 4
+outline_modulate = Color(0.08, 0.08, 0.1, 1)
+modulate = Color(1, 0.94, 0.76, 1)
+line_spacing = 5.0
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+text = "★ BURGER RUSH ★
+
+🔴 FECHADO
+
+HORÁRIO DE FUNCIONAMENTO
+10:00 — 22:00
+
+[E] Abrir Restaurante"
 
 [node name="EaselBack" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(1, 0, 0, 0, 0.984808, -0.173648, 0, 0.173648, 0.984808, 0, 0.68, -0.11)
@@ -57,13 +80,3 @@ mesh = SubResource("BoxMesh_EaselSide")
 [node name="TopHinge" type="MeshInstance3D" parent="Model"]
 transform = Transform3D(0, -1, 0, 1, 0, 0, 0, 0, 1, 0, 1.35, 0)
 mesh = SubResource("CylinderMesh_Hinge")
-
-[node name="Label3D" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.984808, 0.173648, 0, -0.173648, 0.984808, 0, 0.72, 0.16)
-billboard = 0
-double_sided = false
-text = "BURGER RUSH\n\nFECHADO\n\n10:00 — 22:00\n\n[E] Abrir Restaurante"
-font_size = 28
-outline_size = 8
-line_spacing = 6.0
-modulate = Color(1, 0.92, 0.75, 1)
