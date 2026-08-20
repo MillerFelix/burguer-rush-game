@@ -35,28 +35,28 @@ var items_config: Dictionary = {
 	"burger_box": {
 		"name": "Caixa de Hambúrguer",
 		"icon": "📦",
-		"scene": preload("res://src/items/burger_box.tscn"),
+		"scene": load("res://src/items/burger_box.tscn"),
 		"z_min": -1.2,
 		"z_max": -0.50
 	},
 	"potato_box": {
 		"name": "Embalagem de Batata",
 		"icon": "🍟",
-		"scene": preload("res://src/items/potato_box.tscn"),
+		"scene": load("res://src/items/potato_box.tscn"),
 		"z_min": -0.50,
 		"z_max": 0.0
 	},
 	"cup_empty": {
 		"name": "Copo Vazio",
 		"icon": "🥤",
-		"scene": preload("res://src/items/drink_cup.tscn"),
+		"scene": load("res://src/items/drink_cup.tscn"),
 		"z_min": 0.0,
 		"z_max": 0.50
 	},
 	"delivery_bag": {
 		"name": "Saco de Delivery",
 		"icon": "🛍️",
-		"scene": preload("res://src/items/delivery_bag.tscn"),
+		"scene": load("res://src/items/delivery_bag.tscn"),
 		"z_min": 0.50,
 		"z_max": 1.2
 	}

@@ -1,0 +1,264 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/tutorial.gd" id="1_tutorial_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_StepPanel"]
+bg_color = Color(0.0823529, 0.109804, 0.160784, 0.882353)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.921569, 0.65098, 0.121569, 0.901961)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.501961)
+shadow_size = 5
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_SkipBtnNormal"]
+bg_color = Color(0.180392, 0.203922, 0.25098, 0.65098)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.403922, 0.443137, 0.521569, 0.65098)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_SkipBtnHover"]
+bg_color = Color(0.803922, 0.203922, 0.203922, 0.85098)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.352941, 0.352941, 0.901961)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_ModalPanel"]
+bg_color = Color(0.0588235, 0.0784314, 0.117647, 0.960784)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.301961, 0.345098, 0.435294, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.65098)
+shadow_size = 12
+shadow_offset = Vector2(0, 5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_ButtonPrimary"]
+bg_color = Color(0.921569, 0.45098, 0.101961, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.803922, 0.25098, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+shadow_color = Color(0.921569, 0.45098, 0.101961, 0.352941)
+shadow_size = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_ButtonSecondary"]
+bg_color = Color(0.180392, 0.223529, 0.301961, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.301961, 0.380392, 0.501961, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="Tutorial" type="CanvasLayer"]
+process_mode = 3
+layer = 10
+script = ExtResource("1_tutorial_script")
+
+[node name="Control" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="StepPanel" type="PanelContainer" parent="Control"]
+custom_minimum_size = Vector2(420, 130)
+layout_mode = 0
+offset_left = 30.0
+offset_top = 30.0
+theme_override_styles/panel = SubResource("StyleBox_StepPanel")
+
+[node name="Margin" type="MarginContainer" parent="Control/StepPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="Control/StepPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="StepTitle" type="Label" parent="Control/StepPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.980392, 0.803922, 0.25098, 1)
+theme_override_font_sizes/font_size = 15
+text = "Etapa 1: Título"
+
+[node name="StepInstruction" type="Label" parent="Control/StepPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "Instrução detalhada sobre a tarefa a ser executada pelo jogador..."
+autowrap_mode = 2
+
+[node name="StepProgress" type="Label" parent="Control/StepPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.65098, 0.701961, 0.8, 1)
+theme_override_font_sizes/font_size = 11
+text = "Progresso: 0 / 1"
+
+[node name="SkipButton" type="Button" parent="Control"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -160.0
+offset_top = 30.0
+offset_right = -30.0
+offset_bottom = 66.0
+grow_horizontal = 0
+focus_mode = 0
+theme_override_colors/font_color = Color(0.901961, 0.901961, 0.921569, 1)
+theme_override_font_sizes/font_size = 12
+theme_override_styles/normal = SubResource("StyleBox_SkipBtnNormal")
+theme_override_styles/hover = SubResource("StyleBox_SkipBtnHover")
+text = "PULAR TUTORIAL ⏩"
+
+[node name="ConfirmDialog" type="PanelContainer" parent="Control"]
+visible = false
+custom_minimum_size = Vector2(400, 200)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -100.0
+offset_right = 200.0
+offset_bottom = 100.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBox_ModalPanel")
+
+[node name="Margin" type="MarginContainer" parent="Control/ConfirmDialog"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Control/ConfirmDialog/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="Text" type="Label" parent="Control/ConfirmDialog/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.901961, 0.921569, 0.960784, 1)
+theme_override_font_sizes/font_size = 14
+text = "Pular o tutorial?
+
+Você poderá começar o restaurante imediatamente, mas algumas funções ainda não foram apresentadas."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Buttons" type="HBoxContainer" parent="Control/ConfirmDialog/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="CancelSkipButton" type="Button" parent="Control/ConfirmDialog/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(130, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBox_ButtonSecondary")
+text = "CANCELAR"
+
+[node name="ConfirmSkipButton" type="Button" parent="Control/ConfirmDialog/Margin/VBox/Buttons"]
+custom_minimum_size = Vector2(130, 36)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBox_ButtonPrimary")
+text = "PULAR"
+
+[node name="CongratsPanel" type="PanelContainer" parent="Control"]
+visible = false
+custom_minimum_size = Vector2(450, 220)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -225.0
+offset_top = -110.0
+offset_right = 225.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBox_ModalPanel")
+
+[node name="Margin" type="MarginContainer" parent="Control/CongratsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="VBox" type="VBoxContainer" parent="Control/CongratsPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="CongratsTitle" type="Label" parent="Control/CongratsPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.980392, 0.803922, 0.25098, 1)
+theme_override_font_sizes/font_size = 18
+text = "🎓 VOCÊ CONHECE O BÁSICO!"
+horizontal_alignment = 1
+
+[node name="CongratsText" type="Label" parent="Control/CongratsPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.88, 0.90, 0.94, 1)
+theme_override_font_sizes/font_size = 13
+text = "Agora o restaurante é oficialmente seu. Seu primeiro dia de expediente está prestes a começar!"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="StartDayButton" type="Button" parent="Control/CongratsPanel/Margin/VBox"]
+custom_minimum_size = Vector2(240, 42)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBox_ButtonPrimary")
+text = "COMEÇAR MEU PRIMEIRO DIA"

@@ -14,7 +14,7 @@ signal employee_fired(employee_id: int)
 static var instance = null
 
 const Employee = preload("res://src/employees/employee.gd")
-var employee_scene: PackedScene = preload("res://src/employees/employee.tscn")
+var employee_scene: PackedScene = null
 var employees: Array[Employee] = []
 var next_id: int = 1
 
@@ -42,6 +42,8 @@ static func get_instance():
 @export var auto_spawn_initial_employee: bool = false
 
 func _ready() -> void:
+	if not employee_scene:
+		employee_scene = load("res://src/employees/employee.tscn")
 	# O funcionário está desabilitado no início da partida.
 	# A contratação é realizada exclusivamente via PC pelo jogador.
 	if auto_spawn_initial_employee:

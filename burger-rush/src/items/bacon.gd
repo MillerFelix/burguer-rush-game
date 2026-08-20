@@ -15,8 +15,8 @@ enum State {
 @onready var mesh_raw_strip: Node3D = get_node_or_null("VisualRoot/BaconRawStrip")
 @onready var mesh_cooked_strips: Node3D = get_node_or_null("VisualRoot/BaconCookedStrips")
 
-const TEX_BACON_RAW = preload("res://assets/textures/bacon_strip_raw.png")
-const TEX_BACON_COOKED = preload("res://assets/textures/bacon_strip_cooked.png")
+var TEX_BACON_RAW = load("res://assets/textures/bacon_strip_raw.png")
+var TEX_BACON_COOKED = load("res://assets/textures/bacon_strip_cooked.png")
 
 func _ready() -> void:
 	item_id = "bacon"

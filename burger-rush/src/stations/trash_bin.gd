@@ -23,7 +23,10 @@ func _ready() -> void:
 
 func get_interaction_prompt(player: Node = null) -> String:
 	if player:
-		if player.get("held_item") != null:
+		if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+			var sp_patty = player.get_spatula_held_patty()
+			return "🗑️ [Clique/E] Descartar %s no Lixo" % sp_patty.get_display_name()
+		elif player.get("held_item") != null:
 			var held = player.get("held_item")
 			var name_str = held.get_display_name() if held.has_method("get_display_name") else "Item"
 			return "E — Descartar %s" % name_str
@@ -33,8 +36,20 @@ func get_interaction_prompt(player: Node = null) -> String:
 			return "E — Descartar %s" % name_str
 	return ""
 
+func interact_item(player: Node3D) -> void:
+	interact(player)
+
 func interact(player: Node3D) -> void:
 	if not player:
+		return
+
+	if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+		var sp_patty = player.take_spatula_held_patty()
+		if sp_patty:
+			var item_name = sp_patty.get_display_name() if sp_patty.has_method("get_display_name") else "Hambúrguer"
+			_play_dispose_sound()
+			sp_patty.queue_free()
+			_show_feedback(player, "🗑️ %s descartado no lixo." % item_name)
 		return
 
 	if player.get("held_item") != null and player.has_method("take_held_item"):

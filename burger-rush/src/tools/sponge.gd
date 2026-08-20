@@ -20,7 +20,13 @@ var _is_scrubbing_continuous: bool = false
 var _scrub_cycle_time: float = 0.0
 var _is_animating_wash: bool = false
 
+var _initial_pos: Vector3 = Vector3(-0.05, 0.04, -0.06)
+var _initial_rot: Vector3 = Vector3.ZERO
+
 func _ready() -> void:
+	if model:
+		_initial_pos = model.position
+		_initial_rot = model.rotation
 	_update_visuals()
 
 func _process(delta: float) -> void:
@@ -28,15 +34,20 @@ func _process(delta: float) -> void:
 		_scrub_cycle_time += delta
 		# Movimento circular e lateral contínuo e vigoroso de esfregação
 		var speed = 22.0
-		model.position.x = sin(_scrub_cycle_time * speed) * 0.042
-		model.position.z = cos(_scrub_cycle_time * speed) * 0.032
-		model.position.y = -0.022 + absf(sin(_scrub_cycle_time * speed * 2.0)) * 0.008 # Pressão para baixo
-		model.rotation_degrees.z = sin(_scrub_cycle_time * speed) * 14.0
-		model.rotation_degrees.x = cos(_scrub_cycle_time * speed) * 9.0
+		model.position = _initial_pos + Vector3(
+			sin(_scrub_cycle_time * speed) * 0.042,
+			-0.022 + absf(sin(_scrub_cycle_time * speed * 2.0)) * 0.008,
+			cos(_scrub_cycle_time * speed) * 0.032
+		)
+		model.rotation = _initial_rot + Vector3(
+			deg_to_rad(cos(_scrub_cycle_time * speed) * 9.0),
+			0.0,
+			deg_to_rad(sin(_scrub_cycle_time * speed) * 14.0)
+		)
 	elif not _is_animating_wash and model and not _is_scrubbing_continuous:
-		if model.position != Vector3.ZERO or model.rotation != Vector3.ZERO:
-			model.position = model.position.move_toward(Vector3.ZERO, 1.2 * delta)
-			model.rotation = model.rotation.move_toward(Vector3.ZERO, 10.0 * delta)
+		if model.position != _initial_pos or model.rotation != _initial_rot:
+			model.position = model.position.move_toward(_initial_pos, 1.2 * delta)
+			model.rotation = model.rotation.move_toward(_initial_rot, 10.0 * delta)
 
 func is_clean() -> bool:
 	return not is_dirty

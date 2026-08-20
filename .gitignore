@@ -3,3 +3,10 @@
 export.cfg
 export_presets.cfg
 *.tmp
+
+# Exported Builds and Archives
+build/
+**/build/
+*.exe
+*.pck
+*.zip

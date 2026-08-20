@@ -41,7 +41,7 @@ var matched_recipe: Recipe = null
 var is_valid_recipe: bool = false
 
 var current_stack_height: float = 0.040
-const PACKAGED_BURGER_SCENE = preload("res://src/items/packaged_burger.tscn")
+var PACKAGED_BURGER_SCENE = load("res://src/items/packaged_burger.tscn")
 
 @onready var status_label: Label3D = get_node_or_null("StatusLabel")
 
@@ -304,6 +304,14 @@ func package_burger(box_item: Item, player: Node3D = null) -> PackagedBurger:
 func get_interaction_prompt(player: Node = null) -> String:
 	if not player:
 		return ""
+
+	if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+		var sp_patty = player.get_spatula_held_patty()
+		if state != State.CLOSED and state != State.PACKAGED:
+			return "🍔 [Clique] Colocar %s no Lanche" % sp_patty.get_display_name()
+		else:
+			return "⚠️ O lanche já está fechado!"
+
 	var held = player.get("held_item")
 	if held != null:
 		var held_id = str(held.get("item_id"))
@@ -354,9 +362,22 @@ func interact_item(player: Node3D) -> void:
 	if not player:
 		return
 
-	var held = player.get("held_item")
 	var ray = player.get_node_or_null("Head/Camera3D/RayCast3D")
 	var hit_pos = ray.get_collision_point() if (ray and ray is RayCast3D and ray.is_colliding()) else (global_position if is_inside_tree() else Vector3.ZERO)
+
+	if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+		if state != State.CLOSED and state != State.PACKAGED:
+			var sp_patty = player.take_spatula_held_patty()
+			if sp_patty:
+				add_ingredient(sp_patty as Item, hit_pos, player.rotation.y)
+				var d_name = sp_patty.get_display_name() if sp_patty.has_method("get_display_name") else sp_patty.name
+				_show_player_feedback(player, "🍔 %s colocado no lanche!" % d_name)
+				return
+		else:
+			_show_player_feedback(player, "⚠️ O lanche já foi finalizado e fechado!")
+			return
+
+	var held = player.get("held_item")
 
 	if held != null:
 		var held_id = str(held.get("item_id"))

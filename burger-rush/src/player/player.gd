@@ -48,8 +48,8 @@ var quick_slots: Array[Dictionary] = [{}, {}, {}] # 3 Slots rápidos
 var active_quick_slot: int = -1 # -1 = Nenhum slot rápido ativo, 0 = Slot 4, 1 = Slot 5, 2 = Slot 6
 var quick_slot_visual: Node3D = null
 
-const SCENE_SPATULA = preload("res://src/tools/spatula.tscn")
-const SCENE_SPONGE = preload("res://src/tools/sponge.tscn")
+var SCENE_SPATULA = load("res://src/tools/spatula.tscn")
+var SCENE_SPONGE = load("res://src/tools/sponge.tscn")
 
 func _enter_tree() -> void:
 	_setup_audio()
@@ -159,7 +159,31 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
+func get_spatula() -> Node3D:
+	if active_tool_slot == ToolSlot.SPATULA and tool_holder and tool_holder.get_child_count() > 0:
+		var sp = tool_holder.get_child(0)
+		if sp is Spatula or sp.has_method("has_patty"):
+			return sp
+	return null
+
+func get_spatula_held_patty() -> Node3D:
+	var sp = get_spatula()
+	if sp and sp.has_method("get_held_patty"):
+		return sp.get_held_patty()
+	return null
+
+func take_spatula_held_patty() -> Node3D:
+	var sp = get_spatula()
+	if sp and sp.has_method("detach_patty"):
+		return sp.detach_patty()
+	return null
+
 func select_tool_slot(slot: int, show_feedback: bool = true) -> void:
+	if active_tool_slot == ToolSlot.SPATULA and slot != ToolSlot.SPATULA and get_spatula_held_patty() != null:
+		if hud and hud.has_method("show_temporary_feedback"):
+			hud.show_temporary_feedback("⚠️ Deposite o hambúrguer da espátula antes de trocar de ferramenta!")
+		return
+
 	if held_item != null and (held_item.get("is_customer_deposit_money") == true or str(held_item.get("item_id")) == "customer_money"):
 		if hud and hud.has_method("show_temporary_feedback"):
 			hud.show_temporary_feedback("⚠️ Deposite o dinheiro no caixa antes de trocar de ferramenta!")
@@ -457,6 +481,46 @@ func _try_interact_item() -> void:
 
 		# ESTADO 2: Mãos livres (held_item == null) -> PEGAR ITENS DO MUNDO
 		else:
+			# Se a ESPÁTULA estiver carregando um hambúrguer
+			if active_tool_slot == ToolSlot.SPATULA and get_spatula_held_patty() != null:
+				if collider is BreadBottom or collider.get_parent() is BurgerAssembly or collider.has_meta("burger_assembly") or collider.has_meta("burger_base"):
+					collider.interact_item(self)
+					return
+				elif collider is TrashBin:
+					collider.interact(self)
+					return
+				elif collider is ServingTray:
+					var p_tray = take_spatula_held_patty()
+					if p_tray:
+						collider.add_product(p_tray)
+						if hud and hud.has_method("show_temporary_feedback"):
+							hud.show_temporary_feedback("🍱 %s colocado na bandeja!" % p_tray.get_display_name())
+					return
+				elif collider is PrepIsland or collider is PrepTable:
+					if collider.has_method("interact_item"):
+						collider.interact_item(self)
+						return
+				elif collider is Grill:
+					if hud and hud.has_method("show_temporary_feedback"):
+						hud.show_temporary_feedback("⚠️ A espátula já está carregando um hambúrguer! Deposite-o antes de pegar outro.")
+					return
+				else:
+					# Superfície física (bancada, balcão, mesa): deposita no ponto clicado
+					var p_surf = take_spatula_held_patty()
+					if p_surf:
+						var hit_pos = raycast.get_collision_point()
+						if is_inside_tree():
+							get_tree().current_scene.add_child(p_surf)
+						p_surf.global_position = hit_pos + Vector3(0, 0.03, 0)
+						p_surf.rotation = Vector3(0, rotation.y, 0)
+						if "location" in p_surf:
+							p_surf.location = Item.ItemLocation.WORLD
+						if "is_held" in p_surf:
+							p_surf.is_held = false
+						if hud and hud.has_method("show_temporary_feedback"):
+							hud.show_temporary_feedback("🍳 %s depositado na bancada." % p_surf.get_display_name())
+					return
+
 			if collider is Item:
 				if "is_held" in collider and collider.is_held:
 					return
@@ -489,14 +553,27 @@ func _try_interact_item() -> void:
 						pick_up(collider as Item)
 						return
 
-				# 3. Mão Livre (Slot 3)
+				# 3. Mão Livre (Slot 3): PROTEÇÃO CONTRA PEGAR HAMBÚRGUER QUENTE DA CHAPA
 				if active_tool_slot == ToolSlot.HANDS:
 					var p_grill = collider.get_parent()
+					var on_grill = false
 					while p_grill != null:
 						if p_grill is Grill:
-							p_grill.interact_item(self)
-							return
+							on_grill = true
+							break
 						p_grill = p_grill.get_parent()
+
+					if on_grill and collider is Patty:
+						if hud and hud.has_method("show_temporary_feedback"):
+							hud.show_temporary_feedback("⚠️ Alimento quente na chapa! Equipe a Espátula [Tecla 1] para retirar.")
+						return
+
+					if on_grill:
+						var gr = p_grill as Grill
+						if gr:
+							gr.interact_item(self)
+							return
+
 					pick_up(collider as Item)
 					return
 
@@ -1267,6 +1344,20 @@ func pick_up(item: Node3D) -> void:
 		return
 	if "is_held" in item and item.is_held:
 		return
+
+	if active_tool_slot == ToolSlot.SPATULA and get_spatula_held_patty() != null:
+		if hud and hud.has_method("show_temporary_feedback"):
+			hud.show_temporary_feedback("⚠️ Espátula ocupada com um hambúrguer! Deposite-o antes de pegar outro item.")
+		return
+
+	if active_tool_slot == ToolSlot.HANDS and item is Patty:
+		var p_grill = item.get_parent()
+		while p_grill != null:
+			if p_grill is Grill:
+				if hud and hud.has_method("show_temporary_feedback"):
+					hud.show_temporary_feedback("⚠️ Alimento quente na chapa! Equipe a Espátula [Tecla 1] para retirar.")
+				return
+			p_grill = p_grill.get_parent()
 
 	# 1. Se for compatível com Slots Rápidos de Ingredientes (4, 5, 6)
 	if is_quick_slot_compatible(item):

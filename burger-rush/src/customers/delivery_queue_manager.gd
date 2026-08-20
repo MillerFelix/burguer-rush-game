@@ -6,7 +6,7 @@ signal car_served(car: Node3D)
 
 static var instance: DeliveryQueueManager = null
 
-@export var car_scene: PackedScene = preload("res://src/environment/delivery_car.tscn")
+@export var car_scene: PackedScene = null
 @export var max_queue_size: int = 2
 @export var auto_spawn: bool = true
 
@@ -34,6 +34,8 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	instance = self
+	if not car_scene:
+		car_scene = load("res://src/environment/delivery_car.tscn")
 	_init_day_demand()
 
 func static_get() -> DeliveryQueueManager:

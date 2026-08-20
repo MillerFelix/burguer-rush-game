@@ -10,7 +10,7 @@ extends Item
 # ================================================================
 
 var assembly: BurgerAssembly = null
-const BURGER_ASSEMBLY_SCENE = preload("res://src/recipes/burger_assembly.tscn")
+var BURGER_ASSEMBLY_SCENE = load("res://src/recipes/burger_assembly.tscn")
 
 func _ready() -> void:
 	item_id = "bread_bottom"

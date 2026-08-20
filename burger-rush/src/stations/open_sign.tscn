@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://open_sign_scene_uid"]
+[gd_scene format=3]
 
 [ext_resource type="Script" path="res://src/stations/open_sign.gd" id="1_opensign"]
 

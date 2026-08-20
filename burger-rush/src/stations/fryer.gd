@@ -27,7 +27,7 @@ const IDEAL_TEMP_MAX: float = 200.0
 @export var burn_time: float = 126.0 # 126 segundos adicionais até queimar (3x de 42.0s)
 @export var max_capacity: int = 4
 
-var fries_pack_scene: PackedScene = preload("res://src/items/fries_pack.tscn")
+var fries_pack_scene: PackedScene = load("res://src/items/fries_pack.tscn")
 
 # Estrutura dos 4 compartimentos (óleo pré-existente e permanente)
 # 1 saco de batata = 5 porções | 1 saco de cebola = 3 porções

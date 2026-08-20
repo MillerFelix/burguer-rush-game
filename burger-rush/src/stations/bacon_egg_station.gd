@@ -25,13 +25,13 @@ var items_data: Array[Dictionary] = [
 		"id": "bacon",
 		"name": "Tirinha de Bacon",
 		"icon": "🥓",
-		"scene": preload("res://src/items/bacon.tscn")
+		"scene": load("res://src/items/bacon.tscn")
 	},
 	{
 		"id": "egg",
 		"name": "Ovo",
 		"icon": "🥚",
-		"scene": preload("res://src/items/egg.tscn")
+		"scene": load("res://src/items/egg.tscn")
 	}
 ]
 

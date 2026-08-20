@@ -32,10 +32,10 @@ const MELTED = State.READY
 
 @onready var mesh_root: Node = get_node_or_null("MeshInstance3D")
 
-const TEX_MOZZARELLA = preload("res://assets/textures/cheese_mozzarella.png")
-const TEX_CHEDDAR = preload("res://assets/textures/cheese_cheddar.png")
-const TEX_PRATO = preload("res://assets/textures/cheese_prato.png")
-const TEX_NORMAL = preload("res://assets/textures/cheese_normal.png")
+var TEX_MOZZARELLA = load("res://assets/textures/cheese_mozzarella.png")
+var TEX_CHEDDAR = load("res://assets/textures/cheese_cheddar.png")
+var TEX_PRATO = load("res://assets/textures/cheese_prato.png")
+var TEX_NORMAL = load("res://assets/textures/cheese_normal.png")
 
 func _init() -> void:
 	is_grillable = true

@@ -1,0 +1,598 @@
+[gd_scene format=3 uid="uid://c6xqwm1y0b2h1"]
+
+[ext_resource type="Script" path="res://src/ui/main_menu.gd" id="1_menu_script"]
+[ext_resource type="Texture2D" path="res://assets/ui/tela-menu-burger-rush.jpg" id="2_menu_bg"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Play_Normal"]
+bg_color = Color(0.88, 0.28, 0.08, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.72, 0.12, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Play_Hover"]
+bg_color = Color(0.96, 0.35, 0.12, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.88, 0.35, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(1, 0.6, 0.1, 0.45)
+shadow_size = 12
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Play_Pressed"]
+bg_color = Color(0.72, 0.2, 0.05, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.95, 0.6, 0.05, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 4
+shadow_offset = Vector2(0, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Button_Normal"]
+bg_color = Color(0.12, 0.14, 0.18, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.85, 0.65, 0.2, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.45)
+shadow_size = 6
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Button_Hover"]
+bg_color = Color(0.2, 0.24, 0.3, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.82, 0.3, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0.9, 0.7, 0.2, 0.35)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Button_Pressed"]
+bg_color = Color(0.08, 0.1, 0.14, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.7, 0.5, 0.15, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Button_Disabled"]
+bg_color = Color(0.14, 0.15, 0.18, 0.75)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.33, 0.38, 0.5)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_Quit_Hover"]
+bg_color = Color(0.55, 0.1, 0.1, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.35, 0.35, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0.8, 0.1, 0.1, 0.4)
+shadow_size = 8
+shadow_offset = Vector2(0, 3)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_SettingsCard"]
+bg_color = Color(0.1, 0.12, 0.15, 0.96)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.95, 0.72, 0.18, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0, 0, 0, 0.65)
+shadow_size = 24
+shadow_offset = Vector2(0, 8)
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu_script")
+
+[node name="BackgroundRect" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_menu_bg")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="MenuCenter" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -200.0
+offset_top = -460.0
+offset_right = 200.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="MenuContainer" type="VBoxContainer" parent="MenuCenter"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="PlayButton" type="Button" parent="MenuCenter/MenuContainer"]
+custom_minimum_size = Vector2(380, 64)
+layout_mode = 2
+focus_neighbor_top = NodePath("../QuitButton")
+focus_neighbor_bottom = NodePath("../ContinueButton")
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 0.96, 0.8, 1)
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBox_Play_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Play_Hover")
+theme_override_styles/pressed = SubResource("StyleBox_Play_Pressed")
+theme_override_styles/focus = SubResource("StyleBox_Play_Hover")
+text = "JOGAR"
+
+[node name="ContinueButton" type="Button" parent="MenuCenter/MenuContainer"]
+custom_minimum_size = Vector2(380, 56)
+layout_mode = 2
+focus_neighbor_top = NodePath("../PlayButton")
+focus_neighbor_bottom = NodePath("../SettingsButton")
+theme_override_colors/font_color = Color(0.92, 0.94, 0.96, 1)
+theme_override_colors/font_disabled_color = Color(0.48, 0.52, 0.58, 0.7)
+theme_override_colors/font_hover_color = Color(1, 0.92, 0.6, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBox_Button_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Button_Hover")
+theme_override_styles/pressed = SubResource("StyleBox_Button_Pressed")
+theme_override_styles/disabled = SubResource("StyleBox_Button_Disabled")
+theme_override_styles/focus = SubResource("StyleBox_Button_Hover")
+text = "CONTINUAR"
+
+[node name="SettingsButton" type="Button" parent="MenuCenter/MenuContainer"]
+custom_minimum_size = Vector2(380, 56)
+layout_mode = 2
+focus_neighbor_top = NodePath("../ContinueButton")
+focus_neighbor_bottom = NodePath("../QuitButton")
+theme_override_colors/font_color = Color(0.92, 0.94, 0.96, 1)
+theme_override_colors/font_hover_color = Color(1, 0.92, 0.6, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBox_Button_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Button_Hover")
+theme_override_styles/pressed = SubResource("StyleBox_Button_Pressed")
+theme_override_styles/focus = SubResource("StyleBox_Button_Hover")
+text = "CONFIGURAÇÕES"
+
+[node name="QuitButton" type="Button" parent="MenuCenter/MenuContainer"]
+custom_minimum_size = Vector2(380, 56)
+layout_mode = 2
+focus_neighbor_top = NodePath("../SettingsButton")
+focus_neighbor_bottom = NodePath("../PlayButton")
+theme_override_colors/font_color = Color(0.92, 0.94, 0.96, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.85, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBox_Button_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Quit_Hover")
+theme_override_styles/pressed = SubResource("StyleBox_Button_Pressed")
+theme_override_styles/focus = SubResource("StyleBox_Quit_Hover")
+text = "SAIR"
+
+[node name="SettingsOverlay" type="Control" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Backdrop" type="ColorRect" parent="SettingsOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="CenterContainer" type="CenterContainer" parent="SettingsOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SettingsCard" type="PanelContainer" parent="SettingsOverlay/CenterContainer"]
+custom_minimum_size = Vector2(520, 480)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_SettingsCard")
+
+[node name="MarginContainer" type="MarginContainer" parent="SettingsOverlay/CenterContainer/SettingsCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 32
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 22
+alignment = 1
+
+[node name="TitleLabel" type="Label" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.82, 0.2, 1)
+theme_override_font_sizes/font_size = 28
+text = "CONFIGURAÇÕES"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="MasterVolumeContainer" type="VBoxContainer" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderBox" type="HBoxContainer" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MasterVolumeContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MasterVolumeContainer/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Volume Geral"
+
+[node name="MasterValueLabel" type="Label" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MasterVolumeContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "100%"
+
+[node name="MasterSlider" type="HSlider" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MasterVolumeContainer"]
+layout_mode = 2
+value = 100.0
+
+[node name="MusicVolumeContainer" type="VBoxContainer" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderBox" type="HBoxContainer" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MusicVolumeContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MusicVolumeContainer/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Volume da Música"
+
+[node name="MusicValueLabel" type="Label" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MusicVolumeContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "80%"
+
+[node name="MusicSlider" type="HSlider" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/MusicVolumeContainer"]
+layout_mode = 2
+value = 80.0
+
+[node name="SFXVolumeContainer" type="VBoxContainer" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HeaderBox" type="HBoxContainer" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/SFXVolumeContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/SFXVolumeContainer/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "Volume dos Efeitos"
+
+[node name="SFXValueLabel" type="Label" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/SFXVolumeContainer/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "100%"
+
+[node name="SFXSlider" type="HSlider" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer/SFXVolumeContainer"]
+layout_mode = 2
+value = 100.0
+
+[node name="Spacer" type="Control" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="BackSettingsButton" type="Button" parent="SettingsOverlay/CenterContainer/SettingsCard/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.95, 1)
+theme_override_colors/font_hover_color = Color(1, 0.88, 0.25, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBox_Button_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Button_Hover")
+theme_override_styles/pressed = SubResource("StyleBox_Button_Pressed")
+theme_override_styles/focus = SubResource("StyleBox_Button_Hover")
+text = "VOLTAR"
+
+[node name="SlotSelectOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.75)
+
+[node name="CenterContainer" type="CenterContainer" parent="SlotSelectOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="SlotSelectCard" type="PanelContainer" parent="SlotSelectOverlay/CenterContainer"]
+custom_minimum_size = Vector2(860, 520)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_SettingsCard")
+
+[node name="MarginContainer" type="MarginContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 35
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 35
+theme_override_constants/margin_bottom = 30
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SlotHeaderLabel" type="Label" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 26
+text = "SELECIONAR SLOT DE SALVAMENTO"
+horizontal_alignment = 1
+
+[node name="SlotSubLabel" type="Label" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 16
+text = "Escolha um slot para a sua carreira:"
+horizontal_alignment = 1
+
+[node name="SlotsHBox" type="HBoxContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 25
+
+[node name="Slot1Card" type="PanelContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBox_SettingsCard")
+
+[node name="Margin" type="MarginContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot1Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot1Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Slot1Title" type="Label" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot1Card/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.2, 1)
+theme_override_font_sizes/font_size = 22
+text = "SLOT 1"
+horizontal_alignment = 1
+
+[node name="Slot1Details" type="Label" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot1Card/Margin/VBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "Vazio"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Slot1Button" type="Button" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot1Card/Margin/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBox_Play_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Play_Hover")
+theme_override_styles/pressed = SubResource("StyleBox_Play_Pressed")
+theme_override_styles/disabled = SubResource("StyleBox_Button_Disabled")
+text = "SELECIONAR"
+
+[node name="Slot2Card" type="PanelContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBox_SettingsCard")
+
+[node name="Margin" type="MarginContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot2Card"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot2Card/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Slot2Title" type="Label" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot2Card/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.2, 1)
+theme_override_font_sizes/font_size = 22
+text = "SLOT 2"
+horizontal_alignment = 1
+
+[node name="Slot2Details" type="Label" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot2Card/Margin/VBox"]
+custom_minimum_size = Vector2(0, 110)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+text = "Vazio"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Slot2Button" type="Button" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer/SlotsHBox/Slot2Card/Margin/VBox"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBox_Play_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Play_Hover")
+theme_override_styles/pressed = SubResource("StyleBox_Play_Pressed")
+theme_override_styles/disabled = SubResource("StyleBox_Button_Disabled")
+text = "SELECIONAR"
+
+[node name="BackSlotSelectButton" type="Button" parent="SlotSelectOverlay/CenterContainer/SlotSelectCard/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBox_Button_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Button_Hover")
+text = "VOLTAR AO MENU"
+
+[node name="OverwriteConfirmOverlay" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.85)
+
+[node name="CenterContainer" type="CenterContainer" parent="OverwriteConfirmOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="OverwriteCard" type="PanelContainer" parent="OverwriteConfirmOverlay/CenterContainer"]
+custom_minimum_size = Vector2(620, 360)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_SettingsCard")
+
+[node name="Margin" type="MarginContainer" parent="OverwriteConfirmOverlay/CenterContainer/OverwriteCard"]
+layout_mode = 2
+theme_override_constants/margin_left = 35
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 35
+theme_override_constants/margin_bottom = 30
+
+[node name="VBox" type="VBoxContainer" parent="OverwriteConfirmOverlay/CenterContainer/OverwriteCard/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="WarnTitle" type="Label" parent="OverwriteConfirmOverlay/CenterContainer/OverwriteCard/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.3, 1)
+theme_override_font_sizes/font_size = 22
+text = "⚠️ SUBSTITUIR CARREIRA EXISTENTE?"
+horizontal_alignment = 1
+
+[node name="WarnMessage" type="Label" parent="OverwriteConfirmOverlay/CenterContainer/OverwriteCard/Margin/VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.95, 1)
+theme_override_font_sizes/font_size = 16
+text = "Este slot já possui uma carreira salva.
+Iniciar um novo jogo irá substituir todos os dados anteriores permanentemente.
+
+Deseja realmente substituir?"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="HBox" type="HBoxContainer" parent="OverwriteConfirmOverlay/CenterContainer/OverwriteCard/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="CancelOverwriteButton" type="Button" parent="OverwriteConfirmOverlay/CenterContainer/OverwriteCard/Margin/VBox/HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("StyleBox_Button_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Button_Hover")
+text = "CANCELAR"
+
+[node name="ConfirmOverwriteButton" type="Button" parent="OverwriteConfirmOverlay/CenterContainer/OverwriteCard/Margin/VBox/HBox"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 17
+theme_override_styles/normal = SubResource("StyleBox_Play_Normal")
+theme_override_styles/hover = SubResource("StyleBox_Play_Hover")
+text = "SUBSTITUIR"
+

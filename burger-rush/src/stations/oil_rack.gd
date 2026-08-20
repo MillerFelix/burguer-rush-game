@@ -6,7 +6,7 @@ extends StaticBody3D
 # ================================================================
 
 @export var max_display_bottles: int = 4
-var oil_item_scene: PackedScene = preload("res://src/items/cooking_oil.tscn")
+var oil_item_scene: PackedScene = load("res://src/items/cooking_oil.tscn")
 
 @onready var bottle_slots: Node3D = $BottleSlots
 @onready var status_label: Label3D = get_node_or_null("StatusLabel")

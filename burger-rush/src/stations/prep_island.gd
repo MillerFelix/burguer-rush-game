@@ -90,6 +90,10 @@ func get_interaction_prompt(player: Node = null) -> String:
 	if tool_slot == 2 and dirt_level > 0.0:
 		return "🖱️ [Segurar Clique Esquerdo] Limpar Bancada com a Bucha"
 
+	if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+		var sp_patty = player.get_spatula_held_patty()
+		return "🍳 [Clique] Depositar %s na Bancada" % sp_patty.get_display_name()
+
 	var held = player.get("held_item")
 	if held != null:
 		var d_name = held.get_display_name() if held.has_method("get_display_name") else held.name
@@ -104,6 +108,21 @@ func get_interaction_prompt(player: Node = null) -> String:
 # [Clique Esquerdo do Mouse] — Colocar item/ingrediente no ponto exato da mira
 func interact_item(player: Node3D) -> void:
 	if not player:
+		return
+
+	if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+		var hit_pos = _calculate_placement_position(player)
+		var nearby_bread = _find_nearby_bread(hit_pos, 0.22)
+		if nearby_bread:
+			nearby_bread.interact_item(player)
+			add_dirt(0.12)
+			return
+		var sp_patty = player.take_spatula_held_patty()
+		if sp_patty:
+			_place_item_on_surface(sp_patty, hit_pos, player.rotation.y)
+			add_dirt(0.12)
+			var d_name = sp_patty.get_display_name() if sp_patty.has_method("get_display_name") else "Hambúrguer"
+			_show_feedback(player, "🍳 %s depositado na bancada" % d_name)
 		return
 
 	var held = player.get("held_item")

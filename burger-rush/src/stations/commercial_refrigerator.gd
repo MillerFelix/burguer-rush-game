@@ -20,7 +20,7 @@ var is_animating: bool = false
 var _open_duration: float = 0.0
 var _puddle_instance: Node3D = null
 
-const SCENE_PUDDLE = preload("res://src/stations/floor_puddle.tscn")
+var SCENE_PUDDLE = load("res://src/stations/floor_puddle.tscn")
 const PowerManager = preload("res://src/core/power_manager.gd")
 
 @onready var door_pivot: Node3D = get_node_or_null("DoorPivot")

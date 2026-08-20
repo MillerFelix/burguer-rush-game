@@ -36,13 +36,13 @@ enum MeatType {
 @onready var side_b_mesh: MeshInstance3D = get_node_or_null("VisualModel/SideBFace")
 @onready var body_mesh: MeshInstance3D = get_node_or_null("VisualModel/BodyMesh")
 
-const TEX_BEEF_RAW = preload("res://assets/textures/meat_patty_beef_raw.png")
-const TEX_BEEF_COOKED = preload("res://assets/textures/meat_patty_beef_cooked.png")
-const TEX_CHICKEN_RAW = preload("res://assets/textures/meat_patty_chicken_raw.png")
-const TEX_CHICKEN_COOKED = preload("res://assets/textures/meat_patty_chicken_cooked.png")
-const TEX_BURNT = preload("res://assets/textures/meat_patty_burnt.png")
-const TEX_NORMAL_RAW = preload("res://assets/textures/meat_patty_normal.png")
-const TEX_NORMAL_COOKED = preload("res://assets/textures/meat_patty_cooked_normal.png")
+var TEX_BEEF_RAW = load("res://assets/textures/meat_patty_beef_raw.png")
+var TEX_BEEF_COOKED = load("res://assets/textures/meat_patty_beef_cooked.png")
+var TEX_CHICKEN_RAW = load("res://assets/textures/meat_patty_chicken_raw.png")
+var TEX_CHICKEN_COOKED = load("res://assets/textures/meat_patty_chicken_cooked.png")
+var TEX_BURNT = load("res://assets/textures/meat_patty_burnt.png")
+var TEX_NORMAL_RAW = load("res://assets/textures/meat_patty_normal.png")
+var TEX_NORMAL_COOKED = load("res://assets/textures/meat_patty_cooked_normal.png")
 
 func _ready() -> void:
 	is_grillable = true

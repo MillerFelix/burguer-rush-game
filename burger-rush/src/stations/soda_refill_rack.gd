@@ -16,7 +16,7 @@ extends StaticBody3D
 #  - Limite estrito: Máximo 1 refil de cada sabor na reserva
 # ================================================================
 
-const SYRUP_CANISTER_SCENE = preload("res://src/items/syrup_canister.tscn")
+var SYRUP_CANISTER_SCENE = load("res://src/items/syrup_canister.tscn")
 const SoundSynthesizer = preload("res://src/audio/sound_synthesizer.gd")
 
 const SLOTS_CONFIG: Array[Dictionary] = [

@@ -1,0 +1,207 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://src/ui/intro_story.gd" id="1_intro_script"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_StoryCard"]
+bg_color = Color(0.1, 0.1, 0.13, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.55, 0.1, 0.8)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.6)
+shadow_size = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_BtnNext"]
+bg_color = Color(0.9, 0.35, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.6, 0.2, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_BtnSkip"]
+bg_color = Color(0.18, 0.18, 0.22, 0.8)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.4, 0.4, 0.5, 0.6)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_LineEdit"]
+bg_color = Color(0.06, 0.06, 0.08, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.55, 0.1, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="IntroStory" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_intro_script")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.05, 0.07, 1)
+
+[node name="ContentBox" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StoryPanel" type="PanelContainer" parent="ContentBox"]
+custom_minimum_size = Vector2(850, 480)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_StoryCard")
+
+[node name="Margin" type="MarginContainer" parent="ContentBox/StoryPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 35
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 35
+
+[node name="VBox" type="VBoxContainer" parent="ContentBox/StoryPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="HeaderBox" type="HBoxContainer" parent="ContentBox/StoryPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="LogoLabel" type="Label" parent="ContentBox/StoryPanel/Margin/VBox/HeaderBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.7, 0.2, 1)
+theme_override_font_sizes/font_size = 18
+text = "BURGER RUSH — O INÍCIO"
+
+[node name="StepLabel" type="Label" parent="ContentBox/StoryPanel/Margin/VBox/HeaderBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+text = "1 / 5"
+
+[node name="HSeparator" type="HSeparator" parent="ContentBox/StoryPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="ContentBox/StoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 28
+text = "2026 — O Início de uma Nova Era"
+
+[node name="BodyLabel" type="Label" parent="ContentBox/StoryPanel/Margin/VBox"]
+custom_minimum_size = Vector2(750, 180)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 22
+theme_override_constants/line_spacing = 8
+text = "Depois de anos trabalhando na cozinha e aprendendo os segredos do ofício, chegou o momento decisivo da sua trajetória profissional."
+autowrap_mode = 3
+
+[node name="FooterBox" type="HBoxContainer" parent="ContentBox/StoryPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="SkipButton" type="Button" parent="ContentBox/StoryPanel/Margin/VBox/FooterBox"]
+custom_minimum_size = Vector2(180, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBox_BtnSkip")
+text = "PULAR HISTÓRIA [ESC]"
+
+[node name="Spacer" type="Control" parent="ContentBox/StoryPanel/Margin/VBox/FooterBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NextButton" type="Button" parent="ContentBox/StoryPanel/Margin/VBox/FooterBox"]
+custom_minimum_size = Vector2(240, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBox_BtnNext")
+text = "AVANÇAR [ ENTER ] →"
+
+[node name="NameModal" type="PanelContainer" parent="ContentBox"]
+visible = false
+custom_minimum_size = Vector2(680, 420)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_StoryCard")
+
+[node name="Margin" type="MarginContainer" parent="ContentBox/NameModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 35
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 35
+
+[node name="VBox" type="VBoxContainer" parent="ContentBox/NameModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="ChefTitle" type="Label" parent="ContentBox/NameModal/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.2, 1)
+theme_override_font_sizes/font_size = 26
+text = "COMO DEVEMOS CHAMAR O CHEFE?"
+horizontal_alignment = 1
+
+[node name="ChefSub" type="Label" parent="ContentBox/NameModal/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.85, 1)
+theme_override_font_sizes/font_size = 16
+text = "Digite seu nome de chef para o crachá e registro do restaurante:"
+horizontal_alignment = 1
+
+[node name="NameInput" type="LineEdit" parent="ContentBox/NameModal/Margin/VBox"]
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+theme_override_styles/normal = SubResource("StyleBox_LineEdit")
+placeholder_text = "Ex: Carlos"
+alignment = 1
+max_length = 24
+
+[node name="ErrorLabel" type="Label" parent="ContentBox/NameModal/Margin/VBox"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 1
+
+[node name="ConfirmButton" type="Button" parent="ContentBox/NameModal/Margin/VBox"]
+custom_minimum_size = Vector2(0, 55)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBox_BtnNext")
+text = "CRIAR CARREIRA E COMEÇAR →"

@@ -97,7 +97,7 @@ const FILL_DURATION: float = 0.85 # segundos para encher 100%
 const SyrupCanister = preload("res://src/items/syrup_canister.gd")
 const DrinkCup = preload("res://src/items/drink_cup.gd")
 const WaterManager = preload("res://src/core/water_manager.gd")
-const SYRUP_CANISTER_SCENE = preload("res://src/items/syrup_canister.tscn")
+var SYRUP_CANISTER_SCENE = load("res://src/items/syrup_canister.tscn")
 
 # Nós de Interface 3D
 @onready var power_led: MeshInstance3D = get_node_or_null("Model/PowerSwitch/StatusLED")

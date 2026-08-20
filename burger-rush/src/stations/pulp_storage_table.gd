@@ -11,7 +11,7 @@ extends StaticBody3D
 #  - CLIQUE ESQUERDO: Pegar / manipular pedras de polpa
 # ================================================================
 
-const JUICE_PULP_SCENE = preload("res://src/items/juice_pulp.tscn")
+var JUICE_PULP_SCENE = load("res://src/items/juice_pulp.tscn")
 
 @export var stock_orange: int = 10:
 	set(val):

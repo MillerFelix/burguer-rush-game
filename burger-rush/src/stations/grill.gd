@@ -413,47 +413,77 @@ func interact_item(player: Node3D) -> void:
 		_show_feedback(player, "⚠️ Mãos ocupadas com %s! Solte para interagir com a chapa." % (held.get_display_name() if held.has_method("get_display_name") else held.name))
 		return
 
-	# CASO 3: Jogador com ESPÁTULA (Slot 1) ou MÃO LIVRE (Slot 3) sem ingrediente ativo
-	if tool_slot in [1, 3]:
+	# CASO 2: Jogador com ESPÁTULA (Slot 1)
+	if tool_slot == 1:
+		if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+			_show_feedback(player, "⚠️ A espátula já está carregando um hambúrguer! Deposite-o antes de pegar outro.")
+			return
+
 		if active_items.is_empty():
-			if tool_slot == 1:
-				_show_feedback(player, "🍳 Espátula pronta. Nenhum alimento na chapa.")
+			_show_feedback(player, "🍳 Espátula pronta. Nenhum alimento na chapa.")
 			return
 
 		var target_item_data = _get_aimed_item(player)
 		if target_item_data.is_empty():
-			if tool_slot == 1:
-				_show_feedback(player, "🍳 Mire no alimento na chapa que deseja virar ou retirar.")
+			_show_feedback(player, "🍳 Mire no alimento na chapa que deseja virar ou retirar.")
 			return
 
 		var node = target_item_data["item"]
 		if not is_instance_valid(node):
 			return
 
+		var spatula = null
 		if player.has_node("Head/Camera3D/ToolHolder"):
 			var tool_holder = player.get_node("Head/Camera3D/ToolHolder")
 			if tool_holder and tool_holder.get_child_count() > 0:
-				var spatula = tool_holder.get_child(0)
+				spatula = tool_holder.get_child(0)
 				if spatula and spatula.has_method("play_action_animation"):
 					spatula.play_action_animation()
 
-		# Interação com Hambúrguer (Virar com espátula se precisar, ou retirar)
+		# Interação com Hambúrguer (Virar com espátula se precisar, ou fixar na espátula)
 		if node is Patty:
 			var patty = node as Patty
-			if tool_slot == 1 and (patty.state == Patty.State.READY_SIDE_1 or (patty.state == Patty.State.COOKING_SIDE_1 and not patty.is_flipped)):
+			if patty.state == Patty.State.READY_SIDE_1 or (patty.state == Patty.State.COOKING_SIDE_1 and not patty.is_flipped):
 				patty.flip()
 				_play_spatula_sound(true)
 				_show_feedback(player, "🔄 Hambúrguer virado! Grelhando Lado 2.")
 				return
 			else:
+				_remove_item_from_grill_data(node)
+				if spatula and spatula.has_method("attach_patty"):
+					spatula.attach_patty(patty)
+				else:
+					_remove_item_from_grill(node, player)
 				_play_spatula_sound(false)
-				_remove_item_from_grill(node, player)
+				add_dirt(0.04)
 				var state_txt = "Pronto!" if patty.is_fully_cooked() else ("Queimado" if patty.state == Patty.State.BURNT else "Cru")
-				_show_feedback(player, "🍳 Retirou %s da grelha (%s)" % [patty.get_display_name(), state_txt])
+				_show_feedback(player, "🍳 %s preso na espátula (%s)! Leve até a bancada ou pão para montar." % [patty.get_display_name(), state_txt])
 				return
 
 		# Interação com Queijo, Bacon, Ovo ou qualquer outro ingrediente da chapa
 		_play_spatula_sound(false)
+		_remove_item_from_grill(node, player)
+		_show_feedback(player, "✋ Retirou %s da chapa" % node.get_display_name())
+		return
+
+	# CASO 3: Jogador com MÃO LIVRE (Slot 3) sem ingrediente ativo
+	if tool_slot == 3:
+		if active_items.is_empty():
+			return
+
+		var target_item_data = _get_aimed_item(player)
+		if target_item_data.is_empty():
+			return
+
+		var node = target_item_data["item"]
+		if not is_instance_valid(node):
+			return
+
+		# IMPEDIR RETIRADA DIRETA DE HAMBÚRGUER COM A MÃO!
+		if node is Patty:
+			_show_feedback(player, "⚠️ Alimento quente na chapa! Equipe a Espátula [Tecla 1] para virar ou retirar o hambúrguer.")
+			return
+
 		_remove_item_from_grill(node, player)
 		_show_feedback(player, "✋ Retirou %s da chapa" % node.get_display_name())
 		return
@@ -621,17 +651,20 @@ func _play_spatula_sound(is_flip: bool) -> void:
 	spatula_audio.volume_db = -4.0 if is_flip else -6.0
 	_safe_play(spatula_audio)
 
-func _remove_item_from_grill(item: Node3D, player: Node3D) -> void:
+func _remove_item_from_grill_data(item: Node3D) -> void:
 	for i in range(active_items.size() - 1, -1, -1):
 		if active_items[i]["item"] == item:
 			active_items.remove_at(i)
 			break
 
-	if cooking_slot.is_ancestor_of(item):
+	if cooking_slot and cooking_slot.is_ancestor_of(item):
 		cooking_slot.remove_child(item)
 
 	if "is_held" in item:
 		item.is_held = false
+
+func _remove_item_from_grill(item: Node3D, player: Node3D) -> void:
+	_remove_item_from_grill_data(item)
 
 	if player and player.has_method("pick_up"):
 		player.pick_up(item)
@@ -710,6 +743,10 @@ func get_interaction_prompt(player: Node = null) -> String:
 
 	# Se estiver com a espátula
 	if tool_slot == 1:
+		if player.has_method("get_spatula_held_patty") and player.get_spatula_held_patty() != null:
+			var held_p = player.get_spatula_held_patty()
+			return "⚠️ Espátula carregando %s! Deposite antes de pegar outro." % held_p.get_display_name()
+
 		if not active_items.is_empty():
 			var target = _get_aimed_item(player)
 			if not target.is_empty():
@@ -719,13 +756,13 @@ func get_interaction_prompt(player: Node = null) -> String:
 					if p.state == Patty.State.READY_SIDE_1:
 						return "🍳 [Clique] VIRAR %s" % p.get_display_name()
 					elif p.state == Patty.State.COOKING_SIDE_1 and not p.is_flipped:
-						return "🍳 [Clique] Virar/Retirar %s" % p.get_display_name()
+						return "🍳 [Clique] Virar/Retirar %s com a Espátula" % p.get_display_name()
 					elif p.is_fully_cooked():
-						return "🍳 [Clique] RETIRAR %s Pronto!" % p.get_display_name()
+						return "🍳 [Clique] RETIRAR %s COM A ESPÁTULA" % p.get_display_name()
 					elif p.state == Patty.State.BURNT:
-						return "🗑️ [Clique] Retirar %s Queimado" % p.get_display_name()
+						return "🗑️ [Clique] Retirar %s Queimado com a Espátula" % p.get_display_name()
 					else:
-						return "🍳 [Clique] Virar/Retirar %s" % p.get_display_name()
+						return "🍳 [Clique] Retirar %s com a Espátula" % p.get_display_name()
 				elif node is Cheese:
 					var c = node as Cheese
 					if c.is_ready():
@@ -792,13 +829,13 @@ func get_interaction_prompt(player: Node = null) -> String:
 					return "🍳 Ovo Fritando (%d%%)" % int(e.cooking_progress)
 			elif node is Patty:
 				var p = node as Patty
-				if p.is_fully_cooked():
-					return "🍳 [Clique] Pegar %s Pronto" % p.get_display_name()
-				elif p.state == Patty.State.READY_SIDE_1:
-					return "⚠️ [1] Equipe a Espátula para virar o %s!" % p.get_display_name()
+				if p.is_fully_cooked() or p.state == Patty.State.READY_SIDE_1:
+					return "⚠️ [1] Equipe a Espátula para virar/retirar o %s!" % p.get_display_name()
+				elif p.state == Patty.State.BURNT:
+					return "⚠️ [1] Equipe a Espátula para retirar o %s Queimado!" % p.get_display_name()
 				else:
 					var p_pct = int(p.side_a_cooked) if not p.is_flipped else int(p.side_b_cooked)
-					return "🥩 %s Grelhando (%d%%)" % [p.get_display_name(), p_pct]
+					return "🥩 %s Grelhando (%d%%) — [1] Espátula para retirar" % [p.get_display_name(), p_pct]
 			elif node is Cheese:
 				var c = node as Cheese
 				if c.is_ready():
